@@ -327,11 +327,12 @@ is not embedded here.
 - **E12** — 2026-11-23, `bun scripts/docs-generate.mjs` · exit 0 · `PASS`, the Features row for 695 appended by the emitter (never hand-written) and the `docs/generated` projection refreshed.
 - **G1** — 2026-11-23, GATE-RAN · HEAD 4dd04d2c1 · `bun scripts/local-gate.mjs` · exit 0 · `PASS — 20 step(s) in 675s`, 1070 pass / 1 skipped across the suite-bearing steps.
 - **E13** — 2026-11-23, `bun packages/agentic-workflow/bin/agentic-workflow.mjs verify docs/features/695-derived-capability-record/SPEC.md` · exit 0 · the `verify@1` receipt reports no violation.
-- **E14** — 2026-11-23, `bun packages/agentic-workflow/bin/agentic-workflow.mjs journal aggregate --check` · exit 0 · the carrier is conforming.
+- **E14** — 2026-11-23, `bun packages/agentic-workflow/bin/agentic-workflow.mjs journal aggregate --check` · exit 0 · `{"ok":true,"checked":26,"refusals":[]}`.
+- **G4** — 2026-11-24, GATE-RAN · HEAD dda3f7454 · `bun scripts/local-gate.mjs` · exit 0 · `PASS — 20 step(s) in 857s` on the final tree (the run G1 records re-confirmed after the docs landed).
 
 ## Next
 
-Implement P1 under the owner's external verification.
+The owner is the external verifier: review the branch (`feat/695-phase-batching-model-facts`) against this document's acceptance criteria and the differential receipt `E9`. No obligation row is open.
 
 ## References
 
