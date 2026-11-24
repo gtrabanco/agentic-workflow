@@ -1199,7 +1199,7 @@ switch (command) {
       }
       if (arg === "--check") {
         // Issue #705: one row, on demand — a caller that wants the Relay answer
-        // should not parse sixteen. The wizard narrows with `--yes <ids>`.
+        // should not parse the whole inventory. The wizard narrows with `--yes <ids>`.
         if (i + 1 >= restArgs.length) doctorRefuse("--check requires one documented check id");
         flags.check = String(restArgs[++i]).trim();
         continue;

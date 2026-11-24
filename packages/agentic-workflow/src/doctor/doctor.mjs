@@ -167,7 +167,7 @@ export function renderDoctor(envelope) {
  * re-points what it observes, `inventoryText` exists for the drift fixtures —
  * production always reads the shipped README — and `check` narrows the printed
  * rows to one documented id (issue #705: a caller that wants one answer should
- * not parse sixteen rows).
+ * not parse every documented row).
  *
  * The documented↔probed bijection is checked over the whole document whatever the
  * filter is: a drift is a drift, and a narrowed run must not hide one.
