@@ -103,7 +103,9 @@ function describe(row) {
       bits.push(`${evidence.package?.name ?? "relay package"} not registered`);
       if (evidence.embedded?.present) bits.push(`shipped at ${evidence.embedded.path}`);
     }
-    if (evidence.degradation && !row.advisory) bits.push(evidence.degradation);
+    // The route belongs to the absent-capability answer: an `ok` row is not a
+    // hand-off, and the dead ends carry it in their advisory already.
+    if (evidence.degradation && !row.advisory && row.status === "not-applicable") bits.push(evidence.degradation);
   }
   if (evidence.pair) {
     const left = evidence.pair.binary ?? `${evidence.pair.companionLine}.x`;
