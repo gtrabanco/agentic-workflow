@@ -543,6 +543,12 @@ materialization-outcome-vocabulary | packages/agentic-workflow-schema/src/vocabu
 materialization-finding-code-vocabulary | packages/agentic-workflow-schema/src/vocabularies.ts | schema-export:MATERIALIZATION_FINDING_CODES | materialization-finding-code | no
 artifact-evidence-kind-vocabulary | packages/agentic-workflow-schema/src/vocabularies.ts | schema-export:ARTIFACT_EVIDENCE_KINDS | artifact-evidence-kind | no
 materialization-grammar | packages/agentic-workflow/README.md | block:materialization@1 | materialization-outcome+materialization-finding-code+artifact-evidence-kind | no
+delivery-condition-kind-vocabulary | packages/agentic-workflow-schema/src/vocabularies.ts | schema-export:DELIVERY_CONDITION_KINDS | delivery-condition-kind | no
+delivery-condition-verdict-vocabulary | packages/agentic-workflow-schema/src/vocabularies.ts | schema-export:DELIVERY_CONDITION_VERDICTS | delivery-condition-verdict | no
+delivery-condition-finding-vocabulary | packages/agentic-workflow-schema/src/vocabularies.ts | schema-export:DELIVERY_CONDITION_FINDINGS | delivery-condition-finding | no
+delivery-condition-refusal-vocabulary | packages/agentic-workflow-schema/src/vocabularies.ts | schema-export:DELIVERY_CONDITION_REFUSALS | delivery-condition-refusal | no
+delivery-condition-grammar | skills/triage-issue/references/ISSUE_PROCESS.md | block:delivery-condition@1 | delivery-condition-kind | no
+delivery-condition-report | packages/agentic-workflow/README.md | block:delivery-conditions@1 | n/a | no
 doc-provenance-grammar-family-vocabulary | packages/agentic-workflow-schema/src/doc-provenance.ts | schema-export:DOC_GRAMMAR_FAMILIES | doc-grammar-family | no
 doc-provenance-stamp | packages/agentic-workflow-schema/README.md | block:doc-provenance@1 | doc-provenance-format+doc-grammar-family | no
 continuation-refusal-vocabulary | packages/agentic-workflow-schema/src/continuation.ts | schema-export:CONTINUATION_REFUSALS | continuation-refusal-type | yes

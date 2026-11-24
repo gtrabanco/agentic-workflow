@@ -225,17 +225,27 @@ none
 
 ## Applicable tests
 
-- `bun test scripts/delivery-conditions.test.mjs` — the extraction, the state
-  rules, the guard, the sweep and the no-write pin (the frozen-failure corpus
-  from S2 first).
-- `bun run --cwd packages/agentic-workflow-schema test` — the published
-  vocabularies.
-- `bun run --cwd packages/agentic-workflow test` — the CLI surface parity
-  (`cli.surface.test.mjs`, `cli.help.test.mjs`).
+- `bun test scripts/delivery-conditions.test.mjs` · exit 0 — justifies: a
+  delivery condition recorded in prose is judged against the issues it cites, so
+  a close past an undelivered cover is refused with the route that repairs it and
+  a follow-up that came due is reported instead of waiting for a session's
+  memory; the #301 bytes are the suite's first case.
+- `bun run --cwd packages/agentic-workflow-schema test` · exit 0 — justifies:
+  the four closed sets a consumer imports are published from one home, frozen and
+  slug-shaped, so no second copy can grow beside them.
+- `bun run --cwd packages/agentic-workflow test` · exit 0 — justifies: the
+  subcommand is registered on every surface the CLI's own grammar pins (dispatch,
+  usage line, help row, README, runner contract), so a half-registered command is
+  red rather than undiscoverable.
 - `bun test scripts/normative-drift.test.mjs scripts/prose-gate-inventory.test.mjs
   scripts/vocabulary-parity.test.mjs scripts/test-obligation-tags.test.mjs
-  scripts/red-first.test.mjs` — the inventory and ordering gates.
-- `bun scripts/local-gate.mjs` — the whole gate, before the handoff.
+  scripts/red-first.test.mjs` · exit 0 — justifies: the new normative surfaces
+  resolve, the gate inventory claims them, the published sets have one home, the
+  suite declares the surface it protects, and its green commit follows its red
+  one.
+- `bun scripts/local-gate.mjs` · exit 0 — justifies: the repository's own gate
+  (root suites, crate suites, schema build, budgets, projections, pin gate) is
+  green at the head the handoff names.
 
 ## Known pre-existing issues
 
@@ -308,6 +318,27 @@ ledgers it does not consume.
 - **L2** — 2026-12-24, the governing instruction of the applying session, verbatim: `Apply to this repository: issue #704` — the owner's local, unpublished workflow: state resolution first, the frozen ledgers before the first line of code, the frozen-failure corpus red before implementation, and no self-run review machinery.
 - **D1** — 2026-12-24, the carrier is the cited forge issue; the roadmap row is a second corpus read through its own parser, never a new column. Authority: this document's S3/S7 and `decisions.md` D2.
 - **D2** — 2026-12-24, the shipped mechanism is S4's close guard plus S5's sweep, not S9's prose-gate extension. Authority: the issue's own ranking (`The third candidate costs the least`) and `decisions.md` D1/D3.
+
+- **G1** — 2026-12-24, GATE-RAN · HEAD 5b33cdd2e96a72bcc134daa1ccad162c3dfb7697 · `bun scripts/local-gate.mjs` · exit 0 · `local-gate: PASS — 20 step(s) in 836s` (root-suite, crate-suite-bun, crate-suite-node, schema-build, schema-node-compat, docs-generated-projection, journal-carrier-check, log-immutability, pin gates and every offline guard). The only delta after this head is this document's own evidence append.
+- **E1** — 2026-12-24, `bun test scripts/delivery-conditions.test.mjs` at the red commit `d66ea67c0` · exit 1 · `0 pass, 1 fail, 1 error` — `Cannot find module '../packages/agentic-workflow/src/delivery-conditions/index.mjs'`.
+- **E2** — 2026-12-24, `bun test scripts/delivery-conditions.test.mjs` · exit 0 · `20 pass, 0 fail` (the #301 case, the English twin, the five families, one case per verdict, the uncarried advisory, the guard's refusal and its pass, the roadmap corpus, the cache/degradations, the truncation, the byte-stable block, the no-write pin, the exit contract, the declared-table parity and the scheduled workflow).
+- **E3** — 2026-12-24, `bun run --cwd packages/agentic-workflow-schema test` · exit 0 · `953 pass, 0 fail` (the four published sets included).
+- **E4** — 2026-12-24, `bun run --cwd packages/agentic-workflow test` · exit 0 (`cli.surface.test.mjs`, `cli.help.test.mjs` and `runner.dispatch.test.mjs` green with the new subcommand); the gate's own `crate-suite-bun` and `crate-suite-node` steps agree.
+- **E5** — 2026-12-24, `rg -n 'writeFileSync|appendFileSync|unlinkSync|rmSync' packages/agentic-workflow/src/delivery-conditions/index.mjs` · exit 1 · no match: the module has no write path.
+- **E6** — 2026-12-24, `rg -n '"issue",\s*"(close|edit|comment)"' packages/agentic-workflow/src/delivery-conditions/index.mjs` · exit 1 · no match: the module mutates no forge state.
+- **E7** — 2026-12-24, `rg -n 'delivery-conditions --close-check' skills/triage-issue/references/ISSUE_PROCESS.md` · exit 0 · two matches (step 6 and § Delivery conditions): the close path names the guard.
+- **E8** — 2026-12-24, `rg -n '#704' docs/ROADMAP.md` · exit 0 · the `## Fixes` row (line 241) reads `in-progress`; written by `runner roadmap fixrow` (receipt `pass`, `ac1368f3 → b4fc4cad`) and then synced by `docs-generate` from the unit doc's `roadmap_summary`.
+- **E9** — 2026-12-24, `rg -c '704' .agentic-workflow/journal/20261124T015900Z-fix-704-prose-only-delivery-stall-narrative-local.md` · exit 0 · `2`: the session entry exists in the carrier this repository's journal declares.
+- **E10** — 2026-12-24, `rg -n 'permissions:' -A4 .github/workflows/delivery-conditions.yml` · exit 0 · `contents: read` and `issues: read` only; `rg -n 'secrets\.' .github/workflows/delivery-conditions.yml` · exit 1 · the run token is the only credential.
+- **E11** — 2026-12-24, `bun packages/agentic-workflow/bin/agentic-workflow.mjs docs-generate --check` · exit 0 · `verdict: PASS` after the emitter wrote the roadmap cell and the two projections.
+- **E12** — 2026-12-24, `bun scripts/check-skill-context.mjs --documents` · exit 0 · `PASS context documents: 7 budgeted documents` (the guide's six new surface rows and the inventory's one new gate row are inside the re-pinned exact boundaries).
+- **E13** — 2026-12-24, `bun packages/agentic-workflow/bin/agentic-workflow.mjs scaffold-contract authoring docs/fix/704-prose-conditions-stall/SPEC.md` · exit 0 · `ACCEPTANCE MATCH` / `verdict SCAFFOLD OK`.
+- **E14** — 2026-12-24, `bun packages/agentic-workflow/bin/agentic-workflow.mjs journal aggregate --check` · exit 0 · `{"ok":true,"checked":26,"refusals":[]}`.
+- **D3** — 2026-12-24, the roadmap `## Fixes` row status moved to `in-progress` through its writer (`runner roadmap fixrow`), never a hand edit; `docs-generate` then owned the summary cell.
+- **D4** — 2026-12-24, a declared re-base (no emitter exists for the `documents`/`referenceSources` sections): `triage-issue`'s reference ceilings to `ceil(5331 x 1.10) = 5865 / ceil(324 x 1.10) = 357`, and the guide/inventory machine pins to the exact boundary this unit spends. Recorded in the manifest's own `sources` entries.
+- **D5** — 2026-12-24, the reading-coverage ledger (`docs/fix/646-docs-skills-reconciliation/second-read.md`) gains the new workflow's row: every in-scope file must be accounted for, and the gate refuses an unrowed one.
+- **D9** — 2026-12-24, O16's validator amended at close from `docs/LOGS.md` to the fragment carrier, with its reason recorded in `decisions.md` D9; the rule the row states is unchanged.
+- **P1** — 2026-12-24 01:59, the unit applied inline against its frozen ledgers; the cut at `44fd26b49`, the suite red at `d66ea67c0`, the green head at `5b33cdd2e`.
 
 ## Next
 

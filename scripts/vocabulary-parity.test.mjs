@@ -74,6 +74,10 @@ const {
   MATERIALIZATION_OUTCOMES,
   MATERIALIZATION_FINDING_CODES,
   ARTIFACT_EVIDENCE_KINDS,
+  DELIVERY_CONDITION_KINDS,
+  DELIVERY_CONDITION_VERDICTS,
+  DELIVERY_CONDITION_FINDINGS,
+  DELIVERY_CONDITION_REFUSALS,
 } = await import(schemaRuntimePath);
 
 const read = (relative) => readFileSync(path.join(ROOT, relative), "utf8");
@@ -118,6 +122,10 @@ test("the schema package publishes every canonical set, non-empty", () => {
     ["MATERIALIZATION_OUTCOMES", MATERIALIZATION_OUTCOMES],
     ["MATERIALIZATION_FINDING_CODES", MATERIALIZATION_FINDING_CODES],
     ["ARTIFACT_EVIDENCE_KINDS", ARTIFACT_EVIDENCE_KINDS],
+    ["DELIVERY_CONDITION_KINDS", DELIVERY_CONDITION_KINDS],
+    ["DELIVERY_CONDITION_VERDICTS", DELIVERY_CONDITION_VERDICTS],
+    ["DELIVERY_CONDITION_FINDINGS", DELIVERY_CONDITION_FINDINGS],
+    ["DELIVERY_CONDITION_REFUSALS", DELIVERY_CONDITION_REFUSALS],
   ]) {
     assert.ok(Array.isArray(set) && set.length > 0, `${name} is a published const array`);
   }
@@ -659,4 +667,32 @@ test("#643 the stale dependency rationale is gone from source, suites, scripts a
   }
   assert.deepEqual(offenders, [],
     `${offenders.length} surface(s) still narrate the retired mirror architecture with a premise that stopped being true (dependency since 2026-11-09 #427; imports since #643)`);
+});
+
+// ---------------------------------------------------------------------------
+// #704 — the delivery-condition sets: one home, imported, never restated
+// ---------------------------------------------------------------------------
+
+test("#704 the runner's delivery-condition handles are the published sets (F22 pattern)", async () => {
+  const {
+    CONDITION_KINDS, CONDITION_VERDICTS, CONDITION_FINDINGS, CONDITION_REFUSALS,
+  } = await import("../packages/agentic-workflow/src/delivery-conditions/index.mjs");
+  assert.deepEqual([...CONDITION_KINDS], [...DELIVERY_CONDITION_KINDS]);
+  assert.deepEqual([...CONDITION_VERDICTS], [...DELIVERY_CONDITION_VERDICTS]);
+  assert.deepEqual([...CONDITION_FINDINGS], [...DELIVERY_CONDITION_FINDINGS]);
+  assert.deepEqual([...CONDITION_REFUSALS], [...DELIVERY_CONDITION_REFUSALS]);
+});
+
+test("#704 the issue process names every published condition kind, and no other", () => {
+  const text = read("skills/triage-issue/references/ISSUE_PROCESS.md");
+  const block = /```text\ndelivery-condition@1\n([\s\S]*?)```/u.exec(text);
+  assert.ok(block, "the delivery-condition@1 block is the phrasings' declared home");
+  const kinds = new Set(
+    block[1]
+      .split("\n")
+      .slice(1)
+      .map((line) => line.split("|").map((cell) => cell.trim())[1])
+      .filter(Boolean),
+  );
+  assert.deepEqual([...kinds].sort(), [...DELIVERY_CONDITION_KINDS].sort());
 });
