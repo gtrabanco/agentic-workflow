@@ -42,7 +42,9 @@
         "review-change",
         "audit-pr",
         "audit-docs",
-        "product-audit"
+        "product-audit",
+        "agentic-workflow-doctor",
+        "aw-doctor"
       ]
     },
     {

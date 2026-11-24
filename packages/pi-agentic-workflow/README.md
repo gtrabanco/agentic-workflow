@@ -39,8 +39,10 @@ their own — they are composed by the ones above:
 
 | Command | Use it for |
 | --- | --- |
+| `/agentic-workflow-doctor` | Batch-triage the ceremony failures this project's own record carries, anonymized and routed upstream with consent. |
 | `/audit-docs` | Check that docs, roadmap, code and the fix index agree. |
 | `/audit-pr` | The merge gate: is this PR ready? |
+| `/aw-doctor` | The short name for `/agentic-workflow-doctor`. |
 | `/batch-scheduler` | Plan parallel-execution batches over the open work graph. |
 | `/discover-repository-state` | Freeze verified repository facts. |
 | `/execute-phase` | Implement the remaining phases of a planned unit. |

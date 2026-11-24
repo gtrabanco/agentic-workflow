@@ -130,8 +130,8 @@ const GUIDE = `# AGENTS.md
 
 \`\`\`text
 ceremony-profile@1
-design: full
-docs: docs-step
+docs-step: paid
+captures: discarded
 \`\`\`
 `;
 
@@ -479,7 +479,7 @@ test("an absent doctor refuses the battery instead of fabricating a healthy row"
 test("the battery reads the ceremony profile and the named unit's recorded tier", async () => {
   const dir = fixture();
   const receipt = await buildBattery(dir, { doctor: async () => DOCTOR_ENVELOPE, unit: "700-demo" });
-  assert.deepEqual(receipt.ceremony.adoption, { design: "full", docs: "docs-step" });
+  assert.deepEqual(receipt.ceremony.adoption, { "docs-step": "paid", captures: "discarded" });
   assert.equal(receipt.ceremony.unit, "700-demo");
   assert.equal(receipt.ceremony.tier, "standard");
 

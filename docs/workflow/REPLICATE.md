@@ -25,15 +25,16 @@ Two ways to install the skills into a repo. They're complementary.
 
 | Method | What you get | When to use |
 |---|---|---|
-| **`skills` CLI** | The 30 installable skills (14 user-facing + 16 internal, including the `orchestration-envelope` contract) copied (or symlinked) **verbatim** into the target agent's skills dir | You want the exact same skills, fast, deterministic, on any agent |
+| **`skills` CLI** | The 32 installable skills (16 user-facing + 16 internal, including the `orchestration-envelope` contract) copied (or symlinked) **verbatim** into the target agent's skills dir | You want the exact same skills, fast, deterministic, on any agent |
 | **Portable prompt** | The skills **regenerated, adapted** to the target repo's docs/architecture | You want them tuned to a different project's conventions |
 
-The installable set is **14 user-facing + 16 internal** (30 total):
+The installable set is **16 user-facing + 16 internal** (32 total):
 
-- **User-facing (14):** `init-workspace`, `discover-repository-state`,
+- **User-facing (16):** `init-workspace`, `discover-repository-state`,
   `resolve-repository-state`, `unit-lane`, `execute-phase`, `review-change`,
   `audit-pr`, `audit-docs`, `product-audit`, `fold-findings`, `triage-issue`,
-  `log-session`, `workflow-status`, `batch-scheduler`.
+  `log-session`, `workflow-status`, `batch-scheduler`, `agentic-workflow-doctor`,
+  `aw-doctor`.
 - **Internal (16):** `orchestration-envelope`, `pre-execution-review`,
   `phase-contract`, `verification-contract`, `runner-contract`,
   `self-documenting-cli`, `review-implementation`, `review-code`,
