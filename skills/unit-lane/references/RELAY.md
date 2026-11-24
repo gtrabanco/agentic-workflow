@@ -17,6 +17,10 @@ method: `@jmfederico/pi-relay`'s `relay` and `relay-runner` skills own those, an
   where pi-web is present.
 - Without pi-web the lane is unchanged: it hands off `/execute-phase <NN> P<k>`
   one phase per turn (§Degradation).
+- Whether pi-web, its session daemon and the Relay package are actually there is
+  the tool doctor's `relay` row, never a local guess: `runner doctor --check relay`
+  prints that one row, whose status is the answer (`ok`, `unreachable`, `missing`,
+  `not-applicable`) and whose advisory names the missing half and the route below.
 
 ## Ownership
 
@@ -259,6 +263,14 @@ The router says why (`relay: unavailable — …`) and keeps the per-phase comma
 printed. Relay is an enhancement of the seam, never a hard dependency: nothing in
 this repository requires a pi-web session, and every packet is inspected by a
 read-only checker rather than by a dispatcher.
+
+Two readings answer "is Relay available here" without a packet: the router's
+`relay:` line for this unit's session, and the doctor's `relay` row for the
+environment. `runner doctor --check relay` prints that row — the session marker,
+the daemon endpoint PI WEB itself resolves, and the installed `@jmfederico/pi-relay`
+with its two skills — and it reports the session-dispatch bridge as the host's own
+question (`observable: false`) rather than as a probed fact. It never dispatches,
+so reading it costs nothing and decides nothing about consent.
 
 ## Relationship to other units
 
