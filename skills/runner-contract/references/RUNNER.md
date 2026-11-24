@@ -163,6 +163,7 @@ shell fallback.
 | `docs-generated-merge [--install [--repo <dir>]] \| <base> <ours> <theirs> [marker-size] [path]` | the generated-projection merge driver — the incoming side, or a fail-closed refusal on a path it does not cover |
 | `shared-merge [--install [--repo <dir>]] \| <class> <base> <ours> <theirs> [marker-size] [path]` | the shared-document merge drivers — one class registry for the roadmap, the budgets, the frozen repository state, the journal and the telemetry ledger |
 | `test-impact --base <rev> [--paths <p>…] [--references <file>]` | the test impact set — the suites a change can affect, or `empty`, with the reason (issue #356) |
+| `delivery-conditions --close-check <issue> \| --sweep [--issues-file <json>] [--repo <owner/name>] [--root <dir>] [--limit <n>] [--json]` | the delivery-condition carrier — the close-time guard that refuses covering an issue with one that is still open, and the sweep that re-judges every recorded condition against the issues it cites (issue #704; the report block is in the crate README) |
 | `session-close render \| close` | the session's mechanical half — the entry's facts, the append-only proof and the alone-commit (issue #182) |
 | `findings-corpus` | the retrospective findings corpus — the one join `coverage-gap` and `dimension-regression` build on (issue #437) |
 | `correction-budget` | the correction budget as a measurement — batch size, bounded budget and the typed stop (issue #437) |

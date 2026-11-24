@@ -423,6 +423,12 @@ export const HELP_REGISTRY = Object.freeze({
   },
 
   // ── forge ─────────────────────────────────────────────────────────────
+  "delivery-conditions": {
+    family: "forge",
+    summary: "the carrier a delivery condition names: the close-time guard and the scheduled sweep that re-check it",
+    flags: ["--close-check", "--sweep", "--issues-file", "--repo", "--root", "--limit", "--json"],
+    usage: "--close-check <issue> | --sweep [--issues-file <json>] [--repo <owner/name>] [--json]",
+  },
   "forge-read": {
     family: "forge",
     summary: "the one route that may return third-party forge text, fenced and guarded",

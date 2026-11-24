@@ -24,7 +24,7 @@ project invokes one pinned CLI instead of a tree of loose scripts.
 ## Commands
 
 ```text
-usage: bunx @gtrabanco/agentic-workflow@<pin> <unit-doc|roadmap|changelog|budgets|manifest|config|doc|section|relay|memory|log|journal|resolve-passes|runner|verify|charter|materialize|resources|provision|doctor|setup|unit-route|phase-lint|diff-guard|workflow-status|pre-execution-snapshot|needs-input|substrate|ledger-provenance|quality-metrics|forge-read|ceremony|skills|setup-env|test-route|prose-gate-inventory|retention-debt|test-obligation-tags|decision-promotion|dimension-regression|journal-corpus|coverage-gap|repository-state|residual-classify|restatement-sweep|batch-scheduler|promise-coherence|skill-context|dependency-advisory-pass|unit-lineage|audit-pr-gate|adversarial-verdict|gate-receipt|review-receipt|scope-manifest|review-state|differential-baseline|correction-budget|findings-corpus|session-close|test-impact|shared-merge|docs-generated-merge|docs-generate|roadmap-settle|relevant-files|help|scaffold-contract|elicitation|guard-command|turn-contract|git-identity-check|fullauto-merge|telemetry> [--debug|--profile] ...
+usage: bunx @gtrabanco/agentic-workflow@<pin> <unit-doc|roadmap|changelog|budgets|manifest|config|doc|section|relay|memory|log|journal|resolve-passes|runner|verify|charter|materialize|resources|provision|doctor|setup|unit-route|phase-lint|diff-guard|workflow-status|pre-execution-snapshot|needs-input|substrate|ledger-provenance|quality-metrics|forge-read|ceremony|skills|setup-env|test-route|prose-gate-inventory|retention-debt|test-obligation-tags|decision-promotion|dimension-regression|journal-corpus|coverage-gap|repository-state|residual-classify|restatement-sweep|batch-scheduler|delivery-conditions|promise-coherence|skill-context|dependency-advisory-pass|unit-lineage|audit-pr-gate|adversarial-verdict|gate-receipt|review-receipt|scope-manifest|review-state|differential-baseline|correction-budget|findings-corpus|session-close|test-impact|shared-merge|docs-generated-merge|docs-generate|roadmap-settle|relevant-files|help|scaffold-contract|elicitation|guard-command|turn-contract|git-identity-check|fullauto-merge|telemetry> [--debug|--profile] ...
 ```
 
 `<pin>` is the exact version `skills/runner-contract/references/RUNNER.md`
@@ -108,6 +108,7 @@ writing anything**.
 | `journal-corpus [<dir> \| --repo <dir>] [--recurrence <n>]` | The **journal corpus reader** (issue #616, in the CLI since unit 553): it joins the session journal's entries into the corpus `product-audit`'s journal dimension reads, with the closed shapes it publishes, and validates the carrier's own grammar before it counts anything. Read-only · exit 0 a receipt · 1 a defective entry · 2 usage |
 | `repository-state [<snapshot>] [--ttl-days <n>] [--today <YYYY-MM-DD>] [--json]` | The **Normalized Repository State reader** (feature 18, in the CLI since unit 553): it reads the frozen state document and answers what is frozen, what a contradiction is, and which facts a later decision may not silently move — `discover-repository-state` writes it, `resolve-repository-state` alone may replace it, and everything else reads it through this command. Read-only · exit 0 answered · 1 a contradiction · 2 usage |
 | `residual-classify <surface> [--root <dir>] \| --receipt <surface> --date <YYYY-MM-DD> \| --inventory --base <rev>` | The **residual classifier** (issue #340, in the CLI since unit 553): an added surface is classified by what actually consumes it — `used` (live consumer, with the consuming line named), `andamio` (a recorded planned-consumer promise), `orphan`, or `half-built` — so a retirement is legitimate only in the `orphan` state. `--inventory --base <rev>` prints one row per added surface of a change, the anti-divergence receipt a plan decides. Read-only · exit 0 classified · 1 a refusal · 2 usage |
+| `delivery-conditions --close-check <issue> \| --sweep [--issues-file <json>] [--repo <owner/name>] [--root <dir>] [--limit <n>] [--json]` | The **delivery-condition carrier** (issue #704): a condition that gates delivery names an issue the machine re-checks, and this is the machine. `--close-check <n>` is the guard you run before writing a close: a coverage claim (`closed as covered by #N`) against an issue that is still OPEN is refused as `covered-by-open`, and the refusal names the route — deliver the cover, or keep the issue open with a native `blocked-by` link. `--sweep` is the scheduled backstop: it reads the issue corpus (bodies **and** comments — #301's reopen condition lived in a comment) plus the roadmap's `## Fixes` rows, extracts the five families (`covered-by`, `reopen-when`, `proceeds-when`, `waits-for`, `retire-when`), judges each against the cited issues' states and reports the ones whose follow-up came due. Report-only: it writes nothing, mutates no forge state, and prints no third-party text. `--issues-file` reads a cached `[{number, state, body, comments}]` array offline, which is what makes a run deterministic; an unreadable cache is exit 2, an unreachable forge is a named `DEGRADED unavailable-forge-…` line with exit 1. The block is `delivery-conditions@1` below · exit 0 PASS · 1 VIOLATION or UNRESOLVED · 2 usage |
 | `restatement-sweep [--repo <dir>] [--json]` | The **restatement sweep** (issue #646, in the CLI since unit 553): it reads the seeded restatement corpus and reports every place a rule is worded a second time outside its owner, so duplication is detected by a gate instead of by a reviewer's memory. Read-only · exit 0 clean · 1 a restatement · 2 usage |
 | `test-obligation-tags [--root <dir>] [--sweep] [--json]` | The **test-obligation tag gate** (issue #596, in the CLI since unit 553): every root suite declares the surface it protects and the obligation kinds its assertions cover, at its head; a suite that declares nothing, declares a half shape, names an unknown kind or protects a path the tree no longer has is refused. `--sweep` clusters the tags by surface and ranks them by measured cost per obligation. Read-only · exit 0 PASS · 1 a refusal · 2 usage |
 | `retention-debt [--root <dir>] [--json]` | The **document-retention debt sensor** (issue #651, in the CLI since unit 553): it reads the settlement predicate and reports every proved-merged unit still carrying the full carrier past its threshold, plus the rows it puts out of scope, instead of dropping them. The producer `product-audit`'s retention dimension consumes. Read-only · exit 0 a receipt · 1 a refusal · 2 usage |
@@ -984,4 +985,34 @@ source | the registry or repository it came from | provenance, so a stale copy c
 pin | the version it is pinned to | a `latest`/`unpinned`/`main` value is the `unpinned` decay state
 installed | YYYY-MM-DD | the install date; a real calendar day, and the age the `stale` state measures
 axis | a review axis name | what the skill covers, so `product-audit` can tell it apart from the workflow's own pack
+```
+
+## `delivery-conditions` — the block a sweep prints (issue #704)
+
+The command's machine receipt is one fixed block, byte-stable for a given
+corpus: no clock, no path, no hash, and no third-party text — issue numbers,
+condition kinds, verdicts, fixed sentences and degradation codes only. That last
+property is what keeps the sweep outside the content guard's sanitizer: it reads
+forge text to locate a phrase and a citation, and delivers none of it.
+
+The five condition families and the four per-condition verdicts are the schema
+package's published consts (`DELIVERY_CONDITION_KINDS`,
+`DELIVERY_CONDITION_VERDICTS`); the finding and refusal codes are
+`DELIVERY_CONDITION_FINDINGS` / `DELIVERY_CONDITION_REFUSALS`. The three report
+verdicts are this block's own closed set. The phrasings the sweep recognises, and
+the rule each family's `stalled` state implements, are owned by the issue
+process (`skills/triage-issue/references/ISSUE_PROCESS.md` § Delivery conditions,
+block `delivery-condition@1`) — this block states the output, never the rule.
+
+```text
+delivery-conditions@1
+line | shape | what it holds
+header | delivery-conditions@1 <mode> | the mode that produced the block: `sweep`, or `close-check #<n>`
+corpus | corpus issues=<n> text-units=<n> conditions=<n> findings=<n> advisories=<n> unjudged=<n> truncated=<yes\|no> | the counted corpus: one text unit per body, comment or roadmap row read; `unjudged` counts the carried conditions whose citation could not be read; `truncated` says the read hit its limit
+condition | CONDITION #<issue> · <kind> · cites #<n>[,#<n>] · <verdict> · via <body\|comment\|roadmap> | one extracted condition, the rows that need action first: `stalled`, then `unresolved`, `pending`, `satisfied`
+finding | FINDING <code> · #<issue> · <detail> | a condition whose follow-up came due or a settled row covered by an open issue: the run fails
+refusal | REFUSAL <code> · #<issue> · <detail> | the close-time guard's verdict, carrying the route that repairs it
+advisory | ADVISORY <code> · #<issue> · <detail> | an uncarried condition (a phrase naming no issue): printed, never fatal, never silent
+degraded | DEGRADED <code> | a source that could not be read (`unavailable-forge-…`, `unavailable-roadmap-…`, `corpus-truncated-at-limit`); the verdict never reads as a clean corpus
+verdict | verdict <PASS\|VIOLATION\|UNRESOLVED> | `PASS` alone exits 0; `VIOLATION` is a finding or a refusal; `UNRESOLVED` is a corpus or citation the machine could not read
 ```
