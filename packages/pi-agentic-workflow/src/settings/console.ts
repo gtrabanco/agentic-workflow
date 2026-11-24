@@ -18,6 +18,7 @@ import { dirname } from "node:path";
 import { materializeConfig } from "@gtrabanco/agentic-workflow/src/config/materialize.mjs";
 
 import { loadConfig, configFilePaths } from "../config/load.js";
+import { exactVersionLauncher } from "../runner-bin.js";
 import type { ConfigProblem } from "../config/types.js";
 import type { StateFlowConfig } from "../config/types.js";
 
@@ -153,7 +154,10 @@ export const prompts = {
       "A key the schema no longer declares is dropped, after the existing file is copied to <file>.bak-<timestamp>.",
       "The existing file is backed up first; this console has no opt-out.",
     ].join("\n"),
-  materializeUntrusted: "The project config (.pi/) is not writable while this project is untrusted — trust the project, or run `agentic-workflow config default --scope global` yourself.",
+  materializeUntrusted: (launcher: string | null): string =>
+    `The project config (.pi/) is not writable while this project is untrusted — trust the project, or run ${
+      launcher === null ? "the crate's own `config default --scope global`" : `\`${launcher}\``
+    } yourself.`,
   materializeDeclined: "Nothing was written.",
 } as const;
 
@@ -893,7 +897,7 @@ async function discard(ui: SettingsUi): Promise<boolean> {
  */
 async function materializeDefaults(deps: SettingsDeps): Promise<void> {
   if (!deps.projectTrusted) {
-    deps.ui.notify(prompts.materializeUntrusted, "warning");
+    deps.ui.notify(prompts.materializeUntrusted(exactVersionLauncher(["config", "default", "--scope", "global"])), "warning");
     return;
   }
   const paths = configFilePaths(deps.agentDir, deps.cwd);

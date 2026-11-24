@@ -308,7 +308,7 @@ test("S7: the directive names the tool the extension spawns, never a launcher to
     assert.equal(record.target, "fragment", "the fragment branch is the one that composed the launcher");
     assert.match(directive, /agentic_workflow_run \{ "subcommand": "journal write"/u, "the entry is handed to the tool");
     assert.match(directive, new RegExp(`"--session", "${SESSION}"`, "u"), "with the session the record names");
-    assert.match(directive, /The extension spawns the runner at this package's own version/u, "and says so, so the model never looks for a binary");
+    assert.match(directive, /The extension spawns the runner itself, at this package's own version/u, "and says so, so the model never looks for a binary");
     assert.doesNotMatch(directive, /(?:^|[\s`])agentic-workflow\s+[a-z]/mu, "no bare launcher survives anywhere in the composed bytes");
   } finally {
     cleanup(root);

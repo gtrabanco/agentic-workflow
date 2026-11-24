@@ -364,13 +364,21 @@ export function composeDirective(record: InvocationRecord): string {
     // the prose fields, computes the name, the timestamp and the bytes, and
     // refuses a fragment the aggregator could not read. The resolved path is
     // still stated because it is what the settled turn reconciles against.
+    //
+    // Issue #710 S6/S7: this line used to spell the launcher itself — bare,
+    // unversioned and scope-less — and nothing resolves to that name, so a
+    // session that followed the directive byte for byte hit exit 127. The
+    // extension spawns the crate at its own version already; the model is handed
+    // the tool call, never a command it must resolve.
     lines.push(
-      `Entry target — the fragment carrier is opted in: hand the entry to its writer, which computes the name and bytes, and never touch ${record.journal}:`,
+      `Entry target — the fragment carrier is opted in: hand the entry to its writer through the tool below, which computes the name and bytes, and never touch ${record.journal}:`,
     );
     lines.push(
-      `agentic-workflow journal write --kind narrative --session ${record.session} --summary "<your Summary>" [--decisions "<…>"] [--next "<…>"]`,
+      `agentic_workflow_run { "subcommand": "journal write", "args": ["--kind", "narrative", "--session", "${record.session}", "--summary", "<your Summary>", "--decisions", "<…>", "--next", "<…>"] }`,
     );
-    lines.push(`Run at this second it lands at ${record.path}; the CLI never overwrites a collision.`);
+    lines.push(
+      `The extension spawns the runner itself, at this package's own version. Call the tool — never a launcher, never a package name, in a shell. Run at this second it lands at ${record.path}; the CLI never overwrites a collision.`,
+    );
   } else {
     lines.push(`Entry target — append to the end of ${record.journal} (never a past entry):`);
     lines.push(record.path);
@@ -381,10 +389,10 @@ export function composeDirective(record: InvocationRecord): string {
     lines.push("Session facts, from the project's own writer at invocation (`" + label + " render --kind auto`):");
     lines.push(record.facts.trimEnd());
     lines.push("");
-    const close = record.writer === "cli" ? `runner ${WRITER_COMMAND} close` : `${WRITER_SCRIPT} close`;
+    const close = record.writer === "cli" ? `agentic_workflow_run { "subcommand": "${WRITER_COMMAND} close" }` : `${WRITER_SCRIPT} close`;
     lines.push(
       fragment
-        ? `Run the skill's Process steps 3 and 5 with these values: write the entry with your Summary, Decisions and Next through the command above, then run \`${close}\`.`
+        ? `Run the skill's Process steps 3 and 5 with these values: write the entry with your Summary, Decisions and Next through the call above, then run \`${close}\`.`
         : `Run the skill's Process steps 3–5 with these values: render the entry with your Summary, Decisions and Next, save it at the exact target path above, then run \`${close}\`.`,
     );
   } else {
@@ -393,7 +401,7 @@ export function composeDirective(record: InvocationRecord): string {
     );
     lines.push(
       fragment
-        ? "Gather the mechanical facts yourself per the skill's Process step 2 (git), then write the Summary, Decisions and Next through the command above."
+        ? "Gather the mechanical facts yourself per the skill's Process step 2 (git), then write the Summary, Decisions and Next through the call above."
         : "Gather the mechanical facts yourself per the skill's Process step 2 (git), then follow its steps 4–5 to write the Summary, Decisions and Next at the target above.",
     );
   }
