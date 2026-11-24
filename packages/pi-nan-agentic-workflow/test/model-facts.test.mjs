@@ -257,6 +257,30 @@ test("record: the tool-harness residue closes by fact — the four paid entries 
   }
 });
 
+test("record: the phase count is this preset's policy, applied to the recorded facts", async () => {
+  const { NAN_MODEL_CAPABILITIES, NAN_PHASE_THRESHOLDS } = await import("../dist/phase-batching.js");
+  const { MODEL_CAPABILITY_FACTS } = await import("../dist/model-capabilities.generated.js");
+  // The rule restated independently of the implementation: a model without the
+  // executor harness holds one phase, a window at or above the large floor
+  // holds the most, and anything above the small floor holds half as many.
+  const band = (facts) => {
+    if (facts.tool_harness !== "native") return NAN_PHASE_THRESHOLDS.phasesWithoutHarness;
+    return facts.context_window >= NAN_PHASE_THRESHOLDS.largeContextWindow
+      ? NAN_PHASE_THRESHOLDS.phasesOnLargeWindow
+      : NAN_PHASE_THRESHOLDS.phasesOnSmallWindow;
+  };
+  for (const [slug, facts] of Object.entries(MODEL_CAPABILITY_FACTS)) {
+    assert.equal(
+      NAN_MODEL_CAPABILITIES[slug].max_phases_per_context,
+      band(facts),
+      `${slug}: the phase count is the declared thresholds applied to the recorded facts`,
+    );
+  }
+  for (const facts of Object.values(MODEL_CAPABILITY_FACTS)) {
+    assert.ok(facts.context_window >= NAN_PHASE_THRESHOLDS.smallContextWindow, "no routed window sits below the small floor");
+  }
+});
+
 test("record: the artifact names the pin it was derived from, beside the cells", async () => {
   const { MODEL_CAPABILITY_PROVENANCE } = await import("../dist/model-capabilities.generated.js");
   assert.equal(MODEL_CAPABILITY_PROVENANCE.package, "@gtrabanco/pi-nan-provider");
@@ -272,10 +296,13 @@ test("record: the artifact names the pin it was derived from, beside the cells",
 test("docs: the README's capability table quotes the shipped record", async () => {
   const { NAN_MODEL_CAPABILITIES } = await import("../dist/phase-batching.js");
   const doc = readFileSync(new URL("README.md", PACKAGE_ROOT), "utf8");
+  const section = /\*\*The capability record\.\*\*([\s\S]*?)\*\*The policy\.\*\*/u.exec(doc);
+  assert.ok(section, "the README keeps the capability-record section its table lives in");
+  const table = section[1];
   const window = (tokens) => (tokens >= 1_000_000 ? "1M" : `${Math.round(tokens / 1000)}K`);
   const harness = { native: "OpenAI `tools`", xml: "XML", unmeasured: "not documented" };
   for (const [slug, capability] of Object.entries(NAN_MODEL_CAPABILITIES)) {
-    const row = new RegExp(`^\\| \\*\\*${slug.replace(/[.]/gu, "\\.")}\\*\\* \\|.*$`, "mu").exec(doc);
+    const row = new RegExp(`^\\| \\*\\*${slug.replace(/[.]/gu, "\\.")}\\*\\* \\|.*$`, "mu").exec(table);
     assert.ok(row, `the README's capability table has no row for ${slug}`);
     const cells = row[0].split(" | ").map((cell) => cell.replace(/^\||\|$/gu, "").trim());
     assert.equal(cells[1], window(capability.context_window), `${slug}: window cell`);

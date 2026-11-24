@@ -1,26 +1,27 @@
 // src/phase-batching.ts
-// The NaN preset's phase-batching policy (issue #632).
+// The NaN preset's phase-batching policy (issue #632, re-based on the provider's
+// exported facts by issue #695).
 //
 // Two halves, both data-first. The **capability record** states, per routed
-// model, the four facts the policy needs — and every one of them is a fact the
-// recorded catalog already publishes, transcribed here because the runtime
-// reads `src/` and never the snapshot (`test/catalog-parity.test.mjs` pins the
-// pair):
+// model, the four facts the policy needs — and the first three arrive as
+// generated data, never as a transcription (`scripts/derive-model-facts.mjs`
+// writes `src/model-capabilities.generated.ts` from `@gtrabanco/pi-nan-provider`'s
+// exported `NAN_MODEL_FACTS`, and `test/model-facts.test.mjs` pins the pair):
 //
-//   context_window           ← the snapshot's `context`
-//   tool_harness             ← its `capabilities[]`: "Tool calling" is the
-//                              OpenAI `tools` harness the executor path drives,
-//                              "Tool calling (XML)" is not; a model that lists
-//                              neither states nothing (`unmeasured`)
-//   cache_posture            ← its own rate pair: a `cached` rate below the
-//                              `input` rate is `discounted`, an equal one is
-//                              `flat`, and a model that publishes no pair
-//                              states no economics (`unmeasured`)
+//   context_window           ← the provider's `contextWindow`
+//   tool_harness             ← its `toolCalling`: `openai-tools` is the OpenAI
+//                              `tools` harness the executor path drives, `xml`
+//                              is not, and a model that states neither says
+//                              `unmeasured`
+//   cache_posture            ← its `cacheMode` crossed with this repository's
+//                              credit pair: an automatic cache at a cheaper
+//                              cached rate is `discounted`, opt-in or
+//                              unsupported caching bills the input rate
+//                              (`flat`), and a model that states nothing says
+//                              no economics (`unmeasured`)
 //   max_phases_per_context   ← the declared thresholds below, applied to those
-//                              two facts: the executor harness plus the fleet's
-//                              largest window reaches four phases, the smaller
-//                              window reaches two, and a model without the
-//                              harness batches nothing
+//                              two facts: policy, computed here, never recorded
+//                              in the generated artifact
 //
 // The **policy** turns an eligible unit plus that record into the published
 // `phase-batching@1` document (owner: `@gtrabanco/agentic-workflow-schema`).
@@ -47,6 +48,7 @@ import type {
   PhaseBatchingRecommendation,
 } from "@gtrabanco/agentic-workflow-schema";
 
+import { MODEL_CAPABILITY_FACTS } from "./model-capabilities.generated.js";
 import { PROVIDER } from "./preset.js";
 
 /**
@@ -54,9 +56,14 @@ import { PROVIDER } from "./preset.js";
  * window bounds come from the fleet itself (pinned by the sibling parity
  * suite), and the phase counts are this preset's posture — revisable by the
  * tier-cost corpus (#631) when the config key's default-on trigger is met.
+ *
+ * `largeContextWindow` is a **band floor**: a window of at least one million
+ * tokens holds four phases. It is the fleet's largest window rounded down to a
+ * whole million (the provider publishes the exact 2^20 value, `1_048_576`),
+ * which is why a model at exactly `1_000_000` still reaches the top count.
  */
 export const NAN_PHASE_THRESHOLDS = Object.freeze({
-  /** The fleet's largest recorded context window, in tokens. */
+  /** The window at or above which one context holds the most phases, in tokens. */
   largeContextWindow: 1_000_000,
   /** The fleet's smallest recorded context window, in tokens. */
   smallContextWindow: 262_144,
@@ -68,26 +75,6 @@ export const NAN_PHASE_THRESHOLDS = Object.freeze({
   phasesWithoutHarness: 1,
 });
 
-/** The transcribed facts, one row per billed model, in `NAN_MODELS` order. */
-const RECORDED_FACTS: Readonly<
-  Record<string, Omit<ModelPhaseCapability, "max_phases_per_context">>
-> = {
-  // Unlimited cluster models: XML tool calling only, no published rate pair.
-  "qwen3.6": { context_window: 262_144, tool_harness: "xml", cache_posture: "unmeasured" },
-  gemma4: { context_window: 262_144, tool_harness: "xml", cache_posture: "unmeasured" },
-  // Quota tier: the four executor rungs document the OpenAI `tools` harness.
-  "deepseek-v4-flash": { context_window: 1_000_000, tool_harness: "native", cache_posture: "discounted" },
-  "glm5.3-flash": { context_window: 1_000_000, tool_harness: "native", cache_posture: "discounted" },
-  "qwen3.8-flash": { context_window: 1_000_000, tool_harness: "xml", cache_posture: "discounted" },
-  "mimo-v2.6-flash": { context_window: 1_000_000, tool_harness: "native", cache_posture: "discounted" },
-  "glm5.3": { context_window: 1_000_000, tool_harness: "native", cache_posture: "discounted" },
-  // Paid / external: the snapshot names no tool-calling format for them.
-  "kimi-k3.1-pro": { context_window: 1_000_000, tool_harness: "unmeasured", cache_posture: "discounted" },
-  "qwen3.8-max": { context_window: 1_000_000, tool_harness: "unmeasured", cache_posture: "discounted" },
-  "deepseek-v4-pro": { context_window: 1_000_000, tool_harness: "unmeasured", cache_posture: "discounted" },
-  hy4: { context_window: 1_000_000, tool_harness: "unmeasured", cache_posture: "discounted" },
-};
-
 /** The phases a record's two facts earn, by the declared thresholds. */
 function phasesFor(facts: { tool_harness: string; context_window: number }): number {
   if (facts.tool_harness !== "native") return NAN_PHASE_THRESHOLDS.phasesWithoutHarness;
@@ -96,12 +83,18 @@ function phasesFor(facts: { tool_harness: string; context_window: number }): num
     : NAN_PHASE_THRESHOLDS.phasesOnSmallWindow;
 }
 
-/** The capability record: one frozen entry per billed model. */
+/** The capability record: one frozen entry per billed model, made of the
+ *  generated artifact's three facts plus this preset's phase count. */
 export const NAN_MODEL_CAPABILITIES: Readonly<Record<string, ModelPhaseCapability>> = Object.freeze(
   Object.fromEntries(
-    Object.entries(RECORDED_FACTS).map(([slug, facts]) => [
+    Object.entries(MODEL_CAPABILITY_FACTS).map(([slug, facts]) => [
       slug,
-      Object.freeze({ ...facts, max_phases_per_context: phasesFor(facts) }),
+      Object.freeze({
+        context_window: facts.context_window,
+        tool_harness: facts.tool_harness,
+        cache_posture: facts.cache_posture,
+        max_phases_per_context: phasesFor(facts),
+      }),
     ]),
   ),
 );
