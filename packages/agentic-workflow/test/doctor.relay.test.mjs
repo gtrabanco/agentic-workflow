@@ -77,12 +77,15 @@ function fakeOps({ env = {}, registered = "path", skills = ["relay", "relay-runn
   if (embedded) {
     files[`${EMBEDDED}/package.json`] = RELAY_MANIFEST;
     dirs[`${EMBEDDED}/skills`] = skills;
-    for (const skill of skills) dirs[`${EMBEDDED}/skills/${skill}`] = ["SKILL.md"];
+    for (const skill of skills) {
+      dirs[`${EMBEDDED}/skills/${skill}`] = ["SKILL.md"];
+      files[`${EMBEDDED}/skills/${skill}/SKILL.md`] = `# ${skill}\n`;
+    }
   }
   if (registered === "npm" && embedded) {
     // A declared npm spec resolves into Pi's own install tree, not the shipped one.
     files[`${AGENT_DIR}/npm/node_modules/${RELAY_PACKAGE}/package.json`] = RELAY_MANIFEST;
-    for (const skill of skills) dirs[`${AGENT_DIR}/npm/node_modules/${RELAY_PACKAGE}/skills/${skill}`] = ["SKILL.md"];
+    for (const skill of skills) files[`${AGENT_DIR}/npm/node_modules/${RELAY_PACKAGE}/skills/${skill}/SKILL.md`] = `# ${skill}\n`;
   }
   if (socket) files[SOCKET] = "";
 

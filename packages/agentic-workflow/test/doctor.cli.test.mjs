@@ -167,8 +167,8 @@ test("--check narrows the envelope to one row and keeps the exit contract", { ti
     const envelope = JSON.parse(result.stdout);
     assert.equal(envelope.rows.length, 1, "one row, never the whole inventory");
     assert.equal(envelope.rows[0].id, "relay");
-    assert.equal(envelope.inventory.rows, 1, "the printed row count is the printed population");
-    assert.equal(envelope.inventory.check, "relay");
+    assert.equal(envelope.inventory.rows, CHECK_PROBES.length, "the inventory's size stays the documented population");
+    assert.equal(envelope.inventory.check, "relay", "the envelope says which id it was narrowed to");
     assert.equal(result.status, envelope.exitCode, "the exit code is the narrowed envelope's own");
     const sum =
       envelope.summary.ok +
@@ -182,7 +182,7 @@ test("--check narrows the envelope to one row and keeps the exit contract", { ti
 
     const block = runIn({ cwd: root, env: withoutPiWeb() }, "doctor", "--check", "relay");
     const lines = block.stdout.split("\n").filter(Boolean);
-    assert.match(lines[0], /^DOCTOR — tool doctor \(doctor@1\) · 1 surfaces/u);
+    assert.match(lines[0], /^DOCTOR — tool doctor \(doctor@1\) · 1 surface · /u);
     assert.equal(lines.filter((line) => /^(ok|MISS|MISMATCH|UNARMED|UNREACHABLE|N\/A)\s{2,}/u.test(line)).length, 1);
   } finally {
     rmSync(root, { recursive: true, force: true });
