@@ -360,6 +360,7 @@ the changeset that ships with the code.
 - **P7** — 2026-11-24, the changeset, the emitted projection and the journal fragment · `feaea16a7`.
 - **P8** — 2026-11-24, the differential, the gate (G1) and the ledger closure · this commit.
 - **E18** — 2026-11-24, the three-environment battery re-run after `615237d52`: `ok` prints `PI WEB session · daemon <socket> · @jmfederico/pi-relay 0.1.0 · skills relay, relay-runner` with no route, `N/A` prints the route, `UNREACHABLE` keeps it inside the advisory — the block names a hand-off only where one is due.
+- **P9** — 2026-11-24, the branch pushed (`git push -u origin feat/705-tool-doctor-relay-check`: the pre-push hook ran the offline gate, `local-gate: PASS — 18 step(s) in 647s`) and PR #714 opened against `main` with the full evidence pack; `bun packages/agentic-workflow/bin/turn-contract.mjs --finished` · `TURN-CONTRACT ok` (box 4: pushed branch + open pull request whose head is local HEAD) · this commit.
 - **G2** — 2026-11-24, HEAD `615237d52`, `bun scripts/local-gate.mjs --jobs 4` · exit 0 · **`local-gate: PASS — 20 step(s) in 860s`** (root-suite 338s, crate-suite-bun 191s, crate-suite-node 242s, pi-node-compat 72s, schema-node-compat 13s, docs-generated-projection, version-parity-content, skill-context-budgets, journal-carrier-check, log-immutability, secret-scan, worktree-guard, red-first). This line is the post-gate receipt: the ledger closure and the status flips above are docs-only over the gated bytes. The diff-guard reports the cumulative unit at 1,400 lines / 23 files; the per-commit slices are 473 (ledger cut), 359 (red suite), 225 (probe), 111 (row and filter), 77 (marker extraction) and under 70 each for the state lands — no slice shrinks a diff by deleting a comment, a test or a doc (`D1`, `S1`).
 - **D11** — 2026-11-24, the absent-capability answer carries no advisory (the route lives in evidence and is rendered), so a healthy host's `summary.advisories` stays zero; O3's cell corrected before verification.
 - **D12** — 2026-11-24, shared facts are read only when the selected rows declare them (`probe.needs`), amending D4's “same cost” with the measured 3.3s → 0.24s.
@@ -368,9 +369,12 @@ the changeset that ships with the code.
 
 ## Next
 
-Nothing in the unit is open: every obligation verified, the gate green. The next
-action is the operator's external verification of the diff, then the merge gate on
-the PR this unit's branch opens.
+Nothing in the unit is open: 17/17 obligations verified, the gate green, the branch
+pushed and PR #714 open against `main` (the roadmap row carries its URL;
+`roadmap check` reads a doc's own PR URL as the settle signal, so the URL lands
+in this doc at the settle step, never before it). The next action is the operator's external verification of the
+diff, then the merge gate (`/audit-pr 714`), then the roadmap settle — the row stays
+`in-progress` until the merge.
 
 ## References
 
@@ -381,6 +385,8 @@ the PR this unit's branch opens.
 - Issue [#611](https://github.com/gtrabanco/agentic-workflow/issues/611) — the `dogfooding-vehicle` row, the row-after-row precedent this unit follows (probe module + own suite + inventory row).
 - Issue [#703](https://github.com/gtrabanco/agentic-workflow/issues/703) — the live battery that reads this envelope; one more row rides its report at zero extra cost.
 - Issue [#669](https://github.com/gtrabanco/agentic-workflow/issues/669) — `/flow` composes Relay legs and will consult this same capability signal.
+- PR #714 — this unit's pull request against `main` (URL in the roadmap row); it
+  closes #705.
 
 ## Branch
 
