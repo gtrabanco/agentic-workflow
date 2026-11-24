@@ -41,7 +41,7 @@ import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import fs from "node:fs";
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { test } from "node:test";
@@ -488,6 +488,75 @@ test("the battery reads the ceremony profile and the named unit's recorded tier"
   const absent = await buildBattery(fixture({ guide: false }), { doctor: async () => DOCTOR_ENVELOPE });
   assert.equal(absent.ceremony.adoption, null, "no guide section is no declared profile");
   assert.equal(absent.ceremony.tier, null, "no unit named is no tier, never an assumed one");
+});
+
+/* ------------------------------------------------- the battery's skills tree */
+
+/** A consumer-shaped checkout: the fixture's authoring `skills/` tree moved to the layout named. */
+function relocatedFixture(destination) {
+  const dir = fixture();
+  mkdirSync(path.dirname(path.join(dir, destination)), { recursive: true });
+  renameSync(path.join(dir, "skills"), path.join(dir, destination));
+  return dir;
+}
+
+test("the battery locates the installed skills tree through the skills CLI's documented install dirs", async () => {
+  // The skills CLI's cross-agent target — a shape the authoring root never has.
+  const agents = await buildBattery(relocatedFixture(".agents/skills"), { doctor: async () => DOCTOR_ENVELOPE });
+  assert.equal(agents.skills.present, true);
+  assert.equal(agents.skills.source, "agents");
+  assert.equal(agents.skills.count, 2);
+  assert.equal(agents.runner.pin, "4.10.1", "the pin is read inside the located tree, never the project root");
+  assert.equal(agents.runner.pinMatch, "match");
+  assert.match(renderBattery(agents), /from agents/u);
+
+  const claude = await buildBattery(relocatedFixture(".claude/skills"), { doctor: async () => DOCTOR_ENVELOPE });
+  assert.equal(claude.skills.source, "claude-code");
+  assert.equal(claude.runner.pin, "4.10.1");
+});
+
+test("a declared skills root wins over the conventions, and a relative one resolves against the project root", async () => {
+  const dir = relocatedFixture(".claude/skills");
+  mkdirSync(path.join(dir, "installed-skills", "aw-doctor"), { recursive: true });
+  writeFileSync(
+    path.join(dir, "installed-skills", "aw-doctor", "SKILL.md"),
+    "---\nname: aw-doctor\nuser-invocable: true\ndescription: >\n  fixture\n---\n\nbody\n",
+  );
+  const receipt = await buildBattery(dir, {
+    doctor: async () => DOCTOR_ENVELOPE,
+    env: { AGENTIC_WORKFLOW_SKILLS_ROOT: path.join(dir, ".claude", "skills") },
+    skillsRoot: "installed-skills",
+  });
+  assert.equal(receipt.skills.source, "declared", "an explicit declaration outranks every discovered tree");
+  assert.equal(receipt.skills.count, 1);
+  assert.equal(receipt.runner.pinMatch, "unknown", "a tree without the pin does not invent a match");
+  assert.equal(receipt.degradations.map((item) => item.code).includes("pin-absent"), true);
+});
+
+test("the host's AGENTIC_WORKFLOW_SKILLS_ROOT declaration outranks the convention dirs", async () => {
+  const dir = relocatedFixture(".claude/skills");
+  const receipt = await buildBattery(dir, {
+    doctor: async () => DOCTOR_ENVELOPE,
+    env: { AGENTIC_WORKFLOW_SKILLS_ROOT: path.join(dir, ".claude", "skills") },
+  });
+  assert.equal(receipt.skills.source, "host");
+  assert.equal(receipt.skills.count, 2);
+  assert.equal(receipt.degradations.length, 0, "a resolved declaration and a present pin degrade nothing");
+});
+
+test("an unresolved skills tree is a named degradation that says how to declare one", async () => {
+  const dir = fixture();
+  rmSync(path.join(dir, "skills"), { recursive: true, force: true });
+  const receipt = await buildBattery(dir, { doctor: async () => DOCTOR_ENVELOPE, env: {} });
+  assert.equal(receipt.skills.present, false);
+  assert.equal(receipt.skills.source, null);
+  assert.equal(receipt.runner.pin, null);
+  assert.equal(receipt.runner.pinMatch, "unknown");
+  const absent = receipt.degradations.find((item) => item.code === "skills-absent");
+  assert.ok(absent, "the absence is one named degradation, not a silent zero");
+  assert.match(absent.detail, /--skills-root/u);
+  assert.match(absent.detail, /AGENTIC_WORKFLOW_SKILLS_ROOT/u);
+  assert.match(renderBattery(receipt), /no skills tree found/u);
 });
 
 /* -------------------------------------------------------------- the upstream */
