@@ -391,6 +391,19 @@ fused pass are this document's `## Specs` closure and
   `workflow-doctor bogus` · exit 2 with the op list and its candidates ·
   `publish` without `--yes` · exit 2.
 
+- **E13** — 2026-12-23, the evolution-regression gate over the push range: `runner dimension-regression` at
+  base `fa471cc06` · exit 1 ·
+  `missing-reverification-evidence` — the range touches 1 review surface,
+  `docs/workflow/GATE_INVENTORY.md`, because this unit claims four new
+  normative surfaces there. The dimension set itself is unchanged: no
+  `skills/review-*`, no product-audit dimension and no audit producer is added,
+  removed or re-worded (the doctor is a command family and a skill, not a review
+  axis), which is what the reverification below records.
+- **E14** — 2026-12-23, the same gate re-run with the receipt above in place: `runner dimension-regression` at base
+  `fa471cc06` · exit 0 · `clean` · `evidence | docs/fix/703-workflow-doctor/SPEC.md` ·
+  `head | 20 dimensions` against `base | 20 dimensions` — the set is unchanged,
+  which is the reverification the gate asks for over the one review surface this
+  unit touches (`docs/workflow/GATE_INVENTORY.md`).
 - **G1** — 2026-12-23, HEAD `6db674a7f`, `bun scripts/local-gate.mjs` · exit 0 ·
   **`local-gate: PASS — 20 step(s) in 724s`** — every step green, including
   `root-suite` (the bun-first pool), `crate-suite-bun`, `pi-node-compat`
