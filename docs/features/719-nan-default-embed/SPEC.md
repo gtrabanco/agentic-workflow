@@ -213,7 +213,7 @@ Each bullet carries its validator, its `(Implements: …)` link and its read set
 - [x] P4 — Unit verification: run the touched packages' full suites, the local gate, the no-crate-diff pin and the `residual-classify` inventory receipt (O5/O7, PE-007/PE-008) (validator: `bun scripts/local-gate.mjs` exits 0)
   (Implements: S3)
   - Relevant files: packages/pi-agentic-workflow/, packages/pi-nan-agentic-workflow/, docs/features/719-nan-default-embed/
-- P5 — Release settle: open the PR closing #719, then upsert the roadmap row via the crate's writer (`agentic-workflow roadmap rowUpsert`, status `done · [#N](<pr-url>)`, every other cell preserved) (validator: `bun packages/agentic-workflow/bin/agentic-workflow.mjs roadmap-settle` exits 0)
+- [x] P5 — Release settle: open the PR closing #719, then upsert the roadmap row via the crate's writer (`agentic-workflow roadmap rowUpsert`, status `done · [#N](<pr-url>)`, every other cell preserved) (validator: `bun packages/agentic-workflow/bin/agentic-workflow.mjs roadmap-settle` exits 0)
   (Implements: S1, S2)
   - Relevant files: docs/ROADMAP.md, CHANGELOG.md
 
@@ -287,6 +287,8 @@ ledger (grammar: `findings-table@1`).
 - **E11** — 2026-11-25 00:06, O5/PE-008 · `bun scripts/local-gate.mjs` → `PASS — 20 step(s) in 852s`. Two gate rows the unit had to satisfy: `version-parity-content` demanded the release intent, satisfied by the new `.changeset/719-nan-default-embed.md` (linted `ok`); `check-skill-context --documents` measured the package README at 1,392 lines / 19,144 est, so `linesMax` re-pinned 1,368 → 1,392 in `docs/workflow/SKILL_CONTEXT_BUDGETS.json` with its `sources` row, the manifest's own recorded-edit precedent.
 - **E12** — 2026-11-25 00:06, O7 · `agentic-workflow residual-classify --inventory --base <merge-base>` → exit 0; 10 `used` (`live-consumer`) + 1 `andamio` (`recorded-planned-consumer`, the suite's own file — the classifier's declared state for a carrier with a recorded planned consumer) and **no `orphan`, no `half-built`**. O1–O7 are all `verified`.
 - **P3** — 2026-11-25 00:06, P1–P4 implemented and committed, tasks ticked (`92f325e9b`, `383e21659`, `21ac557d5`, `3d7261d21`, `1d43d3b39`, `acb68e2fc`) · next: P5 (release settle — PR closing #719, then the roadmap row).
+- **E13** — 2026-11-25 00:20, P5 · `git push -u origin feat/719-nan-embedding-default-index-tool` → the pre-push hook's own gate `PASS — 18 step(s) in 450s`; `gh pr create` → PR [#720](https://github.com/gtrabanco/agentic-workflow/pull/720) against `main`, body carrying `Closes #719`. `agentic-workflow roadmap docs/ROADMAP.md rowUpsert` → `Receipt: pass · Before: 00a1704d · After: 1a492e1b`, the row now `done · [#720](…)` with `dependsOn` and `description` preserved verbatim; `agentic-workflow roadmap-settle` → `verdict: PASS · 278 unit docs checked · violations: 0`.
+- **P4** — 2026-11-25 00:20, unit complete: P1–P5 ticked, PR open, roadmap settled · next: `/review-change` on the changed HEAD (this unit's triage carries a `review` step).
 
 ## Next
 
@@ -295,6 +297,7 @@ Hand off execution: `→ Next: /execute-phase 719-nan-default-embed P1 (tier: ch
 ## References
 
 - Tracked issue #719 (closes via `Closes #719`).
+- PR: https://github.com/gtrabanco/agentic-workflow/pull/720
 - Companion fix #718 (`docs/ROADMAP.md:244`) — the embed-pass defects, parallel-safe.
 - Pre-spec: `docs/pre-spec/2026-11-24-719-nan-default-embed.md`.
 - Memory (Engram topic `aw-index-partial-embeddings`, project `sosfelinosbasti`;
