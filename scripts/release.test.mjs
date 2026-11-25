@@ -30,6 +30,7 @@ import { fileURLToPath } from "node:url";
 import test from "node:test";
 
 import { contributorLines, previousReleaseTag } from "./release.mjs";
+import { reboundContentHashes } from "../packages/pi-agentic-workflow/scripts/projection.mjs";
 import { tempRoot } from "./temp-root.mjs";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -738,7 +739,7 @@ test("publish-stage stamps every skill frontmatter at the canary it publishes, a
     assert.match(md, new RegExp(`^version: ${canary.replace(/\./gu, "\\.")}$`, "m"), `${name} cites the canary it ships with`);
     assert.doesNotMatch(md, /^version: 0\.9\.0$/m, "the previous train is gone, not kept beside the new one");
   }
-  assert.match(result.stderr, new RegExp(`2 skill frontmatter\\(s\\) at ${canary.replace(/\./gu, "\\.")}`), "the stage reports what it wrote");
+  assert.match(result.stderr, new RegExp(`2 skill frontmatter\\(s\\) \\+ \\d+ projection hash\\(es\\) rebound at ${canary.replace(/\./gu, "\\.")}`), "the stage reports what it wrote");
 });
 
 test("publish-stage leaves an undeclared sibling's version and its pin alone", () => {
@@ -1085,6 +1086,105 @@ test("plan never rewrites the templates, and a tree without them is a clean zero
   assert.match(applied.stdout, /templates: 0 unit-doc provenance stamp\(s\) stamped/, "a project without the template scaffold is not a failure");
 });
 
+// Issue #723: the pin lives inside the span a projection rule hash-binds, so
+// every stamp (stable `apply`, canary `publish-stage`) rewrites bytes the pi
+// bundle's projection binds by digest. The stampers must re-derive that binding
+// from the projection engine itself — the digests its own refusal prints — and
+// rewrite the manifest beside the pin they stamped.
+
+const PROJECTION_MANIFEST_REL = "packages/pi-agentic-workflow/projection-manifest.json";
+
+/** The stale-stamp reproducer: a runner pin file whose pin line sits inside a
+ *  pointerized `## The invocation` section, plus a manifest hash-bound to the
+ *  PRE-stamp body — exactly the shape the committed tree carries since #679. */
+function withProjectionPin(root, pin = "0.0.1") {
+  const file = path.join(root, RUNNER_PIN_REL);
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  fs.mkdirSync(path.join(root, path.dirname(PROJECTION_MANIFEST_REL)), { recursive: true });
+  const text = [
+    "# The pin",
+    "",
+    "## The invocation",
+    "",
+    "The pinned invocation; stamped at release time:",
+    "",
+    "```text",
+    "runner-pin@1",
+    "field | value",
+    `invocation | bunx @gtrabanco/agentic-workflow@${pin} <subcommand> [args...]`,
+    "```",
+    "",
+    "## The set",
+    "",
+    "Fallback candidates live here, outside the removed section.",
+    "",
+  ].join("\n");
+  fs.writeFileSync(file, text);
+  const rule = {
+    id: "fixture-invocation-not-shipped",
+    op: "pointerize",
+    source: RUNNER_PIN_REL,
+    selector: { path: ["The pin", "The invocation"] },
+    enforcingCommand: "runner resolve",
+    // The digest the engine itself computes over the PRE-stamp body.
+    contentHash: reboundContentHashes(text, [{
+      id: "fixture-invocation-not-shipped",
+      op: "pointerize",
+      source: RUNNER_PIN_REL,
+      selector: { path: ["The pin", "The invocation"] },
+      enforcingCommand: "runner resolve",
+      contentHash: "",
+    }], RUNNER_PIN_REL)[0].contentHash,
+  };
+  fs.writeFileSync(
+    path.join(root, PROJECTION_MANIFEST_REL),
+    JSON.stringify({ contract: "agentic-workflow/projection-manifest", version: 1, rules: [rule] }, null, 2) + "\n",
+  );
+  return file;
+}
+
+const readManifest = (root) => JSON.parse(fs.readFileSync(path.join(root, PROJECTION_MANIFEST_REL), "utf8"));
+
+test("apply rebinds the projection digest the pin stamp invalidated (issue #723)", () => {
+  const root = fixture({ changesets: { "a.md": ["agentic:minor"] } });
+  withProjectionPin(root, "0.0.1");
+  const applied = run(["apply", "--root", root, "--base", "1.0.0", "--channel", "stable", "--date", "2026-11-12"]);
+  assert.equal(applied.status, 0, applied.stderr || applied.stdout);
+  assert.match(applied.stdout, /projection: rebound 1 contentHash/, "the rebind is reported, never silent");
+  // The rebound digest is the ENGINE's own for the stamped bytes — the same
+  // value the bundle's hash-mismatch refusal prints — and the bundle now
+  // applies clean against the stamped source.
+  const stamped = fs.readFileSync(path.join(root, RUNNER_PIN_REL), "utf8");
+  const expected = reboundContentHashes(stamped, [readManifest(root).rules[0]], RUNNER_PIN_REL)[0].contentHash;
+  assert.equal(readManifest(root).rules[0].contentHash, expected);
+});
+
+test("a stamp that leaves the bound bytes alone rebinds nothing", () => {
+  const root = fixture({ changesets: { "a.md": ["agentic:minor"] } });
+  withProjectionPin(root, "1.1.0");
+  const applied = run(["apply", "--root", root, "--base", "1.0.0", "--channel", "stable", "--date", "2026-11-12"]);
+  assert.equal(applied.status, 0, applied.stderr || applied.stdout);
+  assert.doesNotMatch(applied.stdout, /projection: rebound/, "no digest moved, so no rebind line");
+  assert.match(applied.stdout, /runner: .*already carried it/, "the pin was already at the train version");
+});
+
+test("publish-stage rebinds the staged digest and prints the restore that covers the manifest", () => {
+  const root = fixture({ changesets: { "a.md": ["agentic:minor"] } });
+  withProjectionPin(root, "1.0.0");
+  const staged = run(["publish-stage", "--root", root, "--base", "1.0.0", "--channel", "canary", "--date", "2026-11-12"]);
+  assert.equal(staged.status, 0, staged.stderr || staged.stdout);
+  const prerelease = / at (\d+\.\d+\.\d+-canary\.\d{8}\.\d+)/u.exec(staged.stderr)?.[1];
+  assert.ok(prerelease, staged.stderr);
+  assert.match(staged.stderr, /\+ 1 projection hash\(es\) rebound/u, "the stage reports the rebound it wrote");
+  const stamped = fs.readFileSync(path.join(root, RUNNER_PIN_REL), "utf8");
+  const expected = reboundContentHashes(stamped, [readManifest(root).rules[0]], RUNNER_PIN_REL)[0].contentHash;
+  assert.equal(readManifest(root).rules[0].contentHash, expected, "the staged manifest binds the canary-stamped bytes");
+
+  const planned = run(["plan", "--root", root, "--base", "1.0.0", "--channel", "canary", "--date", "2026-11-12"]);
+  assert.equal(planned.status, 0, planned.stderr || planned.stdout);
+  assert.match(planned.stdout, /git checkout -- packages\/\*\/package\.json packages\/pi-agentic-workflow\/projection-manifest\.json/, "the restore the cut prints covers the rebound manifest");
+});
+
 // ── The runner pin (feature 91, issue #352) ────────────────────────────────
 // `skills/runner-contract/references/RUNNER.md` carries the repository's only
 // runner version literal. A release stamps it, and a canary stages it in-cut
@@ -1152,10 +1252,10 @@ test("publish-stage stages the canary pin and prints the restore that includes i
 
   const planned = run(["plan", "--root", root, "--base", "1.0.0", "--channel", "canary", "--date", "2026-11-12"]);
   assert.equal(planned.status, 0, planned.stderr || planned.stdout);
-  assert.match(planned.stdout, /git checkout -- packages\/\*\/package\.json skills\/runner-contract\/references\/RUNNER\.md/, "the restore the cut prints covers the staged pin");
+  assert.match(planned.stdout, /git checkout -- packages\/\*\/package\.json packages\/pi-agentic-workflow\/projection-manifest\.json skills\/runner-contract\/references\/RUNNER\.md/, "the restore the cut prints covers the staged pin and the rebound digest beside it");
 });
 
-// #710 S2/S4: the restore the stage prints is the operator's and the publish
+// Issue #710 S2/S4: the restore the stage prints is the operator's and the publish
 // job's copy of the same fact. A skill stamped by the stage but missing from the
 // restore line would be committed as a prerelease — the stamp would bound the
 // cut in code and leak into the repository in practice.
@@ -1169,5 +1269,5 @@ test("the restore publish-stage prints covers the skill stamps it just wrote", (
   assert.match(staged.stderr, /\+ 2 skill frontmatter\(s\)/u, "the stage reports the third family it wrote");
   const planned = run(["plan", "--root", root, "--base", "1.0.0", "--channel", "canary", "--date", "2026-11-12"]);
   assert.equal(planned.status, 0, planned.stderr || planned.stdout);
-  assert.match(planned.stdout, /git checkout -- packages\/\*\/package\.json skills\/runner-contract\/references\/RUNNER\.md skills\/\*\/SKILL\.md/, "the restore names every path the stage wrote");
+  assert.match(planned.stdout, /git checkout -- packages\/\*\/package\.json packages\/pi-agentic-workflow\/projection-manifest\.json skills\/runner-contract\/references\/RUNNER\.md skills\/\*\/SKILL\.md/, "the restore names every path the stage wrote — versions, the rebound digest, the pin and the stamps");
 });

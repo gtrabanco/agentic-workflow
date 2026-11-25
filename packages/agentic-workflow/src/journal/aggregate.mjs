@@ -6,7 +6,9 @@
  * consumed fragments, and refuses anything ambiguous instead of guessing. The
  * module carries no hosting-platform dependency: the example
  * push-to-default-branch workflow and the documented `post-receive` hook both
- * run the same `journal aggregate` command unchanged (AC5).
+ * run the same `journal aggregate` command, each in its own CI context — the
+ * workflow in the runner's `CI`, the hook with `CI=true` — and a non-CI run
+ * is refused before the first byte moves (issue #706, AC5).
  *
  * The decisions worth knowing, each pinned by `test/journal.test.mjs`:
  *
@@ -56,6 +58,22 @@ export class JournalAggregateError extends Error {
 
 /** The project journal, relative to the project root. */
 export const DEFAULT_LOG = "docs/LOGS.md";
+
+/**
+ * The aggregator's execution context: the merge-to-main job, never a local
+ * shell (issue #706). A local run consumes every pending fragment — including
+ * other sessions' work — and each session used to improvise the identity and
+ * the filter. The CLI refuses before the first byte moves; the library stays
+ * callable so a test or an embedding job can drive it directly.
+ *
+ * `CI` is the generic convention every CI runner sets (`CI=true` by default);
+ * naming a specific host here would break the crate's host-neutral contract
+ * (issue #405 AC5).
+ */
+export function isCiRun(env = process.env) {
+  const value = String(env?.CI ?? "").toLowerCase();
+  return value === "true" || value === "1";
+}
 
 /**
  * The entry slot the grammar names: one conversation, one kind. The timestamp

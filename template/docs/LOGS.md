@@ -6,6 +6,15 @@ out to do, what was decided and *why*, and where to resume.
 
 **How it gets written**
 
+**With the fragment carrier** (`.agentic-workflow/journal/` present — issue
+#405): the entry is a new fragment under that carrier, written by
+`/log-session`, the auto-log or the headless writer, and the merge-to-main
+aggregator is the **only** writer of this file; a direct append is refused by
+`session-close close`. See
+[`.agentic-workflow/journal.md`](../.agentic-workflow/journal.md).
+
+**Without the carrier, the direct doors are:**
+
 - **Automatically (free)** — the SessionEnd hook in `.claude/` appends a
   *mechanical* entry (timestamp, branch, commits, files) on every `/clear` and
   exit. No model, no tokens. See [`.claude/README.md`](../.claude/README.md).

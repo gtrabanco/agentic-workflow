@@ -185,3 +185,21 @@ test("374 the crate's entry codec carries the schema package's contract ids verb
   assert.equal(crate.JOURNAL_ENTRY_VERSION, schema.JOURNAL_ENTRY_VERSION);
   assert.deepEqual(crate.JOURNAL_ENTRY_KINDS, schema.JOURNAL_ENTRY_KINDS);
 });
+
+// ── the 2026-11-25 correction batch (EXTERNAL VERIFY B3–B5) ──────────────
+
+// A consumer copying any of the three wiring surfaces gets a command that runs:
+// each names the CI condition the aggregate door enforces, so a copied recipe is
+// never refused for a context its own doc omitted.
+test("706 no sibling wiring surface still asserts the pre-#706 invocation parity", () => {
+  const prose = (text) => text.split("\n").map((line) => line.replace(/^\s*(?:\*|#)\s?/u, "")).join(" ");
+  const crate = prose(read("packages", "agentic-workflow", "src", "journal", "aggregate.mjs"));
+  assert.doesNotMatch(crate, /run the same `journal aggregate` command unchanged/u, "the module doc states the CI context, not the pre-#706 'unchanged' parity");
+  assert.match(crate, /CI/u, "the module doc names the CI condition a run needs");
+  const bin = prose(read("packages", "agentic-workflow", "bin", "agentic-workflow.mjs"));
+  assert.doesNotMatch(bin, /`journal aggregate` unchanged/u, "the CLI header states the CI context, not the pre-#706 'unchanged' parity");
+  assert.match(bin, /CI=true/u, "the CLI header names the hook's CI=true context");
+  const example = prose(read("template", ".github", "workflows", "agentic-workflow-journal.yml.example"));
+  assert.doesNotMatch(example, /the same command a post-receive hook runs/u, "the wiring example states the CI context, not the pre-#706 parity");
+  assert.match(example, /CI=true/u, "the wiring example names the CI condition both doors need");
+});
