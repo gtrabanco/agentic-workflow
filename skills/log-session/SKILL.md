@@ -6,12 +6,14 @@ argument-hint: "[note to prepend to the entry]"
 author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
-  Append a structured entry to the project's session log (`docs/LOGS.md`):
-  what was done this session, files touched, decisions taken, and the next
-  step — so the next session (or another person) can pick up the thread
-  without re-reading git history. Run it before `/clear`, before closing your
-  agent session, or at any natural stopping point. Model-agnostic: the skill
-  inherits whatever model and effort your agent session is already using.
+  Write a structured entry to the project's session log — a new fragment under
+  `.agentic-workflow/journal/` when that carrier exists (the aggregator owns
+  `docs/LOGS.md`), otherwise appended to `docs/LOGS.md`: what was done this
+  session, files touched, decisions taken, and the next step — so the next
+  session (or another person) can pick up the thread without re-reading git
+  history. Run it before `/clear`, before closing your agent session, or at any
+  natural stopping point. Model-agnostic: the skill inherits whatever model and
+  effort your agent session is already using.
   Triggers: "log this
   session", "log-session", "write a session log", "journal what we did",
   "record this session before I clear", "save the session summary".

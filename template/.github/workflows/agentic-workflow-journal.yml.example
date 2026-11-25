@@ -61,8 +61,11 @@ jobs:
           count="$(gh pr list --head "$WEEK_BRANCH" --state open --json number --jq 'length' 2>/dev/null || echo 0)"
           echo "pr=$count" >> "$GITHUB_OUTPUT"
 
-      # The runner crate is forge-free; the same command a post-receive hook
-      # runs. The forge-free aggregator appends the pending fragments to
+      # The runner crate is forge-free; the same command the documented
+      # post-receive hook runs, each in its own CI context (this runner sets
+      # `CI`, the hook sets `CI=true`, issue #706) — a non-CI run is refused
+      # before the first byte moves. The forge-free aggregator appends the
+      # pending fragments to
       # docs/LOGS.md newest-first, deletes the consumed fragments, refuses
       # anything ambiguous with exit 2 (a refusal leaves everything in place —
       # fragments are never lost, only delayed). An already-consumed fragment

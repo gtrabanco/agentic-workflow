@@ -45,7 +45,15 @@ const BASE_ENTRY = `## 2026-11-01T10:00:00Z — main — manual
 `;
 
 function run(cwd, args, env = {}) {
-  return spawnSync("node", [script, ...args], { cwd, encoding: "utf8", env: { ...process.env, ...env } });
+  return spawnSync("node", [script, ...args], { cwd, encoding: "utf8", env: { ...process.env, GITHUB_ACTIONS: "true", ...env } });
+}
+
+/** A local shell: no GitHub Actions context reaches the child (issue #706). */
+function runLocal(cwd, args, env = {}) {
+  const local = { ...process.env, ...env };
+  delete local.GITHUB_ACTIONS;
+  delete local.GITHUB_ACTOR;
+  return spawnSync("node", [script, ...args], { cwd, encoding: "utf8", env: local });
 }
 
 /** One `git` invocation. Every commit-carrying call passes its identity with
@@ -157,11 +165,11 @@ test("PASS: a journal past spawnSync's 1 MiB default maxBuffer still reads (the 
 // Range checks against throwaway repositories
 // ---------------------------------------------------------------------------
 
-test("PASS: a push that touches neither the log nor the carrier", (t) => {
+test("PASS: a local push that touches neither the log nor the carrier", (t) => {
   const fx = fixture(t);
   fs.writeFileSync(path.join(fx.root, "untouched.txt"), "changed\n");
   fx.commit("an unrelated change");
-  const result = run(fx.root, ["--base", fx.base]);
+  const result = runLocal(fx.root, ["--base", fx.base]);
   assert.equal(result.status, 0, result.stdout + result.stderr);
   assert.match(result.stdout, /verdict: PASS/);
 });
@@ -251,6 +259,25 @@ test("FAIL fragment-hand-edited: a session edits a pending fragment", (t) => {
   const result = run(fx.root, ["--base", fx.base]);
   assert.equal(result.status, 1, result.stdout);
   assert.match(result.stdout, /fragment-hand-edited/);
+});
+
+test("FAIL log-local-push: a local push cannot publish a docs/LOGS.md change even under the bot identity (issue #706)", (t) => {
+  const fx = fixture(t);
+  fx.editLog(CONFORMING, true);
+  fx.commit("bot: append the entry", BOT);
+  const result = runLocal(fx.root, ["--base", fx.base]);
+  assert.equal(result.status, 1, result.stdout);
+  assert.match(result.stdout, /log-local-push/);
+  assert.match(result.stdout, /docs\/LOGS\.md/);
+});
+
+test("PASS: the GitHub Action's push may publish the aggregated journal (issue #706)", (t) => {
+  const fx = fixture(t);
+  fx.editLog(CONFORMING, true);
+  fx.commit("bot: append the entry", BOT);
+  const result = run(fx.root, ["--base", fx.base], { GITHUB_ACTOR: "github-actions[bot]" });
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  assert.match(result.stdout, /verdict: PASS/);
 });
 
 test("PASS: the bot actor env certifies the merge identity in CI", (t) => {

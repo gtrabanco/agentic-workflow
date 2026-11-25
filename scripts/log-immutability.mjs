@@ -30,6 +30,11 @@
  *     by resolution: a fragment that vanishes relative to every parent is a
  *     resolution deletion, a fragment that survives every parent's edit is a
  *     resolution edit;
+ *   - a local push may never publish a `docs/LOGS.md` change, even one whose
+ *     commit carries the aggregator identity: only the GitHub Action's journal
+ *     PR may (`log-local-push`, issue #706). The identity rule alone let a local
+ *     `journal-bot` commit through (the `e60f051cf` incident); the push context
+ *     is the missing half;
  *   - a commit already reachable from a published ref (`origin/main`, and the
  *     pushed branch's own remote tip) is walked but never *judged*: what it
  *     wrote is already published, so no push from this checkout can change it
@@ -226,7 +231,7 @@ function shapeBaseline({ root, base, current, published }) {
  * The range half: the journal's shape over `base..HEAD`, plus the identity of
  * every commit that touched it or consumed a fragment. Read-only.
  */
-export function checkRange({ root, base, actor }) {
+export function checkRange({ root, base, actor, ci = false }) {
   const violations = [];
   // Issue #539: what this push cannot change is not judged. The published refs
   // are the remote mainline plus the range's own base (the pushed branch's own
@@ -246,6 +251,7 @@ export function checkRange({ root, base, actor }) {
   const commits = gitOut(root, ["rev-list", "--reverse", `${base}..HEAD`]).split("\n").filter(Boolean);
   const merges = [];
   const touchedLog = []; // non-merge, never-published commits touching the journal
+  const localBotLogWrites = []; // never-published bot commits a local push would publish
   const consumed = new Map(); // fragment name → the non-merge commits that D/M'd it
   for (const sha of commits) {
     const parents = gitOut(root, ["rev-list", "--parents", "-n", "1", sha]).trim().split(" ").slice(1);
@@ -262,6 +268,7 @@ export function checkRange({ root, base, actor }) {
     for (const { status, file } of nameStatus(root, ["diff-tree", "--no-commit-id", "--name-status", "-r", sha])) {
       if (file === LOG) {
         if (!isBot && !isPublished) touchedLog.push({ sha, subject: gitOut(root, ["show", "-s", "--format=%s", sha]).trim() });
+        if (isBot && !isPublished && !ci) localBotLogWrites.push({ sha, subject: gitOut(root, ["show", "-s", "--format=%s", sha]).trim() });
       } else if (file.startsWith(`${CARRIER}/`) && file.endsWith(".md") && (status.startsWith("D") || status.startsWith("M"))) {
         const name = path.basename(file);
         if (!consumed.has(name)) consumed.set(name, []);
@@ -273,6 +280,12 @@ export function checkRange({ root, base, actor }) {
     violations.push({
       code: "log-hand-appended",
       detail: `${LOG}: touched by non-aggregator commit ${shortSha(root, sha)} "${subject}" — write a fragment instead; the aggregator owns the journal`,
+    });
+  }
+  for (const { sha, subject } of localBotLogWrites) {
+    violations.push({
+      code: "log-local-push",
+      detail: `${LOG}: changed by local commit ${shortSha(root, sha)} "${subject}" — only the GitHub Action's journal PR may publish this file; push it from CI`,
     });
   }
   for (const [name, hits] of consumed) {
@@ -383,7 +396,12 @@ function main() {
   }
   let range = { violations: [], rangeCommits: 0 };
   try {
-    range = checkRange({ root, base: resolved.base, actor: process.env.GITHUB_ACTOR });
+    range = checkRange({
+      root,
+      base: resolved.base,
+      actor: process.env.GITHUB_ACTOR,
+      ci: process.env.GITHUB_ACTIONS === "true" || process.env.GITHUB_ACTOR === FORGE_BOT_ACTOR,
+    });
   } catch (error) {
     process.stderr.write(`log-immutability: ${error.message}\n`);
     process.exitCode = 2;

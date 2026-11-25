@@ -289,7 +289,8 @@ test("the same fragment set always yields byte-identical docs/LOGS.md (declared 
 test("re-running on an aggregated set is a no-op diff", () => {
   const repo = newRepo("idempotent");
   fs.mkdirSync(path.join(repo, JOURNAL_DIR), { recursive: true });
-  fs.writeFileSync(path.join(repo, JOURNAL_DIR, "20261105T100000Z-main-mechanical-s1.md"), MECHANICAL_ENTRY);
+  const name = fragmentName({ timestamp: NOW, branch: FACTS.branch, kind: "mechanical", sessionId: "s1" });
+  fs.writeFileSync(path.join(repo, JOURNAL_DIR, name), MECHANICAL_ENTRY);
   const first = aggregateJournal({ root: repo });
   assert.equal(first.ok, true, first.reason);
   const log = fs.readFileSync(path.join(repo, "docs/LOGS.md"), "utf8");
@@ -410,8 +411,15 @@ test("the local publisher appends to docs/LOGS.md when the carrier is absent —
 
 const CLI = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "bin", "agentic-workflow.mjs");
 
-function runCli(args, cwd) {
-  return spawnSync(process.execPath, [CLI, ...args], { encoding: "utf8", cwd, env: sandboxGitEnv() });
+function runCli(args, cwd, env = {}) {
+  return spawnSync(process.execPath, [CLI, ...args], { encoding: "utf8", cwd, env: { ...sandboxGitEnv(), CI: "true", ...env } });
+}
+
+/** A local shell: no CI signal reaches the child (issue #706). */
+function runLocalCli(args, cwd, env = {}) {
+  const local = { ...sandboxGitEnv(), ...env };
+  delete local.CI;
+  return spawnSync(process.execPath, [CLI, ...args], { encoding: "utf8", cwd, env: local });
 }
 
 test("journal aggregate: the CLI aggregates, deletes and answers a receipt; a no-op re-run exits 0", () => {
@@ -426,6 +434,31 @@ test("journal aggregate: the CLI aggregates, deletes and answers a receipt; a no
   const second = runCli(["journal", "aggregate", "--dir", repo]);
   assert.equal(second.status, 0);
   assert.equal(JSON.parse(second.stdout).fragments, 0);
+});
+
+test("journal aggregate: a local run is refused before moving a byte (issue #706)", () => {
+  const repo = newRepo("cli-local");
+  fs.mkdirSync(path.join(repo, JOURNAL_DIR), { recursive: true });
+  const name = fragmentName({ timestamp: NOW, branch: FACTS.branch, kind: "mechanical", sessionId: "s1" });
+  const fragment = path.join(repo, JOURNAL_DIR, name);
+  fs.writeFileSync(fragment, MECHANICAL_ENTRY);
+  const before = fs.readFileSync(path.join(repo, "docs/LOGS.md"), "utf8");
+  const run = runLocalCli(["journal", "aggregate", "--dir", repo]);
+  assert.equal(run.status, 2, run.stdout + run.stderr);
+  assert.match(run.stderr, /^JOURNAL REFUSAL — /);
+  assert.match(run.stderr, /CI/);
+  assert.equal(fs.readFileSync(path.join(repo, "docs/LOGS.md"), "utf8"), before, "no byte moved");
+  assert.equal(fs.existsSync(fragment), true, "the pending fragment was not consumed");
+});
+
+test("journal aggregate --check: the validate-only lint still runs locally (issue #706)", () => {
+  const repo = newRepo("cli-check-local");
+  fs.mkdirSync(path.join(repo, JOURNAL_DIR), { recursive: true });
+  const name = fragmentName({ timestamp: NOW, branch: FACTS.branch, kind: "mechanical", sessionId: "s1" });
+  fs.writeFileSync(path.join(repo, JOURNAL_DIR, name), MECHANICAL_ENTRY);
+  const run = runLocalCli(["journal", "aggregate", "--check", "--dir", repo]);
+  assert.equal(run.status, 0, run.stderr);
+  assert.equal(JSON.parse(run.stdout).ok, true);
 });
 
 test("journal aggregate: ambiguity is exit 2 with JOURNAL REFUSAL on stderr", () => {
