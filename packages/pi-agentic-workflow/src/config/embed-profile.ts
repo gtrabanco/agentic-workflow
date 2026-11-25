@@ -347,10 +347,6 @@ export const EMBED_DIRECT_ENV = Object.freeze({
   apiKey: "AGENTIC_WORKFLOW_DOC_EMBEDDINGS_API_KEY",
 });
 
-/** Re-exported so a caller names the budget variable without importing the crate
- *  (the console and the wiring both read it). */
-export { MAX_REQUEST_CHARS_ENV as EMBED_MAX_REQUEST_CHARS_ENV };
-
 /** Why the default-on decision went the way it did — the closed reason set. */
 export const EMBED_DEFAULT_ON_REASONS = Object.freeze([
   "default-on",

@@ -25,7 +25,7 @@ import { join } from "node:path";
 
 import { clearProviderPresets, getEmbedProfiles } from "@gtrabanco/pi-agentic-workflow/dist/config/presets.js";
 import { NAN_EMBED_PROFILE } from "../dist/embed-profile.js";
-import extension, { applyEmbedDefault } from "../dist/extension.js";
+import extension, { applyEmbedDefault, resetEmbedDefaultReports } from "../dist/extension.js";
 
 /** The crate's direct env names, as the main package publishes them. */
 const DIRECT = {
@@ -253,6 +253,7 @@ test("donor: an applied default is reported once, with the resolver's own line",
   process.env.NAN_API_KEY = "sk-nan";
   const reports = [];
   try {
+    resetEmbedDefaultReports(); // this row owns its own dialect of "the same line"
     applyEmbedDefault({ report: (line, kind) => reports.push({ line, kind }) });
     assert.equal(reports.length, 1, "the operator hears it once");
     assert.match(reports[0].line, /doc-index embeddings resolved by default/u, "and hears what happened");
@@ -283,6 +284,7 @@ test("donor: an unreadable config is reported as a warning carrying the error te
   process.env.NAN_API_KEY = "sk-nan";
   const reports = [];
   try {
+    resetEmbedDefaultReports();
     applyEmbedDefault({ report: (line, kind) => reports.push({ line, kind }) });
     assert.equal(reports.length, 1, "a refusal is never silent — the operator has to act on it");
     assert.equal(reports[0].kind, "warning");
@@ -304,6 +306,7 @@ test("donor: a withhold that carries no detail stays silent", () => {
   process.env.NAN_API_KEY = "sk-nan";
   const reports = [];
   try {
+    resetEmbedDefaultReports();
     applyEmbedDefault({ report: (line, kind) => reports.push({ line, kind }) });
     assert.deepEqual(reports, [], "an operator's own block is not news");
   } finally {

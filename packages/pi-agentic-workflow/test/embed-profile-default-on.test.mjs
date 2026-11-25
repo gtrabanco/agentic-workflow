@@ -26,12 +26,7 @@ import { chmodSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync 
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-import {
-  EMBED_DIRECT_ENV,
-  EMBED_MAX_REQUEST_CHARS_ENV,
-  applyEmbedDefaultOn,
-  planEmbedDefaultOn,
-} from "../dist/config/embed-profile.js";
+import { EMBED_DIRECT_ENV, applyEmbedDefaultOn, planEmbedDefaultOn } from "../dist/config/embed-profile.js";
 import { MAX_REQUEST_CHARS_ENV } from "@gtrabanco/agentic-workflow/src/doc/config.mjs";
 
 /** The NaN profile's shape, as the companion package donates it (issue #541 S3). */
@@ -90,7 +85,7 @@ test("default-on: an absent provider block with the key present exports the prof
     [EMBED_DIRECT_ENV.baseUrl]: NAN_PROFILE.baseUrl,
     [EMBED_DIRECT_ENV.model]: NAN_PROFILE.model,
     [EMBED_DIRECT_ENV.apiKey]: "sk-nan",
-    [EMBED_MAX_REQUEST_CHARS_ENV]: String(NAN_MAX_REQUEST_CHARS),
+    [MAX_REQUEST_CHARS_ENV]: String(NAN_MAX_REQUEST_CHARS),
   });
 });
 
@@ -182,7 +177,7 @@ test("tuning: the default-on path exports the preset's measured pair as the requ
   // 6000-char chunks × 6 texts per request is the pair the preset measured; the
   // crate adopts the request budget as the chunk limit when no explicit
   // `chunk_limit` is configured, so the tuning travels with the budget.
-  const budget = Number(plan.env[EMBED_MAX_REQUEST_CHARS_ENV]);
+  const budget = Number(plan.env[MAX_REQUEST_CHARS_ENV]);
   assert.equal(budget, NAN_PROFILE.chunk_limit * NAN_PROFILE.pacing.batchSize);
   assert.equal(budget, NAN_MAX_REQUEST_CHARS);
 });
