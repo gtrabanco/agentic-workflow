@@ -256,6 +256,13 @@ ledger (grammar: `findings-table@1`).
 
 | id | S# / file:line | axis | severity | impact | class | route |
 |---|---|---|---|---|---|---|
+| F1 | packages/pi-agentic-workflow/src/extension/index.ts:407 + src/extension/factory.ts:49-69 (S1/AC1) | correctness | CRITICAL | blocking | source | fold |
+| F2 | packages/pi-agentic-workflow/src/config/embed-profile.ts:423-429 (S4) | correctness | WARNING | blocking | source | fold |
+| F3 | packages/pi-agentic-workflow/src/config/embed-profile.ts:464-469 (S4/AC2) | correctness | WARNING | blocking | source | fold |
+| F4 | packages/pi-nan-agentic-workflow/README.md:256-257 (S1) | docs | WARNING | docs-only | source | fold |
+| F5 | packages/pi-agentic-workflow/src/extension/workflow-tools.ts:817 (S2/AC5) | docs | WARNING | docs-only | source | fold |
+| F6 | docs/features/719-nan-default-embed/SPEC.md:275 (G1 receipt mark) | workflow | WARNING | blocking | plan | replan-in-unit |
+| F7 | packages/pi-agentic-workflow/src/config/embed-profile.ts:350-352,372-373 | dead-code | WARNING | docs-only | source | fold |
 
 ## Log
 
@@ -289,6 +296,15 @@ ledger (grammar: `findings-table@1`).
 - **P3** — 2026-11-25 00:06, P1–P4 implemented and committed, tasks ticked (`92f325e9b`, `383e21659`, `21ac557d5`, `3d7261d21`, `1d43d3b39`, `acb68e2fc`) · next: P5 (release settle — PR closing #719, then the roadmap row).
 - **E13** — 2026-11-25 00:20, P5 · `git push -u origin feat/719-nan-embedding-default-index-tool` → the pre-push hook's own gate `PASS — 18 step(s) in 450s`; `gh pr create` → PR [#720](https://github.com/gtrabanco/agentic-workflow/pull/720) against `main`, body carrying `Closes #719`. `agentic-workflow roadmap docs/ROADMAP.md rowUpsert` → `Receipt: pass · Before: 00a1704d · After: 1a492e1b`, the row now `done · [#720](…)` with `dependsOn` and `description` preserved verbatim; `agentic-workflow roadmap-settle` → `verdict: PASS · 278 unit docs checked · violations: 0`.
 - **P4** — 2026-11-25 00:20, unit complete: P1–P5 ticked, PR open, roadmap settled · next: `/review-change` on the changed HEAD (this unit's triage carries a `review` step).
+- **G2** — 2026-11-25, review's own gate run `bun scripts/local-gate.mjs` · HEAD ac596aae4551e7f6a53cda8a2f16c1f3e6170dc0 · exit 0 · `PASS — 20 step(s) in 845s` (consumed as the review's gate evidence; red-first per `gate-ran@1` identical-head reuse).
+- **R1** — 2026-11-25, review at HEAD ac596aae4551e7f6a53cda8a2f16c1f3e6170dc0 · verdict REVIEW-FAIL · cycle 1 · gate exit 0 · axes run: review-code, review-security, review-verify, review-perf + inline API-ergonomics/usage-docs; skipped design/a11y/brand/seo (no UI/web surface); F1–F7 open.
+- **V1** — packages/pi-agentic-workflow/src/extension/index.ts:407 · reviewer review-change · HEAD ac596aae4551e7f6a53cda8a2f16c1f3e6170dc0 · recheck code trace + pi loader read (`dist/core/package-manager.js` rank-4 stable sort, no inter-package ordering guarantee; companion side effect at packages/pi-nan-agentic-workflow/src/extension.ts:98) · confirmed
+- **V2** — packages/pi-agentic-workflow/src/config/embed-profile.ts:423-429 · reviewer review-change · HEAD ac596aae4551e7f6a53cda8a2f16c1f3e6170dc0 · recheck live probe — a 0-mode `index.json` threw EACCES and `index.json` as a directory threw EISDIR through `applyEmbedDefaultOnAtLoad` · confirmed
+- **V3** — packages/pi-agentic-workflow/src/config/embed-profile.ts:464-469 · reviewer review-change · HEAD ac596aae4551e7f6a53cda8a2f16c1f3e6170dc0 · recheck crate precedence read (`embeddings.mjs` `pick`: env over config) against the S4/README override promise · confirmed
+- **V4** — packages/pi-nan-agentic-workflow/README.md:256-257 · reviewer review-change · HEAD ac596aae4551e7f6a53cda8a2f16c1f3e6170dc0 · recheck direct read of the cited text · confirmed
+- **V5** — packages/pi-agentic-workflow/src/extension/workflow-tools.ts:817 · reviewer review-change · HEAD ac596aae4551e7f6a53cda8a2f16c1f3e6170dc0 · recheck crate `query.mjs:7` read + live `doc --query … --json-only` returning descending scores (16.78 → 16.53) · confirmed
+- **V6** — docs/features/719-nan-default-embed/SPEC.md:275 · reviewer review-change · HEAD ac596aae4551e7f6a53cda8a2f16c1f3e6170dc0 · recheck `runner verify docs/features/719-nan-default-embed/SPEC.md` exit 2 (2 receipt-malformed-head violations) · confirmed
+- **V7** — packages/pi-agentic-workflow/src/config/embed-profile.ts:350-352,372-373 · reviewer review-change · HEAD ac596aae4551e7f6a53cda8a2f16c1f3e6170dc0 · recheck rg over both packages' `src` (no consumer of `EMBED_MAX_REQUEST_CHARS_ENV` or `.detail` in production) · confirmed
 
 ## Next
 
