@@ -345,13 +345,16 @@ jobs:
       # BEFORE that stamp — and the publish runs with --ignore-scripts, so nothing
       # rebuilds it. Re-stage after the stage: the tag then carries the train
       # version and so does the published bundle, instead of one lying a train
-      # behind the other.
+      # behind the other. The stage also rebinds the projection manifest's digest
+      # the re-pinned invocation bytes legitimately moved (issue #723), otherwise
+      # this re-stage fails closed here on a stale `contentHash`.
       - name: Re-stage the skill bundle at the staged train
         run: bun run --cwd packages/pi-agentic-workflow bundle:skills
 
       # Issue #679: the tag must record the tree this cut publishes. The stage
-      # above wrote the canary pin into RUNNER.md; the restore below would throw
-      # it away, and a tag at HEAD would install skills citing services younger
+      # above wrote the canary pin into RUNNER.md (and rebound the projection
+      # manifest beside it, issue #723); the restore below would throw them
+      # away, and a tag at HEAD would install skills citing services younger
       # than their stable pin. Snapshot the staged tracked tree now, before the
       # publish and the restore; the tag step records that commit.
       - name: Snapshot the published tree for the tag
@@ -386,7 +389,7 @@ jobs:
       # read. The tag already recorded the snapshot commit above.
       - name: Restore the repo (temp versions are never committed)
         if: always()
-        run: git checkout HEAD -- packages/*/package.json skills/runner-contract/references/RUNNER.md skills/*/SKILL.md
+        run: git checkout HEAD -- packages/*/package.json packages/pi-agentic-workflow/projection-manifest.json skills/runner-contract/references/RUNNER.md skills/*/SKILL.md
 
       # Release visible = installable (issue #481): the tag and the pre-release
       # must not appear while the CDN still 404s a tarball the run just published.

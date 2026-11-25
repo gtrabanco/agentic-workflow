@@ -24,6 +24,7 @@ import {
   applyProjection,
   loadProjectionManifest,
   pointerLine,
+  reboundContentHashes,
   rulesFor,
 } from "../scripts/projection.mjs";
 
@@ -231,6 +232,46 @@ test("projection: a tampered hash fails with hash-mismatch", () => {
   assert.throws(
     () => applyProjection(TOY_SKILL, [removeEnforced({ contentHash: `sha256:${"0".repeat(64)}` })]),
     (error) => error instanceof ProjectionError && error.code === "hash-mismatch",
+  );
+});
+
+// Issue #723: the release stampers rewrite `@gtrabanco/agentic-workflow@<pin>`
+// inside the pointerized invocation section, so the bound bytes legitimately
+// move on every cut. The repair path is the engine's own digest — never a
+// hand-computed value — which is what `reboundContentHashes` returns.
+test("projection: reboundContentHashes re-derives a moved binding the stamp caused", () => {
+  const stamped = TOY_SKILL.replace("Untouched body.", "Untouched body — restamped at 9.9.9.");
+  assert.throws(
+    () => applyProjection(stamped, [pointerizeOther()]),
+    (error) => error instanceof ProjectionError && error.code === "hash-mismatch",
+    "the stale binding must first be observable as the bundle's own failure",
+  );
+  const rebound = reboundContentHashes(stamped, [pointerizeOther()], "stamped source");
+  assert.deepEqual(rebound, [
+    { id: "pointerize-other", contentHash: sha256("\nUntouched body — restamped at 9.9.9.\n") },
+  ]);
+  const out = applyProjection(stamped, [pointerizeOther({ contentHash: rebound[0].contentHash })]);
+  assert.doesNotMatch(out, /restamped at 9\.9\.9/, "the rebound rule removes the restamped bytes");
+  assert.match(out, new RegExp(`${POINTER_LINE.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`));
+});
+
+test("projection: reboundContentHashes walks the rules in apply order, on the text each rule sees", () => {
+  const rebound = reboundContentHashes(TOY_SKILL, [removeEnforced(), pointerizeOther()], "ordered");
+  assert.deepEqual(
+    rebound.map((entry) => entry.contentHash),
+    [sha256(ENFORCED_SECTION), sha256("\nUntouched body.\n")],
+    "an unchanged source rebinds to the same digests the manifest already binds",
+  );
+  // The rebound digests are the bundle's own for the same sequential application.
+  const out = applyProjection(TOY_SKILL, [removeEnforced(), pointerizeOther({ contentHash: rebound[1].contentHash })]);
+  assert.doesNotMatch(out, /Untouched body/);
+});
+
+test("projection: reboundContentHashes refuses a locator that can no longer resolve", () => {
+  assert.throws(
+    () => reboundContentHashes(TOY_SKILL, [removeEnforced({ selector: { path: ["Toy skill", "Missing section"] } })], "broken"),
+    (error) => error instanceof ProjectionError && error.code === "stale-rule",
+    "a rebind is the engine's digest of bytes the rule still removes — a section that moved out from under the rule stays a human re-verify",
   );
 });
 
