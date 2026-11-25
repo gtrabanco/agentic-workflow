@@ -21,7 +21,7 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { chmodSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -220,6 +220,48 @@ test("wiring: a broken index.json is reported, never thrown at the host", () => 
 
   assert.equal(result.applied, false);
   assert.equal(result.plan.reason, "unreadable-config", "the loader's own refusal is what an operator needs to see");
+  assert.deepEqual(processEnv, {});
+});
+
+// ---------------------------------------------------------------------------
+// Unreadable, not absent: the read failures a load must survive (F2, O8)
+// ---------------------------------------------------------------------------
+//
+// Absence is a decision surface (`provider` unset ⇒ the default applies); a
+// read the process is not allowed to complete is not a decision, and it is not
+// a crash either. Both error classes below used to escape the resolver and land
+// in whatever loaded the extension.
+
+test("unreadable: a config file the process may not read is refused, never thrown", () => {
+  const root = scratch();
+  mkdirSync(join(root, ".agentic-workflow"), { recursive: true });
+  const path = join(root, ".agentic-workflow", "index.json");
+  writeFileSync(path, JSON.stringify({ version: 1 }));
+  chmodSync(path, 0o000);
+  const processEnv = {};
+  let result;
+  try {
+    result = applyEmbedDefaultOn({ root, entry, env: { NAN_API_KEY: "sk-nan" }, processEnv });
+  } finally {
+    // Restored whatever happened, so the scratch removal below can still empty it.
+    chmodSync(path, 0o600);
+  }
+
+  assert.equal(result.applied, false, "an unreadable decision surface does not let a default through");
+  assert.equal(result.plan.reason, "unreadable-config");
+  assert.match(result.plan.detail, /EACCES/, "the refusal carries the error text the operator has to act on");
+  assert.deepEqual(processEnv, {}, "and nothing is injected on a resolution it could not check");
+});
+
+test("unreadable: a config path that is a directory is refused, never thrown", () => {
+  const root = scratch();
+  mkdirSync(join(root, ".agentic-workflow", "index.json"), { recursive: true });
+  const processEnv = {};
+  const result = applyEmbedDefaultOn({ root, entry, env: { NAN_API_KEY: "sk-nan" }, processEnv });
+
+  assert.equal(result.applied, false);
+  assert.equal(result.plan.reason, "unreadable-config", "EISDIR is a read failure, not an absent block");
+  assert.match(result.plan.detail, /EISDIR/);
   assert.deepEqual(processEnv, {});
 });
 
