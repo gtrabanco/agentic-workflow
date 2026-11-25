@@ -426,13 +426,23 @@ to `verified` only on its foreground validator (or an evidenced `n/a`).
   --check` · PASS; `lint-changeset` · ok; `normative-drift` · 24 pass;
   `unit-doc-contract` · 21 pass; `test-obligation-tags` · 0 findings;
   `skill-lint` · 0 findings; `check-skill-context` · PASS 33 skills.
+- **G1** — 2026-11-25, the batch's full gate at `a0677d8c7`:
+  `bun scripts/local-gate.mjs --no-bail` · exit 0 · `local-gate: PASS — 20
+  step(s) in 854s` · every step exit 0 (`root-suite` 310s, `crate-suite-bun`
+  219s, `crate-suite-node` 284s, `log-immutability` exit 0 — its base
+  resolves to the pushed branch tip, an empty range, per #539); the
+  `git log origin/main..HEAD --format='%ae|%ce' | rg 't@example\.test'` half
+  · no match, and `git log --all` still answers the 99 historical commits only.
 
 ## Next
 
-Owner external verification of branch `fix/706-logs-write-path`; no push. The
-only expected red is the authorized `log-rewritten` from the P3 header (D1);
-every other declared check is green. The owner applies the §7 sentence outside
-this repository (D3).
+Delta external verification of `fix/706-logs-write-path`: `external-verify.md`
+holds the five blockers, all folded in F1, so the next run re-verifies those
+five plus the delta diff — not the full set. The batch's gate receipt is G1
+(exit 0 · 20 steps); the authorized `log-rewritten` + `log-hand-appended` pair
+reproduces with `bun scripts/log-immutability.mjs --base "$(git merge-base
+origin/main HEAD)"` (E9). No push until the owner's verdict; D3's owner-side
+sentence still applies.
 
 ## References
 
