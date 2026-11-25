@@ -739,7 +739,7 @@ test("publish-stage stamps every skill frontmatter at the canary it publishes, a
     assert.match(md, new RegExp(`^version: ${canary.replace(/\./gu, "\\.")}$`, "m"), `${name} cites the canary it ships with`);
     assert.doesNotMatch(md, /^version: 0\.9\.0$/m, "the previous train is gone, not kept beside the new one");
   }
-  assert.match(result.stderr, new RegExp(`2 skill frontmatter\\(s\\) at ${canary.replace(/\./gu, "\\.")}`), "the stage reports what it wrote");
+  assert.match(result.stderr, new RegExp(`2 skill frontmatter\\(s\\) \\+ \\d+ projection hash\\(es\\) rebound at ${canary.replace(/\./gu, "\\.")}`), "the stage reports what it wrote");
 });
 
 test("publish-stage leaves an undeclared sibling's version and its pin alone", () => {
@@ -1124,14 +1124,14 @@ function withProjectionPin(root, pin = "0.0.1") {
     id: "fixture-invocation-not-shipped",
     op: "pointerize",
     source: RUNNER_PIN_REL,
-    selector: { path: ["The invocation"] },
+    selector: { path: ["The pin", "The invocation"] },
     enforcingCommand: "runner resolve",
     // The digest the engine itself computes over the PRE-stamp body.
     contentHash: reboundContentHashes(text, [{
       id: "fixture-invocation-not-shipped",
       op: "pointerize",
       source: RUNNER_PIN_REL,
-      selector: { path: ["The invocation"] },
+      selector: { path: ["The pin", "The invocation"] },
       enforcingCommand: "runner resolve",
       contentHash: "",
     }], RUNNER_PIN_REL)[0].contentHash,
@@ -1252,10 +1252,10 @@ test("publish-stage stages the canary pin and prints the restore that includes i
 
   const planned = run(["plan", "--root", root, "--base", "1.0.0", "--channel", "canary", "--date", "2026-11-12"]);
   assert.equal(planned.status, 0, planned.stderr || planned.stdout);
-  assert.match(planned.stdout, /git checkout -- packages\/\*\/package\.json skills\/runner-contract\/references\/RUNNER\.md/, "the restore the cut prints covers the staged pin");
+  assert.match(planned.stdout, /git checkout -- packages\/\*\/package\.json packages\/pi-agentic-workflow\/projection-manifest\.json skills\/runner-contract\/references\/RUNNER\.md/, "the restore the cut prints covers the staged pin and the rebound digest beside it");
 });
 
-// #710 S2/S4: the restore the stage prints is the operator's and the publish
+// Issue #710 S2/S4: the restore the stage prints is the operator's and the publish
 // job's copy of the same fact. A skill stamped by the stage but missing from the
 // restore line would be committed as a prerelease — the stamp would bound the
 // cut in code and leak into the repository in practice.
@@ -1269,5 +1269,5 @@ test("the restore publish-stage prints covers the skill stamps it just wrote", (
   assert.match(staged.stderr, /\+ 2 skill frontmatter\(s\)/u, "the stage reports the third family it wrote");
   const planned = run(["plan", "--root", root, "--base", "1.0.0", "--channel", "canary", "--date", "2026-11-12"]);
   assert.equal(planned.status, 0, planned.stderr || planned.stdout);
-  assert.match(planned.stdout, /git checkout -- packages\/\*\/package\.json skills\/runner-contract\/references\/RUNNER\.md skills\/\*\/SKILL\.md/, "the restore names every path the stage wrote");
+  assert.match(planned.stdout, /git checkout -- packages\/\*\/package\.json packages\/pi-agentic-workflow\/projection-manifest\.json skills\/runner-contract\/references\/RUNNER\.md skills\/\*\/SKILL\.md/, "the restore names every path the stage wrote — versions, the rebound digest, the pin and the stamps");
 });

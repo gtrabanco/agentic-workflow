@@ -75,6 +75,7 @@ import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
+import { reboundContentHashes } from "../packages/pi-agentic-workflow/scripts/projection.mjs";
 import { parseChangeset } from "./lint-changeset.mjs";
 
 const DEFAULT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -251,8 +252,7 @@ function stampTemplateProvenance(root, version) {
   return stamped;
 }
 
-/**
- * The runner pin (feature 91, issue #352): `skills/runner-contract/references/RUNNER.md`
+/** The runner pin (feature 91, issue #352): `skills/runner-contract/references/RUNNER.md`
  * carries the repository's ONLY runner version literal. Stamping it here is what
  * makes a release a one-line diff instead of a sweep across every skill that
  * cites a command, and `scripts/normative-drift.test.mjs` recomputes the pin
@@ -270,6 +270,53 @@ function stampRunnerPin(root, version) {
   if (after === before) return 0;
   fs.writeFileSync(file, after);
   return 1;
+}
+
+/** The committed manifest whose digests bind the bytes the projection removes
+ *  (`packages/pi-agentic-workflow/scripts/projection.mjs` enforces them at
+ *  bundle time, fail-closed). */
+const PROJECTION_MANIFEST_FILE = "packages/pi-agentic-workflow/projection-manifest.json";
+
+/**
+ * The stamp just rewrote bytes a projection rule hash-binds (issue #723): the
+ * runner pin lives inside the pointerized invocation section, so every stamp —
+ * the stable train's committed one, the canary's staged one — moves the exact
+ * span the bundle's rule binds by digest. The binding is re-derived from the
+ * projection engine itself (the same digests its hash-mismatch refusal prints,
+ * never a hand-computed value) and the manifest is rewritten beside the pin it
+ * tracks. A rule whose section the stamped bytes can no longer locate raises:
+ * that stays a human re-verify, exactly as the bundle's refusal says.
+ *
+ * Returns the number of digests that actually moved (0 rewrites nothing).
+ */
+function rebindProjectionManifest(root) {
+  const manifestPath = path.join(root, PROJECTION_MANIFEST_FILE);
+  if (!fs.existsSync(manifestPath)) return 0;
+  const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+  const next = { ...manifest, rules: manifest.rules.map((rule) => ({ ...rule })) };
+  const groups = new Map();
+  for (const rule of next.rules) {
+    if (!groups.has(rule.source)) groups.set(rule.source, []);
+    groups.get(rule.source).push(rule);
+  }
+  let rebound = 0;
+  for (const [source, rules] of groups) {
+    const sourcePath = path.join(root, source);
+    if (!fs.existsSync(sourcePath)) {
+      throw new Error(`projection rebind: rule "${rules[0].id}" names a missing source: ${source}`);
+    }
+    for (const settled of reboundContentHashes(fs.readFileSync(sourcePath, "utf8"), rules, source)) {
+      const bound = next.rules.find((rule) => rule.id === settled.id);
+      if (bound.contentHash !== settled.contentHash) {
+        bound.contentHash = settled.contentHash;
+        rebound += 1;
+      }
+    }
+  }
+  if (rebound > 0) {
+    fs.writeFileSync(manifestPath, `${JSON.stringify(next, null, 2)}\n`);
+  }
+  return rebound;
 }
 
 /** Highest stable v-tag, or null when the repo has none / is not a repo. */
@@ -1067,6 +1114,10 @@ function main() {
       console.log(`templates: ${stampedTemplates} unit-doc provenance stamp(s) stamped with the train version`);
       const stampedRunner = stampRunnerPin(root, version);
       console.log(`runner: ${RUNNER_PIN_FILE} ${stampedRunner ? "stamped with the train version" : "already carried it (no diff)"}`);
+      // Issue #723: the stamp (or its no-op) may land inside bytes a projection
+      // rule hash-binds — re-derive the binding now, before the release commit.
+      const reboundStable = rebindProjectionManifest(root);
+      console.log(`projection: ${reboundStable > 0 ? `rebound ${reboundStable} contentHash(es) in ${PROJECTION_MANIFEST_FILE}` : "nothing to rebind"} — the stamp never leaves a rule bound to bytes it did not write (issue #723)`);
       // Consume the intent that was just applied — the changesets-tool
       // behavior this format adopted. Without the deletion the files ride
       // into the next cut, whose bump level and notes then re-apply stale
@@ -1110,7 +1161,11 @@ function main() {
         // (issue #710 S2). Same helper, same one-line transform: the field a
         // consumer reads must name the train that ships it.
         const stagedSkills = stampSkillVersions(root, prerelease);
-        console.error(`staged: ${staged} package.json version(s) + ${stagedRunner} runner pin(s) + ${stagedSkills} skill frontmatter(s) at ${prerelease} — the publish job restores them, nothing is committed`);
+        // #723 and same reason as the stamps above: the pin may live inside the
+        // span a projection rule hash-binds, so the rebind rides the same
+        // staging — and the same restore — as the version stamp itself.
+        const rebound = rebindProjectionManifest(root);
+        console.error(`staged: ${staged} package.json version(s) + ${stagedRunner} runner pin(s) + ${stagedSkills} skill frontmatter(s) + ${rebound} projection hash(es) rebound at ${prerelease} — the publish job restores them, nothing is committed`);
       }
       for (const pkg of listed) {
         console.log(`${pkg.name}\t${pkg.dirName}\t${prerelease}\t${args.channel}`);
@@ -1127,7 +1182,7 @@ function main() {
     for (const pkg of listed) {
       console.log(`  cd packages/${pkg.dirName} && npm publish --tag ${args.channel} --ignore-scripts --provenance`);
     }
-    console.log(`  git checkout -- packages/*/package.json ${RUNNER_PIN_FILE} skills/*/SKILL.md`);
+    console.log(`  git checkout -- packages/*/package.json ${PROJECTION_MANIFEST_FILE} ${RUNNER_PIN_FILE} skills/*/SKILL.md`);
     console.log("note: canary never moves the latest dist-tag; --ignore-scripts is required because `publish-stage` writes the temp versions (the gate ran on the committed tree, and `prepublishOnly` would re-run it against the prerelease)");
   }
 

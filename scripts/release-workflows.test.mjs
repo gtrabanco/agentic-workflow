@@ -145,7 +145,7 @@ test("cut + canary records the tag on the staged tree and restores the staged pi
   assert.match(block, /RELEASE_COMMIT=\$\(bun scripts\/canary-tag\.mjs snapshot\)/, "the snapshot's commit is carried to the tag step");
   assert.match(block, /canary-tag\.mjs record --tag "v\$V" --commit "\$TARGET"/, "the tag records the staged tree");
   assert.match(block, /TARGET="\$\{RELEASE_COMMIT:-\$\(git rev-parse HEAD\)\}"/, "the tag step defaults to HEAD only when the snapshot published nothing");
-  assert.match(block, /git checkout HEAD -- packages\/\*\/package\.json skills\/runner-contract\/references\/RUNNER\.md/, "the staged pin is restored with the manifests");
+  assert.match(block, /git checkout HEAD -- packages\/\*\/package\.json packages\/pi-agentic-workflow\/projection-manifest\.json skills\/runner-contract\/references\/RUNNER\.md/, "the staged pin is restored with the manifests (and the rebound digest beside it, issue #723)");
   assert.match(block, /skills\/\*\/SKILL\.md/, "the staged skill stamps are restored with them (issue #710 S2)");
 });
 

@@ -243,6 +243,49 @@ function removedChunks(sourceText, rule, context) {
 }
 
 /**
+ * applyChunks(sourceText, chunks, rule) — splice the rule's replacement over
+ * chunks the caller already located. No binding is checked here: the callers
+ * own the digest.
+ */
+function applyChunks(sourceText, chunks, rule) {
+  let out = sourceText;
+  for (let index = chunks.length - 1; index >= 0; index -= 1) {
+    const chunk = chunks[index];
+    let replacement = "";
+    if (index === 0 && rule.op === "pointerize") {
+      // The pointer takes the body's place, keeping the body's own trailing
+      // newline shape so the next heading stays separated exactly as it was.
+      const removedText = sourceText.slice(chunk.start, chunk.end);
+      replacement = `${pointerLine(rule)}\n${removedText.endsWith("\n\n") ? "\n" : ""}`;
+    }
+    out = out.slice(0, chunk.start) + replacement + out.slice(chunk.end);
+  }
+  return out;
+}
+
+/**
+ * reboundContentHashes(sourceText, rules, context) — the digest each rule binds
+ * when applied to the text AS IT STANDS, computed in apply order by the same
+ * locator and hashing the projection itself runs. The release stampers rewrite
+ * bytes a hash-bound rule removes (the runner pin stamped inside the
+ * pointerized invocation section — issue #723); the stamper stores these
+ * digests in the manifest — the same values the bundle's hash-mismatch refusal
+ * prints — and never a hand-computed one. A rule whose section the new bytes
+ * can no longer locate raises, so the cut fails closed instead of rebinding
+ * into a lie: a moved section stays a human re-verify.
+ * @returns {{ id: string, contentHash: string }[]}
+ */
+export function reboundContentHashes(sourceText, rules, context = "source") {
+  let out = sourceText;
+  return rules.map((rule) => {
+    const chunks = removedChunks(out, rule, context);
+    const contentHash = sha256Hex(chunks.map((chunk) => out.slice(chunk.start, chunk.end)).join(""));
+    out = applyChunks(out, chunks, rule);
+    return { id: rule.id, contentHash };
+  });
+}
+
+/**
  * applyRule(sourceText, rule, context) — the source with one rule applied.
  * The rule's hash must match the exact bytes removed at application time.
  * @returns {string}
@@ -257,19 +300,7 @@ function applyRule(sourceText, rule, context) {
       rule.id,
     );
   }
-  let out = sourceText;
-  for (let index = chunks.length - 1; index >= 0; index -= 1) {
-    const chunk = chunks[index];
-    let replacement = "";
-    if (index === 0 && rule.op === "pointerize") {
-      // The pointer takes the body's place, keeping the body's own trailing
-      // newline shape so the next heading stays separated exactly as it was.
-      const removedText = sourceText.slice(chunk.start, chunk.end);
-      replacement = `${pointerLine(rule)}\n${removedText.endsWith("\n\n") ? "\n" : ""}`;
-    }
-    out = out.slice(0, chunk.start) + replacement + out.slice(chunk.end);
-  }
-  return out;
+  return applyChunks(sourceText, chunks, rule);
 }
 
 /**
