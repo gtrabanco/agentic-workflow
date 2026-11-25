@@ -269,7 +269,7 @@ retired; it gains a precondition.
   - Relevant files: docs/ROADMAP.md, .changeset/706-log-write-path-fix.md, docs/generated, .agentic-workflow/journal
 
 - P8 — Run the declared verification commands in the foreground and report
-  every result, including the authorized `log-rewritten` (validator: `bun scripts/local-gate.mjs --no-bail` exits 1 with exactly one `log-immutability` red — the owner exception — and every other step green)
+  every result, including the authorized `log-rewritten` (validator: `bun scripts/local-gate.mjs --no-bail` exits 0 with every step green — the range step resolves its base to the pushed branch tip once the branch is published (#539), so a plain run carries no range violation — AND `bun scripts/log-immutability.mjs --base "$(git merge-base origin/main HEAD)"` exits 1 with exactly `log-rewritten` and `log-hand-appended` on `39cecced4`, the owner exception (D1))
   (Implements: S9, S10)
   - Relevant files: docs/fix/706-log-write-path-fix/SPEC.md
 
@@ -382,6 +382,50 @@ to `verified` only on its foreground validator (or an evidenced `n/a`).
   't@example\.test'` · no match; `git log --all --format='%ae' | rg -c
   '^t@example\.test$'` · 99 historical commits, all reachable only from the
   release tags/old refs, never rewritten by this unit.
+- **L3** — 2026-11-25, the correction request, verbatim:
+  ```
+  Apply to this repository: triage and fix those that deserve to fix but understand the context before fix and check you haven't broke another different thing, if you have done, start the loop again until you fixed full symbol/related stuff
+  ```
+- **F1** — 2026-11-25, the external-verify correction batch
+  (`external-verify.md`, base `2780f79a7` · head `c73786662`, 5 blockers, one
+  batch per §9): B1 — O11's validator named the unit id while the committed
+  fragment carries the branch slug, so the row now matches the fragment's path
+  (`ls .agentic-workflow/journal/*fix-706-logs-write-path*`) and keeps its
+  lint-exit-0 half; B2 — P8's validator now names the reproducing pair (the
+  full gate green on a pushed branch — #539 — plus the authorized pair under
+  the pinned merge-base) and `E6`'s correction rides an appended line, never an
+  edit, because `## Log` is append-only; B3–B5 —
+  `packages/agentic-workflow/src/journal/aggregate.mjs`,
+  `packages/agentic-workflow/bin/agentic-workflow.mjs` and
+  `template/.github/workflows/agentic-workflow-journal.yml.example` state
+  their CI context instead of the pre-#706 invocation parity (red at
+  `5af85b28b`, green at `6d92ac2e7`, pinned by the new `journal.surfaces`
+  case). Advisories 1–5 triaged, none folded: A1/A2 would add a second
+  unauthorized `docs/LOGS.md` write beyond D1's one-time exception, A3 is
+  another unit's frozen receipt, A4 sits behind the ledgers' cut-time freeze,
+  and A5 is the issue's verbatim quote.
+- **E9** — 2026-11-25, the batch's foreground runs: `bun test
+  packages/agentic-workflow/test/journal.surfaces.test.mjs` · exit 0 · 14 pass
+  (red first: exit 1 at the crate assertion, `5af85b28b`; green after
+  `6d92ac2e7`); `bun test packages/agentic-workflow/test/journal.test.mjs` ·
+  exit 0 · 43 pass; `bun test
+  packages/agentic-workflow/test/journal.write.test.mjs` · exit 0 · 34 pass;
+  `bun scripts/log-immutability.mjs --base "$(git merge-base origin/main
+  HEAD)"` · exit 1 · exactly `log-rewritten` (byte 19) + `log-hand-appended`
+  (`39cecced4`) · `2 violations · base 2780f79a7 · range 18 commits`;
+  `bun packages/agentic-workflow/bin/agentic-workflow.mjs journal aggregate
+  --check` · exit 0 · `checked 54 · refusals 0`; O11's repaired validator ·
+  `ls .agentic-workflow/journal/*fix-706-logs-write-path*` exits 0 naming both
+  unit fragments (`20261124T232327Z-…` and this batch's `20261125T012408Z-…`)
+  — justifies: any of the three wiring surfaces a consumer copies → each names
+  the CI condition, so a copied recipe runs instead of being refused for a
+  context its own doc omitted; differential in `mktemp -d` exports of
+  `c73786662` vs this head · `journal aggregate --check` and the local
+  aggregate refusal byte-identical in stdout, stderr and exit; `phase-lint` ·
+  PASS · `scaffold-contract authoring` · `ACCEPTANCE MATCH`; `docs-generate
+  --check` · PASS; `lint-changeset` · ok; `normative-drift` · 24 pass;
+  `unit-doc-contract` · 21 pass; `test-obligation-tags` · 0 findings;
+  `skill-lint` · 0 findings; `check-skill-context` · PASS 33 skills.
 
 ## Next
 
