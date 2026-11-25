@@ -12,7 +12,7 @@
 //   test-obligation@1 surface=packages/pi-nan-agentic-workflow/src/extension #719
 //   kinds=behavioral,contract,negative
 //   obligations=donor-triggers-default,donor-withholds-on-block,donor-withholds-without-key,
-//               donor-idempotent-under-withdrawal
+//               donor-idempotent-under-withdrawal,donor-reports-its-decision
 //
 // Justification lines name the independent obligation each case covers, never
 // the implementation under test.
@@ -25,7 +25,7 @@ import { join } from "node:path";
 
 import { clearProviderPresets, getEmbedProfiles } from "@gtrabanco/pi-agentic-workflow/dist/config/presets.js";
 import { NAN_EMBED_PROFILE } from "../dist/embed-profile.js";
-import extension from "../dist/extension.js";
+import extension, { applyEmbedDefault } from "../dist/extension.js";
 
 /** The crate's direct env names, as the main package publishes them. */
 const DIRECT = {
@@ -227,6 +227,89 @@ test("donor: a provider block written after the injection wins in the same sessi
       if (value === undefined) delete process.env[name];
       else process.env[name] = value;
     }
+    clearProviderPresets();
+  }
+});
+
+// ---------------------------------------------------------------------------
+// The decision is reported, not kept silent (F7, D6)
+// ---------------------------------------------------------------------------
+//
+// `plan.detail` was a written promise with no reader: the resolver carried an
+// operator-facing line and an `unreadable-config` refusal text that nothing ever
+// printed. The "0 embedding tokens used" mystery this unit exists to remove was a
+// silence problem, so the seam reports — but only a plan that carries detail, and
+// only once per process. A keyword-only session is a supported state, never a
+// fault to announce per load.
+
+test("donor: an applied default is reported once, with the resolver's own line", () => {
+  clearProviderPresets();
+  const root = projectWith(null);
+  const previousCwd = process.cwd();
+  const savedKey = process.env.NAN_API_KEY;
+  const saved = Object.fromEntries([DIRECT.baseUrl, DIRECT.model, DIRECT.apiKey, BUDGET].map((name) => [name, process.env[name]]));
+  for (const name of [DIRECT.baseUrl, DIRECT.model, DIRECT.apiKey, BUDGET]) delete process.env[name];
+  process.chdir(root);
+  process.env.NAN_API_KEY = "sk-nan";
+  const reports = [];
+  try {
+    applyEmbedDefault({ report: (line, kind) => reports.push({ line, kind }) });
+    assert.equal(reports.length, 1, "the operator hears it once");
+    assert.match(reports[0].line, /doc-index embeddings resolved by default/u, "and hears what happened");
+    assert.match(reports[0].line, /qwen3-embedding/u, "naming the provider the session now uses");
+    assert.equal(reports[0].kind, "info");
+
+    applyEmbedDefault({ report: (line, kind) => reports.push({ line, kind }) });
+    assert.equal(reports.length, 1, "a second load in the same process stays silent");
+  } finally {
+    process.chdir(previousCwd);
+    if (savedKey === undefined) delete process.env.NAN_API_KEY;
+    else process.env.NAN_API_KEY = savedKey;
+    for (const [name, value] of Object.entries(saved)) {
+      if (value === undefined) delete process.env[name];
+      else process.env[name] = value;
+    }
+    clearProviderPresets();
+  }
+});
+
+test("donor: an unreadable config is reported as a warning carrying the error text", () => {
+  clearProviderPresets();
+  const root = scratch("nan-default-on-unreadable-");
+  mkdirSync(join(root, ".agentic-workflow", "index.json"), { recursive: true });
+  const previousCwd = process.cwd();
+  const savedKey = process.env.NAN_API_KEY;
+  process.chdir(root);
+  process.env.NAN_API_KEY = "sk-nan";
+  const reports = [];
+  try {
+    applyEmbedDefault({ report: (line, kind) => reports.push({ line, kind }) });
+    assert.equal(reports.length, 1, "a refusal is never silent — the operator has to act on it");
+    assert.equal(reports[0].kind, "warning");
+    assert.match(reports[0].line, /EISDIR/u, "and it carries the error text, not a generic failure");
+  } finally {
+    process.chdir(previousCwd);
+    if (savedKey === undefined) delete process.env.NAN_API_KEY;
+    else process.env.NAN_API_KEY = savedKey;
+    clearProviderPresets();
+  }
+});
+
+test("donor: a withhold that carries no detail stays silent", () => {
+  clearProviderPresets();
+  const root = projectWith({ version: 1, provider: { baseUrl: "https://acme.example/v1", model: "m", envVar: "ACME_API_KEY" } });
+  const previousCwd = process.cwd();
+  const savedKey = process.env.NAN_API_KEY;
+  process.chdir(root);
+  process.env.NAN_API_KEY = "sk-nan";
+  const reports = [];
+  try {
+    applyEmbedDefault({ report: (line, kind) => reports.push({ line, kind }) });
+    assert.deepEqual(reports, [], "an operator's own block is not news");
+  } finally {
+    process.chdir(previousCwd);
+    if (savedKey === undefined) delete process.env.NAN_API_KEY;
+    else process.env.NAN_API_KEY = savedKey;
     clearProviderPresets();
   }
 });
