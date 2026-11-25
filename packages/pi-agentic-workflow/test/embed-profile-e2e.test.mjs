@@ -146,7 +146,7 @@ test("S9 AC1: the second sync is a warm run — zero provider calls, still nothi
 // and the answer must be a hybrid one, not the keyword-only degradation.
 
 test("#719 AC6: a query through the tool seam resolves the default provider (no degradation)", async () => {
-  const { applyEmbedDefaultOnAtLoad } = await import("../dist/extension/factory.js");
+  const { applyEmbedDefaultOn } = await import("../dist/config/embed-profile.js");
   const { createWorkflowTools } = await import("../dist/extension/workflow-tools.js");
 
   const root = mkdtempSync(join(tmpdir(), "embed-default-on-e2e-"));
@@ -193,15 +193,16 @@ test("#719 AC6: a query through the tool seam resolves the default provider (no 
     const profile = { ...PROFILE, baseUrl: `http://127.0.0.1:${port}/v1` };
 
     try {
-      // 1. The load seam decides from an absent block plus the key variable —
+      // 1. The decision is made from an absent block plus the key variable —
       //    the exact shape the issue describes, with no `index.json` written.
       process.env.ACME_API_KEY = "acme-key";
-      const plan = applyEmbedDefaultOnAtLoad({
+      const plan = applyEmbedDefaultOn({
         root,
+        entry: { provider: "acme", profile },
         processEnv: process.env,
-        profiles: () => [{ provider: "acme", profile }],
       });
       assert.equal(plan.applied, true, "the profile resolved by default");
+      assert.equal(plan.abstained, false, "nothing was written by an earlier load");
       assert.equal(process.env.AGENTIC_WORKFLOW_DOC_EMBEDDINGS_MODEL, PROFILE.model);
       assert.equal(process.env.AGENTIC_WORKFLOW_DOC_EMBEDDINGS_BASE_URL, profile.baseUrl);
 

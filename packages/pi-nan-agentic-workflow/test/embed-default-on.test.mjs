@@ -66,17 +66,38 @@ function piStub() {
   };
 }
 
-test("donor: the module registers its own profile, so the default needs no other package's load order", () => {
+test("donor: the module's own graph registers and applies, with no other package's load order involved", () => {
   clearProviderPresets();
+  const root = projectWith(null);
+  const previousCwd = process.cwd();
+  const savedKey = process.env.NAN_API_KEY;
+  const saved = Object.fromEntries([DIRECT.baseUrl, DIRECT.model, DIRECT.apiKey, BUDGET].map((name) => [name, process.env[name]]));
+  process.chdir(root);
+  process.env.NAN_API_KEY = "sk-nan";
   try {
-    // Importing the module is the whole trigger: no entry call, no registry read
-    // by anyone else. The registry holds the profile the module owns.
+    // Nothing registered this profile from outside: the shop is bare.
+    assert.deepEqual(getEmbedProfiles(), [], "the fixture starts with an empty registry");
+
+    extension(piStub());
+
     assert.deepEqual(
       getEmbedProfiles().map((entry) => entry.provider),
       ["nan"],
-      "the donor's own module top registers the profile",
+      "the donor registers its own profile, from its own module",
+    );
+    assert.equal(
+      process.env[DIRECT.model],
+      NAN_EMBED_PROFILE.model,
+      "and applies it in the same call — no other package ran first",
     );
   } finally {
+    process.chdir(previousCwd);
+    if (savedKey === undefined) delete process.env.NAN_API_KEY;
+    else process.env.NAN_API_KEY = savedKey;
+    for (const [name, value] of Object.entries(saved)) {
+      if (value === undefined) delete process.env[name];
+      else process.env[name] = value;
+    }
     clearProviderPresets();
   }
 });
@@ -87,14 +108,17 @@ test("donor: loading the extension applies the profile from an absent block and 
   const previousCwd = process.cwd();
   const savedKey = process.env.NAN_API_KEY;
   const saved = Object.fromEntries([DIRECT.baseUrl, DIRECT.model, DIRECT.apiKey, BUDGET].map((name) => [name, process.env[name]]));
+  // A bare provider surface: this row's fixture is the absent-block + present-key
+  // case, and an export another in-process row left behind is not part of it.
+  for (const name of [DIRECT.baseUrl, DIRECT.model, DIRECT.apiKey, BUDGET]) delete process.env[name];
   process.chdir(root);
   process.env.NAN_API_KEY = "sk-nan";
   try {
     extension(piStub());
 
+    assert.equal(process.env[DIRECT.apiKey], "sk-nan", "the key is the one the process carries");
     assert.equal(process.env[DIRECT.baseUrl], NAN_EMBED_PROFILE.baseUrl, "the profile resolved by default");
     assert.equal(process.env[DIRECT.model], NAN_EMBED_PROFILE.model);
-    assert.equal(process.env[DIRECT.apiKey], "sk-nan", "the key is the one the process carries");
     assert.equal(process.env[BUDGET], String(NAN_EMBED_PROFILE.chunk_limit * NAN_EMBED_PROFILE.pacing.batchSize));
   } finally {
     process.chdir(previousCwd);
@@ -148,13 +172,15 @@ test("donor: without the key nothing is exported — the keyword-only session st
   const previousCwd = process.cwd();
   const savedKey = process.env.NAN_API_KEY;
   const saved = Object.fromEntries([DIRECT.baseUrl, DIRECT.model, DIRECT.apiKey, BUDGET].map((name) => [name, process.env[name]]));
+  // A bare provider surface: whatever earlier rows left behind is not this row's fixture.
+  for (const name of [DIRECT.baseUrl, DIRECT.model, DIRECT.apiKey, BUDGET]) delete process.env[name];
   delete process.env.NAN_API_KEY;
   process.chdir(root);
   try {
     extension(piStub());
 
-    assert.equal(process.env[DIRECT.baseUrl], saved[DIRECT.baseUrl], "no key, no provider, no fault");
-    assert.equal(process.env[DIRECT.model], saved[DIRECT.model]);
+    assert.equal(process.env[DIRECT.baseUrl], undefined, "no key, no provider, no fault");
+    assert.equal(process.env[DIRECT.model], undefined);
     // The trigger is live and the key is what stops it: the same project with a
     // key resolves, so this hold is the absent credential and nothing else.
     process.env.NAN_API_KEY = "sk-nan";

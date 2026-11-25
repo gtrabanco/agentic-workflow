@@ -16,59 +16,6 @@ import type { WorkflowToolSpec, WorkflowToolsDeps } from "./workflow-tools.js";
 import type { ExtensionSurface, InvocationContext, ModelRef, RoutingControls } from "../routing/types.js";
 import type { HintStore } from "../routing/state.js";
 import { createProfileStateStore, stateFilePath } from "../routing/state.js";
-import { getEmbedProfiles } from "../config/presets.js";
-import { applyEmbedDefaultOn } from "../config/embed-profile.js";
-import type { EmbedDefaultOnResult } from "../config/embed-profile.js";
-
-/**
- * Issue #719 S1/S4 — apply the registered presets' doc-index embedding profile at
- * extension load, unless the project's committed config already decides.
- *
- * The decision itself is `planEmbedDefaultOn`'s (one place, suite-driven); this
- * seam only supplies production's two inputs — the process environment and the
- * preset registry — and reports what happened so the entry can say it once. It
- * is idempotent because the resolver is: a second load in the same process
- * changes nothing, and a session with no registered profile or no key exports
- * nothing at all.
- *
- * The environment is read from and written to the same map in production, which
- * is why the child processes the runner spawns inherit the resolution without a
- * spawn-side change.
- */
-export interface EmbedDefaultOnLoadDeps {
-  /** The project root the config is read from. */
-  readonly root: string;
-  /** The process surface; defaults to `process.env`. */
-  readonly processEnv?: Record<string, string | undefined>;
-  /** The preset registry; defaults to the shipped one. */
-  readonly profiles?: () => readonly { provider: string; profile: import("../config/presets.js").ProviderConfig }[];
-  /** The filesystem read; defaults to the resolver's own. */
-  readonly readFile?: (path: string) => string | null;
-}
-
-export function applyEmbedDefaultOnAtLoad(deps: EmbedDefaultOnLoadDeps): EmbedDefaultOnResult {
-  const processEnv = deps.processEnv ?? process.env;
-  const profiles = (deps.profiles ?? getEmbedProfiles)();
-  // The first registered profile is the one the default applies to: a session
-  // loads its companion packages at startup, and a second provider shipping a
-  // profile is an operator decision (`/aw-settings` materialization), never a
-  // guess about which vendor to prefer.
-  const entry = profiles[0];
-  if (entry === undefined) {
-    return {
-      applied: false,
-      abstained: false,
-      plan: { provider: "", reason: "no-provider-key", inject: false, env: {}, detail: null },
-    };
-  }
-  return applyEmbedDefaultOn({
-    entry,
-    root: deps.root,
-    env: processEnv,
-    processEnv,
-    ...(deps.readFile ? { readFile: deps.readFile } : {}),
-  });
-}
 
 /**
  * The Pi-free half of the extension entry (SPEC "Command surface (api)").
