@@ -14,7 +14,7 @@
 //   test-obligation@1 surface=packages/pi-agentic-workflow/src/config/embed-profile #719
 //   kinds=behavioral,contract,negative,integration
 //   obligations=default-on-injection,withhold-on-explicit-block,withhold-without-key,
-//               byte-identity,idempotent-wiring,tuning-parity
+//               byte-identity,idempotent-wiring,tuning-parity,unreadable-config-refusal
 //
 // Justification lines name the independent obligation each case covers, never
 // the implementation under test.
