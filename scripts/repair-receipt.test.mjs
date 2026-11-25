@@ -68,6 +68,7 @@ function facts(overrides = {}) {
 function derivedOf(overrides = {}) {
   const base = facts(overrides);
   return {
+    unit: "698-toy-unit",
     classKind: base.classKind,
     scope: repairScopeDigest({ reviewed: SHA_A, head: SHA_B, paths: base.paths }),
     acHash: DIGEST,
@@ -136,7 +137,12 @@ test("a repaired, gate-green, acceptance-stable head is merge currency", () => {
   assert.equal(judged.currency, true);
   assert.equal(judged.route, "RE-REVIEW-SKIPPED");
   // OPTIONAL is currency too (the fold's advisory branch), never a fresh review.
-  const optional = judgeRepair({ marker: { ...parseRepairReceipt(body), route: "RE-REVIEW-OPTIONAL" }, headSha: SHA_B, derived });
+  const optionalFacts = derivedOf({ classKind: "docs-only", paths: ["docs/ROADMAP.md"] });
+  const optionalBody = renderRepairBody({
+    sha: SHA_B, unit: "698-toy-unit", reviewed: SHA_A, scope: optionalFacts.scope,
+    classKind: "docs-only", route: "RE-REVIEW-OPTIONAL", ac: optionalFacts.acHash, gate: optionalFacts.gateDigest, open: 0,
+  });
+  const optional = judgeRepair({ marker: parseRepairReceipt(optionalBody), headSha: SHA_B, derived: optionalFacts });
   assert.equal(optional.currency, true);
 });
 
@@ -170,10 +176,10 @@ test("a stale gate receipt staled only by ceremony bookkeeping stays gate curren
   const derived = derivedOf({ gateOk: true, gateStalePaths: ["docs/features/698-toy-unit/review-findings.md", "docs/LOGS.md"] });
   const body = renderRepairBody({ sha: SHA_B, unit: "698-toy-unit", reviewed: SHA_A, scope: derived.scope, classKind: "ceremony", route: "RE-REVIEW-SKIPPED", ac: DIGEST, gate: DIGEST, open: 0 });
   const judged = judgeRepair({ marker: parseRepairReceipt(body), headSha: SHA_B, derived });
-  assert.equal(judged.currency, true);
-  assert.match(judged.reason, /gate/i);
+  assert.equal(judged.currency, true, "a gate that ran green before bookkeeping moved is still gate evidence");
+  assert.equal(derived.gateOk, true);
   // A docs-only path in a stale gate delta is not gated evidence: no currency.
-  const notGated = derivedOf({ gateStalePaths: ["docs/workflow/SETUP.md"] });
+  const notGated = derivedOf({ gateStalePaths: ["docs/workflow/SETUP.md"], gateOk: false });
   assert.equal(judgeRepair({ marker: parseRepairReceipt(body), headSha: SHA_B, derived: { ...notGated, scope: derived.scope } }).currency, false);
 });
 
