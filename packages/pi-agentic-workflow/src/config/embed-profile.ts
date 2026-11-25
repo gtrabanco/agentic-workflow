@@ -397,12 +397,28 @@ export interface EmbedDefaultOnDeps {
   readonly readFile?: (path: string) => string | null;
 }
 
-/** The provider block the file holds, `null` when absent, or the refusal text. */
+/**
+ * The provider block the file holds, `null` when absent, or the refusal text.
+ *
+ * Only absence is a decision (`provider` unset ⇒ the default applies). A read the
+ * process cannot complete — a 0-mode file's `EACCES`, a directory's `EISDIR`, a
+ * vanished path's `ENOENT` race — leaves the block unknown, so it becomes the
+ * `unreadable-config` refusal carrying the error text instead of a throw into
+ * whatever loaded the extension.
+ */
 function readProviderBlock(
   path: string,
   readFile: (path: string) => string | null,
 ): { ok: true; provider: ProviderConfig | null } | { ok: false; detail: string } {
-  const text = readFile(path);
+  let text: string | null;
+  try {
+    text = readFile(path);
+  } catch (error) {
+    const cause = error as NodeJS.ErrnoException;
+    if (cause?.code === "ENOENT") return { ok: true, provider: null };
+    const message = error instanceof Error ? error.message : String(error);
+    return { ok: false, detail: `${path} cannot be read (${message})` };
+  }
   if (text === null) return { ok: true, provider: null };
   let parsed: unknown;
   try {
@@ -419,7 +435,8 @@ function readProviderBlock(
   return { ok: true, provider: provider ?? null };
 }
 
-/** The default read: a file's text, `null` when it does not exist, a refusal when it cannot be read. */
+/** The default read: a file's text, `null` when it does not exist. Every other
+ *  failure is left to `readProviderBlock`, which knows absence from a refusal. */
 function readTextFileOrNull(path: string): string | null {
   try {
     return readFileSync(path, "utf8");
