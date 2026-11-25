@@ -354,7 +354,8 @@ the `release` step is the changeset that ships with the code.
 - **P6** — 2026-11-24, audit-pr currency + the BLOCKED receipt, review-receipt repair currency + the non-pass families (E5) · `1d1ad5ed6`.
 - **P7** — 2026-11-24, the skills: the fold's emission command and order, audit-pr's currency and both-verdict receipt, review-change's non-pass receipt, the advisory (E12) · `725356c18`.
 - **P8** — 2026-11-24, the changeset, the emitted projection, the budget re-pins, the command registration and the dispatch/case re-cuts (D14) · `709452055`.
-- **P8a** — 2026-11-24, the ledger closure and this Log (docs-only over the gated bytes; `docs-generate --check` re-run green) · this commit.
+- **P8a** — 2026-11-24, the ledger closure and this Log (docs-only over the gated bytes; `docs-generate --check` re-run green) · `79b7bf4c3` → `7741fb9d1`.
+- **P8b** — 2026-11-24, the branch pushed (pre-push gate `PASS — 18 step(s) in 473s`) and PR [#725](https://github.com/gtrabanco/agentic-workflow/pull/725) opened against `main`; `Closes #698`. This commit is the PR registration.
 - **D14** — 2026-11-24, three closed-set re-cuts, each named rather than silent: `runner.dispatch.test.mjs`'s command list gains `repair-receipt`; `ceremony-findings-ledger.test.mjs`'s `--class c` placeholder becomes the published `source` (the writer now validates the class cell; the assertion is unchanged); `workflow-tools.test.mjs`'s BLOCKED action moves `none → post` because S7 makes a BLOCKED verdict receipt-bearing. No assertion was weakened or deleted (`IR3`), and the suites' intent is intact.
 
 - **E13a** — 2026-11-24, `runner dimension-regression --base origin/main --root .` after E13 landed · exit 0 · `evidence | docs/features/698-ceremony-rule-never-blocks/SPEC.md` · `verdict | clean` (20 → 20 dimensions; the two changed review surfaces re-verified, none dropped).
@@ -362,7 +363,8 @@ the `release` step is the changeset that ships with the code.
 ## Next
 
 `→ Next: /aw-local-review` on the handed-off diff (S1's workflow: the operator is
-the external verifier; no review pack runs on this change).
+the external verifier; no review pack runs on this change). The PR is
+[#725](https://github.com/gtrabanco/agentic-workflow/pull/725) (`Closes #698`).
 
 ## References
 
