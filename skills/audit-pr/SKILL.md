@@ -39,7 +39,10 @@ Load and verify the **canonical** [Turn contract](../orchestration-envelope/refe
 ✓ The review receipt was consumed from one PR snapshot: `headRefOid` + newest
   matching `review-change:pass` marker fetched together; absent or any SHA
   mismatch → blocker routed to `/review-change`, current → its scope/axes/
-  acceptance coverage/manual checks acknowledged without re-review
+  acceptance coverage/manual checks acknowledged without re-review; a current
+  **repair receipt** answers current too (`repairJudge`) — a ceremony/docs-only
+  fold over an unchanged acceptance blob and a green gate is merge currency,
+  never a re-review (issue #698 S4/S5)
 ✓ Gate evidence: `runner gate-receipt verify` answered `current` +
   `pass` (missing/stale/invalid → BLOCKER, route `gate-receipt.mjs run`)
 ✓ Terminal hygiene was read from state, not assumed: tree clean, branch pushed,
@@ -51,9 +54,10 @@ Load and verify the **canonical** [Turn contract](../orchestration-envelope/refe
 ✓ The PR's FULL URL is printed in the verdict header (the user may be juggling
   several projects and agents without a CI monitor — the link in the chat is
   the contract, never "PR #N" alone)
-✓ MERGE-READY verdict? Then the comment was POSTED by
-  `runner audit-pr-gate comment` (re-reads, exits non-zero unless the newest marker
-  names the head) — a comment, never a commit-message tag. BLOCKED → no comment
+✓ The verdict receipt was POSTED by `runner audit-pr-gate comment` — the
+  merge-ready marker on MERGE-READY and the typed `audit-pr:blocked` marker on
+  BLOCKED (re-reads, exits non-zero unless the newest marker names the head) —
+  a comment, never a commit-message tag, and never a verdict left receipt-less
 ✓ Nothing was edited, refactored, or merged; merge authorization is outside
   this skill and cannot be inherited from docs or an earlier session
 ✓ No review pass was composed or reconstructed: a missing/stale receipt is a

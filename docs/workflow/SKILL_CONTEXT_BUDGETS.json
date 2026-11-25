@@ -255,16 +255,17 @@
       "mainLinesMax": 321
     },
     "fold-findings": {
-      "mainEstimateMax": 6620,
+      "mainEstimateMax": 7292,
       "mainSources": {
         "issue #293 (unit 76)": "the freeze-batch contract gains the product-owner class — the Batch-class and Branch receipt lines carry the new vocabulary and the SKILL.md states the freeze-batch (product owner present) rule beside the FOLD_PROCESS.md table; unit 76's review folds then grew SKILL.md from 221 to 225 lines (87decb95), re-measured at 3105; ceiling re-based to ceil(3105 x 1.10) = 3416, reason declared (issue #293 + unit 76 review folds)",
         "issue #308 (unit 79 review fold)": "Step 0 now states both findings carriers' own row schemas — the legacy 7-column row with the folded flip, and the migrated 6-column `findings-table@1` row whose rows are open by definition and close by leaving for a `## Log` F line (F2's fold: one block for two grammars sent the fold queue to flip a column a migrated unit does not have). Grew SKILL.md from 225 lines / 3105 to 245 lines / 3499; ceilings re-based to ceil(3499 × 1.10) = 3849 and ceil(245 × 1.10) = 270, reason declared.",
         "feature 84 review fold (F2/F12: sweep bounds + the report-validator class)": "feature 84 review fold (F2/F12): the `swept:` guardrail states the bounds the gate enforces on a sweep declaration and the report-validator class it re-runs. Measured 3898 est / 270 lines at this re-basis; ceiling = ceil(3898 x 1.10) = 4288 / ceil(270 x 1.10) = 297",
         "fix 318 (class escalation + claim-evidence + evidence-bound + re-review skip)": "fold-findings gains: class escalation (≥2 rows → class-level finding), claim-evidence loop (mandatory reproduction, loop-until-green), evidence-bound check (citation verification), reviewer anti-invention (provably-changed bytes), re-review skip default (docs-only + sweep green), defect identity (mechanism not file:line), per-file review state, net narration diff ≤ 0, closure status output. Measured by `scripts/check-skill-context.mjs` at this re-basis: 5403 est / 373 lines; ceiling re-based to exact ceil(5403 × 1.10) = 5944 / ceil(373 × 1.10) = 411",
         "feature 91 / issue #352 (runner prose)": "measured 6018 est / 407 lines, the runner re-point and each citing skill's pin pointer; ceiling re-based to ceil(6018 x 1.10) = 6620 / ceil(407 x 1.10) = 448",
+        "issue #698 (repair receipt)": "the fold's REPAIR-RECEIPT becomes a machine receipt: the emission command, the derived branch and the prescribed emission order (bookkeeping first, gate run next, receipt last) add nine lines; measured 6629 est / 450 lines, ceiling re-based to ceil(6629 x 1.10) = 7292 / ceil(450 x 1.10) = 495. Growth source = issue #698 S4/S6.",
         "issue #646 (docs + skills reconciliation, 2026-11-20)": "pointer conversion (S6): the duplicated rule becomes a citation of the one surface that owns it, so the citation sentence is what moves the bytes — 6,308 est / 432 machine -> 6,354 / 436. Named growth, never a silent one: the same change deletes a second wording of the rule from the tree, and every measurement stays inside its unchanged mainEstimateMax, so no ceiling is re-based. Measured with `bun scripts/check-skill-context.mjs` at this unit's head against a `git archive` of `8fc204abb`."
       },
-      "mainLinesMax": 448
+      "mainLinesMax": 495
     },
     "init-workspace": {
       "mainEstimateMax": 7895,
@@ -385,10 +386,11 @@
         "issue #269 (per-phase Relevant-files read-set consumption)": "the Scope section gains the read-set-around-the-diff rule (the unit's lists resolved by scripts/relevant-files.mjs --phase all; git still owns review scope); measured by the checker at this re-basis: 3450 est / 248 lines; ceilings re-based to ceil(3450 × 1.10) = 3795 / ceil(248 × 1.10) = 273",
         "issue #646 (docs + skills reconciliation, 2026-11-20)": "pointer conversion (S6): the duplicated rule becomes a citation of the one surface that owns it, so the citation sentence is what moves the bytes — 3,522 est / 252 machine -> 3,604 / 257. Named growth, never a silent one: the same change deletes a second wording of the rule from the tree, and every measurement stays inside its unchanged mainEstimateMax, so no ceiling is re-based. Measured with `bun scripts/check-skill-context.mjs` at this unit's head against a `git archive` of `8fc204abb`."
       },
-      "referenceEstimateMax": 3079,
+      "referenceEstimateMax": 3423,
       "referenceSources": {
         "feature 30 / issue #170": "delta-mode + escalation growth in REVIEW_PROCESS.md (measured 2746)",
-        "feature 32 (P4)": "the P4 budget re-basis swept the route ceilings but left the per-skill ceiling at the stale floor 2800 (measured 2799); re-based to ceil(2799 x 1.10) = 3079 (review finding F17)"
+        "feature 32 (P4)": "the P4 budget re-basis swept the route ceilings but left the per-skill ceiling at the stale floor 2800 (measured 2799); re-based to ceil(2799 x 1.10) = 3079 (review finding F17)",
+        "issue #698 (repair receipt)": "PERSIST_AND_DECIDE.md's step 12 states the non-pass receipt family (the `review-change:fail` / `needs-decision` markers, their `--cycle`/`--findings` cells and the emit command) beside the pass receipt; measured 3111 est at this re-basis, so the reference ceiling re-bases to ceil(3111 x 1.10) = 3423. Growth source = issue #698 S7's non-pass receipt."
       }
     },
     "execute-phase": {

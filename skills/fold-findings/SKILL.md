@@ -233,6 +233,19 @@ no schema field). Six fields, always present:
   ran on — green or red. A **failed gate never silences the receipt**: the
   batch is reported with the observed exit codes and nothing folded (a red gate
   is not a silent gap).
+- **The command derives the branch, the fold never hand-picks it.** After the
+  bookkeeping commits and the gate run, emit the machine receipt:
+  `runner repair-receipt emit --pr <N> --unit <NN-slug> --reviewed <the reviewed head>`.
+  It re-derives the delta class, the scope digest, the acceptance hash, the gate
+  evidence and the open `BLOCKER`/`CRITICAL` count, and prints/posts the typed
+  the `fold-findings:repair` marker marker with the route the facts support.
+  `Branch:` above prints that route verbatim. `RE-REVIEW-SKIPPED` and
+  `RE-REVIEW-OPTIONAL` are merge currency; the other three grant nothing and
+  keep their existing continuation (issue #698 S4/S9).
+- **Emission order (issue #698 S6):** bookkeeping commits first, then the gate
+  run, then the receipt. `emit` posts a comment and **commits nothing**; a
+  re-pin after it is a new head and needs a new receipt. That order is what
+  stops the receipts from voiding each other.
 - The `Fold diff` shortstat comes from a real `git diff` run over the batch's
   commits.
 - The `Batch class` derives from the taken queue's frozen rows only — the fold
