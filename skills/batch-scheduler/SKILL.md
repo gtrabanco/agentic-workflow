@@ -1,7 +1,7 @@
 ---
 name: batch-scheduler
 user-invocable: true
-version: 4.10.1
+version: 5.0.0-canary.20261125.1
 argument-hint: "[--json-only] [--issues-file <json>] [--no-state] [--remote <url>]"
 description: >
   Deterministic batch planner: read the live work graph and emit

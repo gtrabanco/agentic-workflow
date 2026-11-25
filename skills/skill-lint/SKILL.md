@@ -1,7 +1,7 @@
 ---
 name: skill-lint
 user-invocable: false
-version: 4.10.1
+version: 5.0.0-canary.20261125.1
 metadata:
   internal: true
 description: >

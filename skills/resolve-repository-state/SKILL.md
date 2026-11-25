@@ -1,7 +1,7 @@
 ---
 name: resolve-repository-state
 user-invocable: true
-version: 4.10.1
+version: 5.0.0-canary.20261125.1
 argument-hint: <contradiction-id>
 description: >
   Resolve an explicit Normalized Repository State contradiction. This is the

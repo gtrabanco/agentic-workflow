@@ -1,7 +1,7 @@
 ---
 name: review-implementation
 user-invocable: false
-version: 4.10.1
+version: 5.0.0-canary.20261125.1
 argument-hint: <path-or-glob>
 allowed-tools: Read, Grep, Glob, Bash, WebFetch
 author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
