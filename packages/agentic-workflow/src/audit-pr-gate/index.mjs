@@ -40,9 +40,14 @@ const BIN = fileURLToPath(new URL("../../bin/agentic-workflow.mjs", import.meta.
 // fix/286 adds the scope-aware judge to the same import.
 import { judgeReceipt, latestReceipt, receiptStatus } from "../review-receipt/index.mjs";
 import { changedPathsBetween } from "../scope-manifest/index.mjs";
+import { collectRepairFacts, judgeRepair, latestRepairReceipt } from "../repair-receipt/index.mjs";
 
 export const AUDIT_CONTRACT = "v1";
 export const AUDIT_MARKER_RE = /<!-- audit-pr:merge-ready sha=([0-9a-f]{40}) -->/;
+
+/** The BLOCKED verdict's own receipt (issue #698 S7): a typed marker, so a failed
+ *  audit leaves the same machine trace its merge-ready sibling does. */
+export const AUDIT_BLOCKED_MARKER_RE = /<!-- audit-pr:blocked sha=([0-9a-f]{40}) blockers=(\d+) route=([^ \n]+) -->/;
 
 /**
  * The merge gate's per-gate outcome vocabulary (issue #702 S5/S10).
@@ -142,8 +147,14 @@ export function gateBlocker(name, { outcome, reason }) {
  * current does each gate get read, and every gate that is not exactly `pass`
  * blocks — with the outcome it actually holds (`gateReport`).
  */
-export function auditVerdict({ comments, headSha, gates = {}, changedPaths }) {
+export function auditVerdict({ comments, headSha, gates = {}, changedPaths, repair = null }) {
   let status = receiptStatus(comments, headSha);
+  // A current repair receipt is the review gate's currency (issue #698 S4/S5):
+  // the fold repaired only ceremony/docs, the acceptance blob is unchanged and
+  // the gate ran green, so a review receipt staled by that bookkeeping never
+  // re-opens a full review. The remaining gates still decide, below.
+  let receiptSource = "review";
+  let repairJudge = null;
   // fix/286 (#182 AC 3/9) — a receipt that recorded a scope manifest stays
   // current across a head delta whose changed paths are all non-affecting
   // (foreign session-log/toolstate commits); any affecting path, an
@@ -156,17 +167,29 @@ export function auditVerdict({ comments, headSha, gates = {}, changedPaths }) {
       status = { status: "current", reason: scopeJudge.reason, receipt: status.receipt };
     }
   }
+  if (status.status !== "current" && repair?.current) {
+    status = { status: "current", reason: `repair receipt currency at ${headSha}`, receipt: status.receipt };
+    receiptSource = "repair";
+    repairJudge = repair;
+  }
   if (status.status !== "current") {
     return {
       verdict: "BLOCKED",
-      reason: status.reason,
+      reason: repair && !repair.current ? `repair receipt not current: ${repair.reason}` : status.reason,
       route: "/review-change",
       gatesEvaluated: false,
-      blockers: [status.reason],
+      blockers: [repair && !repair.current ? `repair receipt not current: ${repair.reason}` : status.reason],
+      ...(repairJudge ? { repairJudge } : {}),
       ...(scopeJudge && !scopeJudge.current ? { scopeJudge } : {}),
     };
   }
   const report = gateReport(gates);
+  // The repair receipt already re-derived the gate's currency (current + pass,
+  // or stale only over ceremony bookkeeping), so a stale gate judge answer is
+  // cleared with its reason. A genuinely missing/invalid/red gate never is.
+  if (repairJudge && report["gate-receipt"]?.outcome === "fail") {
+    report["gate-receipt"] = { outcome: "pass", reason: "repair receipt gate currency" };
+  }
   const blocking = GATE_NAMES.filter((name) => report[name].outcome !== "pass");
   if (blocking.length > 0) {
     return {
@@ -177,6 +200,8 @@ export function auditVerdict({ comments, headSha, gates = {}, changedPaths }) {
       blockers: blocking.map((name) => gateBlocker(name, report[name])),
       gates: report,
       unevaluatable: GATE_NAMES.filter((name) => report[name].outcome === "unevaluatable"),
+      receiptSource,
+      ...(repairJudge ? { repairJudge } : {}),
     };
   }
   return {
@@ -187,6 +212,8 @@ export function auditVerdict({ comments, headSha, gates = {}, changedPaths }) {
     blockers: [],
     gates: report,
     unevaluatable: [],
+    receiptSource,
+    ...(repairJudge ? { repairJudge } : {}),
     ...(scopeJudge?.current ? { scopeJudge } : {}),
   };
 }
@@ -201,6 +228,54 @@ export function mergeCommentAction({ verdict, comments, headSha }) {
   const marker = newestAuditComment(comments);
   if (marker === headSha) return { action: "skip", reason: "same SHA already commented — idempotent by SHA marker" };
   return { action: "post", reason: "newest marker wins; older SHA re-comments" };
+}
+
+/** The fixed BLOCKED receipt body (issue #698 S7). */
+export function renderBlockedBody({ sha, blockers = [], route = "/review-change", gates = {} }) {
+  const list = Array.isArray(blockers) ? blockers : [];
+  const gateRows = Object.entries(gates)
+    .map(([name, value]) => `${name}=${value !== null && typeof value === "object" ? value.outcome : value}`)
+    .join(" · ");
+  return [
+    `<!-- audit-pr:blocked sha=${sha} blockers=${list.length} route=${route} -->`,
+    "## audit-pr: BLOCKED",
+    "",
+    `- Audited head: \`${sha}\``,
+    `- Route: ${route}`,
+    `- Blockers (${list.length}):`,
+    ...(list.length > 0 ? list.map((blocker) => `  - ${blocker}`) : ["  - none"]),
+    `- Gates: ${gateRows || "none evaluated"}`,
+    "",
+  ].join("\n");
+}
+
+/** The newest blocked marker, in comment order. */
+export function newestBlockedComment(comments) {
+  const list = Array.isArray(comments) ? comments : [];
+  for (let index = list.length - 1; index >= 0; index -= 1) {
+    const match = AUDIT_BLOCKED_MARKER_RE.exec(list[index]?.body ?? "");
+    if (match) return { sha: match[1], blockers: Number(match[2]), route: match[3] };
+  }
+  return null;
+}
+
+/**
+ * The verdict's receipt action: MERGE-READY keeps its merge-ready marker, and
+ * BLOCKED posts its own blocked marker (issue #698 S7). Both are idempotent by
+ * SHA: a newer marker always wins, so a re-audit at the same head skips.
+ */
+export function auditReceiptAction({ verdict, comments, headSha }) {
+  if (verdict === "MERGE-READY") return mergeCommentAction({ verdict, comments, headSha });
+  const marker = newestBlockedComment(comments);
+  if (marker?.sha === headSha) return { action: "skip", reason: "same SHA already posted its blocked receipt — idempotent by SHA marker" };
+  return { action: "post", reason: "newest blocked marker wins; a later head re-comments" };
+}
+
+/** The blocked receipt action — the BLOCKED half of `auditReceiptAction`, named
+ *  separately so a caller can act on one verdict without matching strings. */
+export function blockedCommentAction({ verdict, comments, headSha }) {
+  if (verdict !== "BLOCKED") return { action: "none", reason: "a MERGE-READY verdict posts its own merge-ready marker" };
+  return auditReceiptAction({ verdict, comments, headSha });
 }
 
 /** The fixed merge-ready body. */
@@ -331,6 +406,17 @@ export function gateReceiptGate({ receipt = null, root = process.cwd() } = {}) {
   return receiptGateOutcome(result);
 }
 
+async function repairJudgeAt({ comments, head, root }) {
+  const marker = latestRepairReceipt(comments);
+  if (!marker) return null;
+  try {
+    const facts = await collectRepairFacts({ root, unit: marker.unit, reviewed: marker.reviewed, head });
+    return { ...judgeRepair({ marker, headSha: head, derived: facts.derived }), marker };
+  } catch (error) {
+    return { current: false, currency: false, route: "RE-REVIEW-REQUIRED", reason: error.message, marker };
+  }
+}
+
 const USAGE = `usage: audit-pr-gate <command> [options]
 
   evaluate  (--pr <N> | --comments-json <file|->) [--head <40-hex>] [--gates-json <file>]
@@ -401,7 +487,7 @@ function assertGateValues(stated) {
   }
 }
 
-function dispatch(argv, options) {
+async function dispatch(argv, options) {
   const command = argv[0];
   if (!command || command === "--help" || command === "-h") {
     process.stdout.write(USAGE);
@@ -469,8 +555,10 @@ function dispatch(argv, options) {
           return result.status === 0 ? result.stdout : null;
         }, newest.sha, head)
       : undefined;
-    const verdict = auditVerdict({ comments: forge.comments, headSha: head, gates, changedPaths });
-    const action = mergeCommentAction({ verdict: verdict.verdict, comments: forge.comments, headSha: head });
+    // Issue #698 S4/S5 — a current repair receipt is the review gate's currency.
+    const repair = await repairJudgeAt({ comments: forge.comments, head, root: process.cwd() });
+    const verdict = auditVerdict({ comments: forge.comments, headSha: head, gates, changedPaths, repair });
+    const action = auditReceiptAction({ verdict: verdict.verdict, comments: forge.comments, headSha: head });
     process.stdout.write(
       `${JSON.stringify({ ...verdict, head, pr: forge.number ?? null, action: action.action, actionReason: action.reason }, null, 2)}\n`,
     );
@@ -478,7 +566,7 @@ function dispatch(argv, options) {
     return;
   }
 
-  // comment — shares the same scoped-receipt logic as evaluate (fix/286)
+  // comment — shares the same scoped-receipt and repair logic as evaluate (fix/286, #698)
   const newest = latestReceipt(forge.comments);
   const changedPaths = newest?.scope && newest.sha !== head
     ? changedPathsBetween((...args) => {
@@ -486,25 +574,34 @@ function dispatch(argv, options) {
         return result.status === 0 ? result.stdout : null;
       }, newest.sha, head)
     : undefined;
-  const verdict = auditVerdict({ comments: forge.comments, headSha: head, gates, changedPaths });
-  const action = mergeCommentAction({ verdict: verdict.verdict, comments: forge.comments, headSha: head });
-  if (action.action === "none") throw new Error(`refusing to post a merge-ready comment: ${verdict.reason}`);
+  const repair = await repairJudgeAt({ comments: forge.comments, head, root: process.cwd() });
+  const verdict = auditVerdict({ comments: forge.comments, headSha: head, gates, changedPaths, repair });
+  const action = auditReceiptAction({ verdict: verdict.verdict, comments: forge.comments, headSha: head });
   if (action.action === "post") {
-    const body = renderMergeReadyBody({
-      sha: head,
-      gates: GATE_NAMES.filter((name) => verdict.gates?.[name]?.outcome === "pass"),
-      hygiene: HYGIENE_GATES.map((name) => `${name}=${verdict.gates?.[name]?.outcome ?? "n/a"}`),
-      mergeability: forge.mergeable ?? "unknown",
-    });
+    const body = verdict.verdict === "MERGE-READY"
+      ? renderMergeReadyBody({
+          sha: head,
+          gates: GATE_NAMES.filter((name) => verdict.gates?.[name]?.outcome === "pass"),
+          hygiene: HYGIENE_GATES.map((name) => `${name}=${verdict.gates?.[name]?.outcome ?? "n/a"}`),
+          mergeability: forge.mergeable ?? "unknown",
+        })
+      : renderBlockedBody({
+          sha: head,
+          blockers: verdict.blockers,
+          route: verdict.route ?? "/review-change",
+          gates: verdict.gates ?? {},
+        });
     const scope = repo ? ["-R", repo] : [];
     // `--body-file -` reads standard input: the body never touches the disk.
     const result = run("gh", ["pr", "comment", String(forge.number), "--body-file", "-", ...scope], { input: body });
     if (result.status !== 0) throw new Error(`gh pr comment failed: ${(result.stderr || "").trim()}`);
   }
   const after = stateFromForge(forge.number, repo);
-  const marker = newestAuditComment(after.comments);
-  if (marker !== head) throw new Error(`the merge-ready comment did not land at ${head} (newest marker: ${marker})`);
-  process.stdout.write(`${JSON.stringify({ verdict: "MERGE-READY", head, action: action.action, marker }, null, 2)}\n`);
+  const marker = verdict.verdict === "MERGE-READY"
+    ? newestAuditComment(after.comments)
+    : newestBlockedComment(after.comments)?.sha ?? null;
+  if (marker !== head) throw new Error(`the ${verdict.verdict === "MERGE-READY" ? "merge-ready" : "blocked"} receipt did not land at ${head} (newest marker: ${marker})`);
+  process.stdout.write(`${JSON.stringify({ verdict: verdict.verdict, head, action: action.action, marker }, null, 2)}\n`);
 }
 
 /**

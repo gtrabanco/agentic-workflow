@@ -209,3 +209,89 @@ test("emit refuses a head it cannot read and posts no commit", () => {
     rmSync(cwd, { recursive: true, force: true });
   }
 });
+
+test("the facts re-derive end to end: ceremony repair is currency, a source delta is not", async () => {
+  const { sectionText } = await import("../packages/agentic-workflow/src/runner/unit-doc-phases.mjs");
+  const { buildManifest, assembleReceipt, GATE_RECEIPT_PATH } = await import("../packages/agentic-workflow/src/gate-receipt/index.mjs");
+  const { collectRepairFacts } = await import("../packages/agentic-workflow/src/repair-receipt/index.mjs");
+  const crypto = await import("node:crypto");
+
+  const cwd = mkdtempSync(join(tmpdir(), "repair-facts-"));
+  try {
+    const git = (...args) => spawnSync("git", ["-c", "user.name=Fixture", "-c", "user.email=fixture@example.test", "-c", "commit.gpgsign=false", ...args], { cwd, encoding: "utf8" });
+    const commit = (message) => {
+      git("add", "-A", "--", ".");
+      const done = git("commit", "-qm", message);
+      assert.equal(done.status, 0, done.stderr);
+      return git("rev-parse", "HEAD").stdout.trim();
+    };
+    git("init", "-q", "-b", "main");
+    mkdirSync(join(cwd, "docs/features/698-toy-unit"), { recursive: true });
+    const specPath = join(cwd, "docs/features/698-toy-unit/SPEC.md");
+    writeFileSync(specPath, [
+      "---",
+      "ac-hash: placeholder",
+      "---",
+      "",
+      "# 698 — toy",
+      "",
+      "## Acceptance criteria",
+      "",
+      "1. the toy answers.",
+      "",
+      "## Findings",
+      "",
+      "| id | S# / file:line | axis | severity | impact | class | route |",
+      "|---|---|---|---|---|---|---|",
+      "",
+      "## Log",
+      "",
+    ].join("\n"));
+    const acceptanceHash = crypto.createHash("sha256").update(sectionText(readFileSync(specPath, "utf8"), "Acceptance criteria")).digest("hex");
+    writeFileSync(specPath, readFileSync(specPath, "utf8").replace("ac-hash: placeholder", `ac-hash: ${acceptanceHash}`));
+    const base = commit("base");
+
+    // The project gate ran green at the reviewed head and left its receipt.
+    mkdirSync(join(cwd, ".agentic-workflow/gate"), { recursive: true });
+    const receipt = await assembleReceipt({
+      root: cwd,
+      entries: await buildManifest(cwd),
+      argv: ["toy-gate"],
+      headSha: base,
+      now: "2026-11-24T00:00:00.000Z",
+      logRef: ".agentic-workflow/gate/gate-receipt.log",
+      exitCode: 0,
+      durationMs: 1,
+      result: { schema: "local-gate-result@1", steps: [{ id: "toy", status: "passed", exit_code: 0, duration_ms: 1 }] },
+    });
+    writeFileSync(join(cwd, GATE_RECEIPT_PATH), JSON.stringify(receipt));
+
+    // The fold's bookkeeping: the unit doc's log gains a line, nothing else.
+    writeFileSync(specPath, readFileSync(specPath, "utf8").replace("## Log\n", "## Log\n\n- **F1** — 2026-11-24, folded the ceremony row.\n"));
+    const head = commit("docs: fold bookkeeping");
+    const facts = await collectRepairFacts({ root: cwd, unit: "698-toy-unit", reviewed: base, head });
+    assert.equal(facts.derived.classKind, "ceremony");
+    assert.equal(facts.derived.acMatch, true);
+    assert.equal(facts.derived.openBlocking, 0);
+    assert.equal(facts.gate.status, "stale", "the gate receipt predates the bookkeeping commit");
+    assert.equal(facts.derived.gateOk, true, "stale only over ceremony bookkeeping is still gate evidence");
+    const route = deriveRoute(facts.derived);
+    assert.equal(route, "RE-REVIEW-SKIPPED");
+    const body = renderRepairBody({
+      sha: head, unit: "698-toy-unit", reviewed: base, scope: facts.derived.scope,
+      classKind: facts.derived.classKind, route, ac: facts.derived.acHash, gate: facts.derived.gateDigest, open: 0,
+    });
+    const judged = judgeRepair({ marker: parseRepairReceipt(body), headSha: head, derived: facts.derived });
+    assert.equal(judged.currency, true, judged.reason);
+
+    // A source-bearing commit is not provably ceremony, so it grants nothing.
+    mkdirSync(join(cwd, "src"), { recursive: true });
+    writeFileSync(join(cwd, "src", "core.mjs"), "export const toy = 1;\n");
+    const sourceHead = commit("feat: a real change");
+    const sourceFacts = await collectRepairFacts({ root: cwd, unit: "698-toy-unit", reviewed: base, head: sourceHead });
+    assert.equal(sourceFacts.derived.classKind, null);
+    assert.equal(deriveRoute(sourceFacts.derived), "RE-REVIEW-REQUIRED");
+  } finally {
+    rmSync(cwd, { recursive: true, force: true });
+  }
+});
