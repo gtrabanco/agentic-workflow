@@ -172,4 +172,7 @@ trailing prose would land outside it.
 | null | null | null | qwen3.6 | 0 | 8467946 | 83 | 2785633 | 29401 | 5652912 | 0 | 10392 | 839016 | 0 | 2026-11-21 | pi:reconstruct=01a1fef7-d2b1-7521-b641-36d733bbf88a |
 | null | null | null | qwen3.6 | 0 | 523797 | 9 | 142763 | 1658 | 379376 | 0 | 0 | 30138 | 0 | 2026-11-22 | pi:reconstruct=01a204d0-6010-738d-aa16-947293bd9f0f |
 | null | null | null | qwen3.6 | 0 | 198036 | 5 | 52342 | 1070 | 144624 | 0 | 270 | 16344 | 0 | 2026-11-22 | pi:reconstruct=01a20515-97ae-738d-aa16-947a1d7a4222 |
-| 719-nan-default-embed | execute-phase | 5.0.0-canary.20261122.1 | deepseek-v4-flash | 18 | 26892810 | 188 | 202789 | 52069 | 26637952 | 0 | 0 | 711715 | 2858436 | 2026-11-25 | pi:session=01a20fea-1d25-7011-a8cb-06c47b8c1c85 |
+| 719-nan-default-embed | execute-phase | 5.0.0-canary.20261122.1 | deepseek-v4-flash | 26 | 26892810 | 188 | 202789 | 52069 | 26637952 | 0 | 0 | 711715 | 2858436 | 2026-11-25 | pi:session=01a20fea-1d25-7011-a8cb-06c47b8c1c85 |
+| 719-nan-default-embed | unit-lane | 5.0.0-canary.20261122.1 | glm5.3-flash | 18 | 4115012 | 35 | 325202 | 63218 | 3726592 | 0 | 42083 | 868584 | 6243 | 2026-11-25 | pi:session=01a21061-2b21-7011-a8cb-06e1d8be57dc |
+| 719-nan-default-embed | execute-phase | 5.0.0-canary.20261122.1 | deepseek-v4-flash | 15 | 77452358 | 380 | 740668 | 114186 | 76597504 | 0 | 0 | 1447621 | 1244208 | 2026-11-25 | pi:session=01a21256-8244-7011-a8cb-06e5f918636a |
+| 719-nan-default-embed | execute-phase | 5.0.0-canary.20261125.1 | deepseek-v4-flash | 35 | 5871349 | 77 | 95685 | 13616 | 5762048 | 0 | 0 | 153019 | 2815056 | 2026-11-25 | pi:session=01a213bc-f698-708b-a681-cd7e3c2fa0c8 |
