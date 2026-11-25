@@ -423,58 +423,35 @@ function profileTrio(profile: ProviderConfig, apiKey: string): Record<string, st
 }
 
 /**
- * The trio a trio written by this resolver can be recognized against: the
- * profile's `baseUrl` and `model` verbatim, plus the profile's request budget when
- * it has one. `null` when the profile cannot derive even that. The credential is
- * filled by the caller, because recognizing the credential this resolver wrote is
- * the caller's job to prove.
+ * The trios this resolver exported in this process, keyed by provider — the one
+ * witness of authorship that an operator's hand-written export can never produce.
+ * Value equality alone cannot tell the two apart (an operator exporting the same
+ * values writes an identical shape), so the record is kept where the write
+ * happens and every later decision reads it back.
  */
-function derivedTrio(profile: ProviderConfig): Record<string, string> | null {
-  if (!profile.baseUrl || !profile.model) return null;
-  return {
-    [EMBED_DIRECT_ENV.baseUrl]: profile.baseUrl,
-    [EMBED_DIRECT_ENV.model]: profile.model,
-    ...budgetVariable(profile),
-  };
+const selfExported = new Map<string, Record<string, string>>();
+
+/**
+ * Forget every trio this process recorded as its own write. A caller that shares
+ * one process across independent surfaces owns its dialect of that state, the same
+ * way it owns any other once-per-process memo.
+ */
+export function resetSelfExported(): void {
+  selfExported.clear();
 }
 
 /**
- * The trio this resolver wrote in this process, as far as it can still prove
- * one: the profile's derivation plus the credential the surface carries, which a
- * write by this resolver always landed (`plan.env` names it verbatim). Witnessing
- * it in the caller's environment is what keeps an operator's own key-value from
- * ever matching; the key leaving the caller's environment afterwards does not
- * erase the witness, because the recognized surface is the one this resolver wrote.
- */
-function writtenTrio(
-  profile: ProviderConfig,
-  env: Record<string, string | undefined>,
-  processEnv: Record<string, string | undefined>,
-): Record<string, string> | null {
-  const derived = derivedTrio(profile);
-  if (derived === null) return null;
-  const keyName = profile.envVar;
-  const key = keyName ? (env[keyName]?.trim() ?? processEnv[EMBED_DIRECT_ENV.apiKey]?.trim() ?? "") : "";
-  return key === "" ? derived : { ...derived, [EMBED_DIRECT_ENV.apiKey]: key };
-}
-
-/**
- * The names this resolver wrote and may withdraw: every value present in the
- * surface agrees with the derived trio. The credential is excluded from writing
- * but not from recognition — a profile's key is exactly what a written trio
- * carries — so a present direct name that is missing from (or disagrees with) the
- * derived set is an operator's export and nothing is withdrawn (D7).
+ * The names of `env` this resolver wrote and may withdraw: only the values that
+ * are still exactly what it exported. A name the operator has since changed is
+ * theirs again, and a trio never exported here is never withdrawn (D7).
  */
 function selfInjectedNames(
-  processEnv: Record<string, string | undefined>,
-  trio: Record<string, string> | null,
+  provider: string,
+  env: Record<string, string | undefined>,
 ): string[] {
-  if (trio === null) return [];
-  const exported = Object.values(EMBED_DIRECT_ENV).filter((name) => (processEnv[name] ?? "") !== "");
-  if (exported.length === 0) return [];
-  const disagrees = exported.some((name) => name in trio && processEnv[name] !== trio[name]);
-  if (disagrees) return [];
-  return Object.keys(trio).filter((name) => (processEnv[name] ?? "") !== "");
+  const exported = selfExported.get(provider);
+  if (exported === undefined) return [];
+  return Object.keys(exported).filter((name) => env[name] === exported[name]);
 }
 
 /**
@@ -554,23 +531,24 @@ export function planEmbedDefaultOn({
 
   // The key variable is the gate (`envVar`); an empty or whitespace value is an
   // absent credential, never one this resolver makes up.
-  const keyName = profile.envVar;
-  const apiKey = keyName ? env[keyName]?.trim() : undefined;
-  if (!keyName || !apiKey) return withholds("no-provider-key", null);
-  if (!profile.baseUrl || !profile.model) return withholds("no-provider-key", null);
-
   // An operator who exported the crate's own variables already chose a provider;
   // a partial set is still their choice, and half-injecting around it would
-  // produce a mixture nobody asked for. A trio this resolver exported itself is
-  // not a choice — it is withdrawn before the decision runs, so a provider block
+  // produce a mixture nobody asked for. That choice outranks the key gate: a
+  // session with no preset key and a hand-written export answers `operator-
+  // environment`, which is what it is. A trio this resolver exported itself is not
+  // a choice — it is withdrawn before the decision runs, so a provider block
   // written after the injection wins and a second load plans the surface it found
   // instead of the one it wrote.
-  const trio = writtenTrio(profile, env, processEnv);
-  const selfInjected = selfInjectedNames(processEnv, trio);
+  const selfInjected = selfInjectedNames(entry.provider, processEnv);
   const foreign = Object.values(EMBED_DIRECT_ENV).filter(
     (name) => (processEnv[name] ?? "") !== "" && !selfInjected.includes(name),
   );
   if (foreign.length > 0) return withholds("operator-environment", null);
+
+  const keyName = profile.envVar;
+  const apiKey = keyName ? env[keyName]?.trim() : undefined;
+  if (!keyName || !apiKey) return withholds("no-provider-key", null);
+  if (!profile.baseUrl || !profile.model) return withholds("no-provider-key", null);
 
   const variables = profileTrio(profile, apiKey);
 
@@ -605,16 +583,18 @@ export interface EmbedDefaultOnResult {
 export function applyEmbedDefaultOn(deps: EmbedDefaultOnDeps): EmbedDefaultOnResult {
   const target = deps.processEnv ?? process.env;
   const env = deps.env ?? process.env;
-  const withdrawn = selfInjectedNames(target, writtenTrio(deps.entry.profile, env, target));
+  const provider = deps.entry.provider;
+  const withdrawn = selfInjectedNames(provider, target);
   for (const name of withdrawn) delete target[name];
+  if (withdrawn.length > 0) selfExported.delete(provider);
 
   const plan = planEmbedDefaultOn({ ...deps, processEnv: target, env });
   if (!plan.inject) return { applied: false, abstained: withdrawn.length > 0, plan };
-  let changed = false;
+  const written: Record<string, string> = {};
   for (const [name, value] of Object.entries(plan.env)) {
-    if (target[name] === value) continue;
+    written[name] = value;
     target[name] = value;
-    changed = true;
   }
-  return { applied: changed, abstained: withdrawn.length > 0, plan };
+  selfExported.set(provider, written);
+  return { applied: true, abstained: withdrawn.length > 0, plan };
 }

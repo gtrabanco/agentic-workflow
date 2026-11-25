@@ -299,7 +299,6 @@ ledger (grammar: `findings-table@1`).
 | F5 | packages/pi-agentic-workflow/src/extension/workflow-tools.ts:817 (S2/AC5) | docs | WARNING | docs-only | source | folded (P9 · E18) |
 | F6 | docs/features/719-nan-default-embed/SPEC.md:275 (G1 receipt mark) | workflow | WARNING | blocking | plan | replan-in-unit |
 | F7 | packages/pi-agentic-workflow/src/config/embed-profile.ts:350-352,372-373 | dead-code | WARNING | docs-only | source | folded (P11 · E20) |
-| F8 | packages/pi-agentic-workflow/src/config/embed-profile.ts:457,608-609 (S4/D7) | correctness | WARNING | blocking | source | fold |
 
 ## Log
 
@@ -360,6 +359,8 @@ ledger (grammar: `findings-table@1`).
 - **G4** — 2026-11-25, review's own gate run `env -u AGENTIC_WORKFLOW_SKILLS_ROOT bun scripts/local-gate.mjs` · HEAD 955e65ecf853fb26987303586d9756c9b26439b4 · exit 0 · `PASS — 20 step(s) in 516s`; at the re-frozen head 683818e04 the hook's offline subset ran `PASS — 12 step(s) in 7s` (test-impact: empty — the one-row toolstate delta).
 - **V8** — packages/pi-agentic-workflow/src/config/embed-profile.ts:457 · reviewer review-change · HEAD 683818e0494b8deef2316dbf0ae535e9533a6b10 · recheck failing reproducer against unchanged code: fixture project, no provider block, no `NAN_API_KEY`, operator exporting only `AGENTIC_WORKFLOW_DOC_EMBEDDINGS_API_KEY=op-credential` → after `applyEmbedDefaultOn` the variable is left `undefined`, `plan.reason no-provider-key`, `abstained true` (abstained correctly names the abstention path that is itself supposed to protect this case; the recognizer was unable to disagree) · confirmed
 - **P14** — 2026-11-25, review change cycle 2: one fix-now finding (F8) persisted; the report's decision is REVIEW-FAIL and the review→fold loop has reached the two-cycle cap — a third cycle never starts without an explicit user instruction (owner decision required).
+- **F8** — 2026-11-25, F8 folded (D8): the self-injection recognizer stopped deriving its witness from the surface it inspects. `writtenTrio`/`derivedTrio` are gone; `applyEmbedDefaultOn` now records the trio it actually exports in a process-owned `selfExported` map keyed by provider and withdraws only names that still carry exactly that value, so an operator's export — identical shape included — is never `self-injected` (D8 supersedes D7's value-equality rule, which no reader could satisfy while an operator wrote the same values). The operator's choice now outranks the key gate, because a hand-written export with no preset key answers `operator-environment` instead of `no-provider-key`; the no-key withhold keeps its meaning for a bare surface. Both packages' suites green (pi `1115 pass 0 fail`, pi-nan `93 pass 0 fail`), gate `PASS — 20 step(s) in 869s` at `9cd0ee2`. Suites: the two new red-first rows (`8bbe4a482`) plus the donor fixture owning its own memo through `resetSelfExported`; `findings-corpus` re-froze at 1174 findings / 176 review marks because the tree carries the new row and this cycle's `R2`.
+- **D8** — 2026-11-25, decision (fold): defect identity is authorship, not value shape — the resolver remembers the trio it exported (`selfExported`), and the withdrawal reads that record; value equality is kept only as the guard that the operator has not since edited a name the resolver wrote. Scope `unit-only`.
 
 ## Next
 

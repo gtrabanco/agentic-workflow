@@ -26,6 +26,7 @@ import { join } from "node:path";
 import { clearProviderPresets, getEmbedProfiles } from "@gtrabanco/pi-agentic-workflow/dist/config/presets.js";
 import { NAN_EMBED_PROFILE } from "../dist/embed-profile.js";
 import extension, { applyEmbedDefault, resetEmbedDefaultReports } from "../dist/extension.js";
+import { resetSelfExported } from "@gtrabanco/pi-agentic-workflow/dist/config/embed-profile.js";
 
 /** The crate's direct env names, as the main package publishes them. */
 const DIRECT = {
@@ -134,6 +135,7 @@ test("donor: loading the extension applies the profile from an absent block and 
 
 test("donor: an explicit provider block withholds the default, and the committed file is untouched", () => {
   clearProviderPresets();
+  resetSelfExported();
   const block = { baseUrl: "https://acme.example/v1", model: "acme-embed-1", envVar: "ACME_API_KEY" };
   const root = projectWith({ version: 1, provider: block });
   const path = join(root, ".agentic-workflow", "index.json");
@@ -199,6 +201,7 @@ test("donor: without the key nothing is exported — the keyword-only session st
 
 test("donor: a provider block written after the injection wins in the same session", () => {
   clearProviderPresets();
+  resetSelfExported();
   const root = projectWith(null);
   const previousCwd = process.cwd();
   const savedKey = process.env.NAN_API_KEY;

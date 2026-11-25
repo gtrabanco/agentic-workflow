@@ -26,7 +26,7 @@ import { chmodSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync 
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-import { EMBED_DIRECT_ENV, applyEmbedDefaultOn, planEmbedDefaultOn } from "../dist/config/embed-profile.js";
+import { EMBED_DIRECT_ENV, applyEmbedDefaultOn, planEmbedDefaultOn, resetSelfExported } from "../dist/config/embed-profile.js";
 import { MAX_REQUEST_CHARS_ENV } from "@gtrabanco/agentic-workflow/src/doc/config.mjs";
 
 /** The NaN profile's shape, as the companion package donates it (issue #541 S3). */
@@ -337,9 +337,13 @@ test("self-injection: a trio that disagrees with the profile is the operator's a
 test("self-injection: a trio this resolver exported blocks nothing, so the withdrawal still runs", () => {
   // The block is what the plan reads; a trio already sitting in the process is
   // the resolver's own and must not be mistaken for an operator's export.
+  resetSelfExported();
   const explicit = { baseUrl: "https://acme.example/v1", model: "acme-embed-1", envVar: "ACME_API_KEY" };
   const root = projectWith({ version: 1, provider: explicit });
-  const processEnv = { ...SELF_TRIO };
+  resetSelfExported();
+  const processEnv = {};
+  applyEmbedDefaultOn({ root: projectWith(null), entry, env: { NAN_API_KEY: "sk-nan" }, processEnv });
+  assert.deepEqual(processEnv, SELF_TRIO, "the first load exported the trio");
   const result = applyEmbedDefaultOn({ root, entry, env: { NAN_API_KEY: "sk-nan" }, processEnv });
 
   assert.equal(result.plan.reason, "explicit-provider-block", "the block decides, not the environment behind it");
@@ -359,14 +363,14 @@ test("self-injection: an operator's direct credential export survives the load t
 
   assert.equal(result.abstained, false, "nothing was withdrawn — the resolver wrote no trio here");
   assert.equal(result.applied, false);
-  assert.equal(result.plan.reason, "no-provider-key", "no preset key is present, so the default cannot apply");
+  assert.equal(result.plan.reason, "operator-environment", "an exported credential is the operator's choice, read as such");
   assert.deepEqual(processEnv, { [EMBED_DIRECT_ENV.apiKey]: "operator-credential" }, "and the operator's export is untouched");
 });
 
 test("self-injection: a hand-picked trio keeps its credential even with no preset key", () => {
   // The same rule for the whole hand-picked surface: every name the operator
-  // exported agrees with the profile, and the load still leaves it alone — the
-  // trio is withdrawn only when the credential is the one `envVar` carries.
+  // exported agrees with the profile, and the load still leaves it alone — a trio
+  // is withdrawn only when this resolver is the one that exported it.
   const root = projectWith(null);
   const handPicked = { ...SELF_TRIO };
   const processEnv = { ...handPicked };
