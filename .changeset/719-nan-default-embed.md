@@ -1,5 +1,6 @@
 ---
 "@gtrabanco/pi-agentic-workflow": minor
+"@gtrabanco/pi-nan-agentic-workflow": minor
 ---
 
 feat(pi): resolve a preset's doc-index embedding profile by default, and expose the index as a tool
@@ -28,3 +29,12 @@ Two additive surfaces behind issue #719, neither of which changes a crate:
 
 `rg` stays the tool for exact strings and regex in code, LSP for symbols:
 embeddings win prose retrieval only.
+
+### The companion also moves
+
+`@gtrabanco/pi-nan-agentic-workflow` gains the default-on trigger itself: its
+extension module applies the NaN doc-index profile right after registering it, in
+the same module graph, so a session resolves the provider whatever order pi loads
+its packages in — and it says so once, on stderr, instead of leaving the operator
+guessing why the index embedded nothing. That is a new user-visible behaviour in
+this package, so it carries its own minor alongside the pi package's.
