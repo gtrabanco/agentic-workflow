@@ -246,6 +246,10 @@ no schema field). Six fields, always present:
   run, then the receipt. `emit` posts a comment and **commits nothing**; a
   re-pin after it is a new head and needs a new receipt. That order is what
   stops the receipts from voiding each other.
+- **A `workflow` row is not folded.** A ceremony finding is an agentic-workflow
+  defect, not the project's: search the upstream tracker (#170, #301, #260,
+  #698) and offer to file it (issue #698 S8). It is `report-only`, never a taken
+  queue row, so it earns no correction round.
 - The `Fold diff` shortstat comes from a real `git diff` run over the batch's
   commits.
 - The `Batch class` derives from the taken queue's frozen rows only — the fold

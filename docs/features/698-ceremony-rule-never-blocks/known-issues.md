@@ -6,11 +6,11 @@
   escalation is recorded as the unit's named high-risk item, and this unit's hunk
   is the usage list entry and the dispatch row — the retrieval module is
   untouched.
-- **`docs/ROADMAP.md` carries the #698 row twice** (`:215`, added by `0c0e2718a`;
-  `:219`, re-added by `2780f79a7`). `does-not-affect`: the duplicated row renders
-  once and no reader counts rows; the unit's own row moves through
-  `roadmap rowUpsert`, and the duplicate is reported to the owner (`D13`) rather
-  than silently deleted inside this change.
+- **The roadmap table carried the #698 row twice** (`docs/ROADMAP.md:215` and
+  `:219`, the second added by `2780f79a7`). `does-not-affect`, and repaired
+  through the writer: `roadmap rowUpsert` updated the row readers keep and
+  spliced the earlier duplicate (`D13`), so the table ends with one row and no
+  hand edit touched a cell.
 - **`unit-route --triage` and every runner command need the schema package's
   built `dist/`**, which is gitignored and absent in a fresh worktree.
   `affects` this unit's procedure only: the build runs once
