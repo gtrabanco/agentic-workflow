@@ -45,9 +45,11 @@ rows — a `SUGGESTION`, and any `report-only` row, is a note that never blocks)
 `REVIEW-FAIL` while any
 fix-now finding is open, and
 `NEEDS-DECISION` when a decision-required finding blocks. Only `REVIEW-PASS`
-**and only when the PR exists** posts the idempotent exact-SHA receipt (step 13
-of *Persist and decide*); `REVIEW-FAIL` leaves findings in the fold ledger and
-posts nothing; `NEEDS-DECISION` blocks without creating an issue. The
+**and only when the PR exists** posts the idempotent exact-SHA currency receipt
+(step 13 of *Persist and decide*); `REVIEW-FAIL` leaves findings in the fold
+ledger and posts its own typed receipt, `NEEDS-DECISION` posts its own typed
+receipt and blocks without creating an issue — both are traces, never currency
+(step 12). The
 `→ Next:` block in *Persist and decide* step 14 is the single place that maps
 each decision to its next command — never emit a `→ Next:` block that disagrees
 with the `Decision:` line.
@@ -68,7 +70,8 @@ with the `Decision:` line.
 - **The `REVIEW-PASS` receipt is a PR comment, never a commit** (D6): it goes
   through a temporary `--body-file` (exact body from *Persist and decide* step
   13), is idempotent by SHA, and is never added to the branch. `REVIEW-FAIL` and
-  `NEEDS-DECISION` post no receipt.
+  `NEEDS-DECISION` post their own typed receipts under the same comment rules —
+  traces, never currency.
 
 ## Normalized Repository State
 

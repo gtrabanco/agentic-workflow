@@ -13,10 +13,10 @@
      `BLOCKER`/`CRITICAL` rows and a green gate, so the head is merge currency
      and no re-review is due (issue #698 S4/S5).
    - **absent / stale** → **BLOCKER** (no review evidence at the head), routed to
-     `/review-change`; never re-review from here. Before that route, a
-     the `fold-findings:repair` marker marker that `verify` rejected is named
-     with its own route (`RE-REVIEW-REQUIRED`/`REPLAN-ROUTE`/`PRODUCT-ROUTE`), so
-     the blocker says which continuation the facts support; a
+     `/review-change`; never re-review from here. Before that route, the
+     `fold-findings:repair` marker that `verify` rejected is named with its own
+     route (`RE-REVIEW-REQUIRED`/`REPLAN-ROUTE`/`PRODUCT-ROUTE`), so the
+     blocker says which continuation the facts support; a
      `RE-REVIEW-SKIPPED`/`OPTIONAL` receipt is never a blocker.
 3. **Walk the contract** — evaluate every gate above against evidence, recording
    pass / blocker / n-a with the artifact that proves it. The three

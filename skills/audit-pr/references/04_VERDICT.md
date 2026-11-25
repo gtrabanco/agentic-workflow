@@ -31,8 +31,9 @@ Before merge, a human should still verify:
   · MERGE-READY inside active advance --fullauto → return this SHA-bound
     verdict to the conductor; it runs the transient merge wrapper
   · BLOCKED → clear the top blocker (routed above), then re-run /audit-pr
-  · Receipt absent/stale blocker → /review-change (re-review at the head), then
-    re-run /audit-pr — never re-review from this audit
+  · Receipt absent/stale blocker with no current repair receipt (03 step 1) →
+    /review-change (re-review at the head), then re-run /audit-pr — never
+    re-review from this audit
   · Closure warning (in addition to the verdict above) or a closure blocker →
     /unit-lane <slug> — re-runs the design step to fill the missing closure rows (upsert, destroys
     nothing) before further work on this feature is planned; re-run /audit-pr after

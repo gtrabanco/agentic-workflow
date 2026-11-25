@@ -171,7 +171,7 @@ every audit loads and applies exactly these five mandatory resources in order:
 2. [02 closure and scope gates](references/02_CLOSURE_AND_SCOPE_GATES.md) for
    capability closure and descope provenance.
 3. [03 audit process](references/03_AUDIT_PROCESS.md) to gather, decide, persist
-   blockers, and post the SHA-bound MERGE-READY comment.
+   blockers, and post the SHA-bound verdict receipt (merge-ready or blocked).
 4. [04 verdict](references/04_VERDICT.md) before output, then
    [05 routing and guardrails](references/05_ROUTING_AND_GUARDRAILS.md). These
    mandatory resources own the `docs/workflow/REPOSITORY_STATE.md` evidence

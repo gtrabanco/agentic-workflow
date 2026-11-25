@@ -33,6 +33,10 @@ For a final PR review, the turn is incomplete until this additional box passes:
   RUN and exited 0 — the script posts the SHA-bound comment, re-reads the PR
   comments, and exits non-zero unless the newest exact-HEAD
   `review-change:pass` marker is confirmed, so its exit code IS this box
+✓ Decision: REVIEW-FAIL | NEEDS-DECISION + PR exists →
+  the non-pass emitter (*Persist and decide* step 12) RUN and exited 0 — its
+  typed `review-change:fail` / `review-change:needs-decision` marker landed
+  at the head (a trace, never currency), so its exit code IS this box
 ```
 
 When the receipt emitter runs, it also records the affecting-path scope
@@ -57,8 +61,9 @@ never invokes `/fold-findings`, `/execute-phase`, `/unit-lane` or
 `/triage-issue` — those are separate user-initiated invocations,
 run in a fresh turn (a programmatic outer driver may compose the same
 sequence in-turn, per `REVIEW_PROCESS.md`). The review's only mutations are the
-ledger commit (persist step 11) and, on `REVIEW-PASS` with a PR, the
-receipt comment (persist step 12); it never folds a finding, executes a phase,
+ledger commit (persist step 11) and, on any verdict with a PR, the receipt
+comment (persist step 12 — the pass receipt or a non-pass verdict's typed
+trace); it never folds a finding, executes a phase,
 or edits code. A `REVIEW-FAIL`/`NEEDS-DECISION` turn closes when the report
 block is printed (report step 13).
 
