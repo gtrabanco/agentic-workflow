@@ -358,7 +358,7 @@ to `verified` only on its foreground validator (or an evidenced `n/a`).
   --check` · exit 0; `scaffold-contract authoring` · exit 0 · SCAFFOLD OK;
   `phase-lint` · exit 0 · PASS; `journal aggregate --check` · exit 0 · checked
   53.
-- **E6** — the full gate at `ab49dddf7`: `bun scripts/local-gate.mjs --no-bail` ·
+- **E6** — the full gate at `eefb47df3`: `bun scripts/local-gate.mjs --no-bail` ·
   exit 1 · 20 steps · one failed step, `log-immutability`, carrying the two
   violations of the same authorized header commit (`log-rewritten` and
   `log-hand-appended` on `39cecced4`; D1). An earlier run also caught
