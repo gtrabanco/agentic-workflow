@@ -107,7 +107,7 @@ test("default-on: a `provider: null` block is absent, not a declaration — the 
   const processEnv = {};
   const result = applyEmbedDefaultOn({ root, entry, env: { NAN_API_KEY: "sk-nan" }, processEnv });
 
-  assert.equal(result.plan.inject, false, "null is the shipped keyword-only default, never an operator block");
+  assert.equal(result.plan.inject, true, "null is the shipped keyword-only default, never an operator block");
   assert.equal(result.applied, true, "so the default applies — a second load in the same process must too");
   assert.equal(processEnv[EMBED_DIRECT_ENV.model], NAN_PROFILE.model);
 });
@@ -191,7 +191,7 @@ test("tuning: the default-on path exports the preset's measured pair as the requ
 // Idempotence and the process seam (S1 wiring contract)
 // ---------------------------------------------------------------------------
 
-test("wiring: applying the plan twice writes the same environment and reports the second run as a no-op", () => {
+test("wiring: applying the plan twice writes the same environment and re-reaches the same decision", () => {
   const root = projectWith(null);
   const processEnv = {};
   const first = applyEmbedDefaultOn({ root, entry, env: { NAN_API_KEY: "sk-nan" }, processEnv });
@@ -199,8 +199,9 @@ test("wiring: applying the plan twice writes the same environment and reports th
   const second = applyEmbedDefaultOn({ root, entry, env: { NAN_API_KEY: "sk-nan" }, processEnv });
 
   assert.equal(first.applied, true);
-  assert.equal(second.applied, false, "a second load in the same process changes nothing");
-  assert.deepEqual(processEnv, snapshot);
+  assert.deepEqual(processEnv, snapshot, "a second load leaves the environment exactly as the first one did");
+  assert.equal(second.plan.reason, "default-on", "and reaches the same decision, not the operator-environment mislabel");
+  assert.equal(second.abstained, true, "because it withdrew the trio it had written first");
 });
 
 test("wiring: an operator's own exported value is never overwritten", () => {
@@ -294,6 +295,7 @@ test("self-injection: a provider block written after the injection wins in the s
   assert.deepEqual(processEnv, SELF_TRIO, "the first load exported the profile");
 
   // The operator writes their own block without leaving the session.
+  mkdirSync(join(root, ".agentic-workflow"), { recursive: true });
   writeFileSync(
     join(root, ".agentic-workflow", "index.json"),
     `${JSON.stringify({ version: 1, provider: { baseUrl: "https://acme.example/v1", model: "acme-embed-1", envVar: "ACME_API_KEY" } }, null, 2)}\n`,
@@ -335,6 +337,19 @@ test("self-injection: a trio that disagrees with the profile is the operator's a
   assert.equal(result.applied, false);
   assert.equal(result.plan.reason, "operator-environment");
   assert.deepEqual(processEnv, handPicked);
+});
+
+test("self-injection: a trio this resolver exported blocks nothing, so the withdrawal still runs", () => {
+  // The block is what the plan reads; a trio already sitting in the process is
+  // the resolver's own and must not be mistaken for an operator's export.
+  const explicit = { baseUrl: "https://acme.example/v1", model: "acme-embed-1", envVar: "ACME_API_KEY" };
+  const root = projectWith({ version: 1, provider: explicit });
+  const processEnv = { ...SELF_TRIO };
+  const result = applyEmbedDefaultOn({ root, entry, env: { NAN_API_KEY: "sk-nan" }, processEnv });
+
+  assert.equal(result.plan.reason, "explicit-provider-block", "the block decides, not the environment behind it");
+  assert.equal(result.abstained, true);
+  assert.deepEqual(processEnv, {}, "and the trio goes with it");
 });
 
 // ---------------------------------------------------------------------------
@@ -413,7 +428,10 @@ test("wiring: a second load is idempotent, and a session with no registered prof
 
   registerProviderPreset({ provider: "nan", embedProfile: NAN_PROFILE, resolveProfile: () => ({ default: { model: "nan/big", thinking: "inherit" } }) });
   assert.equal(applyEmbedDefaultOnAtLoad({ root, processEnv }).applied, true);
-  assert.equal(applyEmbedDefaultOnAtLoad({ root, processEnv }).applied, false, "the second load changes nothing");
+  // The second load withdraws the trio it wrote and re-reaches `default-on`, so
+  // the surface it leaves is the same one — the process still carries the profile.
+  assert.equal(applyEmbedDefaultOnAtLoad({ root, processEnv }).applied, true, "the second load re-establishes the same surface");
+  assert.equal(processEnv[EMBED_DIRECT_ENV.model], NAN_PROFILE.model);
   clearProviderPresets();
 });
 

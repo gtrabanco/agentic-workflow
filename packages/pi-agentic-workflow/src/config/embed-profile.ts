@@ -398,6 +398,90 @@ export interface EmbedDefaultOnDeps {
 }
 
 /**
+ * The request budget the profile's measured pair implies, or an empty object when
+ * the profile declares no usable pair (D3). One derivation, so the trios that
+ * carry it agree.
+ */
+function budgetVariable(profile: ProviderConfig): Record<string, string> {
+  const chunkLimit = profile.chunk_limit;
+  const batchSize = profile.pacing?.batchSize;
+  if (typeof chunkLimit !== "number" || typeof batchSize !== "number" || chunkLimit <= 0 || batchSize <= 0) return {};
+  return { [MAX_REQUEST_CHARS_ENV]: String(chunkLimit * batchSize) };
+}
+
+/**
+ * The variables this resolver exports: the crate's three direct env names with
+ * the credential in force, plus the profile's request budget.
+ */
+function profileTrio(profile: ProviderConfig, apiKey: string): Record<string, string> {
+  // Tuning parity (D3): the preset's measured chunk × batch pair is what one
+  // request may carry, and the crate adopts the request budget as the chunk limit
+  // when no explicit `chunk_limit` is configured — so the pair travels as the
+  // budget, with no crate change and no new env name.
+  return {
+    [EMBED_DIRECT_ENV.baseUrl]: profile.baseUrl ?? "",
+    [EMBED_DIRECT_ENV.model]: profile.model ?? "",
+    [EMBED_DIRECT_ENV.apiKey]: apiKey,
+    ...budgetVariable(profile),
+  };
+}
+
+/**
+ * The trio a trio written by this resolver can be recognized against: the
+ * profile's `baseUrl` and `model` verbatim, plus the profile's request budget when
+ * it has one. `null` when the profile cannot derive even that. The credential is
+ * filled by the caller, because recognizing the credential this resolver wrote is
+ * the caller's job to prove.
+ */
+function derivedTrio(profile: ProviderConfig): Record<string, string> | null {
+  if (!profile.baseUrl || !profile.model) return null;
+  return {
+    [EMBED_DIRECT_ENV.baseUrl]: profile.baseUrl,
+    [EMBED_DIRECT_ENV.model]: profile.model,
+    ...budgetVariable(profile),
+  };
+}
+
+/**
+ * The trio this resolver wrote in this process, as far as it can still prove
+ * one: the profile's derivation plus the credential the surface carries, which a
+ * write by this resolver always landed (`plan.env` names it verbatim). Witnessing
+ * it in the caller's environment is what keeps an operator's own key-value from
+ * ever matching; the key leaving the caller's environment afterwards does not
+ * erase the witness, because the recognized surface is the one this resolver wrote.
+ */
+function writtenTrio(
+  profile: ProviderConfig,
+  env: Record<string, string | undefined>,
+  processEnv: Record<string, string | undefined>,
+): Record<string, string> | null {
+  const derived = derivedTrio(profile);
+  if (derived === null) return null;
+  const keyName = profile.envVar;
+  const key = keyName ? (env[keyName]?.trim() ?? processEnv[EMBED_DIRECT_ENV.apiKey]?.trim() ?? "") : "";
+  return key === "" ? derived : { ...derived, [EMBED_DIRECT_ENV.apiKey]: key };
+}
+
+/**
+ * The names this resolver wrote and may withdraw: every value present in the
+ * surface agrees with the derived trio. The credential is excluded from writing
+ * but not from recognition — a profile's key is exactly what a written trio
+ * carries — so a present direct name that is missing from (or disagrees with) the
+ * derived set is an operator's export and nothing is withdrawn (D7).
+ */
+function selfInjectedNames(
+  processEnv: Record<string, string | undefined>,
+  trio: Record<string, string> | null,
+): string[] {
+  if (trio === null) return [];
+  const exported = Object.values(EMBED_DIRECT_ENV).filter((name) => (processEnv[name] ?? "") !== "");
+  if (exported.length === 0) return [];
+  const disagrees = exported.some((name) => name in trio && processEnv[name] !== trio[name]);
+  if (disagrees) return [];
+  return Object.keys(trio).filter((name) => (processEnv[name] ?? "") !== "");
+}
+
+/**
  * The provider block the file holds, `null` when absent, or the refusal text.
  *
  * Only absence is a decision (`provider` unset ⇒ the default applies). A read the
@@ -481,24 +565,18 @@ export function planEmbedDefaultOn({
 
   // An operator who exported the crate's own variables already chose a provider;
   // a partial set is still their choice, and half-injecting around it would
-  // produce a mixture nobody asked for.
-  const exported = Object.values(EMBED_DIRECT_ENV).filter((name) => (processEnv[name] ?? "") !== "");
-  if (exported.length > 0) return withholds("operator-environment", null);
+  // produce a mixture nobody asked for. A trio this resolver exported itself is
+  // not a choice — it is withdrawn before the decision runs, so a provider block
+  // written after the injection wins and a second load plans the surface it found
+  // instead of the one it wrote.
+  const trio = writtenTrio(profile, env, processEnv);
+  const selfInjected = selfInjectedNames(processEnv, trio);
+  const foreign = Object.values(EMBED_DIRECT_ENV).filter(
+    (name) => (processEnv[name] ?? "") !== "" && !selfInjected.includes(name),
+  );
+  if (foreign.length > 0) return withholds("operator-environment", null);
 
-  const variables: Record<string, string> = {
-    [EMBED_DIRECT_ENV.baseUrl]: profile.baseUrl,
-    [EMBED_DIRECT_ENV.model]: profile.model,
-    [EMBED_DIRECT_ENV.apiKey]: apiKey,
-  };
-  // Tuning parity (D3): the preset's measured chunk × batch pair is what one
-  // request may carry, and the crate adopts the request budget as the chunk limit
-  // when no explicit `chunk_limit` is configured — so the pair travels as the
-  // budget, with no crate change and no new env name.
-  const chunkLimit = profile.chunk_limit;
-  const batchSize = profile.pacing?.batchSize;
-  if (typeof chunkLimit === "number" && typeof batchSize === "number" && chunkLimit > 0 && batchSize > 0) {
-    variables[MAX_REQUEST_CHARS_ENV] = String(chunkLimit * batchSize);
-  }
+  const variables = profileTrio(profile, apiKey);
 
   return {
     provider: entry.provider,
@@ -512,25 +590,35 @@ export function planEmbedDefaultOn({
 /** What applying the plan did to the process surface. */
 export interface EmbedDefaultOnResult {
   readonly applied: boolean;
+  /** True when a trio this resolver exported earlier was withdrawn before planning. */
+  readonly abstained: boolean;
   readonly plan: EmbedDefaultOnPlan;
 }
 
 /**
  * Apply the plan to the process environment — the one impure step, and the only
- * thing the extension load has to do. Idempotent: a variable already carrying the
- * plan's value is not rewritten, so a second load in the same process reports
- * `applied: false` instead of re-exporting. A plan whose `env` is empty never
- * touches the process.
+ * thing the extension load has to do.
+ *
+ * Idempotent by withdrawal, not by skipping: a trio this resolver exported
+ * earlier in the same process is detached before the decision runs and re-exported
+ * whenever it still holds, so the second load reaches the same conclusion the
+ * first one did — and a provider block the operator wrote after the injection
+ * wins inside the same session instead of being shadowed by the environment it
+ * replaced. Any plan whose `env` is empty leaves the process as it found it.
  */
 export function applyEmbedDefaultOn(deps: EmbedDefaultOnDeps): EmbedDefaultOnResult {
   const target = deps.processEnv ?? process.env;
-  const plan = planEmbedDefaultOn({ ...deps, processEnv: target });
-  if (!plan.inject) return { applied: false, plan };
+  const env = deps.env ?? process.env;
+  const withdrawn = selfInjectedNames(target, writtenTrio(deps.entry.profile, env, target));
+  for (const name of withdrawn) delete target[name];
+
+  const plan = planEmbedDefaultOn({ ...deps, processEnv: target, env });
+  if (!plan.inject) return { applied: false, abstained: withdrawn.length > 0, plan };
   let changed = false;
   for (const [name, value] of Object.entries(plan.env)) {
     if (target[name] === value) continue;
     target[name] = value;
     changed = true;
   }
-  return { applied: changed, plan };
+  return { applied: changed, abstained: withdrawn.length > 0, plan };
 }

@@ -57,6 +57,7 @@ export function applyEmbedDefaultOnAtLoad(deps: EmbedDefaultOnLoadDeps): EmbedDe
   if (entry === undefined) {
     return {
       applied: false,
+      abstained: false,
       plan: { provider: "", reason: "no-provider-key", inject: false, env: {}, detail: null },
     };
   }
