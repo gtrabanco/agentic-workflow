@@ -10,15 +10,17 @@
  * Split by purity, as `review-receipt.mjs` does:
  *
  * - Every decision is an exported pure function (`newestAuditComment`,
- *   `auditVerdict`, `mergeCommentAction`, `hygieneFromState`,
- *   `renderMergeReadyBody`), so `audit-pr-receipt.test.mjs` proves the contract
+ *   `auditVerdict`, `mergeCommentAction`, `blockedCommentAction`,
+ *   `hygieneFromState`, `renderMergeReadyBody`, `renderBlockedBody`), so
+ *   `audit-pr-receipt.test.mjs` proves the contract
  *   against the code the skill runs instead of against itself.
  * - The CLI reads forge/git state and prints one JSON report on stdout;
  *   diagnostics go to stderr, and every uncertainty fails closed.
  *
- * The receipt gate is **first**: without a current `review-change` receipt the
- * gate set is not evaluated at all. That ordering is the point — an absent
- * receipt routes back to `/review-change`, and re-reviewing the diff from the
+ * The receipt gate is **first**: without a current `review-change` receipt —
+ * and no current repair receipt answering it (issue #698 S4/S5) — the gate set
+ * is not evaluated at all. That ordering is the point — an absent receipt routes
+ * back to `/review-change`, and re-reviewing the diff from the
  * merge gate is exactly the duplicated work the routing forbids.
  *
  * Hygiene gates (`tree-clean`, `branch-pushed`, `pr-ready`) were the missing
@@ -221,10 +223,12 @@ export function auditVerdict({ comments, headSha, gates = {}, changedPaths, repa
 /**
  * The merge-ready comment action. Idempotent by the SHA marker: a newer marker
  * always wins, so a re-audit at the same head skips and a later head re-comments.
- * BLOCKED posts nothing — a stale green flag on a blocked PR is worse than none.
+ * A BLOCKED verdict never posts this marker — a stale green flag on a blocked
+ * PR is worse than none; it posts its own `audit-pr:blocked` receipt instead
+ * (issue #698 S7).
  */
 export function mergeCommentAction({ verdict, comments, headSha }) {
-  if (verdict !== "MERGE-READY") return { action: "none", reason: "BLOCKED posts no comment (no stale green flag)" };
+  if (verdict !== "MERGE-READY") return { action: "none", reason: "BLOCKED posts no merge-ready comment (its own blocked marker carries the failure)" };
   const marker = newestAuditComment(comments);
   if (marker === headSha) return { action: "skip", reason: "same SHA already commented — idempotent by SHA marker" };
   return { action: "post", reason: "newest marker wins; older SHA re-comments" };
