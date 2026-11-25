@@ -671,6 +671,19 @@ test("doc_search: an explicit mode rides the crate's own flag, an absent one is 
   );
 });
 
+test("doc_search: the result description matches the crate's frozen ordering — a higher score ranks first", async () => {
+  const { createWorkflowTools } = await loadModule();
+  const search = createWorkflowTools().find((tool) => tool.name === "doc_search");
+  const score = search.outputSchema.properties.results.items.properties.score;
+
+  assert.equal(score.type, "number");
+  // `query.mjs`'s frozen D3 ordering is score descending (the score is the
+  // negated bm25 rank, so higher is better) — a caller reading this schema must
+  // be told the same thing the crate does, never the inverse.
+  assert.match(score.description, /higher (score )?ranks first/iu, "the description names the real ordering");
+  assert.doesNotMatch(score.description, /lower/iu, "and never claims the inverse");
+});
+
 test("doc_search: a keyword-only store answers with its declared degradation, not an error", async () => {
   const { createWorkflowTools } = await loadModule();
   const degradedEnvelope = {
