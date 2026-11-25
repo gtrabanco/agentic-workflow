@@ -17,6 +17,7 @@
  *   O8  a stale gate receipt staled only by ceremony bookkeeping stays gate currency
  *   O9  a ceremony-only repair derives RE-REVIEW-SKIPPED; docs-only derives OPTIONAL
  *   O12 emit refuses a head it cannot read and posts no commit
+ *   AC4  emit posts one typed marker per verdict at the head
  */
 
 import { test } from "node:test";
@@ -205,6 +206,63 @@ test("emit refuses a head it cannot read and posts no commit", () => {
     assert.match(refusal.stderr, /reviewed|ancestor|sha/i);
     const untouched = git("rev-parse", "HEAD").stdout.trim();
     assert.equal(untouched, head);
+  } finally {
+    rmSync(cwd, { recursive: true, force: true });
+  }
+});
+
+test("emit posts one typed marker per verdict at the head", () => {
+  // Issue #698 AC4: every route verdict carries exactly one typed marker, and
+  // the marker is bound to the head the command derives — never a hand-pinned
+  // sha. The pure loop covers the closed verdict set; the command leg proves
+  // emit itself prints one marker at the repository's real HEAD.
+  const cwd = mkdtempSync(join(tmpdir(), "repair-emit-verdict-"));
+  try {
+    const git = (...args) => spawnSync("git", ["-c", "user.name=Fixture", "-c", "user.email=fixture@example.test", "-c", "commit.gpgsign=false", ...args], { cwd, encoding: "utf8" });
+    const commit = (message) => {
+      git("add", "-A", "--", ".");
+      const done = git("commit", "-qm", message);
+      assert.equal(done.status, 0, done.stderr);
+      return git("rev-parse", "HEAD").stdout.trim();
+    };
+    git("init", "-q", "-b", "main");
+    mkdirSync(join(cwd, "docs", "features", "698-toy-unit"), { recursive: true });
+    const specPath = join(cwd, "docs", "features", "698-toy-unit", "SPEC.md");
+    writeFileSync(specPath, [
+      "# 698 — toy",
+      "",
+      "## Findings",
+      "",
+      "| id | S# / file:line | axis | severity | impact | class | route |",
+      "|---|---|---|---|---|---|---|",
+      "",
+      "## Log",
+      "",
+    ].join("\n"));
+    const reviewedSha = commit("docs: cut the toy unit");
+    writeFileSync(specPath, readFileSync(specPath, "utf8").replace("## Log\n", "## Log\n\n- **F1** — 2026-11-25, folded the ceremony row.\n"));
+    const headSha = commit("docs: fold bookkeeping");
+
+    for (const route of REPAIR_ROUTES) {
+      const body = renderRepairBody({
+        sha: headSha, unit: "698-toy-unit", reviewed: reviewedSha, scope: DIGEST,
+        classKind: "ceremony", route, ac: DIGEST, gate: DIGEST, open: 0,
+      });
+      const markers = body.match(/<!-- fold-findings:repair /gu) ?? [];
+      assert.equal(markers.length, 1, `${route}: exactly one marker`);
+      const parsed = parseRepairReceipt(body);
+      assert.equal(parsed.sha, headSha, route);
+      assert.equal(parsed.route, route, route);
+    }
+
+    const emitted = run(cwd, "emit", "--unit", "698-toy-unit", "--reviewed", reviewedSha, "--dry-run");
+    assert.equal(emitted.code, 0, emitted.stderr);
+    const markers = emitted.stdout.match(/<!-- fold-findings:repair [^>]*-->/gu) ?? [];
+    assert.equal(markers.length, 1, `emit printed ${markers.length} markers`);
+    const parsed = parseRepairReceipt(markers[0]);
+    assert.equal(parsed.sha, headSha, "the marker binds to the command's HEAD");
+    assert.equal(parsed.unit, "698-toy-unit");
+    assert.equal(parsed.reviewed, reviewedSha);
   } finally {
     rmSync(cwd, { recursive: true, force: true });
   }

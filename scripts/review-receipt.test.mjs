@@ -167,6 +167,44 @@ test("body round-trips: render → parse yields the same sha", () => {
   assert.equal(parseReviewReceipt(body).sha, SHA_A);
 });
 
+test("the pass receipt body is byte-identical", () => {
+  // The exact bytes the emitter posts, pinned against the base implementation
+  // (issue #698 O11): the non-pass verdict family added beside this body must
+  // never move a byte of it. Both shapes are pinned — the plain receipt and
+  // the scope-manifest one fix/286 added.
+  const digest = "d".repeat(64);
+  const plain = [
+    `<!-- review-change:pass sha=${SHA_A} contract=v1 -->`,
+    "## review-change: REVIEW-PASS",
+    "",
+    `- Reviewed head: \`${SHA_A}\``,
+    "- Scope and applicable axes: code, security, verify, perf",
+    "- Acceptance coverage: AC1–AC9 mapped to the suite output; no unverified criterion",
+    "- Architectural invariants: n/a",
+    "- Current-unit findings open: 0",
+    "- Future-capability proposals: 0",
+    "- Manual verification: none",
+    "",
+  ].join("\n");
+  assert.equal(renderReceiptBody({ sha: SHA_A, ...fields() }), plain);
+
+  const scoped = [
+    `<!-- review-change:pass sha=${SHA_A} contract=v1 scope=${digest} -->`,
+    "## review-change: REVIEW-PASS",
+    "",
+    `- Reviewed head: \`${SHA_A}\``,
+    `- Scope manifest: \`sha256:${digest}\``,
+    "- Scope and applicable axes: code, security, verify, perf",
+    "- Acceptance coverage: AC1–AC9 mapped to the suite output; no unverified criterion",
+    "- Architectural invariants: n/a",
+    "- Current-unit findings open: 0",
+    "- Future-capability proposals: 0",
+    "- Manual verification: none",
+    "",
+  ].join("\n");
+  assert.equal(renderReceiptBody({ sha: SHA_A, ...fields({ scopeManifest: digest }) }), scoped);
+});
+
 test("no hand-escaping artifacts and no shell interpolation survive rendering", () => {
   const body = renderReceiptBody({ sha: SHA_A, ...fields({ scope: "`code`", coverage: "${HEAD} $(id)" }) });
   assert.doesNotMatch(body, /\\`/);

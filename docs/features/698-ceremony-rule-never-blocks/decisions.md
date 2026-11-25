@@ -29,3 +29,10 @@ The ledger the `needs-input` sensor reads (`open-questions@1`, grammar owned by
 one design point the issue left unparked (the anonymized bundle) is #703's
 declared surface (`## Non-goals`), and the class-derivation ambiguity is resolved
 by D11 with the fold's own test.
+
+```text
+path-protection-records@1
+kind | paths | phase | date | authority | justification
+justification | scripts/repair-receipt.test.mjs | P4 | 2026-11-25 | execute-phase | The 2026-11-25 EXTERNAL VERIFY blocker B5 lands AC4's named case (`emit posts one typed marker per verdict at the head`) in the suite that owns the repair-receipt contract; the frozen red reproducer (`bun test scripts/repair-receipt.test.mjs -t 'OME emits one typed marker per verdict at the head'` → matched 0 tests) is the §2 corpus, the case is added, and every pre-existing case keeps its exact expectations.
+approval | scripts/repair-receipt.test.mjs | P4 | 2026-11-25 | human-owner | owner instruction 2026-11-25 (external-verify correction batch), verbatim: "Apply to this repository: triage and fix those that deserve to fix but understand the context before fix and check you haven't broke another different thing, if you have done, start the loop again until you fixed full symbol/related stuff" — the recorded owner order for this post-freeze addition to the protected suite; B5 names this file's suite, and its own case is how the AC check reproduces.
+```
