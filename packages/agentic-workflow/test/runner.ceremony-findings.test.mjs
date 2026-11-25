@@ -272,3 +272,35 @@ test("O17 the unchanged carrier still appends, reads, groups, deletes and merges
   assert.equal(json(deleted)["deleted-count"], 1);
   assert.match(findingsOf(spec()), /^\| id \| S# \/ file:line \|/mu, "an emptied carrier keeps its header");
 });
+
+test("O20 a workflow row must be report-only", (t) => {
+  const { root, spec } = makeUnit(t, { findingsBody: TABLE_V1 });
+  const before = spec();
+  for (const impact of ["blocking", "docs-only"]) {
+    const refused = run(root, "findings", "append", "--slug", "77-toy", "--file", "docs/workflow/SETUP.md", "--line", "1", "--axis", "workflow", "--severity", "WARNING", "--impact", impact, "--class", "workflow", "--route", "report upstream");
+    assert.equal(refused.code, 1, `${impact}: ${refused.stdout}${refused.stderr}`);
+    assert.equal(json(refused).error, "workflow-cannot-block");
+    assert.equal(spec(), before, "a refused workflow row writes nothing");
+  }
+  // The class cell is the published set, not free text.
+  const offSet = run(root, "findings", "append", "--slug", "77-toy", "--file", "docs/workflow/SETUP.md", "--line", "1", "--axis", "workflow", "--severity", "WARNING", "--impact", "report-only", "--class", "ceremony", "--route", "report upstream");
+  assert.equal(offSet.code, 1, offSet.stdout + offSet.stderr);
+  assert.equal(json(offSet).error, "unknown-vocabulary");
+  assert.equal(json(offSet).flag, "--class");
+});
+
+test("O20 a workflow row is persisted report-only and keeps its class", (t) => {
+  const { root, spec } = makeUnit(t, { findingsBody: TABLE_V1 });
+  const appended = run(root, "findings", "append", "--slug", "77-toy", "--file", "docs/workflow/SETUP.md", "--line", "1", "--axis", "workflow", "--severity", "WARNING", "--impact", "report-only", "--class", "workflow", "--route", "report upstream");
+  assert.equal(appended.code, 0, appended.stdout + appended.stderr);
+  assert.equal(json(appended).finding.class, "workflow");
+  assert.equal(json(appended).finding.impact, "report-only");
+  assert.match(findingsOf(spec()), /^\| F1 \| docs\/workflow\/SETUP\.md:1 \| workflow \| WARNING \| report-only \| workflow \| report upstream \|$/mu);
+  const read = run(root, "findings", "read", "--slug", "77-toy");
+  assert.equal(json(read).findings[0].class, "workflow");
+  assert.equal(json(read).findings[0].impact, "report-only");
+  // Flipping a persisted source row to workflow with a blocking impact is refused too.
+  const flip = run(root, "findings", "update", "--slug", "77-toy", "--id", "F1", "--class", "workflow", "--impact", "blocking");
+  assert.equal(flip.code, 1, flip.stdout + flip.stderr);
+  assert.equal(json(flip).error, "workflow-cannot-block");
+});

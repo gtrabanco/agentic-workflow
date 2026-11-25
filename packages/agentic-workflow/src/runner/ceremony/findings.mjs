@@ -35,7 +35,7 @@ import {
   readCarrier, parseCarrierBody, spliceFindingsTable, grammarDefect,
   CURRENT_FINDINGS_GRAMMAR, LEDGER_FINDINGS_GRAMMAR,
 } from "../findings-carrier.mjs";
-import { FINDINGS_TABLE_SEVERITIES, FINDINGS_TABLE_IMPACTS } from "@gtrabanco/agentic-workflow-schema";
+import { FINDINGS_TABLE_SEVERITIES, FINDINGS_TABLE_IMPACTS, PRE_EXECUTION_FINDING_CLASSES } from "@gtrabanco/agentic-workflow-schema";
 
 /** Highest-first merge order across both carriers: the ladder, then the legacy
  *  ledger aliases a pre-#308 unit still carries (read-only, never written). */
@@ -47,6 +47,21 @@ const SEVERITY_RANK = {
 /** Refuse a token the published set does not carry, naming the cell and the set. */
 function requireVocabulary(value, set, flag) {
   if (!set.includes(value)) fail("unknown-vocabulary", { flag: `--${flag}`, value, allowed: set.join("|") });
+}
+
+/**
+ * A ceremony finding never blocks the project's merge (issue #698 S3): the
+ * `workflow` class owns the workflow's own scaffold, gate or carrier, so it
+ * routes upstream and is persisted `report-only`. Any other impact is refused
+ * here — the anti-deflation rule can never turn a workflow defect into a
+ * `BLOCKER · fix-now` row the fold would then "repair" inside the project.
+ * A legacy carrier has no impact cell at all, so it cannot record the one
+ * shape the class requires; the writer refuses rather than dropping the cell.
+ */
+function requireWorkflowIsReportOnly({ classKind, impact, carrier }) {
+  if (classKind !== "workflow") return;
+  if (carrier === "legacy") fail("workflow-needs-current-carrier", { class: classKind, carrier });
+  if (impact !== "report-only") fail("workflow-cannot-block", { class: classKind, impact });
 }
 
 /** Resolve the unit's findings carrier: the migrated doc table or the legacy side file. */
@@ -170,6 +185,8 @@ export function findings(op, argv, cwd = process.cwd()) {
       }
       requireVocabulary(flags.severity, FINDINGS_TABLE_SEVERITIES, "severity");
       requireVocabulary(flags.impact, FINDINGS_TABLE_IMPACTS, "impact");
+      requireVocabulary(flags.class, PRE_EXECUTION_FINDING_CLASSES, "class");
+      requireWorkflowIsReportOnly({ classKind: flags.class, impact: flags.impact, carrier: c.carrier });
       if (flags.severity === "BLOCKER" && flags.impact === "report-only") {
         fail("blocker-cannot-be-advisory", { severity: flags.severity, impact: flags.impact });
       }
@@ -206,8 +223,10 @@ export function findings(op, argv, cwd = process.cwd()) {
       // echoing both is the contract — never silently dropping one of them.
       if (flags.severity) requireVocabulary(flags.severity, FINDINGS_TABLE_SEVERITIES, "severity");
       if (flags.impact) requireVocabulary(flags.impact, FINDINGS_TABLE_IMPACTS, "impact");
+      if (flags.class) requireVocabulary(flags.class, PRE_EXECUTION_FINDING_CLASSES, "class");
       const cells = ["severity", "impact", "class", "route"].filter((k) => flags[k]);
       for (const k of cells) row[k] = flags[k];
+      requireWorkflowIsReportOnly({ classKind: row.class, impact: row.impact, carrier: c.carrier });
       const applied = Object.fromEntries(cells.map((k) => [k, row[k]]));
       if (flags.folded === "true") {
         const body = readSection(c.md, "findings");
