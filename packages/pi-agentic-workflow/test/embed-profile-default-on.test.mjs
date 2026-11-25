@@ -93,7 +93,7 @@ test("default-on: an absent provider block with the key present exports the prof
 });
 
 test("default-on: an index.json carrying no `provider` key at all is the same absent block", () => {
-  const root = projectWith({ version: 1, store: { path: ".agentic-workflow/index/index.db" } });
+  const root = projectWith({ version: 1, index: { excludes: ["vendor/"] } });
   const plan = planEmbedDefaultOn({ root, entry, env: { NAN_API_KEY: "sk-nan" }, readFile: readFileOrNull });
 
   assert.equal(plan.inject, true, "a config file without a provider block leaves the provider unset");

@@ -174,33 +174,25 @@ doc-index embedding profile — <provider>
 
 ## Default-on resolution (issue #719)
 
-A project that carries a preset's profile, its key variable and **no**
-`provider` block in `index.json` used to answer keyword-only until somebody
-found the preset, materialized it and ran `/aw-index` — the "0 embedding tokens
-used" surprise. It now resolves at extension load:
+A project carrying a preset's profile, its key variable and **no** `provider`
+block in `index.json` used to answer keyword-only until somebody found the
+preset, materialized it and ran `/aw-index` — the "0 embedding tokens used"
+surprise. It now resolves at extension load:
 
-- **The trigger is an absent block plus a present key.** When an installed
-  preset ships an embed profile and its `envVar` (`NAN_API_KEY` for NaN) is in
-  the environment, the package exports the crate's own
+- **An absent block plus a present key.** The package exports the crate's own
   `AGENTIC_WORKFLOW_DOC_EMBEDDINGS_BASE_URL/MODEL/API_KEY` into the session
-  process, so every runner child it spawns (`doc --sync`, `doc --query`, the
-  [`doc_search`](#workflow-tools-deferred--issue-274) tool) resolves the provider
-  env-only. The materialization action above stays the route that writes a file.
-- **Your block always wins.** A `provider` block in `index.json` — complete or
-  partial — withholds the default wholesale. The file is never merged into and
-  stays byte-identical; the resolution only ever reads it.
-- **No key, nothing changes.** Without the key variable nothing is exported and
-  the shipped keyword-only behaviour with its
-  `unavailable-embeddings-not-configured` degradation is untouched. The same
-  holds once you export any of those three variables yourself: your choice is
-  the instruction.
-- **The tuning travels with it.** The profile's measured chunk × batch pair
-  (6000 × 6) is exported as the crate's request budget
-  (`AGENTIC_WORKFLOW_DOC_EMBEDDINGS_MAX_REQUEST_CHARS=36000`), which is the chunk
-  limit the crate adopts when none is configured — no crate change, no second
-  env name.
-- **Prose retrieval only.** This changes nothing about `rg` for exact strings or
-  regex in code, or LSP for symbols, and the store's corpus stays markdown.
+  process, plus the profile's measured chunk × batch pair (6000 × 6) as its
+  request budget (`…_MAX_REQUEST_CHARS=36000`) — the chunk limit the crate adopts
+  when none is configured. Every runner child (`doc --sync`, `doc --query`, the
+  [`doc_search`](#workflow-tools-deferred--issue-274) tool) then resolves the
+  provider env-only. The materialization action above stays what writes a file.
+- **Your block always wins.** A `provider` block — complete or partial — withholds
+  the default wholesale; the file is never merged into and stays byte-identical.
+- **No key, nothing changes.** Nothing is exported and the keyword-only
+  `unavailable-embeddings-not-configured` behaviour is untouched — as it is once
+  you export any of those three variables yourself.
+- **Prose retrieval only.** `rg` stays the tool for exact strings and regex in
+  code, LSP for symbols, and the corpus stays markdown.
 
 ## Unattended durability — supervisor resume (issue #284)
 
