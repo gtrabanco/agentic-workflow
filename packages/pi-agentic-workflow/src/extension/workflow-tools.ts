@@ -814,7 +814,11 @@ const DOC_QUERY_RESULT_SCHEMA: Record<string, unknown> = {
             maxItems: 2,
             description: "The 1-based inclusive [start, end] pair pinning the chunk's location.",
           },
-          score: { type: "number", description: "The fusion score; lower ranks first (the crate's own ordering)." },
+          score: {
+            type: "number",
+            description:
+              "The fusion score; higher ranks first (the crate's frozen ordering: score descending, then path, section and first line ascending).",
+          },
           meta: { type: "object", description: "The chunk's metadata, verbatim." },
         },
       },
