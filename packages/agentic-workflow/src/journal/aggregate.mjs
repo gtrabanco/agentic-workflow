@@ -6,7 +6,9 @@
  * consumed fragments, and refuses anything ambiguous instead of guessing. The
  * module carries no hosting-platform dependency: the example
  * push-to-default-branch workflow and the documented `post-receive` hook both
- * run the same `journal aggregate` command unchanged (AC5).
+ * run the same `journal aggregate` command, each in its own CI context — the
+ * workflow in the runner's `CI`, the hook with `CI=true` — and a non-CI run
+ * is refused before the first byte moves (issue #706, AC5).
  *
  * The decisions worth knowing, each pinned by `test/journal.test.mjs`:
  *

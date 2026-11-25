@@ -144,7 +144,9 @@
  * instead of duplicating the entry. The distributable GitHub Action in
  * `journal/` calls exactly this operation.
  * The example GitHub workflow and the documented `post-receive` hook both call
- * `journal aggregate` unchanged.
+ * `journal aggregate` — the workflow in the runner's `CI`, the hook with a
+ * `CI=true` prefix; a non-CI run is refused before the first byte moves
+ * (issue #706).
  */
 
 import { readFileSync, existsSync, writeFileSync, renameSync, readdirSync } from "node:fs";
