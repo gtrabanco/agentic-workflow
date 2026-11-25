@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// test-obligation: protects=scripts/repair-receipt.mjs,packages/agentic-workflow/src/repair-receipt/index.mjs obligations=contract,failure-path,state-integrity
+// test-obligation: protects=scripts/repair-receipt.mjs,packages/agentic-workflow/src/repair-receipt/index.mjs obligations=contract,failure-path,boundary
 /**
  * repair-receipt.test.mjs — issue #698: the fold's REPAIR-RECEIPT becomes a
  * machine-consumable currency, and every failing condition fails closed.

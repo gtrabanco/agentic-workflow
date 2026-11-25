@@ -487,8 +487,8 @@
         "audit-pr"
       ],
       "templates": [],
-      "routeEstimateMax": 11616,
-      "routeLinesMax": 699,
+      "routeEstimateMax": 11907,
+      "routeLinesMax": 715,
       "sources": {
         "fix #182 (deterministic receipts + PR hygiene)": "three terminal-hygiene gates (tree-clean / branch-pushed / pr-ready) added to the merge contract, plus the receipt and gate runtimes named in the Turn contract and the process step; ceiling = ceil(measured x 1.10)",
         "fix 285 (lane-era lineage gate)": "02_CLOSURE_AND_SCOPE_GATES.md rewritten for the lane-era surfaces (triage-block currency + unit-doc obligations, legacy verify path retained); route measured estimate 9193, lines 574; ceiling = ceil(measured x 1.10)",
@@ -509,7 +509,8 @@
         "feature 108 / issue #409 (machine gate receipts)": "the Turn contract gains one box that reads the verification gate's machine envelope (bun scripts/gate-receipt.mjs verify) and treats anything but current + pass as a BLOCKER routed to a re-run, replacing the prose claim that the suite is green; the verification row of references/01_MERGE_GATES.md states the same rule. Measured 10273 est / 619 lines at this re-basis; ceilings re-based to ceil(10273 x 1.10) = 11301 est and ceil(619 x 1.10) = 681 lines. Growth source = feature 409's gate-receipt box.",
         "feature 91 / issue #352 (runner prose)": "measured 10361 est / 623 lines, the runner re-point and each citing skill's pin pointer; ceiling re-based to ceil(10361 x 1.10) = 11398 / ceil(623 x 1.10) = 686",
         "issue #646 (docs + skills reconciliation, 2026-11-20)": "the D-table pointer conversions and the new references the affected skills link moved this route: measured 10392 est / 625 lines at this head, ceilings re-based to the checker's own ceiling over that measurement. Growth source: each converted rule carries a citation of its owner instead of a copy, and `skills/resolve-repository-state/references/STATE_CONTRACT.md` / `skills/audit-docs/references/RESTATEMENT.md` join the routes whose skills link them.",
-        "issue #702 (the merge gate's own outcomes)": "the audit route loads `audit-pr`'s process, whose BLOCKED verdict now names the outcome each gate holds (failed · skipped · unevaluatable with its reason) and persists only a `failed` one as a finding, so an environment the checkout cannot read routes instead of accusing content nobody observed; measured at this change with `bun scripts/check-skill-context.mjs --routes --json`: 10560 est / 635 lines; ceilings re-based to the exact ceil(10560 x 1.10) = 11616 est and ceil(635 x 1.10) = 699 lines, growth source = skills/audit-pr/references/03_AUDIT_PROCESS.md"
+        "issue #702 (the merge gate's own outcomes)": "the audit route loads `audit-pr`'s process, whose BLOCKED verdict now names the outcome each gate holds (failed · skipped · unevaluatable with its reason) and persists only a `failed` one as a finding, so an environment the checkout cannot read routes instead of accusing content nobody observed; measured at this change with `bun scripts/check-skill-context.mjs --routes --json`: 10560 est / 635 lines; ceilings re-based to the exact ceil(10560 x 1.10) = 11616 est and ceil(635 x 1.10) = 699 lines, growth source = skills/audit-pr/references/03_AUDIT_PROCESS.md",
+        "issue #698 (repair receipt)": "issue #698 (repair receipt): the merge gate and the review close-out name the typed repair receipt and the non-pass verdict families they consume, and CLASSIFY.md's sixth owning stage loads on every review-change route. Measured at the change with `bun scripts/check-skill-context.mjs --routes`; ceilings re-based to the checker's exact ceil(measured x 1.10) at this re-basis. Growth source = issue #698 S3/S4/S7/S8."
       }
     },
     "audit-pr:fix": {
@@ -517,8 +518,8 @@
         "audit-pr"
       ],
       "templates": [],
-      "routeEstimateMax": 11616,
-      "routeLinesMax": 699,
+      "routeEstimateMax": 11907,
+      "routeLinesMax": 715,
       "sources": {
         "fix #182 (deterministic receipts + PR hygiene)": "three terminal-hygiene gates (tree-clean / branch-pushed / pr-ready) added to the merge contract, plus the receipt and gate runtimes named in the Turn contract and the process step; ceiling = ceil(measured x 1.10)",
         "fix 285 (lane-era lineage gate)": "02_CLOSURE_AND_SCOPE_GATES.md rewritten for the lane-era surfaces (triage-block currency + unit-doc obligations, legacy verify path retained); route measured estimate 9193, lines 574; ceiling = ceil(measured x 1.10)",
@@ -538,7 +539,8 @@
         "feature 33 / issue #173 (single-owner turn contract, 2026-11-08)": "the skill's Turn contract now loads the canonical TURN_CONTRACT.md (P15 loader line for the execute-phase entrypoint, P10 loader + additions for the audit-pr entrypoint); route re-measured at this re-basis, routeEstimateMax 11178 -> 11206 = the checker's own ceil(measured x 1.10), reason declared (single-owner migration).",
         "feature 108 / issue #409 (machine gate receipts)": "the Turn contract gains one box that reads the verification gate's machine envelope (bun scripts/gate-receipt.mjs verify) and treats anything but current + pass as a BLOCKER routed to a re-run, replacing the prose claim that the suite is green; the verification row of references/01_MERGE_GATES.md states the same rule. Measured 10273 est / 619 lines at this re-basis; ceilings re-based to ceil(10273 x 1.10) = 11301 est and ceil(619 x 1.10) = 681 lines. Growth source = feature 409's gate-receipt box.",
         "feature 91 / issue #352 (runner prose)": "measured 10361 est / 623 lines, the runner re-point and each citing skill's pin pointer; ceiling re-based to ceil(10361 x 1.10) = 11398 / ceil(623 x 1.10) = 686",
-        "issue #646 (docs + skills reconciliation, 2026-11-20)": "the D-table pointer conversions and the new references the affected skills link moved this route: measured 10392 est / 625 lines at this head, ceilings re-based to the checker's own ceiling over that measurement. Growth source: each converted rule carries a citation of its owner instead of a copy, and `skills/resolve-repository-state/references/STATE_CONTRACT.md` / `skills/audit-docs/references/RESTATEMENT.md` join the routes whose skills link them."
+        "issue #646 (docs + skills reconciliation, 2026-11-20)": "the D-table pointer conversions and the new references the affected skills link moved this route: measured 10392 est / 625 lines at this head, ceilings re-based to the checker's own ceiling over that measurement. Growth source: each converted rule carries a citation of its owner instead of a copy, and `skills/resolve-repository-state/references/STATE_CONTRACT.md` / `skills/audit-docs/references/RESTATEMENT.md` join the routes whose skills link them.",
+        "issue #698 (repair receipt)": "issue #698 (repair receipt): the merge gate and the review close-out name the typed repair receipt and the non-pass verdict families they consume, and CLASSIFY.md's sixth owning stage loads on every review-change route. Measured at the change with `bun scripts/check-skill-context.mjs --routes`; ceilings re-based to the checker's exact ceil(measured x 1.10) at this re-basis. Growth source = issue #698 S3/S4/S7/S8."
       }
     },
     "execute-phase:descope": {
@@ -973,8 +975,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 27856,
-      "routeLinesMax": 1913,
+      "routeEstimateMax": 28351,
+      "routeLinesMax": 1929,
       "sources": {
         "issue #667 (review-pack preamble extraction)": "issue #667: the finder contract now carries the review pack's whole shared preamble (the scope contract, the materiality bar, the checklist discipline with its tally protocol and the reason it stays inline, the review-debt transform variant and the pass identity) instead of only its scope and materiality halves, and review-debt gained its inline tally binding; every review-change route loads review-implementation's references, so all four measure it. Ceilings re-based to exact ceil(measured x 1.10) from the checker's own measured route at this cut. Growth source = issue #667's preamble extraction.",
         "#355 (fix 355)": "fix 355 (#355): the classifier's residue row routes a delivered feature's missing *planned* half to `replan-in-unit` with both branches stated in one row, and `skills/review-implementation/references/CLASSIFY.md` is loaded by every review-change route; ceilings re-based to exact ceil(measured x 1.10) from the checker's own measured route at this cut. Growth source = fix 355's classifier row.",
@@ -1007,7 +1009,8 @@
         "issue #269 (2026-11-10 read-set consumption)": "issue #269 (per-phase Relevant-files consumption): execute-phase SKILL.md grew by the context-targeting paragraph, the turn-contract read-set box and the Relevant-files discipline + forward-propagation post-step item; review-change SKILL.md grew by the read-set-around-the-diff scope rule; each affected route re-measured at this re-basis, ceilings re-set to the checker ceil(measured x 1.10)",
         "issue #437 (2026-11-11 citation repair)": "the baseline-advisory rule's citation repair (issue #437, merged as PR #492): CLASSIFY.md's ladder cell and rule paragraph name `scripts/differential-baseline.mjs` instead of the folded `#363` and its \"until it exists\" clause; the file rides every review-change route, so each route was re-measured at this re-basis and both ceilings re-set to the checker's ceil(measured x 1.10). Growth source = issue #437's citation repair.",
         "feature 91 / issue #352 (runner prose)": "measured 24638 est / 1692 lines, the runner re-point and each citing skill's pin pointer; ceiling re-based to ceil(24638 x 1.10) = 27102 / ceil(1692 x 1.10) = 1862",
-        "issue #646 (docs + skills reconciliation, 2026-11-20)": "the D-table pointer conversions and the new references the affected skills link moved this route: measured 24653 est / 1693 lines at this head, ceilings re-based to the checker's own ceiling over that measurement. Growth source: each converted rule carries a citation of its owner instead of a copy, and `skills/resolve-repository-state/references/STATE_CONTRACT.md` / `skills/audit-docs/references/RESTATEMENT.md` join the routes whose skills link them."
+        "issue #646 (docs + skills reconciliation, 2026-11-20)": "the D-table pointer conversions and the new references the affected skills link moved this route: measured 24653 est / 1693 lines at this head, ceilings re-based to the checker's own ceiling over that measurement. Growth source: each converted rule carries a citation of its owner instead of a copy, and `skills/resolve-repository-state/references/STATE_CONTRACT.md` / `skills/audit-docs/references/RESTATEMENT.md` join the routes whose skills link them.",
+        "issue #698 (repair receipt)": "issue #698 (repair receipt): the merge gate and the review close-out name the typed repair receipt and the non-pass verdict families they consume, and CLASSIFY.md's sixth owning stage loads on every review-change route. Measured at the change with `bun scripts/check-skill-context.mjs --routes`; ceilings re-based to the checker's exact ceil(measured x 1.10) at this re-basis. Growth source = issue #698 S3/S4/S7/S8."
       },
       "linesMax": 1842
     },
@@ -1027,8 +1030,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 24314,
-      "routeLinesMax": 1688,
+      "routeEstimateMax": 24809,
+      "routeLinesMax": 1703,
       "sources": {
         "issue #667 (review-pack preamble extraction)": "issue #667: the finder contract now carries the review pack's whole shared preamble (the scope contract, the materiality bar, the checklist discipline with its tally protocol and the reason it stays inline, the review-debt transform variant and the pass identity) instead of only its scope and materiality halves, and review-debt gained its inline tally binding; every review-change route loads review-implementation's references, so all four measure it. Ceilings re-based to exact ceil(measured x 1.10) from the checker's own measured route at this cut. Growth source = issue #667's preamble extraction.",
         "#355 (fix 355)": "fix 355 (#355): the classifier's residue row routes a delivered feature's missing *planned* half to `replan-in-unit` with both branches stated in one row, and `skills/review-implementation/references/CLASSIFY.md` is loaded by every review-change route; ceilings re-based to exact ceil(measured x 1.10) from the checker's own measured route at this cut. Growth source = fix 355's classifier row.",
@@ -1059,7 +1062,8 @@
         "issue #269 (2026-11-10 read-set consumption)": "issue #269 (per-phase Relevant-files consumption): execute-phase SKILL.md grew by the context-targeting paragraph, the turn-contract read-set box and the Relevant-files discipline + forward-propagation post-step item; review-change SKILL.md grew by the read-set-around-the-diff scope rule; each affected route re-measured at this re-basis, ceilings re-set to the checker ceil(measured x 1.10)",
         "issue #437 (2026-11-11 citation repair)": "the baseline-advisory rule's citation repair (issue #437, merged as PR #492): CLASSIFY.md's ladder cell and rule paragraph name `scripts/differential-baseline.mjs` instead of the folded `#363` and its \"until it exists\" clause; the file rides every review-change route, so each route was re-measured at this re-basis and both ceilings re-set to the checker's ceil(measured x 1.10). Growth source = issue #437's citation repair.",
         "feature 91 / issue #352 (runner prose)": "measured 21413 est / 1487 lines, the runner re-point and each citing skill's pin pointer; ceiling re-based to ceil(21413 x 1.10) = 23555 / ceil(1487 x 1.10) = 1636",
-        "issue #646 (docs + skills reconciliation, 2026-11-20)": "the D-table pointer conversions and the new references the affected skills link moved this route: measured 21428 est / 1488 lines at this head, ceilings re-based to the checker's own ceiling over that measurement. Growth source: each converted rule carries a citation of its owner instead of a copy, and `skills/resolve-repository-state/references/STATE_CONTRACT.md` / `skills/audit-docs/references/RESTATEMENT.md` join the routes whose skills link them."
+        "issue #646 (docs + skills reconciliation, 2026-11-20)": "the D-table pointer conversions and the new references the affected skills link moved this route: measured 21428 est / 1488 lines at this head, ceilings re-based to the checker's own ceiling over that measurement. Growth source: each converted rule carries a citation of its owner instead of a copy, and `skills/resolve-repository-state/references/STATE_CONTRACT.md` / `skills/audit-docs/references/RESTATEMENT.md` join the routes whose skills link them.",
+        "issue #698 (repair receipt)": "issue #698 (repair receipt): the merge gate and the review close-out name the typed repair receipt and the non-pass verdict families they consume, and CLASSIFY.md's sixth owning stage loads on every review-change route. Measured at the change with `bun scripts/check-skill-context.mjs --routes`; ceilings re-based to the checker's exact ceil(measured x 1.10) at this re-basis. Growth source = issue #698 S3/S4/S7/S8."
       },
       "linesMax": 1616
     },
@@ -1079,8 +1083,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 24314,
-      "routeLinesMax": 1688,
+      "routeEstimateMax": 24809,
+      "routeLinesMax": 1703,
       "sources": {
         "issue #667 (review-pack preamble extraction)": "issue #667: the finder contract now carries the review pack's whole shared preamble (the scope contract, the materiality bar, the checklist discipline with its tally protocol and the reason it stays inline, the review-debt transform variant and the pass identity) instead of only its scope and materiality halves, and review-debt gained its inline tally binding; every review-change route loads review-implementation's references, so all four measure it. Ceilings re-based to exact ceil(measured x 1.10) from the checker's own measured route at this cut. Growth source = issue #667's preamble extraction.",
         "#355 (fix 355)": "fix 355 (#355): the classifier's residue row routes a delivered feature's missing *planned* half to `replan-in-unit` with both branches stated in one row, and `skills/review-implementation/references/CLASSIFY.md` is loaded by every review-change route; ceilings re-based to exact ceil(measured x 1.10) from the checker's own measured route at this cut. Growth source = fix 355's classifier row.",
@@ -1111,7 +1115,8 @@
         "issue #269 (2026-11-10 read-set consumption)": "issue #269 (per-phase Relevant-files consumption): execute-phase SKILL.md grew by the context-targeting paragraph, the turn-contract read-set box and the Relevant-files discipline + forward-propagation post-step item; review-change SKILL.md grew by the read-set-around-the-diff scope rule; each affected route re-measured at this re-basis, ceilings re-set to the checker ceil(measured x 1.10)",
         "issue #437 (2026-11-11 citation repair)": "the baseline-advisory rule's citation repair (issue #437, merged as PR #492): CLASSIFY.md's ladder cell and rule paragraph name `scripts/differential-baseline.mjs` instead of the folded `#363` and its \"until it exists\" clause; the file rides every review-change route, so each route was re-measured at this re-basis and both ceilings re-set to the checker's ceil(measured x 1.10). Growth source = issue #437's citation repair.",
         "feature 91 / issue #352 (runner prose)": "measured 21413 est / 1487 lines, the runner re-point and each citing skill's pin pointer; ceiling re-based to ceil(21413 x 1.10) = 23555 / ceil(1487 x 1.10) = 1636",
-        "issue #646 (docs + skills reconciliation, 2026-11-20)": "the D-table pointer conversions and the new references the affected skills link moved this route: measured 21428 est / 1488 lines at this head, ceilings re-based to the checker's own ceiling over that measurement. Growth source: each converted rule carries a citation of its owner instead of a copy, and `skills/resolve-repository-state/references/STATE_CONTRACT.md` / `skills/audit-docs/references/RESTATEMENT.md` join the routes whose skills link them."
+        "issue #646 (docs + skills reconciliation, 2026-11-20)": "the D-table pointer conversions and the new references the affected skills link moved this route: measured 21428 est / 1488 lines at this head, ceilings re-based to the checker's own ceiling over that measurement. Growth source: each converted rule carries a citation of its owner instead of a copy, and `skills/resolve-repository-state/references/STATE_CONTRACT.md` / `skills/audit-docs/references/RESTATEMENT.md` join the routes whose skills link them.",
+        "issue #698 (repair receipt)": "issue #698 (repair receipt): the merge gate and the review close-out name the typed repair receipt and the non-pass verdict families they consume, and CLASSIFY.md's sixth owning stage loads on every review-change route. Measured at the change with `bun scripts/check-skill-context.mjs --routes`; ceilings re-based to the checker's exact ceil(measured x 1.10) at this re-basis. Growth source = issue #698 S3/S4/S7/S8."
       },
       "linesMax": 1616
     },
@@ -1131,8 +1136,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 25067,
-      "routeLinesMax": 1726,
+      "routeEstimateMax": 25562,
+      "routeLinesMax": 1742,
       "sources": {
         "issue #667 (review-pack preamble extraction)": "issue #667: the finder contract now carries the review pack's whole shared preamble (the scope contract, the materiality bar, the checklist discipline with its tally protocol and the reason it stays inline, the review-debt transform variant and the pass identity) instead of only its scope and materiality halves, and review-debt gained its inline tally binding; every review-change route loads review-implementation's references, so all four measure it. Ceilings re-based to exact ceil(measured x 1.10) from the checker's own measured route at this cut. Growth source = issue #667's preamble extraction.",
         "#355 (fix 355)": "fix 355 (#355): the classifier's residue row routes a delivered feature's missing *planned* half to `replan-in-unit` with both branches stated in one row, and `skills/review-implementation/references/CLASSIFY.md` is loaded by every review-change route; ceilings re-based to exact ceil(measured x 1.10) from the checker's own measured route at this cut. Growth source = fix 355's classifier row.",
@@ -1165,7 +1170,8 @@
         "issue #269 (2026-11-10 read-set consumption)": "issue #269 (per-phase Relevant-files consumption): execute-phase SKILL.md grew by the context-targeting paragraph, the turn-contract read-set box and the Relevant-files discipline + forward-propagation post-step item; review-change SKILL.md grew by the read-set-around-the-diff scope rule; each affected route re-measured at this re-basis, ceilings re-set to the checker ceil(measured x 1.10)",
         "issue #437 (2026-11-11 citation repair)": "the baseline-advisory rule's citation repair (issue #437, merged as PR #492): CLASSIFY.md's ladder cell and rule paragraph name `scripts/differential-baseline.mjs` instead of the folded `#363` and its \"until it exists\" clause; the file rides every review-change route, so each route was re-measured at this re-basis and both ceilings re-set to the checker's ceil(measured x 1.10). Growth source = issue #437's citation repair.",
         "feature 91 / issue #352 (runner prose)": "measured 22101 est / 1522 lines, the runner re-point and each citing skill's pin pointer; ceiling re-based to ceil(22101 x 1.10) = 24312 / ceil(1522 x 1.10) = 1675",
-        "issue #646 (docs + skills reconciliation, 2026-11-20)": "the D-table pointer conversions and the new references the affected skills link moved this route: measured 22116 est / 1523 lines at this head, ceilings re-based to the checker's own ceiling over that measurement. Growth source: each converted rule carries a citation of its owner instead of a copy, and `skills/resolve-repository-state/references/STATE_CONTRACT.md` / `skills/audit-docs/references/RESTATEMENT.md` join the routes whose skills link them."
+        "issue #646 (docs + skills reconciliation, 2026-11-20)": "the D-table pointer conversions and the new references the affected skills link moved this route: measured 22116 est / 1523 lines at this head, ceilings re-based to the checker's own ceiling over that measurement. Growth source: each converted rule carries a citation of its owner instead of a copy, and `skills/resolve-repository-state/references/STATE_CONTRACT.md` / `skills/audit-docs/references/RESTATEMENT.md` join the routes whose skills link them.",
+        "issue #698 (repair receipt)": "issue #698 (repair receipt): the merge gate and the review close-out name the typed repair receipt and the non-pass verdict families they consume, and CLASSIFY.md's sixth owning stage loads on every review-change route. Measured at the change with `bun scripts/check-skill-context.mjs --routes`; ceilings re-based to the checker's exact ceil(measured x 1.10) at this re-basis. Growth source = issue #698 S3/S4/S7/S8."
       },
       "linesMax": 1655
     }
