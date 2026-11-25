@@ -347,6 +347,36 @@ test("self-injection: a trio this resolver exported blocks nothing, so the withd
   assert.deepEqual(processEnv, {}, "and the trio goes with it");
 });
 
+test("self-injection: an operator's direct credential export survives the load that reads no key", () => {
+  // The credential is the one value a hand-written export and this resolver's
+  // own write can share verbatim, so it is never evidence of a self-injection on
+  // its own (D7: the recognized key is the one read from `envVar`). An operator
+  // exporting only the crate's direct API key — the documented env-only path —
+  // made a choice this resolver did not, and the load leaves it exactly as found.
+  const root = projectWith(null);
+  const processEnv = { [EMBED_DIRECT_ENV.apiKey]: "operator-credential" };
+  const result = applyEmbedDefaultOn({ root, entry, env: {}, processEnv });
+
+  assert.equal(result.abstained, false, "nothing was withdrawn — the resolver wrote no trio here");
+  assert.equal(result.applied, false);
+  assert.equal(result.plan.reason, "no-provider-key", "no preset key is present, so the default cannot apply");
+  assert.deepEqual(processEnv, { [EMBED_DIRECT_ENV.apiKey]: "operator-credential" }, "and the operator's export is untouched");
+});
+
+test("self-injection: a hand-picked trio keeps its credential even with no preset key", () => {
+  // The same rule for the whole hand-picked surface: every name the operator
+  // exported agrees with the profile, and the load still leaves it alone — the
+  // trio is withdrawn only when the credential is the one `envVar` carries.
+  const root = projectWith(null);
+  const handPicked = { ...SELF_TRIO };
+  const processEnv = { ...handPicked };
+  const result = applyEmbedDefaultOn({ root, entry, env: {}, processEnv });
+
+  assert.equal(result.abstained, false, "an operator's trio is never withdrawn");
+  assert.equal(result.plan.reason, "operator-environment", "it is read as the choice it is");
+  assert.deepEqual(processEnv, handPicked);
+});
+
 // ---------------------------------------------------------------------------
 // The resolved configuration the crate then sees (AC1's other half)
 // ---------------------------------------------------------------------------
