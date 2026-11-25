@@ -101,6 +101,7 @@ test("cut + canary publishes the declared packages at the canary version, gated 
   assert.match(block, /npm-version-gate\.mjs/, "the exact-version gate guards every publish");
   assert.match(block, /npm publish --ignore-scripts --access public --provenance --tag "\$tag"/);
   assert.match(block, /git checkout HEAD -- packages\/\*\/package\.json/, "the repo is restored after the temp version");
+  assert.match(block, /packages\/pi-agentic-workflow\/projection-manifest\.json/, "the rebound projection digest is restored with the temp state (issue #723)");
   assert.match(block, /canary-tag\.mjs record --tag "v\$V"/, "the tag is the canary counter's input");
 });
 
