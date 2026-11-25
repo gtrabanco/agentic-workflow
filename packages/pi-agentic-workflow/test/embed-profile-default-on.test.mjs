@@ -14,7 +14,8 @@
 //   test-obligation@1 surface=packages/pi-agentic-workflow/src/config/embed-profile #719
 //   kinds=behavioral,contract,negative,integration
 //   obligations=default-on-injection,withhold-on-explicit-block,withhold-without-key,
-//               byte-identity,idempotent-wiring,tuning-parity,unreadable-config-refusal
+//               byte-identity,idempotent-wiring,tuning-parity,unreadable-config-refusal,
+//               self-injection-withdrawal
 //
 // Justification lines name the independent obligation each case covers, never
 // the implementation under test.
@@ -31,6 +32,7 @@ import {
   applyEmbedDefaultOn,
   planEmbedDefaultOn,
 } from "../dist/config/embed-profile.js";
+import { MAX_REQUEST_CHARS_ENV } from "@gtrabanco/agentic-workflow/src/doc/config.mjs";
 
 /** The NaN profile's shape, as the companion package donates it (issue #541 S3). */
 const NAN_PROFILE = {
@@ -102,9 +104,12 @@ test("default-on: an index.json carrying no `provider` key at all is the same ab
 
 test("default-on: a `provider: null` block is absent, not a declaration — the default applies", () => {
   const root = projectWith({ version: 1, provider: null });
-  const plan = planEmbedDefaultOn({ root, entry, env: { NAN_API_KEY: "sk-nan" }, readFile: readFileOrNull });
+  const processEnv = {};
+  const result = applyEmbedDefaultOn({ root, entry, env: { NAN_API_KEY: "sk-nan" }, processEnv });
 
-  assert.equal(plan.inject, true, "null is the shipped keyword-only default, never an operator block");
+  assert.equal(result.plan.inject, false, "null is the shipped keyword-only default, never an operator block");
+  assert.equal(result.applied, true, "so the default applies — a second load in the same process must too");
+  assert.equal(processEnv[EMBED_DIRECT_ENV.model], NAN_PROFILE.model);
 });
 
 // ---------------------------------------------------------------------------
@@ -263,6 +268,73 @@ test("unreadable: a config path that is a directory is refused, never thrown", (
   assert.equal(result.plan.reason, "unreadable-config", "EISDIR is a read failure, not an absent block");
   assert.match(result.plan.detail, /EISDIR/);
   assert.deepEqual(processEnv, {});
+});
+
+// ---------------------------------------------------------------------------
+// The resolver's own trio is not an operator's (F3, D7, O9)
+// ---------------------------------------------------------------------------
+//
+// A second load, or a load after the operator finally wrote a provider block,
+// must reach the same decision the first one did. The trio this resolver
+// exported is recognized by value — only a trio that matches what the profile
+// derives, in full, is withdrawn — so a hand-picked export survives untouched.
+
+/** The trio this resolver exports for `NAN_PROFILE`, exactly as it lands. */
+const SELF_TRIO = {
+  [EMBED_DIRECT_ENV.baseUrl]: NAN_PROFILE.baseUrl,
+  [EMBED_DIRECT_ENV.model]: NAN_PROFILE.model,
+  [EMBED_DIRECT_ENV.apiKey]: "sk-nan",
+  [MAX_REQUEST_CHARS_ENV]: String(NAN_MAX_REQUEST_CHARS),
+};
+
+test("self-injection: a provider block written after the injection wins in the same session", () => {
+  const root = projectWith(null);
+  const processEnv = {};
+  applyEmbedDefaultOn({ root, entry, env: { NAN_API_KEY: "sk-nan" }, processEnv });
+  assert.deepEqual(processEnv, SELF_TRIO, "the first load exported the profile");
+
+  // The operator writes their own block without leaving the session.
+  writeFileSync(
+    join(root, ".agentic-workflow", "index.json"),
+    `${JSON.stringify({ version: 1, provider: { baseUrl: "https://acme.example/v1", model: "acme-embed-1", envVar: "ACME_API_KEY" } }, null, 2)}\n`,
+  );
+  const second = applyEmbedDefaultOn({ root, entry, env: { NAN_API_KEY: "sk-nan", ACME_API_KEY: "acme-key" }, processEnv });
+
+  assert.equal(second.plan.reason, "explicit-provider-block", "the block is the instruction, not the trio it replaced");
+  assert.deepEqual(processEnv, {}, "the resolver's own trio is withdrawn, so the block is what runs");
+});
+
+test("self-injection: a second load plans the surface it found, not the one it wrote", () => {
+  const root = projectWith(null);
+  const processEnv = {};
+  applyEmbedDefaultOn({ root, entry, env: { NAN_API_KEY: "sk-nan" }, processEnv });
+  const second = applyEmbedDefaultOn({ root, entry, env: { NAN_API_KEY: "sk-nan" }, processEnv });
+
+  assert.equal(second.applied, true, "the same decision, reached again");
+  assert.equal(second.plan.reason, "default-on", "nobody in this process chose anything, so the withhold was not `operator-environment`");
+  assert.deepEqual(processEnv, SELF_TRIO, "and the process carries exactly the trio back");
+});
+
+test("self-injection: a no-key withhold withdraws the trio a previous load exported", () => {
+  const root = projectWith(null);
+  const processEnv = {};
+  applyEmbedDefaultOn({ root, entry, env: { NAN_API_KEY: "sk-nan" }, processEnv });
+  const second = applyEmbedDefaultOn({ root, entry, env: {}, processEnv });
+
+  assert.equal(second.plan.reason, "no-provider-key");
+  assert.deepEqual(processEnv, {}, "a default this resolver exported never outlives the decision to export it");
+});
+
+test("self-injection: a trio that disagrees with the profile is the operator's and stays untouched", () => {
+  const root = projectWith(null);
+  const handPicked = { ...SELF_TRIO, [EMBED_DIRECT_ENV.model]: "hand-picked-model" };
+  const processEnv = { ...handPicked };
+  const result = applyEmbedDefaultOn({ root, entry, env: { NAN_API_KEY: "sk-nan" }, processEnv });
+
+  assert.equal(result.abstained, false, "the operator made the call, so there is nothing to withdraw");
+  assert.equal(result.applied, false);
+  assert.equal(result.plan.reason, "operator-environment");
+  assert.deepEqual(processEnv, handPicked);
 });
 
 // ---------------------------------------------------------------------------
