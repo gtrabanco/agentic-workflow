@@ -486,6 +486,19 @@ for this change (it would be a second, competing step list).`
   latest: tsc --noEmit clean`). The root suite's own reds are the two
   base-present ones named in `## Known pre-existing issues`.
 
+- **G2** — 2026-11-26, GATE-RAN | HEAD 68f85b54 | `bun scripts/gate-receipt.mjs
+  run -- --jobs 4 --no-bail` | exit 1 | manifest
+  be3d4c29fb4eba6fa1bf780a6e67a6c5bebc5117ad5d9a1e6a406dc6cb7edaf3 — the
+  terminal run through the producer at `68f85b545`, and the receipt it left:
+  `runner gate-receipt verify` answers `status: current`, `verdict: fail`,
+  `blocker: gate verdict is fail`, exit 1 — **14 passed / 1 failed / 5
+  skipped**, `manifest.entries` 2,416, the one failed check `root-suite`, whose
+  first red is `scripts/findings-corpus.test.mjs` (the base-present frozen
+  count above). `scripts/ceremony-findings-ledger.test.mjs` passed inside that
+  run in 72s, so its earlier red was the per-test budget under load, exactly as
+  recorded. A receipt that cannot say `pass` says `fail` and names the check —
+  the one behaviour this unit exists to make reachable.
+
 ## Next
 
 The external verifier's verdict — the diff, the obligations ledger (`16 rows ×
