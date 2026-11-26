@@ -183,20 +183,17 @@ test("reader reconciliation: a settled carrier keeps its one-line marks and open
 
 test("harvest: the real tree yields the counts the planning ledger froze", () => {
   const corpus = buildCorpus(ROOT, { resolveFold: () => null });
-  // 1178 = 1173 + feature 719's five rows `F9`–`F13` (the review-receipt,
-  // verify and lineage findings recorded after the 1173 re-pin landed): the
-  // corpus counts the finding rows the tree actually carries, so a unit that
-  // records one raises it (the same mechanism this line documents for
-  // `reviewMarks` below). Re-frozen during the 2026-11-26 main integration,
-  // where origin/main's own tip proved red (1178 ≠ 1173) before any branch
-  // content joined it — exact equality kept, no assertion relaxed.
+  // 1178 findings, 56 legacy ledgers, 229 fold-annotated rows and 179 review
+  // marks were measured on the tree this merge produces, not on either parent:
+  // origin/main's 40 commits carry feature 719's `F9`-`F13` rows and its `R3`
+  // line, and fix/729 adds its own `R1` and `R2` lines. The corpus counts what
+  // the tree actually carries — the mechanism issue #651 introduced — so a unit
+  // that records a finding or a review mark raises it and a folded row lowers
+  // it; the assertions stay exact, nothing is relaxed.
   assert.equal(corpus.findings.length, 1178, "every finding row in either carrier is in the corpus");
   assert.equal(corpus.legacyLedgers, 56);
   assert.equal(corpus.foldAnnotated, 229);
-  // 177 = 176 + feature 719's `R3` line (its third review cycle, recorded after
-  // the 176 re-pin): the corpus counts the review marks the tree actually
-  // carries, so a unit that records one raises it.
-  assert.equal(corpus.reviewMarks, 177);
+  assert.equal(corpus.reviewMarks, 179);
   assert.ok(corpus.units.length >= 171);
   assert.deepEqual(corpus.unparsable, []);
   assert.ok(corpus.findings.every((row) => row.provenance.includes(":") && row.digest.length === 12));
