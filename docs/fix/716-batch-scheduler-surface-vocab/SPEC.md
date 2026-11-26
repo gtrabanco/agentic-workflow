@@ -356,6 +356,7 @@ applied inline by the owner's workflow (`## Log` L2), so no review pack, no
 - **P7** — 2026-11-24, docs currency across the owner page, the config guides, the scaffold offer, triage's contract and the crate README. Commit `82b530930`.
 - **P8** — 2026-11-24, the roadmap row through `docs-generate`, the changeset, the materialized config section and the journal fragment. Commit `82b530930`.
 - **P9** — 2026-11-24, verification: the frozen corpus green, the differential on both corpora, the twelve gate steps proven individually (E6–E12, E15), the obligations ledger closed (`19 verified`) and the two pre-existing reds recorded as K6/K8 with their base-commit reproduction. Commit `a77928c17`.
+- **D12** — 2026-11-24, the branch reached the forge through the pre-push hook's own documented hatch (`AGENTIC_WORKFLOW_SKIP_LOCAL_GATE=1`, whose comment requires the reason to be recorded): the hook's gate is red on the two suites that are red at `022769f8b` too (K6, K8), so no run of it could pass for this push. The full gate was nevertheless run and reported step by step (`E11`, `E12`), and the reason is recorded in PR #733's body as the hook demands — never an undocumented `--no-verify`.
 - **D11** — 2026-11-24, `O19` stays `in-progress` instead of `verified`: two of its three validators exit 0 (`skill-lint`, `check-skill-context`) and the third — `bun scripts/local-gate.mjs` — exits 1 on two suites that are already red at `022769f8b` (K6's frozen count, K8's absent pin) plus one suite wall that only a contended box crosses (K7). Marking the row verified would be self-approval of an outcome no run produced, so the row is handed over open with its cause; repairing another unit's frozen count is not this unit's scope.
 - **D10** — 2026-11-24, the session fragment is the one the writer accepted, not the one I would have written last: `journal write` computed its commit count (2) at the moment it ran, and its errata route is closed for this repository's shared `local` identity — `--supersedes` is refused with "cannot correct the shared local identity — it is not a conversation, and an errata corrects one conversation's entry (`journal-write-grammar@1`)". The fragment therefore stands as the snapshot it is, and this `## Log` carries the full evidence.
 
@@ -366,6 +367,8 @@ it judges.
 
 ## References
 
+- **PR** [#733](https://github.com/gtrabanco/agentic-workflow/pull/733) — this
+  unit's delivery (base `main`, head `55300a030`, 28 files, +1356/−122).
 - Issue [#716](https://github.com/gtrabanco/agentic-workflow/issues/716) — the
   request this unit applies, quoted verbatim in `## Specs`.
 - Issue [#717](https://github.com/gtrabanco/agentic-workflow/issues/717) — the
