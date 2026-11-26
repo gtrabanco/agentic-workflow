@@ -1,0 +1,6 @@
+## 2026-11-26T20:01:33Z — feat/716-batch-scheduler-surface-vocab — fix-716 receipts composed
+- **Commits:** 10 (`747ad416…e515efb2`)
+- **Files:** 30 files
+- **Summary:** Correction batch after the unit's EXTERNAL VERIFY verdict (NEEDS-DECISION, 2 blockers): B1 folded - the Log P9 line no longer claims 19 verified, it states the D11 hand-over (18 verified + O19 in-progress with its cause), and the P9 task wording carries the same parenthetical; B2 folded - known-issues.md gained the missing K8 row, the workflow-doctor.test.mjs red reproduced standalone at base 022769f8b in a detached mktemp clone (20 pass/3 fail, identical at this head, suite untouched by the branch). Ledger statuses untouched: O19 stays open on purpose. Recheck: B1 grep 0 matches, B2 grep 1 + every K-id the SPEC cites resolves, verify SPEC keeps the single honest obligations-open refusal, docs-generate --check PASS.
+- **Decisions:** Advisories triaged, none fixed in this batch - each belongs to its owning surface: K6's frozen count (the unit that landed the five rows), the doctor battery fixture (the pin read's owner), the F99 flake (load on an untouched file), K7 (disclosed, standalone green). The PR body was checked read-only and already reads honestly; no forge edit made.
+- **Next:** Owner's external verify on this head: a delta verdict limited to B1/B2 on this receipt.
