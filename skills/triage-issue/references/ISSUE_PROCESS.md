@@ -194,9 +194,15 @@ remove | none | the unit that performs the deletion, carrying its measured recei
    work on the issue body's `## Surfaces`, and a missing one is planned as a
    guess:
    - `runner batch-scheduler --infer-surfaces <n>` prints the block to
-     paste (fences inert, `## Where`/`## In scope` honored) or
-     `- surface-unknown`. `--issues-file <cache>` works offline. Never hand-write
-     the lane keys: the six the project resolves are the script's vocabulary.
+     paste (fences inert, `## Where`/`## In scope` honored, resolved through the
+     project's own lane vocabulary) or `- surface-unknown`. `--issues-file
+     <cache>` works offline. Never hand-write the lane keys: they are the
+     script's, and the vocabulary is the project's (owner:
+     `skills/batch-scheduler/references/PLAN.md` § The surface vocabulary).
+   - When the emitter answers on stderr that the keys came from the project's
+     tree rather than a declaration, record that config line (`runner config set
+     batchScheduler.surfaces '[…]' --scope project`) in the triage receipt as the
+     follow-up that would pin them — a discovered lane follows a directory rename.
    - **No `## Surfaces`** → append the printed block with
      `gh issue edit <n> --body-file <path>` (write the file first, never an
      inline `--body`), after the last section, never inside an existing one.

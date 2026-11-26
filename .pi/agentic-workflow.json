@@ -175,5 +175,12 @@
     // docRetention.seamHook — The project-declared offsite copy, run after the local archive is durable.
     // type: string|null · shipped default: null
     "seamHook": null
+  },
+  // batchScheduler — The batch scheduler's lane vocabulary: this project's own tree roots, so a tree that is not this repository's layout plans in parallel lanes instead of degrading to surface-unknown (issue #716).
+  // type: object · shipped default: {"surfaces":[]}
+  "batchScheduler": {
+    // batchScheduler.surfaces — This project's lane trees, one project-relative directory per entry (`src/pages`, `apps/web`). Empty means undeclared: the shipped roots plus the project's own directories answer.
+    // type: array · shipped default: []
+    "surfaces": []
   }
 }

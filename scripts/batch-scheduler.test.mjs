@@ -34,6 +34,8 @@ const {
   extractFileClaims,
   extractProseDependencies,
   printHumanSummary,
+  resolveSurfaceVocabulary,
+  SURFACE_UNKNOWN_TOKEN,
   STATE_FILE_NAME,
 } = await import(scriptPath);
 
@@ -605,17 +607,21 @@ test("F9: a `<…>` vocabulary placeholder is never a surface — no lane, and n
 });
 
 test("T1: the templates declare the `## Surfaces` section the parser reads, and the contract keeps it optional", () => {
-  // This repository's own templates name the six lane keys the planner resolves.
+  // This repository's own templates teach the rule the parser implements and
+  // point at its owner: a closed list of this tree's folders is the #716 defect,
+  // and the scaffold copies already say "the project's lane key".
   const TEMPLATES = ["docs/fix/_TEMPLATE/SPEC.md", "docs/features/_TEMPLATE/SPEC.md"];
   for (const rel of TEMPLATES) {
     const text = fs.readFileSync(path.join(repoRoot, rel), "utf8");
     const at = text.indexOf("\n## Surfaces\n");
     assert.notEqual(at, -1, `${rel} carries ## Surfaces — triage cuts a unit from it`);
     const body = text.slice(at + 1, text.indexOf("\n## ", at + 1));
-    for (const key of ["packages/<name>", "skills/<name>", "scripts", "docs", "template", ".github"]) {
-      assert.ok(body.includes(key), `${rel}: the section names the lane key ${key} the parser resolves`);
-    }
     assert.ok(body.includes("surface-unknown"), `${rel}: an unknown declaration is a legal answer`);
+    assert.ok(body.includes("batchScheduler.surfaces"), `${rel}: the project's declaration is named as the vocabulary's source`);
+    assert.ok(body.includes("skills/batch-scheduler/references/PLAN.md"), `${rel}: the vocabulary's owner is cited, never restated`);
+    for (const key of ["packages/<name>", "skills/<name>"]) {
+      assert.ok(!body.includes(key), `${rel} restates this repository's closed lane list (${key})`);
+    }
     assert.ok(at > text.indexOf("\n## Impact\n"), `${rel}: the section follows ## Impact`);
   }
 
@@ -638,9 +644,8 @@ test("T1: the templates declare the `## Surfaces` section the parser reads, and 
   for (const rel of FORMS) {
     const text = fs.readFileSync(path.join(repoRoot, rel), "utf8");
     assert.match(text, /^\s+id: surfaces$/mu, `${rel} asks for the surfaces`);
-    for (const key of ["packages/<name>", "skills/<name>", "scripts", "docs", "template", ".github"]) {
-      assert.ok(text.includes(key), `${rel}: the field names the lane key ${key}`);
-    }
+    assert.ok(text.includes("batchScheduler.surfaces"), `${rel}: the field names the project's declaration as the vocabulary`);
+    assert.ok(text.includes("surface-unknown"), `${rel}: the honest unknown is part of the field`);
   }
   for (const rel of ["template/.github/ISSUE_TEMPLATE/fix.yml", "template/.github/ISSUE_TEMPLATE/feature.yml"]) {
     const text = fs.readFileSync(path.join(repoRoot, rel), "utf8");
@@ -2555,4 +2560,267 @@ test("S9: the script contains no session spawn, worktree creation or unit launch
     assert.deepEqual(lines, [], `no executable use of ${banned}`);
   }
   assert.ok(!/(fetch|XMLHttpRequest)\s*\(/.test(src), "no network call beyond the gh child process");
+});
+
+// ── the surface vocabulary is the project's (issue #716) ──────────────────
+// The frozen-failure corpus: a tree that is not this repository's layout has
+// always degraded to `surface-unknown` — one `general` lane, one `blind-spot`,
+// fully serial — because the vocabulary was `skills/`, `packages/`, `scripts`,
+// `docs`, `template` and `.github` baked into two functions, and
+// `--infer-surfaces` re-parsed the body through the same closed list. Each case
+// below is one reproducer of that class; the change is done when every one of
+// them passes.
+
+/** A consumer-shaped tree: an app under `src/`, its config, and migrations. */
+function consumerTree(root) {
+  for (const dir of ["src/pages/api", "src/shared/domain", "src/config", "migrations", "docs"]) {
+    fs.mkdirSync(path.join(root, dir), { recursive: true });
+  }
+  fs.writeFileSync(path.join(root, "docs", "ROADMAP.md"), roadmapDoc());
+}
+
+/** The project-scope config file, written the way the CLI writes it (JSONC). */
+function projectConfig(root, value) {
+  const dir = path.join(root, ".pi");
+  fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(path.join(dir, "agentic-workflow.json"), typeof value === "string" ? value : `${JSON.stringify(value, null, 2)}\n`);
+}
+
+/** One live-branch evidence slot: the issue stays batched and its diff is known. */
+const knownDiff = (files) => ({
+  branches: [{ name: "fix/51-stale-branch", merged: false }],
+  pr: { number: 900, state: "CLOSED" },
+  worktree: null,
+  files,
+  filesKnown: true,
+});
+
+/** Every issue row a plan carries, in batch order. */
+const rowsOfPlan = (plan) => plan.batches.flatMap((batch) => batch.lanes).flatMap((lane) => lane.issues);
+const rowOf = (plan, number) => rowsOfPlan(plan).find((row) => row.number === number);
+const laneSurfacesOf = (plan) => plan.batches.flatMap((batch) => batch.lanes).map((lane) => lane.surface).sort();
+
+/** The paste block `--infer-surfaces` prints. */
+const surfacesBlock = (keys) => `## Surfaces\n\n${keys.map((key) => `- \`${key}\``).join("\n")}\n`;
+
+test("S2: a foreign tree resolves the paths its body names, instead of degrading to surface-unknown", () => {
+  const root = scratchRoot();
+  try {
+    consumerTree(root);
+    const body = whereSection(["src/pages/api/ledger.ts", "src/shared/domain/ledger.ts", "migrations/001.sql"]);
+    assert.deepEqual(
+      [...extractSurfaces(body, resolveSurfaceVocabulary({ root }))].sort(),
+      ["migrations", "src/pages", "src/shared"],
+      "the paths the project really carries name the project's lanes",
+    );
+
+    const plan = buildBatchPlan(baseInput([issue(40, "Ledger across the app", body)], root));
+    assert.deepEqual(plan.degraded, [], "nothing failed to resolve, so nothing is degraded");
+    assert.deepEqual(laneSurfacesOf(plan), ["migrations", "src/pages", "src/shared"], "one lane per real tree");
+    assert.ok(!laneSurfacesOf(plan).includes("general"), "the unknown lane is never opened for a resolvable body");
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("S3: the emitter and the producer read one vocabulary, and a declared project's keys are its declaration", () => {
+  const root = scratchRoot();
+  try {
+    consumerTree(root);
+    projectConfig(root, { batchScheduler: { surfaces: ["src/pages", "src/shared"] } });
+    const body = whereSection(["src/pages/api/ledger.ts", "src/shared/domain/ledger.ts", "src/config/embedding.ts", "migrations/001.sql"]);
+    const vocabulary = resolveSurfaceVocabulary({ root });
+    const declaredKeys = [...extractSurfaces(body, vocabulary)].sort();
+    assert.deepEqual(declaredKeys, ["src/pages", "src/shared"], "the declaration is the whole of the project's extra vocabulary");
+
+    const plan = buildBatchPlan(baseInput([issue(41, "Declared vocabulary", body)], root));
+    assert.deepEqual(laneSurfacesOf(plan), declaredKeys, "the plan's lanes are the same keys, computed once");
+
+    const issuesFile = path.join(root, "issues.json");
+    fs.writeFileSync(issuesFile, JSON.stringify([issue(41, "Declared vocabulary", body)]));
+    const emit = spawnSync(
+      process.execPath,
+      [scriptPath, "--root", root, "--issues-file", issuesFile, "--infer-surfaces", "41"],
+      { encoding: "utf8" },
+    );
+    assert.equal(emit.status, 0, emit.stderr);
+    assert.equal(emit.stdout, surfacesBlock(declaredKeys), "triage pastes exactly what the plan will read");
+    assert.equal(emit.stderr, "", "a declared project needs no advisory");
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("S4: a branch diff and a body declaration resolve through the same vocabulary", () => {
+  const root = scratchRoot();
+  try {
+    consumerTree(root);
+    const body = whereSection(["src/pages/api/ledger.ts"]);
+    const plan = buildBatchPlan(
+      baseInput([issue(50, "Pages branch", body), issue(51, "Pages body, other branch", body)], root, {
+        launchEvidence: new Map([
+          [50, knownDiff(["src/pages/api/ledger.ts"])],
+          [51, knownDiff(["src/config/embedding.ts"])],
+        ]),
+      }),
+    );
+    assert.equal(rowOf(plan, 50).claimed_surface, undefined, "the branch covers the declared surface — no risk to report");
+    assert.deepEqual(rowOf(plan, 51).claimed_surface, ["src/pages"], "the branch is thinner than the declaration");
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("S6: --infer-surfaces prints the block for a foreign tree, and the advisory names the config key", () => {
+  const root = scratchRoot();
+  try {
+    consumerTree(root);
+    const issuesFile = path.join(root, "issues.json");
+    fs.writeFileSync(
+      issuesFile,
+      JSON.stringify([
+        issue(42, "Foreign tree", whereSection(["src/pages/api/ledger.ts", "src/shared/domain/ledger.ts"])),
+        issue(43, "Nothing to name", "## Problem\n\nNo paths are named in this body."),
+      ]),
+    );
+    const infer = (number) =>
+      spawnSync(process.execPath, [scriptPath, "--root", root, "--issues-file", issuesFile, "--infer-surfaces", String(number)], {
+        encoding: "utf8",
+      });
+
+    const foreign = infer(42);
+    assert.equal(foreign.status, 0, foreign.stderr);
+    assert.equal(foreign.stdout, surfacesBlock(["src/pages", "src/shared"]), "the paste block carries the project's own trees");
+    assert.match(foreign.stderr, /batchScheduler\.surfaces/u, "the operator is told which key would make the lanes stable");
+    assert.match(foreign.stderr, /runner config set/u, "and the command that writes it");
+
+    const nothing = infer(43);
+    assert.equal(nothing.status, 0, nothing.stderr);
+    assert.equal(nothing.stdout, surfacesBlock([SURFACE_UNKNOWN_TOKEN]), "an honest unknown is still the answer when no path is named");
+    assert.equal(nothing.stderr, "", "a body that named nothing earns no advisory");
+
+    assert.equal(fs.existsSync(path.join(root, ".agentic-workflow")), false, "the print-only path writes no state");
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("S7: a consumer-shaped set plans in parallel lanes with no blind spot", () => {
+  const root = scratchRoot();
+  try {
+    consumerTree(root);
+    const issues = [
+      issue(60, "Pages", whereSection(["src/pages/api/ledger.ts"])),
+      issue(61, "Shared domain", whereSection(["src/shared/domain/ledger.ts"])),
+      issue(62, "Migrations", whereSection(["migrations/001.sql"])),
+      issue(63, "Config", whereSection(["src/config/embedding.ts"])),
+    ];
+    const plan = buildBatchPlan(baseInput(issues, root));
+    assert.deepEqual(plan.degraded, [], "every issue declares a tree the project carries");
+    assert.deepEqual(laneSurfacesOf(plan), ["migrations", "src/config", "src/pages", "src/shared"], "four disjoint lanes, runnable together");
+    assert.equal(plan.summary.batches, 1, "disjoint lanes batch together, which is the parallelism the sensor exists for");
+    assert.deepEqual(
+      plan.findings.filter((finding) => finding.code === "blind-spot"),
+      [],
+      "no batch is presented as unverifiable",
+    );
+    assert.ok(!laneSurfacesOf(plan).includes("general"), "no issue falls to the guess lane");
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("S8: a declared vocabulary excludes a tree it does not name", () => {
+  const root = scratchRoot();
+  try {
+    consumerTree(root);
+    projectConfig(root, { batchScheduler: { surfaces: ["src/pages"] } });
+    const plan = buildBatchPlan(
+      baseInput([issue(70, "Undeclared tree", whereSection(["src/shared/domain/ledger.ts"]))], root),
+    );
+    assert.ok(plan.degraded.includes("surface-unknown-issue-70"), "a declaration is authoritative: the tree it omits is not discovered");
+    assert.deepEqual(laneSurfacesOf(plan), ["general"], "and the row is honest about touching nothing it can name");
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("S9: the shipped roots are still recognized whatever a project declares", () => {
+  const root = scratchRoot();
+  try {
+    fs.mkdirSync(path.join(root, "docs"), { recursive: true });
+    fs.writeFileSync(path.join(root, "docs", "ROADMAP.md"), roadmapDoc());
+    projectConfig(root, { batchScheduler: { surfaces: ["app/routes"] } });
+    const body = whereSection([
+      "skills/alpha/SKILL.md",
+      "packages/beta/src/x.ts",
+      "scripts/tool.mjs",
+      "docs/ROADMAP.md",
+      "template/AGENTS.md",
+      ".github/workflows/ci.yml",
+    ]);
+    assert.deepEqual(
+      [...extractSurfaces(body, resolveSurfaceVocabulary({ root }))].sort(),
+      [".github", "docs", "packages/beta", "scripts", "skills/alpha", "template"],
+      "a project that declares extra trees never loses the trees this workflow ships with",
+    );
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("S9: a bare tree root joins the children declared in the run", () => {
+  const root = scratchRoot();
+  try {
+    consumerTree(root);
+    projectConfig(root, { batchScheduler: { surfaces: ["src/pages", "src/shared"] } });
+    const plan = buildBatchPlan(
+      baseInput(
+        [
+          issue(80, "Broad slices", whereSection(["src"])),
+          issue(81, "Pages only", whereSection(["src/pages/api/ledger.ts"])),
+          issue(82, "Shared only", whereSection(["src/shared/domain/ledger.ts"])),
+        ],
+        root,
+      ),
+    );
+    assert.deepEqual(laneSurfacesOf(plan), ["src/pages", "src/shared"], "the bare root joins the concrete lanes instead of opening a third");
+    assert.deepEqual(lanesOfIssue(plan, 80).sort(), ["src/pages", "src/shared"], "and the broad row occupies both");
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("S9: an unreadable config degrades by name and the plan still prints", () => {
+  const root = scratchRoot();
+  try {
+    consumerTree(root);
+    projectConfig(root, '{ "batchScheduler": ');
+    const plan = buildBatchPlan(
+      baseInput([issue(90, "Broken config", whereSection(["src/pages/api/ledger.ts"]))], root),
+    );
+    assert.ok(
+      plan.degraded.some((entry) => /^unavailable-surface-vocabulary-[a-z0-9-]+$/u.test(entry)),
+      "a refused config is declared, never read as an undeclared project",
+    );
+    assert.ok(plan.degraded.includes("surface-unknown-issue-90"), "and no tree is discovered on its behalf");
+    assert.equal(plan.summary.open_issues, 1, "the plan still prints");
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("S10: the shipped vocabulary has one owner and no second copy", () => {
+  const src = fs.readFileSync(new URL("../packages/agentic-workflow/src/batch-scheduler/index.mjs", import.meta.url), "utf8");
+  assert.ok(!src.includes('top === "skills"'), "the producer carries no inline root list");
+  assert.ok(src.includes("SHIPPED_SURFACE_ROOTS"), "it reads the one exported list instead");
+  const vocabulary = fs.readFileSync(new URL("../packages/agentic-workflow/src/batch-scheduler/vocabulary.mjs", import.meta.url), "utf8");
+  for (const root of ["skills", "packages", "scripts", "docs", "template", ".github"]) {
+    assert.ok(vocabulary.includes(`"${root}"`), `the shipped roots are declared once, in the owner (${root})`);
+  }
+  assert.deepEqual(
+    resolveSurfaceVocabulary({ root: repoRoot }).roots.map((entry) => entry.path.join("/")),
+    ["skills", "packages", "scripts", "docs", "template", ".github"],
+    "and the owner's list is the shipped one, in order",
+  );
 });

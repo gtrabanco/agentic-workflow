@@ -10,7 +10,7 @@ An agentic-workflow install reads two files at each scope:
 
 | File | Owner | Holds |
 |---|---|---|
-| `agentic-workflow.json` | the framework | cross-tool feature sections: `logSession`, `memory`, `telemetry`, `guard`, `gitIdentity`, `advance`, `pathProtection`, `contentGuard` |
+| `agentic-workflow.json` | the framework | cross-tool feature sections: `logSession`, `memory`, `telemetry`, `guard`, `gitIdentity`, `advance`, `pathProtection`, `contentGuard`, `batchScheduler` |
 | `pi-agentic-workflow.json` | the `pi-agentic-workflow` package | package-internal section: routing, profiles, passes, subagent limits, State Flow, shell-tool choice |
 
 - Global scope: `~/.pi/agent/` (the host's agent directory, never hardcoded).
@@ -71,6 +71,34 @@ runner config default [--scope global|project|both]
   code, so the project loses no behaviour. Nothing rewrites config in the
   background: the operator, this question, the console, or a `doctor` advisory
   is what starts a run.
+
+## The lane vocabulary (one consented question)
+
+Ask where the project plans parallel work, and only when the answer is not
+already declared:
+
+> Which directories are this project's parallel lanes — the trees two units can
+> work in at the same time? (For a web app that is usually `src/pages`,
+> `src/shared`, `migrations`; leave it empty and the scheduler uses the
+> directories your tree already carries.)
+
+The answer is written by the CLI, never by hand — one project-relative
+directory per entry:
+
+```bash
+runner config set batchScheduler.surfaces '["src/pages","src/shared","migrations"]' --scope project
+```
+
+- **Answered** ⇒ the value is the project's vocabulary. Every key a unit
+  declares must be one of those directories (or a directory under one), and a
+  tree the list omits resolves to nothing rather than silently opening a lane.
+- **Empty** ⇒ write nothing: the scheduler recognizes the trees this workflow
+  ships with and discovers the project's own top-level directories, so an
+  unconfigured project still schedules in parallel lanes (coarser ones). The
+  emitter's stderr advisory is what names the line to run later.
+- **Never** invent a lane key in a unit doc or issue body to compensate: the
+  vocabulary is this key, and the owner of its meaning is
+  `skills/batch-scheduler/references/PLAN.md` § The surface vocabulary.
 
 ## Verification
 

@@ -61,6 +61,17 @@ import {
   openFence,
   parseUnitDocPhases,
 } from "../runner/unit-doc-phases.mjs";
+// The lane vocabulary is the project's, not this repository's (issue #716): one
+// module owns the rule that turns a path into a lane key, and every reader here
+// goes through it — the declared side, the branch-diff side and the emitter.
+import {
+  resolveSurfaceVocabulary,
+  sanitizeCause,
+  SHIPPED_VOCABULARY,
+  surfaceKey as vocabularyKey,
+} from "./vocabulary.mjs";
+
+export { resolveSurfaceVocabulary, SHIPPED_SURFACE_ROOTS } from "./vocabulary.mjs";
 
 /** The state file's name, under `<root>/.agentic-workflow/` (untracked, durable). */
 export const STATE_FILE_NAME = "batches.json";
@@ -302,11 +313,6 @@ function normalizeIssues(raw, { associations = new Map(), policy, degradations =
       };
     })
     .sort((a, b) => a.number - b.number);
-}
-
-function sanitizeCause(cause) {
-  const text = String(cause?.message ?? cause ?? "error").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
-  return text.slice(0, 40) || "error";
 }
 
 /**
@@ -589,21 +595,13 @@ function declaredSections(body) {
 }
 
 /**
- * Map one file path to its surface key — the inverse of `surfaceKey`.
- * A file inside `skills/<name>/` resolves to `skills/<name>`, etc.
- * If the file is not inside a known surface tree, returns null.
+ * Map one file path to its surface key — the same rule the declared side uses
+ * (owner: `vocabulary.mjs`). A file inside a lane tree resolves to that lane, so
+ * a branch diff and a body declaration can never disagree about which surface a
+ * path belongs to (issue #716, S4).
  */
-function surfaceKeyFor(file) {
-  const parts = file.split("/");
-  if (parts.length === 0) return null;
-  const top = parts[0];
-  if (["skills", "packages"].includes(top) && parts.length > 1 && parts[1] !== "") {
-    return `${top}/${parts[1]}`;
-  }
-  if (["scripts", "docs", "template", ".github"].includes(top) && parts.length === 1) return top;
-  // A file inside one of these trees but not directly under top (e.g. scripts/foo/bar.mjs)
-  if (["scripts", "docs", "template", ".github"].includes(top)) return top;
-  return null;
+function surfaceKeyFor(file, vocabulary) {
+  return vocabularyKey(file, vocabulary);
 }
 
 /**
@@ -620,7 +618,7 @@ function surfaceCovered(surface, actual) {
   return false;
 }
 
-/** The lane keys one text declares (see `surfaceKey`).
+/** The lane keys one text declares (see `vocabulary.mjs`).
  *
  * `bare` adds the list-item form a human types without backticks — `- scripts`
  * — because a declared section is a list of lane keys whose punctuation is never
@@ -628,10 +626,10 @@ function surfaceCovered(surface, actual) {
  * is deliberately off for the whole-body inference, where only a backticked
  * token is evidence that the word names a path.
  */
-function surfaceKeys(text, { bare = false } = {}) {
+function surfaceKeys(text, { bare = false, vocabulary = SHIPPED_VOCABULARY } = {}) {
   const surfaces = new Set();
   for (const token of proseTokens(text)) {
-    const key = surfaceKey(token);
+    const key = vocabularyKey(token, vocabulary);
     if (key !== null) surfaces.add(key);
   }
   if (!bare) return surfaces;
@@ -650,7 +648,7 @@ function surfaceKeys(text, { bare = false } = {}) {
     const item = /^[-*+]\s+(.+)$/u.exec(trimmed);
     if (item === null) continue;
     const [head] = item[1].split(/[\s,;:(]/u);
-    const key = surfaceKey(head.replace(/^`+|`+$/gu, ""));
+    const key = vocabularyKey(head.replace(/^`+|`+$/gu, ""), vocabulary);
     if (key !== null) surfaces.add(key);
   }
   return surfaces;
@@ -668,20 +666,20 @@ function surfaceKeys(text, { bare = false } = {}) {
  *
  * @returns {{surfaces: Set<string>, declared: boolean}}
  */
-function resolveBodySurfaces(body) {
+function resolveBodySurfaces(body, vocabulary = SHIPPED_VOCABULARY) {
   const sections = declaredSections(body);
   const explicit = sections.filter((section) => section.name === "Surfaces");
   if (explicit.length > 0) {
     const surfaces = new Set();
-    for (const section of explicit) for (const key of surfaceKeys(section.text, { bare: true })) surfaces.add(key);
+    for (const section of explicit) for (const key of surfaceKeys(section.text, { bare: true, vocabulary })) surfaces.add(key);
     return { surfaces, declared: true };
   }
   if (sections.length > 0) {
     const surfaces = new Set();
-    for (const section of sections) for (const key of surfaceKeys(section.text, { bare: true })) surfaces.add(key);
+    for (const section of sections) for (const key of surfaceKeys(section.text, { bare: true, vocabulary })) surfaces.add(key);
     if (surfaces.size > 0) return { surfaces, declared: true };
   }
-  return { surfaces: surfaceKeys(body), declared: false };
+  return { surfaces: surfaceKeys(body, { vocabulary }), declared: false };
 }
 
 /**
@@ -718,9 +716,15 @@ function fileToken(token) {
   return /^[^/]+\.[A-Za-z][A-Za-z0-9]{0,9}$/u.test(last) && !last.startsWith(".") ? clean : null;
 }
 
-/** The surfaces one issue body declares (see `resolveBodySurfaces`). */
-export function extractSurfaces(body) {
-  return resolveBodySurfaces(body).surfaces;
+/**
+ * The surfaces one issue body declares (see `resolveBodySurfaces`).
+ *
+ * The default vocabulary is the shipped roots — the behaviour a caller that
+ * knows no project gets. The planner passes the project's resolved vocabulary,
+ * so a foreign tree resolves there and here identically (issue #716, S4).
+ */
+export function extractSurfaces(body, vocabulary = SHIPPED_VOCABULARY) {
+  return resolveBodySurfaces(body, vocabulary).surfaces;
 }
 
 /**
@@ -736,10 +740,10 @@ export function extractSurfaces(body) {
  *
  * @returns {{surfaces: Set<string>, source: "declared"|"inferred"|"unit-doc"|"declared-unknown"|"unknown"}}
  */
-function resolveSurfaces(root, issue, unitDir) {
-  const body = resolveBodySurfaces(issue.body ?? "");
+function resolveSurfaces(root, issue, unitDir, vocabulary) {
+  const body = resolveBodySurfaces(issue.body ?? "", vocabulary);
   if (body.surfaces.size > 0) return { surfaces: body.surfaces, source: body.declared ? "declared" : "inferred" };
-  const fromDoc = unitDir === undefined ? null : unitDocSurfaces(root, unitDir);
+  const fromDoc = unitDir === undefined ? null : unitDocSurfaces(root, unitDir, vocabulary);
   if (fromDoc !== null && fromDoc.size > 0) return { surfaces: fromDoc, source: "unit-doc" };
   return { surfaces: new Set(), source: body.declared ? "declared-unknown" : "unknown" };
 }
@@ -751,7 +755,7 @@ function resolveSurfaces(root, issue, unitDir) {
  *
  * @returns {Set<string>|null} null when the doc cannot be read at all
  */
-function unitDocSurfaces(root, unitDir) {
+function unitDocSurfaces(root, unitDir, vocabulary) {
   let text;
   try {
     text = fs.readFileSync(path.join(root, unitDir, "SPEC.md"), "utf8");
@@ -760,7 +764,7 @@ function unitDocSurfaces(root, unitDir) {
   }
   const declared = new Set();
   for (const bounds of headingBoundsAll(text, "Surfaces")) {
-    for (const key of surfaceKeys(text.slice(bounds.start, bounds.end), { bare: true })) declared.add(key);
+    for (const key of surfaceKeys(text.slice(bounds.start, bounds.end), { bare: true, vocabulary })) declared.add(key);
   }
   if (declared.size > 0) return declared;
   const { phases } = parseUnitDocPhases(text);
@@ -768,37 +772,11 @@ function unitDocSurfaces(root, unitDir) {
   for (const phase of phases) {
     for (const entry of String(phase.relevantFiles ?? "").split(",")) {
       const trimmed = entry.trim();
-      const key = trimmed === "" ? null : surfaceKey(trimmed);
+      const key = trimmed === "" ? null : vocabularyKey(trimmed, vocabulary);
       if (key !== null) surfaces.add(key);
     }
   }
   return surfaces;
-}
-
-/**
- * One lane key from one path token.
- *
- * `skills/…` and `packages/…` are the documented surfaces. The vocabulary is
- * written with a `<name>` metavariable (the templates are required to carry
- * those literals), and a placeholder child is notation — it resolves to
- * nothing, so a quoted example or a template bullet never opens a lane. A
- * token that names the tree instead of a child — `skills`, `skills/`, `skills/**`,
- * a wildcard child — collapses to the tree-root key, never to a wildcard
- * (a wildcard lane would run beside the concrete lanes it covers). A
- * top-level directory is its own key; anything else names no surface.
- */
-function surfaceKey(token) {
-  const clean = String(token).trim().replace(/^\.\//u, "").replace(/(?:\/|\*)+$/u, "");
-  if (clean === "") return null;
-  const parts = clean.split("/").filter(Boolean);
-  const top = parts[0];
-  if (top === "skills" || top === "packages") {
-    const child = parts[1];
-    if (child !== undefined && /[<>]/u.test(child)) return null;
-    return child !== undefined && !/^\*+$/u.test(child) ? `${top}/${child}` : top;
-  }
-  if (["scripts", "docs", "template", ".github"].includes(top)) return top;
-  return null;
 }
 
 /**
@@ -1031,6 +1009,12 @@ export function buildBatchPlan({
   const degradations = [...degraded];
   const openNumbers = new Set(issues.map((i) => i.number));
   const byNumber = new Map(issues.map((i) => [i.number, i]));
+  // The project's lane vocabulary, resolved once per run (issue #716): the
+  // declared roots from the project config, the shipped ones always, and the
+  // project's own tree only while nothing is declared. A config the resolver
+  // refuses is a declared degradation, never a silent "undeclared".
+  const vocabulary = resolveSurfaceVocabulary({ root });
+  degradations.push(...vocabulary.degradations);
 
   // ── where things live: roadmap state + unit docs on disk ──
   let roadmapText = null;
@@ -1084,7 +1068,7 @@ export function buildBatchPlan({
     const evidenceText = inFlightEvidence(launchEvidence?.get(issue.number) ?? null, unitDir);
     if (evidenceText !== null) {
       launched.push({ number: issue.number, evidence: evidenceText });
-      launchedSurfaces.set(issue.number, extractSurfaces(issue.body));
+      launchedSurfaces.set(issue.number, extractSurfaces(issue.body, vocabulary));
     } else {
       launchable.push(issue);
     }
@@ -1111,7 +1095,7 @@ export function buildBatchPlan({
   // and, when a batch carries two or more, one `blind-spot` finding.
   const surfaceUnknown = new Set();
   for (const issue of launchable) {
-    const resolved = resolveSurfaces(root, issue, unitDirByIssue.get(issue.number));
+    const resolved = resolveSurfaces(root, issue, unitDirByIssue.get(issue.number), vocabulary);
     if (resolved.surfaces.size === 0) {
       surfaceUnknown.add(issue.number);
       degradations.push(`surface-unknown-issue-${issue.number}`);
@@ -1137,31 +1121,30 @@ export function buildBatchPlan({
       triaged: isTriaged(fixStatusByNumber.get(issue.number), issue.body),
     });
   }
-  // A tree-root declaration (`skills`, `skills/**`, `packages/`) names every
-  // declared child of that tree: it joins their lanes instead of opening a
-  // lane of its own, so a broad issue can never run beside the concrete lane
-  // it covers (S5, "one lane per surface"). The child set is derived from the
-  // run's own declarations, so the plan stays deterministic.
-  const children = new Map();
-  const noteChildren = (surfaces) => {
-    for (const surface of surfaces) {
-      const [root, child] = surface.split("/");
-      if (child === undefined || (root !== "skills" && root !== "packages")) continue;
-      if (!children.has(root)) children.set(root, new Set());
-      children.get(root).add(child);
+  // A tree-root declaration names every declared child of that tree: it joins
+  // their lanes instead of opening a lane of its own, so a broad issue can never
+  // run beside the concrete lane it covers (S5, "one lane per surface"). The
+  // rule reads the run's own declarations rather than a fixed pair of folder
+  // names (issue #716, D6): any key that is a strict prefix of another key is a
+  // parent, whatever the project's vocabulary is, and the closure is applied
+  // transitively so a grandparent joins its grandchildren too.
+  const declaredKeys = new Set();
+  for (const row of model.values()) for (const surface of row.surfaces) declaredKeys.add(surface);
+  for (const surfaces of launchedSurfaces.values()) for (const surface of surfaces) declaredKeys.add(surface);
+  const expand = (surface, seen = new Set()) => {
+    if (seen.has(surface)) return [surface];
+    const children = new Set();
+    for (const other of declaredKeys) {
+      if (!other.startsWith(`${surface}/`)) continue;
+      for (const leaf of expand(other, new Set([...seen, surface]))) children.add(leaf);
     }
-  };
-  for (const row of model.values()) noteChildren(row.surfaces);
-  for (const surfaces of launchedSurfaces.values()) noteChildren(surfaces);
-  const expand = (surface) => {
-    const kids = children.get(surface);
-    return kids === undefined || kids.size === 0 ? [surface] : [...kids].map((child) => `${surface}/${child}`);
+    return children.size === 0 ? [surface] : [...children];
   };
   for (const row of model.values()) {
-    row.surfaces = [...new Set(row.surfaces.flatMap(expand))].sort((a, b) => a.localeCompare(b));
+    row.surfaces = [...new Set(row.surfaces.flatMap((surface) => expand(surface)))].sort((a, b) => a.localeCompare(b));
   }
   for (const [number, surfaces] of launchedSurfaces) {
-    launchedSurfaces.set(number, new Set([...surfaces].flatMap(expand)));
+    launchedSurfaces.set(number, new Set([...surfaces].flatMap((surface) => expand(surface))));
   }
   for (const row of model.values()) {
     row.soft = row.softAll.filter((n) => model.has(n));
@@ -1184,7 +1167,7 @@ export function buildBatchPlan({
   const filesBySurface = new Map();
   for (const [number, slot] of launchEvidence ?? []) {
     for (const file of slot.files ?? []) {
-      const key = surfaceKeyFor(file);
+      const key = surfaceKeyFor(file, vocabulary);
       if (key === null) continue;
       if (!filesBySurface.has(number)) filesBySurface.set(number, new Set());
       filesBySurface.get(number).add(key);
@@ -1783,14 +1766,32 @@ export async function main(argv = process.argv.slice(2), options = {}) {
     // The triage step's emitter (issue #574, S2, decision D6): the block to paste
     // into the issue body, and nothing else — no state, no forge write. A model
     // hand-writing lane keys is the drift this replaces.
+    //
+    // It reads the same vocabulary the plan reads (issue #716, D5): re-parsing
+    // the body through a closed list of this repository's own folders was the
+    // reason the emitter could only ever print `surface-unknown` on a foreign
+    // tree, and triage's "never hand-typed" contract was unfulfillable there.
+    const vocabulary = resolveSurfaceVocabulary({ root: args.root });
     const issue = readOneIssue(args.inferSurfaces, { issuesFile: args.issuesFile, remote: args.remote });
     if (issue.error !== undefined) {
       process.stderr.write(`cannot read issue #${args.inferSurfaces}: ${issue.error}\n`);
       process.exit(1);
     }
-    const { surfaces } = resolveBodySurfaces(issue.issue.body ?? "");
+    const { surfaces } = resolveBodySurfaces(issue.issue.body ?? "", vocabulary);
     const keys = [...surfaces].sort((a, b) => a.localeCompare(b));
     const lines = keys.length === 0 ? [SURFACE_UNKNOWN_TOKEN] : keys;
+    for (const degradation of vocabulary.degradations) process.stderr.write(`degraded: ${degradation}\n`);
+    // One advisory, and only when discovery answered: the keys are real, but they
+    // follow the tree, so a renamed directory silently moves a lane. Naming the
+    // key is what turns the honest answer into a stable one. stdout stays the
+    // paste block alone (the feedback channel's stderr-only invariant).
+    const discovered = new Set(vocabulary.discoveredRoots().map((entry) => entry.path.join("/")));
+    if (keys.some((key) => discovered.has(key))) {
+      process.stderr.write(
+        `advisory: ${keys.length} key(s) resolved from this project's tree because no batchScheduler.surfaces is declared; `
+          + `record them with runner config set batchScheduler.surfaces '[${keys.map((key) => `"${key}"`).join(",")}]' --scope project\n`,
+      );
+    }
     console.log(["## Surfaces", "", ...lines.map((key) => `- \`${key}\``)].join("\n"));
     return;
   }
