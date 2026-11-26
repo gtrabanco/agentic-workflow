@@ -208,7 +208,6 @@ artifact); the suite runs are this unit's evidence step and P3's validators.
 
 | id | S# / file:line | axis | severity | impact | class | route |
 |---|---|---|---|---|---|---|
-| F1 | AC2 · docs/fix/729-workflow-doctor-hermetic-battery/SPEC.md:65 | plan | WARNING | docs-only | plan | replan-in-unit |
 
 ## Log
 
@@ -248,6 +247,9 @@ artifact); the suite runs are this unit's evidence step and P3's validators.
 - **G1** — 2026-11-26, GATE-RAN · HEAD 27842a182cad566667eb89f63d82a6f86f7d76ec · `env -u AGENTIC_WORKFLOW_SKILLS_ROOT bun scripts/run-root-suite.mjs` | `env AGENTIC_WORKFLOW_SKILLS_ROOT=/home/agent/.pi/agent/npm/node_modules/@gtrabanco/pi-agentic-workflow/skills bun scripts/run-root-suite.mjs` · exit 0 · 144 suites PASS / 0 FAIL in both environments (the review's gate run at the reviewed head).
 - **V1** — 2026-11-26, docs/fix/729-workflow-doctor-hermetic-battery/SPEC.md:65 · reviewer review-change · HEAD 27842a182cad566667eb89f63d82a6f86f7d76ec · recheck direct read of AC2 against `skills/verification-contract/SKILL.md` section "Every criterion names its demonstrating command (S5)": the criterion carries no backticked command and no `manual:`/`read-verified:` label while its claim is command-settleable (O3's validator in this same doc settles it), so S5 fails it closed at review · confirmed
 - **R1** — 2026-11-26, review at HEAD 27842a182cad566667eb89f63d82a6f86f7d76ec · verdict REVIEW-FAIL · cycle 1 · gate exit 0 · 1 fix-now row (F1, plan-owned, route replan-in-unit); 1 report-only ignore row (machine gate receipt absent — `runner gate-receipt verify` exit 3); 1 candidate refuted (missing `ac-hash` — the design step was triaged out and the verification contract requires only the `## Acceptance criteria` section plus its E-line receipts)
+- **F1** — 2026-11-26, REPLANNED IN UNIT — AC2 (`SPEC.md:65`) carried no demonstrating command (verification-contract S5); the plan re-cut delivers it at `3132d8f8a` (the criterion now embeds the O3 validator's own command, claim text otherwise intact), owner-confirmed 2026-11-26 (`selected minimal-recut`, decisions D3/D4). Never folded: the row's `replan-in-unit` class freezes the fold batch (FOLD_PROCESS §7); recorded per the migrated precedent fix-319 F4/F5 — row removed from `## Findings`, delivery commit and confirmation cited here.
+- **V2** — 2026-11-26, docs/fix/729-workflow-doctor-hermetic-battery/SPEC.md:65 · outer driver recheck of F1 · HEAD 3132d8f8a · recheck direct read of AC2 against verification-contract S5 (the materialized `finding-mark@1` method from V1) + live `git diff origin/main..HEAD -- scripts/workflow-doctor.test.mjs | rg '^-[^-]' | rg 'assert'` → exit 1 (matches nothing) · the criterion now carries its backticked command and S5 passes it · confirmed fixed; dispute resolved by the pre-recorded owner decision D3.
+- **P3** — 2026-11-26, verification (both root-suite environments 144/144, O3 diff check, doc-state checks green — E4/E5; re-run at the reviewed head as G1) → `fb63c118e` — next: review cycle 2.
 ## Next
 
 Paste the triage block at cut, implement P2 against the frozen ledgers, run P3,

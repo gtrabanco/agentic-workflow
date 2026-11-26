@@ -10,6 +10,8 @@ Every row here is `unit-only`.
 
 | D3 | The owner confirmed the **minimal plan re-cut of AC2** (F1's repair): AC2 embeds its demonstrating command — the O3 validator's own `git diff … | rg '^-[^-]' | rg 'assert'` — and the claim text stays otherwise intact; F1 then closes through its fold and the review re-judges at cycle 2. The full `/unit-lane --fix 729` replan machinery was the documented alternative and was not chosen. | unit-only | ask_user answer 2026-11-26 (`selected minimal-recut`) over the review's `route: replan`; `SPEC.md` F1 + its V/R/G lines |
 
+| D4 | F1 closes as **REPLANNED IN UNIT**: the delivered row leaves `## Findings` and becomes a `## Log` `F` line citing the re-cut and its confirmation — never folded (its `replan-in-unit` class freezes the fold batch, FOLD_PROCESS §7). Grounds: the fold's own `FOLD_POLICY` routes an already-fixed finding to a user decision (the decision predates the fold: D3), the review's own route description prescribes exactly this closure (\"planning author re-cuts AC2 with user confirmation, review re-judges\"), and the migrated-unit precedent is fix-319's F4/F5 (\"recorded as replanned-in-unit … never folded\", row left the table). The freeze's consumer chain (user confirms → plan → review gate) is satisfied up to its last link — cycle 2 is that gate. | unit-only | D3 + ask_user answer 2026-11-26; `skills/fold-findings/references/FOLD_POLICY.md` (already-fixed → dispute); `docs/fix/319-location-index-consolidation/SPEC.md` F4/F5 + V7 |
+
 ## Open questions
 
 None. The one open product question — the installed pi tree's missing literal
