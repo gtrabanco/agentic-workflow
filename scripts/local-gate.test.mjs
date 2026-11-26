@@ -179,6 +179,7 @@ test("every former remote check survives as a step, and the ids are unique", () 
     "pi-node-compat",
     "pi-compat-guard",
     "dependency-pin-gate",
+    "machine-ledger-commit",
     "dependency-advisories",
   ]);
 });
@@ -807,6 +808,7 @@ test("--push-base with an empty verdict plans the gate without the test steps", 
       "worktree-guard",
       "rigidity-review",
       "dimension-regression",
+      "machine-ledger-commit",
     ], "only the offline non-test steps survive an empty impact set");
     assert.match(result.stdout, /skipping .*test step/, "the skip names what it skipped and why");
     assert.match(result.stdout, /test-impact/);
@@ -1135,7 +1137,7 @@ test("the machine-ledger prelude commits before any step runs", () => {
   fs.writeFileSync(path.join(dir, "app.ts"), "export const one = 1;\nexport const two = 2;\n");
   gitIn(["add", "app.ts"]);
 
-  const run = gate(["--only", "machine-ledger-commit", "--jobs", "1", "--skip-network"], { cwd: dir });
+  const run = gate(["--only", "machine-ledger-commit", "--jobs", "1", "--skip-network", "--repo", dir]);
 
   assert.equal(run.status, 0, run.stderr);
   assert.match(run.stdout, /machine-ledger-commit: committed/u, "the receipt names the commit it made");
@@ -1149,7 +1151,7 @@ test("the prelude is planned by --dry-run and commits nothing there", () => {
   fs.appendFileSync(path.join(dir, "docs", "workflow", "TIER_COST.md"), "| 2 | 20 |\n");
   const before = gitIn(["rev-list", "--count", "HEAD"]);
 
-  const run = gate(["--only", "machine-ledger-commit", "--dry-run"], { cwd: dir });
+  const run = gate(["--only", "machine-ledger-commit", "--dry-run", "--repo", dir]);
 
   assert.equal(run.status, 0, run.stderr);
   assert.match(run.stdout, /plan: machine-ledger-commit —/u);
