@@ -984,8 +984,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 27968,
-      "routeLinesMax": 1920,
+      "routeEstimateMax": 28013,
+      "routeLinesMax": 1922,
       "sources": {
         "issue #667 (review-pack preamble extraction)": "issue #667: the finder contract now carries the review pack's whole shared preamble (the scope contract, the materiality bar, the checklist discipline with its tally protocol and the reason it stays inline, the review-debt transform variant and the pass identity) instead of only its scope and materiality halves, and review-debt gained its inline tally binding; every review-change route loads review-implementation's references, so all four measure it. Ceilings re-based to exact ceil(measured x 1.10) from the checker's own measured route at this cut. Growth source = issue #667's preamble extraction.",
         "#355 (fix 355)": "fix 355 (#355): the classifier's residue row routes a delivered feature's missing *planned* half to `replan-in-unit` with both branches stated in one row, and `skills/review-implementation/references/CLASSIFY.md` is loaded by every review-change route; ceilings re-based to exact ceil(measured x 1.10) from the checker's own measured route at this cut. Growth source = fix 355's classifier row.",
@@ -1019,7 +1019,8 @@
         "issue #437 (2026-11-11 citation repair)": "the baseline-advisory rule's citation repair (issue #437, merged as PR #492): CLASSIFY.md's ladder cell and rule paragraph name `scripts/differential-baseline.mjs` instead of the folded `#363` and its \"until it exists\" clause; the file rides every review-change route, so each route was re-measured at this re-basis and both ceilings re-set to the checker's ceil(measured x 1.10). Growth source = issue #437's citation repair.",
         "feature 91 / issue #352 (runner prose)": "measured 24638 est / 1692 lines, the runner re-point and each citing skill's pin pointer; ceiling re-based to ceil(24638 x 1.10) = 27102 / ceil(1692 x 1.10) = 1862",
         "issue #646 (docs + skills reconciliation, 2026-11-20)": "the D-table pointer conversions and the new references the affected skills link moved this route: measured 24653 est / 1693 lines at this head, ceilings re-based to the checker's own ceiling over that measurement. Growth source: each converted rule carries a citation of its owner instead of a copy, and `skills/resolve-repository-state/references/STATE_CONTRACT.md` / `skills/audit-docs/references/RESTATEMENT.md` join the routes whose skills link them.",
-        "issue #728 (the gate receipt's producer)": "the producer's rule reaches every route that loads it: EXECUTION_CONTRACT.md's step-gate Produce bullet, FOLDING.md's gate-run mark sentence and SKILL.md's turn-contract box for execute-phase, and PERSIST_AND_DECIDE.md's step-11 producer ordering for review-change. Measured by `bun scripts/check-skill-context.mjs --routes` at this re-basis; ceilings re-based to ceil(measured x 1.10), growth source declared (issue #728)."
+        "issue #728 (the gate receipt's producer)": "the producer's rule reaches every route that loads it: EXECUTION_CONTRACT.md's step-gate Produce bullet, FOLDING.md's gate-run mark sentence and SKILL.md's turn-contract box for execute-phase, and PERSIST_AND_DECIDE.md's step-11 producer ordering for review-change. Measured by `bun scripts/check-skill-context.mjs --routes` at this re-basis; ceilings re-based to ceil(measured x 1.10), growth source declared (issue #728).",
+        "external-verify correction batch (unit 728, 2026-11-26)": "external-verify correction batch (unit 728, 2026-11-26): the handshake-exception clause at the reviewer call site (PERSIST_AND_DECIDE.md step 11 — a project with no handshake gate runs its declared gate command and records the absence, owner block absent field) grew this route PERSIST_AND_DECIDE load; measured at this re-basis with `bun scripts/check-skill-context.mjs --routes`, ceilings re-set to ceil(measured x 1.10); growth source = that clause alone (advisory 3 of the unit 728 EXTERNAL VERIFY receipt)."
       },
       "linesMax": 1842
     },
@@ -1039,8 +1040,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 24426,
-      "routeLinesMax": 1694,
+      "routeEstimateMax": 24471,
+      "routeLinesMax": 1697,
       "sources": {
         "issue #667 (review-pack preamble extraction)": "issue #667: the finder contract now carries the review pack's whole shared preamble (the scope contract, the materiality bar, the checklist discipline with its tally protocol and the reason it stays inline, the review-debt transform variant and the pass identity) instead of only its scope and materiality halves, and review-debt gained its inline tally binding; every review-change route loads review-implementation's references, so all four measure it. Ceilings re-based to exact ceil(measured x 1.10) from the checker's own measured route at this cut. Growth source = issue #667's preamble extraction.",
         "#355 (fix 355)": "fix 355 (#355): the classifier's residue row routes a delivered feature's missing *planned* half to `replan-in-unit` with both branches stated in one row, and `skills/review-implementation/references/CLASSIFY.md` is loaded by every review-change route; ceilings re-based to exact ceil(measured x 1.10) from the checker's own measured route at this cut. Growth source = fix 355's classifier row.",
@@ -1072,7 +1073,8 @@
         "issue #437 (2026-11-11 citation repair)": "the baseline-advisory rule's citation repair (issue #437, merged as PR #492): CLASSIFY.md's ladder cell and rule paragraph name `scripts/differential-baseline.mjs` instead of the folded `#363` and its \"until it exists\" clause; the file rides every review-change route, so each route was re-measured at this re-basis and both ceilings re-set to the checker's ceil(measured x 1.10). Growth source = issue #437's citation repair.",
         "feature 91 / issue #352 (runner prose)": "measured 21413 est / 1487 lines, the runner re-point and each citing skill's pin pointer; ceiling re-based to ceil(21413 x 1.10) = 23555 / ceil(1487 x 1.10) = 1636",
         "issue #646 (docs + skills reconciliation, 2026-11-20)": "the D-table pointer conversions and the new references the affected skills link moved this route: measured 21428 est / 1488 lines at this head, ceilings re-based to the checker's own ceiling over that measurement. Growth source: each converted rule carries a citation of its owner instead of a copy, and `skills/resolve-repository-state/references/STATE_CONTRACT.md` / `skills/audit-docs/references/RESTATEMENT.md` join the routes whose skills link them.",
-        "issue #728 (the gate receipt's producer)": "the producer's rule reaches every route that loads it: EXECUTION_CONTRACT.md's step-gate Produce bullet, FOLDING.md's gate-run mark sentence and SKILL.md's turn-contract box for execute-phase, and PERSIST_AND_DECIDE.md's step-11 producer ordering for review-change. Measured by `bun scripts/check-skill-context.mjs --routes` at this re-basis; ceilings re-based to ceil(measured x 1.10), growth source declared (issue #728)."
+        "issue #728 (the gate receipt's producer)": "the producer's rule reaches every route that loads it: EXECUTION_CONTRACT.md's step-gate Produce bullet, FOLDING.md's gate-run mark sentence and SKILL.md's turn-contract box for execute-phase, and PERSIST_AND_DECIDE.md's step-11 producer ordering for review-change. Measured by `bun scripts/check-skill-context.mjs --routes` at this re-basis; ceilings re-based to ceil(measured x 1.10), growth source declared (issue #728).",
+        "external-verify correction batch (unit 728, 2026-11-26)": "external-verify correction batch (unit 728, 2026-11-26): the handshake-exception clause at the reviewer call site (PERSIST_AND_DECIDE.md step 11 — a project with no handshake gate runs its declared gate command and records the absence, owner block absent field) grew this route PERSIST_AND_DECIDE load; measured at this re-basis with `bun scripts/check-skill-context.mjs --routes`, ceilings re-set to ceil(measured x 1.10); growth source = that clause alone (advisory 3 of the unit 728 EXTERNAL VERIFY receipt)."
       },
       "linesMax": 1616
     },
@@ -1092,8 +1094,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 24426,
-      "routeLinesMax": 1694,
+      "routeEstimateMax": 24471,
+      "routeLinesMax": 1697,
       "sources": {
         "issue #667 (review-pack preamble extraction)": "issue #667: the finder contract now carries the review pack's whole shared preamble (the scope contract, the materiality bar, the checklist discipline with its tally protocol and the reason it stays inline, the review-debt transform variant and the pass identity) instead of only its scope and materiality halves, and review-debt gained its inline tally binding; every review-change route loads review-implementation's references, so all four measure it. Ceilings re-based to exact ceil(measured x 1.10) from the checker's own measured route at this cut. Growth source = issue #667's preamble extraction.",
         "#355 (fix 355)": "fix 355 (#355): the classifier's residue row routes a delivered feature's missing *planned* half to `replan-in-unit` with both branches stated in one row, and `skills/review-implementation/references/CLASSIFY.md` is loaded by every review-change route; ceilings re-based to exact ceil(measured x 1.10) from the checker's own measured route at this cut. Growth source = fix 355's classifier row.",
@@ -1125,7 +1127,8 @@
         "issue #437 (2026-11-11 citation repair)": "the baseline-advisory rule's citation repair (issue #437, merged as PR #492): CLASSIFY.md's ladder cell and rule paragraph name `scripts/differential-baseline.mjs` instead of the folded `#363` and its \"until it exists\" clause; the file rides every review-change route, so each route was re-measured at this re-basis and both ceilings re-set to the checker's ceil(measured x 1.10). Growth source = issue #437's citation repair.",
         "feature 91 / issue #352 (runner prose)": "measured 21413 est / 1487 lines, the runner re-point and each citing skill's pin pointer; ceiling re-based to ceil(21413 x 1.10) = 23555 / ceil(1487 x 1.10) = 1636",
         "issue #646 (docs + skills reconciliation, 2026-11-20)": "the D-table pointer conversions and the new references the affected skills link moved this route: measured 21428 est / 1488 lines at this head, ceilings re-based to the checker's own ceiling over that measurement. Growth source: each converted rule carries a citation of its owner instead of a copy, and `skills/resolve-repository-state/references/STATE_CONTRACT.md` / `skills/audit-docs/references/RESTATEMENT.md` join the routes whose skills link them.",
-        "issue #728 (the gate receipt's producer)": "the producer's rule reaches every route that loads it: EXECUTION_CONTRACT.md's step-gate Produce bullet, FOLDING.md's gate-run mark sentence and SKILL.md's turn-contract box for execute-phase, and PERSIST_AND_DECIDE.md's step-11 producer ordering for review-change. Measured by `bun scripts/check-skill-context.mjs --routes` at this re-basis; ceilings re-based to ceil(measured x 1.10), growth source declared (issue #728)."
+        "issue #728 (the gate receipt's producer)": "the producer's rule reaches every route that loads it: EXECUTION_CONTRACT.md's step-gate Produce bullet, FOLDING.md's gate-run mark sentence and SKILL.md's turn-contract box for execute-phase, and PERSIST_AND_DECIDE.md's step-11 producer ordering for review-change. Measured by `bun scripts/check-skill-context.mjs --routes` at this re-basis; ceilings re-based to ceil(measured x 1.10), growth source declared (issue #728).",
+        "external-verify correction batch (unit 728, 2026-11-26)": "external-verify correction batch (unit 728, 2026-11-26): the handshake-exception clause at the reviewer call site (PERSIST_AND_DECIDE.md step 11 — a project with no handshake gate runs its declared gate command and records the absence, owner block absent field) grew this route PERSIST_AND_DECIDE load; measured at this re-basis with `bun scripts/check-skill-context.mjs --routes`, ceilings re-set to ceil(measured x 1.10); growth source = that clause alone (advisory 3 of the unit 728 EXTERNAL VERIFY receipt)."
       },
       "linesMax": 1616
     },
@@ -1145,8 +1148,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 25179,
-      "routeLinesMax": 1733,
+      "routeEstimateMax": 25225,
+      "routeLinesMax": 1735,
       "sources": {
         "issue #667 (review-pack preamble extraction)": "issue #667: the finder contract now carries the review pack's whole shared preamble (the scope contract, the materiality bar, the checklist discipline with its tally protocol and the reason it stays inline, the review-debt transform variant and the pass identity) instead of only its scope and materiality halves, and review-debt gained its inline tally binding; every review-change route loads review-implementation's references, so all four measure it. Ceilings re-based to exact ceil(measured x 1.10) from the checker's own measured route at this cut. Growth source = issue #667's preamble extraction.",
         "#355 (fix 355)": "fix 355 (#355): the classifier's residue row routes a delivered feature's missing *planned* half to `replan-in-unit` with both branches stated in one row, and `skills/review-implementation/references/CLASSIFY.md` is loaded by every review-change route; ceilings re-based to exact ceil(measured x 1.10) from the checker's own measured route at this cut. Growth source = fix 355's classifier row.",
@@ -1180,7 +1183,8 @@
         "issue #437 (2026-11-11 citation repair)": "the baseline-advisory rule's citation repair (issue #437, merged as PR #492): CLASSIFY.md's ladder cell and rule paragraph name `scripts/differential-baseline.mjs` instead of the folded `#363` and its \"until it exists\" clause; the file rides every review-change route, so each route was re-measured at this re-basis and both ceilings re-set to the checker's ceil(measured x 1.10). Growth source = issue #437's citation repair.",
         "feature 91 / issue #352 (runner prose)": "measured 22101 est / 1522 lines, the runner re-point and each citing skill's pin pointer; ceiling re-based to ceil(22101 x 1.10) = 24312 / ceil(1522 x 1.10) = 1675",
         "issue #646 (docs + skills reconciliation, 2026-11-20)": "the D-table pointer conversions and the new references the affected skills link moved this route: measured 22116 est / 1523 lines at this head, ceilings re-based to the checker's own ceiling over that measurement. Growth source: each converted rule carries a citation of its owner instead of a copy, and `skills/resolve-repository-state/references/STATE_CONTRACT.md` / `skills/audit-docs/references/RESTATEMENT.md` join the routes whose skills link them.",
-        "issue #728 (the gate receipt's producer)": "the producer's rule reaches every route that loads it: EXECUTION_CONTRACT.md's step-gate Produce bullet, FOLDING.md's gate-run mark sentence and SKILL.md's turn-contract box for execute-phase, and PERSIST_AND_DECIDE.md's step-11 producer ordering for review-change. Measured by `bun scripts/check-skill-context.mjs --routes` at this re-basis; ceilings re-based to ceil(measured x 1.10), growth source declared (issue #728)."
+        "issue #728 (the gate receipt's producer)": "the producer's rule reaches every route that loads it: EXECUTION_CONTRACT.md's step-gate Produce bullet, FOLDING.md's gate-run mark sentence and SKILL.md's turn-contract box for execute-phase, and PERSIST_AND_DECIDE.md's step-11 producer ordering for review-change. Measured by `bun scripts/check-skill-context.mjs --routes` at this re-basis; ceilings re-based to ceil(measured x 1.10), growth source declared (issue #728).",
+        "external-verify correction batch (unit 728, 2026-11-26)": "external-verify correction batch (unit 728, 2026-11-26): the handshake-exception clause at the reviewer call site (PERSIST_AND_DECIDE.md step 11 — a project with no handshake gate runs its declared gate command and records the absence, owner block absent field) grew this route PERSIST_AND_DECIDE load; measured at this re-basis with `bun scripts/check-skill-context.mjs --routes`, ceilings re-set to ceil(measured x 1.10); growth source = that clause alone (advisory 3 of the unit 728 EXTERNAL VERIFY receipt)."
       },
       "linesMax": 1655
     }

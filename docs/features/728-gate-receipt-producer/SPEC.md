@@ -2,7 +2,7 @@
 type: feature
 scope: large
 roadmap_summary: Issue [#728](https://github.com/gtrabanco/agentic-workflow/issues/728) (L): the gate receipt gains a producer in the lane's execution path — `execute-phase`, `fold-findings`, `unit-lane` and `review-change` run their verification gate *as* `runner gate-receipt run`, the `GATE-RAN` mark fills its reserved `manifest <sha>` slot with the receipt's digest, the run is the step's last signed-byte write so the receipt is current at the audited head, a project declares the handshake gate that makes it possible, and a deterministic drift gate refuses a step owner shipped with zero citations.
-ac-hash: c06777dedca0fd6f15f42c5cb43c6e50dfaa2f35ffc85847ba4a4eabd97f6e9b
+ac-hash: 22b07bae1a79e0117a7e0c7196209e95e530039e1dd8949b49cabf0bc042350d
 ---
 
 # 728 — gate-receipt-producer
@@ -82,13 +82,13 @@ correction | **S<n><letter> — <title>.** | an appended amendment to requiremen
 Frozen at the cut; `ac-hash:` in the frontmatter is this section's SHA-256. One
 criterion per requirement, each naming the check that proves it.
 
-1. **S1 — the issue is applied inside its declared surface.** `git diff --name-only $(git merge-base origin/main HEAD)..HEAD` lists only paths `## Impact` names, and every `S#` above appears verbatim in this document.
+1. **S1 — the issue is applied inside its declared surface.** `git diff --name-only $(git merge-base origin/main HEAD)..HEAD` lists only paths this unit's `## Impact`, `## Surfaces`, the tasks' `Relevant files:` and the recorded decisions (D10) name — the unit doc and its ledgers included — and every `S#` above appears verbatim in this document.
 2. **S2 — no lane step leaves a green gate unrecorded.** `bun test scripts/gate-producer-drift.test.mjs` exits 0 with `every gate-running step owner cites the producer's command and its block`; the mechanic each caller relies on is pinned by `bun test scripts/gate-receipt.test.mjs` exiting 0 with `a green run writes the envelope and the full log`.
 3. **S3 — the zero-citation tree is gone.** `bun scripts/gate-producer-drift.mjs` exits 0 and prints `gate-producer-drift — … · 4 callers · 1 owner block · 1 template guide · 0 findings` then `verdict: PASS`.
 4. **S4 — the run is recorded where the head is decided, never after it.** The owner block declares the ordering rule and the receipt the mark cites: `bun test scripts/gate-producer-drift.test.mjs` exits 0 with `the owner block publishes every producer field and keeps the mark's manifest slot`, and `rg -n 'ordering \|' skills/pre-execution-review/references/LEDGERS.md` answers one line naming the step's last signed-byte write.
 5. **S5 — the executor produces.** `skills/execute-phase` is one of the four callers the drift gate reads, and its step-completion gate names the producer: `bun scripts/gate-producer-drift.mjs` exits 0 with `execute-phase` in its four callers, and `rg -c 'gate-receipt run' skills/execute-phase` is ≥ 2.
 6. **S6 — the hook route is deliberately not taken, and the reason is recorded.** `test -d .husky` answers absent (no pre-commit gate to route) and `rg -n 'install-hook' scripts/local-gate.mjs` shows the installed hook is `pre-push`; `## Non-goals` states the route and that evidence.
-7. **S7 — the consumer side is untouched, and the review pack's frozen checklists stay frozen.** `bun test scripts/audit-pr-receipt.test.mjs` exits 0 and `bun test scripts/gate-receipt.test.mjs` exits 0 (the merge gate's receipt judgment and the freshness predicate are byte-identical), and `git diff --name-only $(git merge-base origin/main HEAD)..HEAD -- skills/review-verify skills/audit-pr skills/review-*` lists **0** paths — `scripts/review-pack-preamble.test.mjs` protects those checklist bytes and passes.
+7. **S7 — the consumer side is untouched, and the review pack's frozen checklists stay frozen.** `bun test scripts/audit-pr-receipt.test.mjs` exits 0 and `bun test scripts/gate-receipt.test.mjs` exits 0 (the merge gate's receipt judgment and the freshness predicate are byte-identical), and `git diff --name-only $(git merge-base origin/main HEAD)..HEAD -- skills/review-verify skills/audit-pr skills/review-* ':(exclude)skills/review-change'` lists **0** paths — the review pack's passes and both consumers, with the composer this unit deliberately edits excluded — `scripts/review-pack-preamble.test.mjs` protects those checklist bytes and passes.
 
 ## Impact
 
@@ -248,7 +248,9 @@ none
 - `bun test scripts/skill-lint.test.mjs`
 - `bun test scripts/test-obligation-tags.test.mjs`
 - `bun test scripts/structural-sibling-pins.test.mjs`
-- `bun test scripts/red-first.test.mjs`
+- `bun test --timeout 60000 scripts/red-first.test.mjs` (its declared bound — the
+  shipped-history walk exceeds bun's 5s standalone default, which the
+  `scripts/test-timeout-allowlist.json` entry records as base-present)
 - `bun scripts/check-skill-context.mjs`
 - `bun test scripts/prose-gate-inventory.test.mjs`
 - `bun scripts/lint-changeset.mjs .changeset/728-gate-receipt-producer.md`
@@ -321,7 +323,7 @@ never hand-deleted (no emitter deletes a feature row).
   consumer's re-route goes to.
   (validator: `bun test scripts/gate-producer-drift.test.mjs` exits 0 with its template case green)
   (Implements: S5, S6, S7)
-  - Relevant files: template/AGENTS.md, skills/review-verify/SKILL.md, packages/agentic-workflow/README.md
+  - Relevant files: template/AGENTS.md, packages/agentic-workflow/README.md
 - [x] P7 — Ship the declared state and verify like a writer: the unit doc's evidence
   and log, the roadmap row through `roadmap rowUpsert`, the changeset, the
   generated projection, the session fragment, the derived test-impact set, the
@@ -388,6 +390,29 @@ for this change (it would be a second, competing step list).`
   after: O7's cell claimed `rg -c 'gate-receipt run' skills/review-change` would
   match ≥ 2, and the shipped text carries one (the step-11 ordering). The cell
   now states the count the tree actually holds, so `verified` is truthful.
+- **L7** — 2026-11-26, the correction batch over the external-verify receipt
+  (`external-verify.md`, `NEEDS-DECISION` with 3 blockers / 7 advisories),
+  triaged under the owner's "triage and fix those that deserve to fix" — every
+  blocker and all seven advisories corrected, none waived. Blockers: AC7/O10's
+  consumer-side diff re-scoped (`skills/review-*` plus
+  `':(exclude)skills/review-change'`, the composer this unit edits — 0 paths in
+  both shell forms, the pack's passes and both consumers still covered), E15
+  amended beside it, `D6`'s stale `review-verify` clause claim withdrawn in
+  place, P6's stale `Relevant files` line dropped. Advisories: AC1 now names
+  what the diff actually covers (Impact + Surfaces + tasks' files + D10), E16
+  carries the loaded-box re-run note, the handshake exception reached the fold
+  and reviewer call sites (new row O17), the `ed1ffdab4` corpus-expectation
+  correction is recorded here at E17, `LEDGERS.md`'s mark example reads
+  `additive trailing slot` instead of `reserved`, E12 names its three
+  invocations, and the Applicable-tests red-first entry carries
+  `--timeout 60000`. `ac-hash` re-frozen to the amended section (precedent L4);
+  O10 was flipped back before its corrected validator re-ran, O17 added and
+  judged on its own run. Two loop hits, both caught before any status flipped:
+  the reviewer call-site clause pushed the four `review-change:*` routes past
+  their exact-boundary ceilings (re-based under the gate's own instruction with
+  a per-route growth-source row in `SKILL_CONTEXT_BUDGETS.json`), and a wrap
+  split `no handshake gate` across two lines so O17's own validator named
+  `fold-findings/SKILL.md` missing until the clause was re-wrapped.
 - **E1** — 2026-11-26, the frozen corpus alone at `caf8f996f`, red against the
   unchanged tree: `bun test scripts/gate-producer-drift.test.mjs` · exit 1 ·
   `Cannot find module './gate-producer-drift.mjs'` · **0 pass / 1 fail**.
@@ -447,8 +472,9 @@ for this change (it would be a second, competing step list).`
   scripts/skill-lint.test.mjs` · exit 0 · **20 pass**; `bun test
   scripts/test-obligation-tags.test.mjs` · exit 0 · **22 pass**; `bun test
   scripts/structural-sibling-pins.test.mjs` · exit 0 · **8 pass**; `bun scripts/
-  check-skill-context.mjs` · `PASS context budgets: 33 skills`, `PASS route
-  budgets: 14 routes`, `PASS context documents: 7 budgeted documents`; `bun test
+  check-skill-context.mjs` · three invocations — default · `PASS context
+  budgets: 33 skills`, `--routes` · `PASS route budgets: 14 routes`,
+  `--documents` · `PASS context documents: 7 budgeted documents`; `bun test
   scripts/red-first.test.mjs` · exit 0 · **9 pass** (its declared 60s bound).
 - **E13** — 2026-11-26, the differential (§6): a `mktemp` toy project (one
   handshake gate writing a `passed` step) driven by the base commit's
@@ -462,16 +488,54 @@ for this change (it would be a second, competing step list).`
   suites derived; the set is the conservative whole-estate answer, and the
   local gate's own suites subsume it (`G1`).
 - **E15** — 2026-11-26, the review pack's frozen checklists after `D9`:
-  `bun test scripts/review-pack-preamble.test.mjs` · PASS (0 fail) and `git diff
+  `bun test scripts/review-pack-preamble.test.mjs` · PASS (0 fail), and the
+  consumer-side diff with the 2026-11-26 correction batch's exclusion — `git diff
   --name-only $(git merge-base origin/main HEAD)..HEAD -- skills/review-verify
-  skills/audit-pr skills/review-*` · **0 paths**.
+  skills/audit-pr skills/review-* ':(exclude)skills/review-change'` · **0 paths**
+  (as first written the line carried no exclusion and counted
+  `skills/review-change`, which this unit edits as the fourth caller — the
+  receipt's blocker 1; see L7).
 - **E16** — 2026-11-26, the root suite with the bound the reds were hiding:
   `bun scripts/run-root-suite.mjs --jobs 4 --test-timeout 60` · two reds only,
   `scripts/findings-corpus.test.mjs` (the frozen 1173 count against the tree's
   1178 — reproduced at the base commit, 16 pass / 1 fail there) and
   `scripts/workflow-doctor.test.mjs` (red at the base commit too); every other
   suite green, including `scripts/ceremony-findings-ledger.test.mjs` (19/19 with
-  headroom, red only under the 5s standalone default) and
+  headroom, red only under the 5s standalone default). Re-run 2026-11-26 at the
+  correction batch's handoff, box load 10.7–12.8 on 6 CPUs: the same command
+  reported **5** reds — these two, plus `scripts/phase-lint.test.mjs` and
+  `scripts/workflow-status-sensor.test.mjs` (SUITE TIMEOUT at the shared 120s
+  bound) and `scripts/red-first.test.mjs` (64.2s against its declared 60s) — and
+  all three are green standalone at this head (162/0; 81/0 and 9/0 at
+  `--timeout 60000`), on three suites this diff does not touch: load-shaped,
+  not change-caused (receipt advisory 2, `external-verify.md`).
+- **E17** — 2026-11-26, the correction batch's foreground runs. O10: the
+  corrected diff (AC7's own command) · **0 paths**, identical quoted and
+  shell-expanded; `bun test scripts/audit-pr-receipt.test.mjs` · **32 pass**;
+  `bun test scripts/gate-receipt.test.mjs` · **10 pass**. O17: `rg -l 'no
+  handshake gate' <the three call sites>` · **3 files**;
+  `bun scripts/check-skill-context.mjs --routes` · `PASS route budgets: 14
+  routes` after the declared re-basis (adversarial 28013/1922, default-backend
+  and default-web 24471/1697, synthesize 25225/1735 — each
+  `ceil(measured × 1.10)`, one growth-source row per route). Neighbours after
+  the batch, all 0 fail: `gate-producer-drift.test` 9 (+ `bun
+  scripts/gate-producer-drift.mjs` · `verdict: PASS`), `normative-drift` 24,
+  `skill-lint` 20, `test-obligation-tags` 22, `structural-sibling-pins` 8,
+  `prose-gate-inventory` 22, `red-first` 9 at `--timeout 60000`,
+  `review-loop-discipline` exit 0 (assertion script), `next-recommendations` 8,
+  `invocation-drift` 13, `residue-dimensions` 30, `ledger-ownership` 15,
+  `decision-promotion` 14, `check-skill-context.test` 1, `roadmap-settle.test`
+  10, `docs-generate.test` 31, `lane-era-lineage` 24, `pre-execution-quality`
+  2, `retention-declaration` 6, `doc-discipline` 21, `promise-coherence` 37,
+  `delivery-conditions` 20, crate `scaffold-contract.test` 18 (ac-hash
+  contract), pi `skill-parity` + `alias-coverage` 24; default/`--routes`/
+  `--documents` budget modes all PASS; `acceptanceState` → `match`
+  (`22b07bae…`); `bun scripts/lint-changeset.mjs` · ok; `docs-generate --check`
+  · `3 checked · 0 stale` · `verdict: PASS`; `roadmap check` · `violations: 0`;
+  and the batch's own full gate, `bun scripts/local-gate.mjs --jobs 4
+  --no-bail` · exit 1 with the identical shape as G2 — every step green but
+  `root-suite`, whose first red is the base-present `findings-corpus` count
+  (1178 vs frozen 1173), 5 dependents skipped.
 - **G1** — 2026-11-26, GATE-RAN | HEAD 9addb0bc9 | `bun scripts/gate-receipt.mjs
   run -- --jobs 4 --no-bail` | exit 1 | manifest
   e0cf41118e15a788d058bd76b918264d92d5ce273ef21c30506934510cb84207 — the run

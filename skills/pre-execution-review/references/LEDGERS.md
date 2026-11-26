@@ -263,7 +263,7 @@ truth-class row's owner cell extended with the two recorder column-sets:
 ```text
 gate-ran@1
 id | file:line | cmds | exit | [additive-slots ...]
-GATE-RAN | HEAD <40-hex sha> | <cmds> | exit <code> | [reserved trailing slot: `manifest <sha>`]
+GATE-RAN | HEAD <40-hex sha> | <cmds> | exit <code> | [additive trailing slot: `manifest <sha>`]
 ```
 
 - **Fixed format** (the one grammar; every consumer cites this block):

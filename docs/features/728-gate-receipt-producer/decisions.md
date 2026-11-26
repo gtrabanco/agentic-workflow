@@ -65,8 +65,10 @@ and `review-change`.
 
 The consumer half already exists and is correct: `review-verify` and `audit-pr`
 read `runner gate-receipt verify` and never re-run the gate. Nothing there gains
-a behavior; `review-verify` gains one clause naming the owner a re-route goes to,
-so "routed to `runner gate-receipt run`" names a step that actually performs it.
+a behavior. The cut planned one clause in `review-verify` naming the owner a
+re-route goes to; it was withdrawn when the review-pack pin refused the edit
+(`D9`), and the owner a re-route needs is stated where the rule lives
+(`gate-producer@1`'s `owner` and `command` fields).
 
 `gate-ran@1` reserved a trailing `manifest <sha>` slot ("reserved, not yet
 consumed"). The producer **fills** it with the receipt's `manifest.digest`. No

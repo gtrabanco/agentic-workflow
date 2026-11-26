@@ -23,7 +23,9 @@
    behavioral member. Use the strongest tier required by the most subtle member.
 4. **Verify.** Run the group's validators plus the project gate **as the
    producer** — `runner gate-receipt run`, so the group's gate run is also the
-   receipt a consumer reads (owner: `LEDGERS.md` §The producer, `gate-producer@1`). Red →
+   receipt a consumer reads (owner: `LEDGERS.md` §The producer, `gate-producer@1`).
+   A project with no handshake gate runs its declared gate command directly and
+   records the declared absence instead (owner block's `absent` field). Red →
    continue repairing only this group. Same failure with no diff twice →
    `BLOCKED NO-PROGRESS`; never commit red or weaken a check.
 5. **Persist atomically.** Flip every group row `folded: no → yes`; stage the

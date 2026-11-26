@@ -69,9 +69,11 @@ exact command tokens.
    **the review's gate run is produced, not bare**: this append is a signed-byte
    write, so the gate runs as `runner gate-receipt run` *after* the rows are
    final and *before* this commit, and the mark's `manifest <sha>` slot carries
-   the receipt's digest (owner: `LEDGERS.md` §The producer, `gate-producer@1`). A receipt produced
-   before the append is stale the moment the commit lands, and the merge gate
-   then blocks on it.
+   the receipt's digest (owner: `LEDGERS.md` §The producer, `gate-producer@1`).
+   A project with no handshake gate runs its declared gate command directly and
+   records the declared absence in the mark instead (owner block's `absent`
+   field). A receipt produced before the append is stale the moment the commit
+   lands, and the merge gate then blocks on it.
    pushed when a PR is open;
    an uncommitted append hands the next review a dirty-tree stop. On
    `REVIEW-PASS` with an open PR the SHA-bound receipt is the durable record:

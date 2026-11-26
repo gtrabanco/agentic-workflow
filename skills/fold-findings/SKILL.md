@@ -33,7 +33,9 @@ Load and verify the **canonical** [Turn contract](../orchestration-envelope/refe
      atomic commit was RUN with its sha pasted, and (if the branch has an open PR)
      `git push` was RUN immediately after that commit. The gate was run **as the
      producer** (`runner gate-receipt run`, owner: `LEDGERS.md` §The producer, `gate-producer@1`), so
-     the batch's gate run is the receipt a consumer reads.
+     the batch's gate run is the receipt a consumer reads. A project with
+     no handshake gate runs its declared gate command directly and records
+     the declared absence instead (owner block's `absent` field).
 ✓ 3. The ledger row for each FOLDED finding was flipped `folded: no → yes`
      in the same commit — never a bare code fix with the ledger left stale.
 ✓ 4. No finding was reclassified: no severity downgrade, no fix-now →
