@@ -175,4 +175,4 @@ trailing prose would land outside it.
 | 719-nan-default-embed | execute-phase | 5.0.0-canary.20261122.1 | deepseek-v4-flash | 26 | 26892810 | 188 | 202789 | 52069 | 26637952 | 0 | 0 | 711715 | 2858436 | 2026-11-25 | pi:session=01a20fea-1d25-7011-a8cb-06c47b8c1c85 |
 | 719-nan-default-embed | unit-lane | 5.0.0-canary.20261122.1 | glm5.3-flash | 18 | 4115012 | 35 | 325202 | 63218 | 3726592 | 0 | 42083 | 868584 | 6243 | 2026-11-25 | pi:session=01a21061-2b21-7011-a8cb-06e1d8be57dc |
 | 719-nan-default-embed | execute-phase | 5.0.0-canary.20261122.1 | deepseek-v4-flash | 15 | 77452358 | 380 | 740668 | 114186 | 76597504 | 0 | 0 | 1447621 | 1244208 | 2026-11-25 | pi:session=01a21256-8244-7011-a8cb-06e5f918636a |
-| 719-nan-default-embed | execute-phase | 5.0.0-canary.20261125.1 | deepseek-v4-flash | 35 | 6424568 | 83 | 188653 | 14347 | 6221568 | 0 | 0 | 166388 | 2881212 | 2026-11-25 | pi:session=01a213bc-f698-708b-a681-cd7e3c2fa0c8 |
+| 719-nan-default-embed | execute-phase | 5.0.0-canary.20261125.1 | deepseek-v4-flash | 44 | 7847823 | 97 | 494059 | 17124 | 7336640 | 0 | 0 | 281685 | 2993867 | 2026-11-26 | pi:session=01a213bc-f698-708b-a681-cd7e3c2fa0c8 |
