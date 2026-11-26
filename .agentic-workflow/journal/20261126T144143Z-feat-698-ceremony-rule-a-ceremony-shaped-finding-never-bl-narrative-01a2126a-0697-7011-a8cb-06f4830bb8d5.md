@@ -1,0 +1,6 @@
+## 2026-11-26T14:41:43Z — feat/698-ceremony-rule-a-ceremony-shaped-finding-never-bl — narrative
+- **Commits:** 18 (`71421c3b…f0605c87`)
+- **Files:** 59 files
+- **Summary:** Applied and pushed issue #698 inline against frozen ledgers (local workflow, no review pack, no fold cycle). Delivered the ceremony-rule unit: workflow finding class (report-only), repair-receipt machine currency, ceremony-bookkeeping scope class, and typed verdict receipts for audit-blocked and review-fail. All verification green, PR #725 created and pushed.
+- **Decisions:** The unit applied inline against frozen ledgers at sha 207147ff1. First push was refused by the local gate's dimension-regression check (change touches review surfaces, evidence was recorded in-place and pushed clean). A second commit registered PR #725 in the unit doc. 18 commits total, 59 files, all test suites green (root 145/145, crate 84/84, schema 953/0). Next step: operator external verification of the PR.
+- **Next:** External verification of PR #725 (the operator is the external verifier). After approval: merge against main, then optionally run the remote gate. Open items: #701 write-time checks, #669 cycle caps, #703 report bundle — all cited in the unit, not deferred here.
