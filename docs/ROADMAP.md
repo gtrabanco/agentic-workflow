@@ -240,6 +240,7 @@ PR merges — history lives in git log + the closed issue, never in this table.
 
 | Issue | Topic | Status | Notes |
 |---|---|---|---|
+| [#729](https://github.com/gtrabanco/agentic-workflow/issues/729) | workflow-doctor-hermetic-battery | in-progress | Issue [#729](https://github.com/gtrabanco/agentic-workflow/issues/729) (S): the `workflow-doctor` battery suite answers green with and without an ambient `AGENTIC_WORKFLOW_SKILLS_ROOT` — the three discovery cases declare their scenario's `env` (the injection the sibling cases already use), every assertion byte unchanged, and the root gate proves both environments. |
 | [#706](https://github.com/gtrabanco/agentic-workflow/issues/706) | log-write-path-fix | in-progress | Issue [#706](https://github.com/gtrabanco/agentic-workflow/issues/706) (M): five instruction-chain gaps let sessions hand-append to the journal — the LOGS.md header, the log-session description, the local aggregate door, and the fixture-identity leak path now agree on one writer. |
 | [#718](https://github.com/gtrabanco/agentic-workflow/issues/718) | embedding-pass-improvements | pending | Triaged fix-now (medium) 2026-11-24. Five embedding pass defects: silent embed stage (no onProgress), no fetch timeout, /aw-index 600s cap, concurrent sync double-spend, inert PATH-resolved hook. Each independently fixable; five commits in one PR. |
 
