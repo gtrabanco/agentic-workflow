@@ -354,7 +354,6 @@ for this change (it would be a second, competing step list).`
 | id | S# / file:line | axis | severity | impact | class | route |
 |---|---|---|---|---|---|---|
 | F1 | S4 · docs/features/728-gate-receipt-producer/SPEC.md:553 | workflow | WARNING | docs-only | runtime | fold |
-| F4 | S4 · skills/fold-findings/references/FOLD_PROCESS.md:40 | code | WARNING | docs-only | source | fold |
 
 ## Log
 
@@ -598,6 +597,22 @@ for this change (it would be a second, competing step list).`
   step's last signed-byte write") and the pinned freshness behaviour
   (`gate-receipt.test.mjs`: a signed byte after a run flips it stale, so
   producing AFTER the flip is what covers it) · confirmed
+
+- **F2** — 2026-11-26, F4 folded (S4 · `skills/fold-findings/references/FOLD_PROCESS.md`,
+  review mark `V2`): the fold process placed the producer at step 4, *before* its
+  own step-5 ledger flip, and its closing sentence claimed producing *after* the
+  flip would stale the receipt — the inverse of `gate-producer@1`'s `ordering`
+  field and of the pinned freshness behaviour, so a conforming batch landed stale
+  by construction. Repaired by reordering, not by rewording: step 4 verifies,
+  step 5 stages, step 7 produces (`runner gate-receipt run` over the staged bytes)
+  and commits those same bytes unchanged; the contradicting sentence is deleted
+  rather than moved (net narration diff −5 lines). The guard is a new case in the
+  producer's suite reading every gate-running call site for the inverted claim —
+  red first at `1a6bb9ac6` (9 pass / 1 fail), green with the repair, and red again
+  by name (`FINDING ordering-inverted — skills/fold-findings`) when the inversion
+  is re-injected into the real tree.
+  swept: `/producing\s+after\s+(it|them|that|this)\s+would\s+leave\s+the\s+receipt\s+stale/iu` → expected 0 in skills/**
+  swept: `/producer ran before/` → expected 0 in skills/**
 
 ## Next
 

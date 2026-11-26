@@ -212,7 +212,8 @@ test("gate-producer-drift: no call site inverts the ordering law the owner block
   const result = audit({ root: REPO_ROOT });
   assert.deepEqual(result.orderingViolations, [], "every call site agrees the producer runs after the step's signed bytes settle");
 
-  const root = toyRoot({ ["skills/fold-findings/SKILL.md"]: `# fold-findings\n\nRun \`runner gate-receipt run\` (\`${PRODUCER_BLOCK}\`) before this commit, because producing after it would leave the receipt stale.\n` });
+  const root = toyRoot();
+  write(root, "skills/fold-findings/SKILL.md", `# fold-findings\n\nRun \`runner gate-receipt run\` (\`${PRODUCER_BLOCK}\`) before this commit, because producing after it would leave the receipt stale.\n`);
   assert.deepEqual(audit({ root }).orderingViolations, [{ path: "skills/fold-findings", detail: "a call site claims producing after the step's signed bytes would stale the receipt" }]);
 });
 

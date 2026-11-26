@@ -26,6 +26,9 @@
  *   default-gate-schema-missing
  *                           that script no longer publishes the handshake token
  *                           the receipt consumes
+ *   ordering-inverted       a caller states the ordering law backwards: it claims
+ *                           producing after the step's signed bytes would stale
+ *                           the receipt, which is what producing before them does
  *
  * The owner block is the rule's one home (`gate-producer@1`); this gate restates
  * none of it. What it cannot decide — whether an agent actually ran the producer
@@ -80,6 +83,14 @@ export const CALLER_TOKENS = Object.freeze([PRODUCER_BLOCK, "gate-receipt run"])
 /** The scaffold guide that declares the handshake a project's gate must have. */
 export const TEMPLATE_GUIDE = "template/AGENTS.md";
 export const TEMPLATE_TOKENS = Object.freeze([GATE_RESULT_SCHEMA, "gate-receipt run"]);
+
+/**
+ * The inverted ordering claim, stated once so a caller cannot restate it. A
+ * receipt produced *after* the step's signed bytes is the fresh one; a site that
+ * says the opposite has the law backwards, and a fold that followed it would
+ * land stale by construction (issue #728, D4).
+ */
+export const ORDERING_INVERSION = /producing\s+after\s+(?:it|them|that|this)\s+would\s+leave\s+the\s+receipt\s+stale/iu;
 
 const MARKDOWN = /\.md$/u;
 
@@ -174,7 +185,19 @@ export function audit({ root = REPO_ROOT } = {}) {
     surfaces.push({ kind: "caller", path: surface, commandCited, ownerCited });
   }
 
-  // 3. The scaffold guide declares the handshake, or the producer has no
+  // 3. No gate-running call site states the ordering law backwards.
+  const orderingViolations = [];
+  for (const caller of PRODUCER_CALLERS) {
+    const surface = `skills/${caller}`;
+    for (const file of markdownFiles(root, surface)) {
+      const text = readOrNull(path.join(root, surface, file)) ?? "";
+      if (!ORDERING_INVERSION.test(text)) continue;
+      orderingViolations.push({ path: surface, detail: "a call site claims producing after the step's signed bytes would stale the receipt" });
+      break;
+    }
+  }
+
+  // 4. The scaffold guide declares the handshake, or the producer has no
   //    precondition a project could satisfy.
   const guideText = readOrNull(path.join(root, TEMPLATE_GUIDE));
   if (guideText === null) {
@@ -186,7 +209,7 @@ export function audit({ root = REPO_ROOT } = {}) {
     surfaces.push({ kind: "template", path: TEMPLATE_GUIDE, missing });
   }
 
-  // 4. The producer's default gate is this repository's, and it publishes the
+  // 5. The producer's default gate is this repository's, and it publishes the
   //    handshake — a rename there breaks the default with no other signal.
   const gateText = readOrNull(path.join(root, GATE_DEFAULT_SCRIPT));
   const gateSurface = { kind: "default-gate", path: GATE_DEFAULT_SCRIPT, present: gateText !== null };
@@ -199,7 +222,9 @@ export function audit({ root = REPO_ROOT } = {}) {
   surfaces.push(gateSurface);
 
   findings.sort((left, right) => (left.path === right.path ? left.code.localeCompare(right.code) : left.path.localeCompare(right.path)));
-  return { ok: findings.length === 0, verdict: findings.length === 0 ? "PASS" : "FAIL", owner, surfaces, findings };
+  const orderingFindings = orderingViolations.map((violation) => ({ code: "ordering-inverted", ...violation }));
+  const all = [...findings, ...orderingFindings].sort((left, right) => (left.path === right.path ? left.code.localeCompare(right.code) : left.path.localeCompare(right.path)));
+  return { ok: all.length === 0, verdict: all.length === 0 ? "PASS" : "FAIL", owner, surfaces, findings: all, orderingViolations };
 }
 
 /** The fixed block, byte-stable for one tree and one result. */

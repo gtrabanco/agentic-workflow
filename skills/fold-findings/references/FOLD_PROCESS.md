@@ -21,37 +21,40 @@
 3. **Repair one group at a time.** Diagnose the shared cause, implement the
    smallest complete correction, and add/update regression coverage for every
    behavioral member. Use the strongest tier required by the most subtle member.
-4. **Verify.** Run the group's validators plus the project gate **as the
-   producer** — `runner gate-receipt run`, so the group's gate run is also the
-   receipt a consumer reads (owner: `LEDGERS.md` §The producer, `gate-producer@1`).
-   A project with no handshake gate runs its declared gate command directly and
-   records the declared absence instead (owner block's `absent` field). Red →
+4. **Verify.** Run the group's validators plus the project gate (owner:
+   `LEDGERS.md` §gate-ran@1). Red →
    continue repairing only this group. Same failure with no diff twice →
    `BLOCKED NO-PROGRESS`; never commit red or weaken a check.
 5. **Persist atomically.** Flip every group row `folded: no → yes`; stage the
-   group diff + ledger; commit:
+   group diff + ledger. The commit that closes the batch is step 7's, once the
+   producer has run over these exact staged bytes:
 
    ```text
    fix(<scope>): fold <F1+F2+…> — <shared correction>
    ```
 
-   If the PR is open, push immediately. Emit one `FOLDED <same-sha>` line per
-   member so no finding disappears inside the batch. The producer ran before
-   this commit (step 4), because the ledger flip is a signed byte: producing
-   after it would leave the receipt stale the moment the commit lands.
+   If the PR is open, push immediately after the commit. Emit one `FOLDED <same-sha>` line per
+   member so no finding disappears inside the batch.
 6. **Continue groups.** A blocked/disputed group does not prevent independent
    groups from folding. Leave its rows `no` and emit individual outcomes.
    **Failed gate:** if the group's gate is red, do not fold the group — the
    receipt records the observed gate exit codes and nothing is folded for it;
    never silence the receipt and never commit red.
-7. **Batch classification.** The batch class derives from the taken queue's
+7. **Produce, then commit.** The group's gate run is the receipt's run, and it is
+   the batch's **last signed-byte write**: run it as `runner gate-receipt run`
+   over step 5's staged bytes, then commit those same bytes unchanged — staging
+   nothing after the run (owner: `LEDGERS.md` §The producer, `gate-producer@1`,
+   `ordering`). A receipt produced earlier — as fix-288 shipped — is stale at
+   once. A project with no handshake gate runs its declared gate command directly
+   and records the declared absence instead (owner block's `absent` field).
+8. **Batch classification.** The batch class derives from the taken queue's
    frozen rows only, and the fold never reclassifies:
 
    | Condition over the taken batch | Batch class | Fold behavior |
    |---|---|---|
    | ≥ 1 row with frozen class `replan-in-unit` or `decision-required` | `frozen (replan present)` | **freeze-batch** — nothing folds, no `folded: yes` flips, no commits; the receipt records the REPLAN-ROUTE and every retained (unfolded) row id; the loop stops; the consumer is the conclusion printed by `runner unit-route <unit>` (discovery step the fold already ran), where `<unit>` is the bare folder number or the full slug (both resolve): on `route: replan` the planner command the router printed — `/unit-lane <slug>` (feature) or `/unit-lane --fix <n>` (fix) — the lane appends the phases and its `review` step gates, then `/execute-phase` on this unit; on `route: decision` stop and surface the decision to the user, never a planner |
    | ≥ 1 row with frozen class `fix-now` whose `Route` cell begins `product owner`, `product-owned` or `owned by product` (head-anchored, identical to `runner unit-route`'s `PRODUCT_ROUTE` regex: `/^(?:product[- ]owner\|product[- ]owned\|owned by product)\b/i`, per `#293`) | `frozen (product owner present)` | **freeze-batch** — nothing folds, no `folded: yes` flips, no commits; the receipt records the PRODUCT-ROUTE and every retained (unfolded) row id; the loop stops; the consumer is the conclusion printed by `runner unit-route <unit>`: `route: product` and the lane hand-off — `/unit-lane <slug>` (feature) or `/unit-lane --fix <n>` (fix) — the lane repairs the half, its `review` step re-judges it, then `/execute-phase` on this unit |
-   | all taken rows foldable, none replan-class | `all-repair-in-place` | fold as today (group → fix → gate → commit → flip) |
+   | all taken rows foldable, none replan-class | `all-repair-in-place` | fold as today (group → fix → gate → flip → produce → commit) |
    | empty queue (zero findings taken) | `none` | receipt only |
 
    The batch-class vocabulary references only `review-implementation`'s closed
@@ -62,10 +65,10 @@
    and `PRODUCT-ROUTE` for a `frozen (product owner present)` batch; otherwise
    the docs-only file-set test (E-D3) and the frozen-severity-`high` override (E-D2) select
    `RE-REVIEW-OPTIONAL` vs `RE-REVIEW-REQUIRED (delta)`.
-8. **Disputes.** Non-reproducible/already-fixed/wrong findings become
+9. **Disputes.** Non-reproducible/already-fixed/wrong findings become
    `DISPUTED <evidence → user decision>`; never edit classification or create an
    issue.
-9. **Replan.** If the smallest correct group exceeds a reviewable correction,
+10. **Replan.** If the smallest correct group exceeds a reviewable correction,
    run `runner unit-route <unit>` — its `route: replan` line prints the
    planner command (`/unit-lane <slug>` for a feature, `/unit-lane --fix <n>` for
    a fix) that appends the proposed
