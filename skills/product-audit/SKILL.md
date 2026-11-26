@@ -2,7 +2,7 @@
 name: product-audit
 user-invocable: true
 disable-model-invocation: true
-version: 4.10.1
+version: 5.0.0-canary.20261126.1
 metadata:
   opencode/autoinvoke: false
 argument-hint: <path-or-area> (optional — defaults to the whole product)

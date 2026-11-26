@@ -1,7 +1,7 @@
 ---
 name: review-security
 user-invocable: false
-version: 4.10.1
+version: 5.0.0-canary.20261126.1
 author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >

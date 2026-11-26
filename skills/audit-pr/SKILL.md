@@ -1,7 +1,7 @@
 ---
 name: audit-pr
 user-invocable: true
-version: 4.10.1
+version: 5.0.0-canary.20261126.1
 argument-hint: <pr-number> (optional — defaults to the current branch's PR)
 author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT
