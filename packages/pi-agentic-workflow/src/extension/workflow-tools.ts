@@ -779,6 +779,122 @@ function runnerRunSpec(deps: WorkflowToolsDeps): WorkflowToolSpec {
   };
 }
 
+// ---------------------------------------------------------------------------
+// doc_search (issue #719 S2, D4): the index as a first-class tool
+// ---------------------------------------------------------------------------
+
+/**
+ * The crate's query envelope, as `doc --query … --json-only` prints it: the
+ * frozen key order `{ok, command, results[], degradations[], store}` with result
+ * rows `{path, section, lines, score, meta}` (owner: the crate's
+ * `src/doc/envelope.mjs`). Declared here as the tool's `outputSchema` so a
+ * programmatic consumer reads typed results — the crate stays the one producer
+ * and this schema is the projection of what it prints, never a second contract.
+ */
+const DOC_QUERY_RESULT_SCHEMA: Record<string, unknown> = {
+  type: "object",
+  additionalProperties: false,
+  required: ["ok", "command", "results", "degradations", "store"],
+  properties: {
+    ok: { type: "boolean" },
+    command: { const: "query" },
+    results: {
+      type: "array",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        required: ["path", "section", "lines", "score", "meta"],
+        properties: {
+          path: { type: "string", description: "The chunk's file, repo-relative." },
+          section: { type: ["string", "null"], description: "The markdown heading the chunk sits under." },
+          lines: {
+            type: "array",
+            items: { type: "integer", minimum: 1 },
+            minItems: 2,
+            maxItems: 2,
+            description: "The 1-based inclusive [start, end] pair pinning the chunk's location.",
+          },
+          score: {
+            type: "number",
+            description:
+              "The fusion score; higher ranks first (the crate's frozen ordering: score descending, then path, section and first line ascending).",
+          },
+          meta: { type: "object", description: "The chunk's metadata, verbatim." },
+        },
+      },
+    },
+    degradations: {
+      type: "array",
+      items: { type: "string" },
+      description:
+        "The crate's closed degradation vocabulary — e.g. " +
+        "`unavailable-embeddings-not-configured` for a keyword-only store.",
+    },
+    store: { type: ["object", "null"], description: "The store's state (chunks, pinned model, pending)." },
+  },
+};
+
+/**
+ * The doc index as a tool (issue #719 S2, D4).
+ *
+ * Semantic prose retrieval used to be a shell incantation a caller had to
+ * remember; here it is the same crate query behind a deferred tool, so every
+ * skill or model surface can reach the index by default. It delegates the whole
+ * query to `doc --query <term> [--mode …] --json-only` — the pinned runner over
+ * the project's bytes — and returns the crate's envelope untouched: no second
+ * retrieval implementation, no re-derived score, no write.
+ *
+ * `mode` is forwarded only when the caller names one. An absent mode is absent,
+ * so the crate's own auto resolution runs (hybrid when a provider resolves and
+ * the store is embedded, keyword with the declared cause otherwise) — a default
+ * here would make that resolution unreachable.
+ */
+function docSearchSpec(deps: WorkflowToolsDeps): WorkflowToolSpec {
+  return {
+    ...TOOL_COMMON,
+    name: "doc_search",
+    label: "Search the doc index",
+    description:
+      "Search the project's doc index (docs, SPECs, skills, decisions) and return " +
+      "typed results: path, section, the 1-based inclusive line range, score and " +
+      "chunk metadata. Use it for prose retrieval — a question about what the docs " +
+      "say — and keep `rg` for exact strings or regex in code and LSP for symbols. " +
+      "Keyword and vector results are fused by the store; `mode` forces one or the " +
+      "other, and omitting it resolves at query time. A keyword-only store answers " +
+      "with its declared degradation rather than failing. The tool never writes.",
+    parameters: {
+      type: "object",
+      required: ["query"],
+      additionalProperties: false,
+      properties: {
+        query: { type: "string", description: "The search term or natural-language question." },
+        mode: {
+          enum: ["hybrid", "keyword"],
+          description: "Force one retrieval mode; omit to let the crate resolve it from the store's own state.",
+        },
+      },
+    },
+    outputSchema: { oneOf: [DOC_QUERY_RESULT_SCHEMA, degradedSchema("gate-unavailable")] },
+    async execute(params, cwd) {
+      return runGateTool(
+        {
+          name: "doc_search",
+          parse: parseJsonObject,
+          spawn: (bin, p) => {
+            const args = ["doc", "--query", requireString(p, "query"), "--json-only"];
+            const mode = optionalString(p, "mode");
+            if (mode !== undefined) args.push("--mode", mode);
+            return launchRequest(cwd, args, bin);
+          },
+        },
+        deps,
+        params,
+        cwd,
+      );
+    },
+  };
+}
+
 /**
  * The deferred workflow tools: the contract + `workflow-status` tool first, then
  * the red gates. The generic runner door (issue #555) runs the subcommands
@@ -790,9 +906,10 @@ export function createWorkflowTools(deps: WorkflowToolsDeps = {}): WorkflowToolS
   return [
     statusSpec(deps),
     diffGuardSpec(deps),
-    phaseLintSpec(deps),
     auditPrGateSpec(deps),
+    phaseLintSpec(deps),
     snapshotVerifySpec(deps),
+    docSearchSpec(deps),
     runnerRunSpec(deps),
   ];
 }

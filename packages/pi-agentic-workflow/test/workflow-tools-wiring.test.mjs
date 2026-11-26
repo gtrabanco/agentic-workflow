@@ -111,6 +111,7 @@ const ARGS_BY_TOOL = {
   agentic_workflow_phase_lint: { path: "docs/fix/678-deferred-tools-signature-bug/SPEC.md" },
   agentic_workflow_audit_pr_gate: {},
   agentic_workflow_snapshot_verify: { stage: "spec", unit: "678-deferred-tools-signature-bug" },
+  doc_search: { query: "embedding precedence" },
   agentic_workflow_run: { subcommand: "setup-env", args: ["--check"] },
 };
 
@@ -123,7 +124,7 @@ const ARGUMENT_CHECK = "is required and must be a non-empty string";
 
 test("every tool runs through the host's 5-arg convention", async () => {
   const registered = await registeredTools();
-  assert.equal(registered.length, 6, "the six deferred tools register");
+  assert.equal(registered.length, 7, "the seven deferred tools register");
   for (const tool of registered) {
     assert.equal(
       tool.execute.length,
@@ -144,7 +145,7 @@ test("every params-reading tool answers when the host calls it with the 5-arg co
     runSensor: () => Promise.resolve({ ok: true, envelope: makeValidEnv() }),
   });
   const paramsReading = registered.filter((tool) => tool.name !== "agentic_workflow_status");
-  assert.equal(paramsReading.length, 5, "five of the six tools read params");
+  assert.equal(paramsReading.length, 6, "six of the seven tools read params");
   for (const tool of paramsReading) {
     const result = await tool.execute(...hostCall(ARGS_BY_TOOL[tool.name], project));
     assert.equal(typeof result, "object", `${tool.name} resolved instead of throwing`);

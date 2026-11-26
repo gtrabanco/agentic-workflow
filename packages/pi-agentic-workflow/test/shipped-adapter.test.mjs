@@ -765,13 +765,13 @@ test("issue #531 through the adapter: ENGRAM_BIN is the binary that gets registe
 });
 
 test("issue #274 through the adapter: the shipped entry registers the deferred workflow tools", async () => {
-  // The host names registerTool (pi >= 0.99 always does), so the five
-  // envelope-emitting scripts plus the generic runner door (issue #555) land as
-  // deferred tools in the agentic-workflow namespace — never declared to the
-  // model, read-only annotated.
+  // The host names registerTool (pi >= 0.99 always does), so the envelope-emitting
+  // scripts, the doc index (issue #719 S2) and the generic runner door (issue
+  // #555) land as deferred tools in the agentic-workflow namespace — never
+  // declared to the model, read-only annotated.
   const entry = await shippedEntry();
   try {
-    assert.equal(entry.calls.registerTool.length, 6, "all six tools register");
+    assert.equal(entry.calls.registerTool.length, 7, "all seven tools register");
     for (const tool of entry.calls.registerTool) {
       assert.equal(tool.exposure, "deferred", `${tool.name} is deferred`);
       assert.equal(tool.namespace.name, "agentic-workflow");
@@ -792,6 +792,7 @@ test("issue #274 through the adapter: the shipped entry registers the deferred w
         "agentic_workflow_run",
         "agentic_workflow_snapshot_verify",
         "agentic_workflow_status",
+        "doc_search",
       ],
     );
   } finally {

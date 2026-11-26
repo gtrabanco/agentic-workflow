@@ -15,7 +15,7 @@
  *               metric and the ARW code-net ratio with its band.
  *
  * Fixtures are throwaway trees under the OS temp dir; the real tree is read
- * once to prove the counts the planning ledger froze (1166 findings, 56 legacy
+ * once to prove the counts the planning ledger froze (1178 findings, 56 legacy
  * ledgers, 229 fold-annotated rows).
  */
 
@@ -183,17 +183,18 @@ test("reader reconciliation: a settled carrier keeps its one-line marks and open
 
 test("harvest: the real tree yields the counts the planning ledger froze", () => {
   const corpus = buildCorpus(ROOT, { resolveFold: () => null });
-  // 1166 = 1165 + fix/701's own `F1` row: the corpus counts the finding rows
-  // the tree actually carries, so a unit that records one raises it (fix/729's
-  // own `F2` raised it to 1167 while that row was open and folded back out —
+  // 1178 = 1165 + fix/701's own `F1` row + feature 719's seven `F1`–`F7` rows
+  // (its `F8` was folded, which deletes the row) — the corpus counts the finding
+  // rows the tree actually carries, so a unit that records one raises it and a
+  // closed one lowers it (fix/729's own `F2` also rose and folded back out —
   // the same mechanism this line documents for `reviewMarks` below).
-  assert.equal(corpus.findings.length, 1166, "every finding row in either carrier is in the corpus");
+  assert.equal(corpus.findings.length, 1178, "every finding row in either carrier is in the corpus");
   assert.equal(corpus.legacyLedgers, 56);
   assert.equal(corpus.foldAnnotated, 229);
-  // 176 = 175 + fix/729's own `R2` line (175 = 174 + its `R1`; the mechanism
-  // issue #651 introduced): the corpus counts the review marks the tree
-  // actually carries, so a unit that records one raises it.
-  assert.equal(corpus.reviewMarks, 176);
+  // 179 = 174 + feature 719's `R1` and `R2` lines + fix/729's own `R1` and `R2`
+  // lines (the mechanism issue #651 introduced): the corpus counts the review
+  // marks the tree actually carries, so a unit that records one raises it.
+  assert.equal(corpus.reviewMarks, 179);
   assert.ok(corpus.units.length >= 171);
   assert.deepEqual(corpus.unparsable, []);
   assert.ok(corpus.findings.every((row) => row.provenance.includes(":") && row.digest.length === 12));
