@@ -1,8 +1,179 @@
+// =========================================================================
+// agentic-workflow — explicit defaults (written by `config default`).
+//
+// Every declared option is written out with its shipped default, so the file
+// is the whole surface and nothing is hidden. A value you set is never
+// overwritten; a new option gains its default on the next run, and an option
+// the schema no longer declares is dropped after `<file>.bak-<timestamp>`.
+// Resolution: project over global; shipped defaults fill only UNDEFINED keys.
+// =========================================================================
 {
-  "gitIdentity": {
-    "enforce": "off"
+  // logSession — Automatic session logging: a boolean-like switch and an optional publisher command.
+  // type: boolean|integer|string|object · shipped default: {"enabled":false,"publisher":null}
+  "logSession": {
+    // logSession.enabled — Append the mechanical entry to docs/LOGS.md.
+    // type: boolean · shipped default: false
+    "enabled": false,
+    // logSession.publisher — The publisher command run at the session boundary; null means no publisher.
+    // type: null|object · shipped default: null
+    // logSession.publisher.command — The command and its arguments, run without a shell.
+    // type: array · shipped default: no shipped default — set it only when you use it
+    // logSession.publisher.timeoutMs — How long the publisher may run before it is abandoned, in milliseconds.
+    // type: integer · shipped default: no shipped default — set it only when you use it
+    "publisher": null
   },
+  // memory — Memory-substrate consent (the Engram MCP registration is ask-first).
+  // type: object · shipped default: {"engram":false}
+  "memory": {
+    // memory.engram — Opt in to the Engram MCP registration; false writes nothing.
+    // type: boolean · shipped default: false
+    "engram": false
+  },
+  // telemetry — Per-unit cost measurement. On by default — the sample stays local and anonymized (no prompt text, no model output, no diff, no file content); false opts a project out.
+  // type: object · shipped default: {"enabled":true,"jsonFile":".pi/.telemetry/sessions.jsonl"}
   "telemetry": {
-    "enabled": true
+    // telemetry.enabled — Measure the per-unit cost sample locally; false opts the project out.
+    // type: boolean · shipped default: true
+    "enabled": true,
+    // telemetry.jsonFile — Per-session JSONL destination, relative to the project root.
+    // type: string · shipped default: ".pi/.telemetry/sessions.jsonl"
+    "jsonFile": ".pi/.telemetry/sessions.jsonl"
+  },
+  // guard — One disposition per guard: allow (the guard stands down), deny (it refuses without asking) or ask (it asks when the host has a UI, and denies when it cannot). `default` is what every guard falls back to; a guard's own `mode` overrides it. Guards that can be configured here: gitIdentity, toolChoice, receipt. Always on and not configurable: pathProtection (tighten-only) and contentGuard (no bypass).
+  // type: object · shipped default: {"default":"ask"}
+  "guard": {
+    // guard.default — The disposition every guard falls back to when its own entry declares no mode. Shipped: ask.
+    // type: string · shipped default: "ask"
+    "default": "ask"
+    // guard.gitIdentity — The agent-side `git config` write guard (issue #514). `ask` can really ask; a session with no UI is refused in every mode except `allow`.
+    // type: object · shipped default: no shipped default — set it only when you use it
+    // guard.gitIdentity.mode — This guard's disposition; absent falls back to guard.default.
+    // type: string · shipped default: no shipped default — set it only when you use it
+    // guard.toolChoice — The command-time `rg`/`bun` carrier (issue #610). This guard cannot ask, so `ask` answers as `deny`.
+    // type: object · shipped default: no shipped default — set it only when you use it
+    // guard.toolChoice.mode — This guard's disposition; absent falls back to guard.default.
+    // type: string · shipped default: no shipped default — set it only when you use it
+    // guard.receipt — The inline PR-receipt guard (issue #182). This guard cannot ask, so `ask` answers as `deny`.
+    // type: object · shipped default: no shipped default — set it only when you use it
+    // guard.receipt.mode — This guard's disposition; absent falls back to guard.default.
+    // type: string · shipped default: no shipped default — set it only when you use it
+  },
+  // gitIdentity — The approved commit identity and the agent-side config-write guard.
+  // type: object · shipped default: {"enforce":"off","approved":{},"agentGuard":{"allow":[]}}
+  "gitIdentity": {
+    // gitIdentity.enforce — When the identity check runs: off, commit, push, push-upstream, or the commit-and-push pair.
+    // type: string · shipped default: "off"
+    "enforce": "off",
+    // gitIdentity.approved — Only the declared facts are verified; an absent field is not checked.
+    // type: object · shipped default: {}
+    "approved": {
+      // gitIdentity.approved.name — git user.name, matched case-insensitively.
+      // type: string · shipped default: no shipped default — set it only when you use it
+      // gitIdentity.approved.email — git user.email, matched case-insensitively.
+      // type: string · shipped default: no shipped default — set it only when you use it
+      // gitIdentity.approved.fullName — The legal name a signing key's UID must carry.
+      // type: string · shipped default: no shipped default — set it only when you use it
+      // gitIdentity.approved.format — The signing key format: openpgp or ssh.
+      // type: string · shipped default: no shipped default — set it only when you use it
+      // gitIdentity.approved.signingKey — The resolved signing key: key id, fingerprint or path.
+      // type: string · shipped default: no shipped default — set it only when you use it
+      // gitIdentity.approved.signingKeys — The per-machine keys: a resolved key matching any of these is approved (issue #546).
+      // type: array · shipped default: no shipped default — set it only when you use it
+      // gitIdentity.approved.signing — required: a commit must carry a signature from an approved key. allowed (default): signing is optional, and a resolved key is verified when one resolves. off: the project approves unsigned commits, so a signed one is refused.
+      // type: string · shipped default: no shipped default — set it only when you use it
+    },
+    // gitIdentity.agentGuard — The model-facing half of the identity guard: the config keys the agent may write without asking.
+    // type: object · shipped default: {"allow":[]}
+    "agentGuard": {
+      // gitIdentity.agentGuard.allow — Config keys the agent may write without asking (e.g. user.name).
+      // type: array · shipped default: []
+      "allow": []
+    }
+  },
+  // advance — Conductor knobs: iteration ceiling, sensitive/security path sets, run-log path.
+  // type: object · shipped default: {"iterationsCap":12,"sensitivePaths":[],"securityPaths":[],"runLogPath":".agentic-workflow/advance-run.log"}
+  "advance": {
+    // advance.iterationsCap — The conductor's iteration ceiling per run.
+    // type: integer · shipped default: 12
+    "iterationsCap": 12,
+    // advance.sensitivePaths — Globs that raise the conductor's caution for a touched path.
+    // type: array · shipped default: []
+    "sensitivePaths": [],
+    // advance.securityPaths — Globs that join the conductor's security path set.
+    // type: array · shipped default: []
+    "securityPaths": [],
+    // advance.runLogPath — The advance run log, relative to the project root.
+    // type: string · shipped default: ".agentic-workflow/advance-run.log"
+    "runLogPath": ".agentic-workflow/advance-run.log"
+  },
+  // pathProtection — A tighten-only override: the shipped floor is always kept.
+  // type: object · shipped default: {}
+  "pathProtection": {
+    // pathProtection.protectedGlobs — Extra globs to protect, on top of the shipped floor.
+    // type: array · shipped default: no shipped default — set it only when you use it
+    // pathProtection.requirements — Per phase and operation requirement overrides; a value raises the floor, never lowers it.
+    // type: object · shipped default: no shipped default — set it only when you use it
+    // pathProtection.requirements.pre-freeze — Requirements for pre-freeze writes (none, justification or approval).
+    // type: object · shipped default: no shipped default — set it only when you use it
+    // pathProtection.requirements.pre-freeze.create — The requirement for a create in the pre-freeze phase.
+    // type: string · shipped default: no shipped default — set it only when you use it
+    // pathProtection.requirements.pre-freeze.modify — The requirement for a modify in the pre-freeze phase.
+    // type: string · shipped default: no shipped default — set it only when you use it
+    // pathProtection.requirements.pre-freeze.delete — The requirement for a delete in the pre-freeze phase.
+    // type: string · shipped default: no shipped default — set it only when you use it
+    // pathProtection.requirements.pre-freeze.rename — The requirement for a rename in the pre-freeze phase.
+    // type: string · shipped default: no shipped default — set it only when you use it
+    // pathProtection.requirements.post-freeze — Requirements for post-freeze writes (none, justification or approval).
+    // type: object · shipped default: no shipped default — set it only when you use it
+    // pathProtection.requirements.post-freeze.create — The requirement for a create in the post-freeze phase.
+    // type: string · shipped default: no shipped default — set it only when you use it
+    // pathProtection.requirements.post-freeze.modify — The requirement for a modify in the post-freeze phase.
+    // type: string · shipped default: no shipped default — set it only when you use it
+    // pathProtection.requirements.post-freeze.delete — The requirement for a delete in the post-freeze phase.
+    // type: string · shipped default: no shipped default — set it only when you use it
+    // pathProtection.requirements.post-freeze.rename — The requirement for a rename in the post-freeze phase.
+    // type: string · shipped default: no shipped default — set it only when you use it
+    // pathProtection.requirements.always — Requirements for always writes (none, justification or approval).
+    // type: object · shipped default: no shipped default — set it only when you use it
+    // pathProtection.requirements.always.create — The requirement for a create at any phase.
+    // type: string · shipped default: no shipped default — set it only when you use it
+    // pathProtection.requirements.always.modify — The requirement for a modify at any phase.
+    // type: string · shipped default: no shipped default — set it only when you use it
+    // pathProtection.requirements.always.delete — The requirement for a delete at any phase.
+    // type: string · shipped default: no shipped default — set it only when you use it
+    // pathProtection.requirements.always.rename — The requirement for a rename at any phase.
+    // type: string · shipped default: no shipped default — set it only when you use it
+  },
+  // contentGuard — Author-provenance policy for third-party forge content: which authors are ingested as readable content.
+  // type: object · shipped default: {"trustedRoles":["OWNER","MEMBER","COLLABORATOR"],"allowLogins":[],"denyLogins":[]}
+  "contentGuard": {
+    // contentGuard.trustedRoles — The author associations whose content may be ingested; every other association is excluded and declared.
+    // type: array · shipped default: ["OWNER","MEMBER","COLLABORATOR"]
+    "trustedRoles": ["OWNER","MEMBER","COLLABORATOR"],
+    // contentGuard.allowLogins — Logins admitted regardless of association — an explicit, reviewable exception list.
+    // type: array · shipped default: []
+    "allowLogins": [],
+    // contentGuard.denyLogins — Logins excluded regardless of association; a deny always beats an allow.
+    // type: array · shipped default: []
+    "denyLogins": []
+  },
+  // docRetention — Document retention: whether a merged unit's process artifacts are trimmed into the gitignored archive, and how the archive is kept (issue #651).
+  // type: object · shipped default: {"mode":"keep-all","pendingTrimAfterDays":0,"archiveDir":".agentic-workflow/archive","archiveRetentionDays":null,"seamHook":null}
+  "docRetention": {
+    // docRetention.mode — keep-all detects only; archive lets the trim step run.
+    // type: string · shipped default: "keep-all"
+    "mode": "keep-all",
+    // docRetention.pendingTrimAfterDays — How long the sensor waits before offering a merge, from the unit's last log entry.
+    // type: integer · shipped default: 0
+    "pendingTrimAfterDays": 0,
+    // docRetention.archiveDir — The repo-relative, gitignored archive directory.
+    // type: string · shipped default: ".agentic-workflow/archive"
+    "archiveDir": ".agentic-workflow/archive",
+    // docRetention.archiveRetentionDays — Prune the archive after this many days; null never prunes it.
+    // type: integer|null · shipped default: null
+    "archiveRetentionDays": null,
+    // docRetention.seamHook — The project-declared offsite copy, run after the local archive is durable.
+    // type: string|null · shipped default: null
+    "seamHook": null
   }
 }

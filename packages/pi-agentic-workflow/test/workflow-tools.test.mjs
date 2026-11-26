@@ -90,6 +90,8 @@ const TOOL_NAMES = [
   "agentic_workflow_phase_lint",
   "agentic_workflow_audit_pr_gate",
   "agentic_workflow_snapshot_verify",
+  // Issue #719 S2: the doc index as a first-class tool.
+  "doc_search",
   // Issue #555's generic door: the subcommands the skills cite symbolically
   // and no typed tool wraps.
   "agentic_workflow_run",
@@ -99,7 +101,7 @@ const TOOL_NAMES = [
 // Registration shape (AC2, O3)
 // ---------------------------------------------------------------------------
 
-test("registration: six deferred tools in the agentic-workflow namespace, readOnly", async () => {
+test("registration: seven deferred tools in the agentic-workflow namespace, readOnly", async () => {
   const { createWorkflowTools, WORKFLOW_TOOLS_NAMESPACE } = await loadModule();
   const tools = createWorkflowTools();
   assert.deepEqual(
@@ -588,4 +590,156 @@ test("snapshot-verify: exit 0 fresh; exit 3/4 → isError with the report", asyn
   const staleRun = await verify.execute({ stage: "spec", unit: "70-pi-tool-surface" }, "/fixture/project");
   assert.equal(staleRun.isError, true);
   assert.equal(staleRun.structuredContent.current, false);
+});
+
+// ---------------------------------------------------------------------------
+// doc_search (issue #719 S2, D4)
+// ---------------------------------------------------------------------------
+//
+// The doc index used to be reachable only through a shell (`agentic-workflow doc
+// --query`) or the `/aw-index` slash command, so semantic search was a command a
+// caller had to remember. `doc_search` is the same query as a deferred tool: the
+// crate's own `doc --query … --json-only` envelope, returned typed, never
+// re-derived and never written.
+
+const DOC_QUERY_ENVELOPE = {
+  ok: true,
+  command: "query",
+  results: [
+    { path: "docs/features/a/SPEC.md", section: "Decision", lines: [12, 30], score: -1.25, meta: { words: 140 } },
+    { path: "skills/x/SKILL.md", section: null, lines: [1, 9], score: -0.5, meta: {} },
+  ],
+  degradations: [],
+  store: { present: true, model: "qwen3-embedding", chunks: 4200, pending: 0 },
+};
+
+test("doc_search: registered deferred and read-only in the agentic-workflow namespace", async () => {
+  const { createWorkflowTools, WORKFLOW_TOOLS_NAMESPACE } = await loadModule();
+  const tools = createWorkflowTools();
+  const search = tools.find((tool) => tool.name === "doc_search");
+
+  assert.ok(search, "the tool is registered under the owner's own suggested name");
+  assert.equal(search.exposure, "deferred", "never declared to the model");
+  assert.equal(search.annotations?.readOnlyHint, true, "a query writes nothing");
+  assert.equal(search.namespace, WORKFLOW_TOOLS_NAMESPACE);
+  assert.deepEqual(Object.keys(search.parameters.properties).sort(), ["mode", "query"]);
+  assert.deepEqual(search.parameters.required, ["query"]);
+  assert.deepEqual(search.parameters.properties.mode.enum, ["hybrid", "keyword"]);
+});
+
+test("doc_search: spawns the pinned runner's doc query with --json-only and returns the typed envelope", async () => {
+  const { createWorkflowTools } = await loadModule();
+  const requests = [];
+  const tools = createWorkflowTools({
+    bin: () => "bun",
+    spawnScript: (request) => {
+      requests.push(request);
+      return Promise.resolve({ code: 0, stdout: JSON.stringify(DOC_QUERY_ENVELOPE), stderr: "" });
+    },
+  });
+  const search = tools.find((tool) => tool.name === "doc_search");
+  const result = await search.execute({ query: "embedding precedence" }, "/fixture/project");
+
+  assert.equal(requests.length, 1);
+  assert.equal(requests[0].cwd, "/fixture/project", "the host's cwd is the project the query runs against");
+  assert.deepEqual(
+    requests[0].argv.slice(-4),
+    ["doc", "--query", "embedding precedence", "--json-only"],
+    "the crate's own query op, its JSON switch",
+  );
+  assert.deepEqual(result.structuredContent, DOC_QUERY_ENVELOPE, "the envelope arrives as data, verbatim");
+  assert.equal(result.isError, undefined);
+  checkSchema(search.outputSchema, result.structuredContent, "doc_search happy path");
+});
+
+test("doc_search: an explicit mode rides the crate's own flag, an absent one is left to the crate", async () => {
+  const { createWorkflowTools } = await loadModule();
+  const requests = [];
+  const tools = createWorkflowTools({
+    bin: () => "bun",
+    spawnScript: (request) => {
+      requests.push(request);
+      return Promise.resolve({ code: 0, stdout: JSON.stringify(DOC_QUERY_ENVELOPE), stderr: "" });
+    },
+  });
+  const search = tools.find((tool) => tool.name === "doc_search");
+
+  await search.execute({ query: "term", mode: "keyword" }, "/fixture");
+  assert.ok(requests[0].argv.includes("--mode"), "the mode is forwarded");
+  assert.equal(requests[0].argv[requests[0].argv.indexOf("--mode") + 1], "keyword");
+
+  await search.execute({ query: "term" }, "/fixture");
+  assert.ok(
+    !requests[1].argv.includes("--mode"),
+    "an absent mode is absent, so the crate's own auto resolution runs",
+  );
+});
+
+test("doc_search: the result description matches the crate's frozen ordering — a higher score ranks first", async () => {
+  const { createWorkflowTools } = await loadModule();
+  const search = createWorkflowTools().find((tool) => tool.name === "doc_search");
+  // The published schema is the success/error union; the score lives in the
+  // envelope branch, the one a caller reads a result row from.
+  const schema = search.outputSchema.oneOf?.find((branch) => branch.properties?.results) ?? search.outputSchema;
+  const score = schema.properties.results.items.properties.score;
+  assert.equal(score.type, "number");
+  // `query.mjs`'s frozen D3 ordering is score descending (the score is the
+  // negated bm25 rank, so higher is better) — a caller reading this schema must
+  // be told the same thing the crate does, never the inverse.
+  assert.match(score.description, /higher (score )?ranks first/iu, "the description names the real ordering");
+  assert.doesNotMatch(score.description, /lower/iu, "and never claims the inverse");
+});
+
+test("doc_search: a keyword-only store answers with its declared degradation, not an error", async () => {
+  const { createWorkflowTools } = await loadModule();
+  const degradedEnvelope = {
+    ...DOC_QUERY_ENVELOPE,
+    degradations: ["unavailable-embeddings-not-configured"],
+    store: { present: true, model: null, chunks: 4200, pending: 0 },
+  };
+  const tools = createWorkflowTools({
+    bin: () => "bun",
+    spawnScript: () => Promise.resolve({ code: 0, stdout: JSON.stringify(degradedEnvelope), stderr: "" }),
+  });
+  const result = await tools.find((tool) => tool.name === "doc_search").execute({ query: "term" }, "/fixture");
+
+  // exit 0 is ok by the crate's own contract (D3): a degraded hybrid answer is
+  // still an answer, and the caller decides what the degradation means.
+  assert.equal(result.isError, undefined);
+  assert.deepEqual(result.structuredContent.degradations, ["unavailable-embeddings-not-configured"]);
+});
+
+test("doc_search: a spawn that cannot answer degrades with a record instead of throwing", async () => {
+  const { createWorkflowTools } = await loadModule();
+  const tools = createWorkflowTools({
+    bin: () => "bun",
+    spawnScript: () => Promise.resolve({ code: null, stdout: "", stderr: "", spawnError: "ENOENT" }),
+  });
+  const result = await tools.find((tool) => tool.name === "doc_search").execute({ query: "term" }, "/fixture");
+
+  assert.equal(result.isError, true);
+  assert.equal(result.structuredContent.contract, "agentic-workflow/tool-degraded");
+  assert.equal(result.structuredContent.refusal, "gate-unavailable");
+});
+
+test("doc_search: a missing query is an argument error, never a silent empty search", async () => {
+  const { createWorkflowTools } = await loadModule();
+  const spawned = [];
+  const tools = createWorkflowTools({
+    bin: () => "bun",
+    spawnScript: (request) => {
+      spawned.push(request);
+      return Promise.resolve({ code: 0, stdout: "{}", stderr: "" });
+    },
+  });
+  const search = tools.find((tool) => tool.name === "doc_search");
+  const result = await search.execute({}, "/fixture");
+
+  // The shared gate-tool body turns a refused argument into a degraded record
+  // rather than letting it escape to the host — and, crucially, nothing spawns:
+  // an empty `--query` would answer the whole corpus, which is worse than no
+  // answer at all.
+  assert.equal(spawned.length, 0, "no query runs without a term");
+  assert.equal(result.isError, true);
+  assert.match(result.structuredContent.detail, /query is required/);
 });

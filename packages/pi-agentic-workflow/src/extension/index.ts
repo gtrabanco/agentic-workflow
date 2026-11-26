@@ -396,6 +396,13 @@ export default function extension(pi: ExtensionAPI): void {
   // session so every crate command the session spawns (the workflow-doctor
   // battery among them) declares it instead of guessing a layout.
   publishSkillsRoot();
+  // Issue #719 S1/S4 — the doc-index embedding default is applied by the preset
+  // that ships the profile (decision D5), in the companion's own module graph,
+  // right after it registers: Pi promises no inter-package load order, so a read
+  // of the preset registry from here could find it empty and silently answer
+  // keyword-only. This entry stays provider-neutral and decides nothing about
+  // embeddings; a project without such a preset keeps the crate's shipped
+  // keyword-only behaviour.
   const hint = createHintStore({ path: stateFilePath(agentDir) });
   // One gate for both entry points (AC9): session start says it first, and a
   // session that begins by running a command says it there instead. The

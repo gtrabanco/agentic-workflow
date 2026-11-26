@@ -1,0 +1,6 @@
+## 2026-11-26T16:08:36Z — feat/719-nan-embedding-default-index-tool — narrative
+- **Commits:** 59 (`e8d7e1ab…9857a864`)
+- **Files:** 40 files
+- **Summary:** Feature 719 nan-default-embed: implemented the NaN embedding profile default-on resolver (read index.json, withhold-or-inject env vars at extension load), exposed the doc index as a deferred pi tool (doc_search over the crate doc-query envelope), ran the full gate (1104 pi-agentic + 85 pi-nan tests green, local-gate PASS), opened PR #720, settled the roadmap row. A relay session later resolved the review-change fold batch (P6–P13, F1–F8) and a release fix (#723) was also landed this session.
+- **Decisions:** The default-on resolver reads index.json and never rewrites it (S4: explicit blocks always win). The tuning pair 6000x6 travels as the request budget env var (36000). doc_search is a deferred tool wrapping doc --query --json-only. The package README grew past its context ceiling so the manifest was re-pinned. A test case hard-coded index.db as fixture filler and tripped doc-discipline AC25; replaced with neutral config. The unit-lane ran inline (no relay legs dispatched without approval), which later needed a replan to bootstrap relay for the fold batch.
+- **Next:** Review and merge PR #720 on main, then close the unit-lane judgment steps.
