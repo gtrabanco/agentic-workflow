@@ -208,6 +208,7 @@ artifact); the suite runs are this unit's evidence step and P3's validators.
 
 | id | S# / file:line | axis | severity | impact | class | route |
 |---|---|---|---|---|---|---|
+| F1 | AC2 · docs/fix/729-workflow-doctor-hermetic-battery/SPEC.md:65 | plan | WARNING | docs-only | plan | replan-in-unit |
 
 ## Log
 
@@ -244,6 +245,9 @@ artifact); the suite runs are this unit's evidence step and P3's validators.
 - **P2** — 2026-11-25, the scenario env declared in the three cases (four `buildBattery` calls + one comment; zero assertion lines touched, E5) · `cb5276399`.
 - **E5** — 2026-11-25, the assertion-preservation and doc-state checks: `git diff origin/main..HEAD -- scripts/workflow-doctor.test.mjs | rg '^-[^-]' | rg 'assert'` · exit 1 (matches nothing — every assertion line byte-identical); `agentic-workflow verify …/SPEC.md --no-git` · exit 0 · `"ok": true, "violations": []`; `bun scripts/roadmap-settle.mjs` · exit 0 · `verdict: PASS`; `bun scripts/docs-generate.mjs --check` · exit 0 · PASS; `bun scripts/skill-lint.mjs` · `0 finding(s) · verdict: PASS`; `bun scripts/check-skill-context.mjs` · exit 0; `bun scripts/lint-changeset.mjs` · exit 0; `journal aggregate --check` · `ok (59)`.
 - **L3** — 2026-11-26, date correction (append-only; the session crossed UTC midnight between #698's batch and this unit): every run recorded above — #729's filing, L1's capture, L2's owner order, E1–E5 and P1/P2 — happened on **2026-11-26** (issue `createdAt` `2026-11-26T14:57:29Z`; this unit's journal fragment `20261126T151803Z`), not the `2026-11-25` their lines print, and `decisions.md` D1's authority date carries the same slip. What stays correct at `2026-11-25`: #698's diagnosis (E21 there), PE-003's first sample of the variable in that turn, and the pi package's own `canary.20261125` name; PE-003's `runtime.js` bytes were read 2026-11-26.
+- **G1** — 2026-11-26, GATE-RAN · HEAD 27842a182cad566667eb89f63d82a6f86f7d76ec · `env -u AGENTIC_WORKFLOW_SKILLS_ROOT bun scripts/run-root-suite.mjs` | `env AGENTIC_WORKFLOW_SKILLS_ROOT=/home/agent/.pi/agent/npm/node_modules/@gtrabanco/pi-agentic-workflow/skills bun scripts/run-root-suite.mjs` · exit 0 · 144 suites PASS / 0 FAIL in both environments (the review's gate run at the reviewed head).
+- **V1** — 2026-11-26, docs/fix/729-workflow-doctor-hermetic-battery/SPEC.md:65 · reviewer review-change · HEAD 27842a182cad566667eb89f63d82a6f86f7d76ec · recheck direct read of AC2 against `skills/verification-contract/SKILL.md` section "Every criterion names its demonstrating command (S5)": the criterion carries no backticked command and no `manual:`/`read-verified:` label while its claim is command-settleable (O3's validator in this same doc settles it), so S5 fails it closed at review · confirmed
+- **R1** — 2026-11-26, review at HEAD 27842a182cad566667eb89f63d82a6f86f7d76ec · verdict REVIEW-FAIL · cycle 1 · gate exit 0 · 1 fix-now row (F1, plan-owned, route replan-in-unit); 1 report-only ignore row (machine gate receipt absent — `runner gate-receipt verify` exit 3); 1 candidate refuted (missing `ac-hash` — the design step was triaged out and the verification contract requires only the `## Acceptance criteria` section plus its E-line receipts)
 ## Next
 
 Paste the triage block at cut, implement P2 against the frozen ledgers, run P3,
