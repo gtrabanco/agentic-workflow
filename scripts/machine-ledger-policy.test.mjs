@@ -194,6 +194,11 @@ test("every exempting surface cites the policy block", () => {
     "skills/orchestration-envelope/references/TURN_CONTRACT.md",
     "skills/review-change/references/PERSIST_AND_DECIDE.md",
     "skills/review-change/references/REVIEW_PROCESS.md",
+    "packages/agentic-workflow/src/audit-pr-gate/index.mjs",
+    "packages/agentic-workflow/src/fullauto-merge.mjs",
+    "scripts/unit-cycle.mjs",
+    "packages/pi-agentic-workflow/src/conductor/closeout.ts",
+    "packages/pi-agentic-workflow/src/extension/receipt-guard.ts",
   ];
   for (const surface of surfaces) {
     assert.match(read(surface), new RegExp(MARKER, "u"), `${surface} cites ${MARKER}`);

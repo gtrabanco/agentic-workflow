@@ -17,6 +17,7 @@
  */
 
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
@@ -29,6 +30,7 @@ import {
   autoLedgerPaths,
   commitMachineLedgers,
   foreignPorcelainLines,
+  foreignPorcelainPaths,
   isMachineLedgerPath,
 } from "../src/machine-ledger/index.mjs";
 import { main as sessionCloseMain } from "../src/session-close/index.mjs";
@@ -101,17 +103,33 @@ test("the class recognises its own paths and nothing else", () => {
   assert.equal(isMachineLedgerPath("app.ts"), false);
 });
 
-test("foreignPorcelainLines names every non-exempt path and never the class's (the filter every verdict refuses foreign files through)", () => {
+test("foreignPorcelain names every non-exempt entry and never the class's (the filter every verdict refuses foreign files through)", () => {
   const porcelain = " M docs/workflow/TIER_COST.md\n M src/app.ts\n?? docs/LOGS.md\n M docs/features/502-nan-publish-stable/review-findings.md\n";
-  assert.deepEqual(foreignPorcelainLines(porcelain), ["src/app.ts"]);
+  assert.deepEqual(foreignPorcelainPaths(porcelain), ["src/app.ts"]);
+  // The trimmed lines keep the letters: a consumer that printed paths instead
+  // would silently drop the staged/modified distinction.
+  assert.deepEqual(foreignPorcelainLines(porcelain), ["M src/app.ts"]);
 });
 
-test("foreignPorcelainLines keeps git's rename and quoting shapes", () => {
-  assert.deepEqual(foreignPorcelainLines('R  a.txt -> b.txt\n M "weird name.txt"\n'), ["b.txt", "weird name.txt"]);
+test("foreignPorcelain keeps git's rename and quoting shapes", () => {
+  const porcelain = 'R  a.txt -> b.txt\n M "weird name.txt"\n';
+  assert.deepEqual(foreignPorcelainPaths(porcelain), ["b.txt", "weird name.txt"]);
+  assert.deepEqual(foreignPorcelainLines(porcelain), ['R  a.txt -> b.txt'.trim(), 'M "weird name.txt"']);
 });
 
-test("foreignPorcelainLines answers an empty porcelain with an empty list", () => {
+test("foreignPorcelain answers an empty porcelain with an empty list", () => {
   assert.deepEqual(foreignPorcelainLines(""), []);
+  assert.deepEqual(foreignPorcelainPaths(""), []);
+});
+
+test("the type projection declares exactly the module's exports", async () => {
+  // Same rule as `tool-choice/policy.d.mts` F19: the .d.mts beside the module
+  // is a projection, and its names never drift from the module's.
+  const source = readFileSync(new URL("../src/machine-ledger/index.d.mts", import.meta.url), "utf8");
+  const declared = [...source.matchAll(/export declare (?:const|function|interface) (\w+)/gu)].map((match) => match[1]);
+  const module = await import("../src/machine-ledger/index.mjs");
+  const runtime = Object.keys(module).filter((key) => key !== "default");
+  assert.deepEqual(declared.sort(), runtime.sort(), "index.d.mts and index.mjs export different names");
 });
 
 test("commits the named paths alone under the class subject and leaves a foreign staged file behind", () => {

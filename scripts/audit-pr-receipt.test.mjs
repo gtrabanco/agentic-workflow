@@ -232,10 +232,13 @@ test("hygieneFromState: a clean, pushed, ready terminal state passes every hygie
 });
 
 test("hygieneFromState: a dirty tree names every path and offers no repair — it is the author's to fix", () => {
-  const state = hygieneFromState({ treePorcelain: " M docs/LOGS.md\n?? tmp/scratch\n", branchAhead: 0, isDraft: false });
+  // The fixture names ordinary files: `docs/LOGS.md` left the foreign set with
+  // issue #727 (it is a declared machine-owned ledger now), so a case extracting
+  // itself on it would pin the exemption, not the naming rule.
+  const state = hygieneFromState({ treePorcelain: " M src/pipeline.ts\n?? tmp/scratch\n", branchAhead: 0, isDraft: false });
   assert.equal(state.gates["tree-clean"], "fail");
   assert.equal(state.blockers.length, 1);
-  assert.match(state.blockers[0], /docs\/LOGS\.md/);
+  assert.match(state.blockers[0], /src\/pipeline\.ts/);
   assert.match(state.blockers[0], /tmp\/scratch/);
   assert.deepEqual(state.repairs, [], "only the draft flag has a mechanical repair");
 });
@@ -252,7 +255,7 @@ test("hygieneFromState: a pending machine-ledger row is exempt from tree-clean (
 test("hygieneFromState: the exemption never hides a foreign dirty file", () => {
   const state = hygieneFromState({ treePorcelain: " M docs/workflow/TIER_COST.md\n M src/app.ts\n", branchAhead: 0, isDraft: false });
   assert.equal(state.gates["tree-clean"], "fail");
-  assert.deepEqual(state.blockers, ["uncommitted changes: src/app.ts"]);
+  assert.deepEqual(state.blockers, ["uncommitted changes: M src/app.ts"]);
 });
 
 test("hygieneFromState: an unpushed branch blocks and is not silently pushed", () => {

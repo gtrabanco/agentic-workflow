@@ -22,8 +22,13 @@ test("AC7: both dirty + ahead → partial", () => {
   assert.equal(checkCloseout(" M src/a.ts\n", 5), "partial");
 });
 
-test("AC7: single newline porcelain → partial", () => {
-  assert.equal(checkCloseout("\n", 0), "partial");
+test("AC7: single newline porcelain → clean (a whitespace artifact names no file; re-anchored by #727)", () => {
+  // This case used to probe the string-level rule: any non-empty porcelain was
+  // changes, even a lone newline. The closeout now judges files, not bytes
+  // (issue #727): a whitespace-only porcelain carries no foreign entry and is
+  // clean — the old expectation is unreachable without re-introducing the
+  // model-commits-the-ledger park.
+  assert.equal(checkCloseout("\n", 0), "clean");
 });
 
 test("closeout: a pending machine-owned ledger row does not park the conductor (issue #727)", () => {
