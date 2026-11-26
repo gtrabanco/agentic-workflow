@@ -229,9 +229,15 @@ session-store | .pi/.telemetry/sessions.jsonl | agentic-shared-telemetry | out-o
   commits it — one lock, `git commit -- <paths>`, never `git add -A` (#182); a
   clean or locked class is a no-op the next cycle carries. `writer-step`: the
   writing step commits it and machinery only annotates. `out-of-scope`: untracked.
-- **Exempt from the dirty-tree verdict.** Box 5 (`TURN_CONTRACT.md`) filters
-  exactly these paths, so a pending machine row never blocks a review, and a
-  human-uncommitted file still fails; `ahead-of-remote` is untouched.
+- **Exempt from the dirty-tree verdicts and notices.** The one filter —
+  `foreignPorcelainLines`/`foreignPorcelainPaths` in the class's own module —
+  is what every consumer runs before judging, so no second list exists: box 5
+  (`TURN_CONTRACT.md`) for reviews, `audit-pr-gate`'s `tree-clean` and
+  `fullauto-merge`'s clean-tree precondition for merges and publishes,
+  `unit-cycle`'s loop guard for the lane, and the conductor's closeout and
+  settled-turn notice in the pi extension. A pending machine row never blocks
+  any of them (never "fix" or revert one), and a human-uncommitted file still
+  fails; `ahead-of-remote` is untouched.
 - **The pre-push pairing is the gate's.** Its `machine-ledger-commit` prelude
   commits the pending `auto` rows before any step; no teardown pushes, because
   that would bypass the gate or launch it at every close.

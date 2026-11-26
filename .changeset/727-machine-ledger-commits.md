@@ -17,3 +17,9 @@ filters the class out of its dirty-tree verdict while a human-uncommitted file
 still blocks, the class's one policy lives beside the ownership map
 (`machine-ledger-commit@1`), and `needs-triage` gains its exit state: a triage
 pass that reaches a published verdict removes it, loudly. Issue #727.
+
+Post-verification correction batch (owner order 2026-11-26): the same class now
+reaches every dirty-tree consumer atom through one filter (`foreignPorcelainLines`/
+`foreignPorcelainPaths` on the class's own module) — the audit merge gate's
+`tree-clean`, the lane loop's guard, the conductor's closeout park and the
+pi settled-turn notice all judge foreign files only.

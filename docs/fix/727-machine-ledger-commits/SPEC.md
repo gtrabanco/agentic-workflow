@@ -2,7 +2,7 @@
 type: fix
 scope: medium
 roadmap_summary: Issue [#727](https://github.com/gtrabanco/agentic-workflow/issues/727) (M): the machine-owned ledgers commit by machinery outside any session's lifetime (pi teardown, `telemetry commit`/`session-close`/`reconstruct write`, the pre-push prelude), the `.gitattributes` shared classes are exempt from the dirty-tree verdict, one commit policy lives beside the ownership map, and `needs-triage` gains its exit state.
-ac-hash: a6819e1c5fb5cce98d4e13010c1a9f20d29f5b4ba0feb1912ecaa01371c0c9dc
+ac-hash: 49f426ac1916115f53d1a5e2e65bba3fade03f25111fdf196b03c098f580a877
 ---
 
 # fix/727-machine-ledger-commits
@@ -66,6 +66,15 @@ issue's own asks, in the issue's order.
 **S8 — every new mechanical step lands red first.**
 > Red-first suites for every new mechanical step (extension wiring test, crate suite, gate-hook test, review-exemption test, triage-exit test), per IR4.
 
+**S9 — the owner's correction directive after the EXTERNAL VERIFY ( VERIFIED / 0 blockers / 2 advisories, head `3979cb777`), verbatim.**
+> Apply to this repository: triage and fix those that deserve to fix but understand the context before fix and check you haven't broke another different thing, if you have done, start the loop again until you fixed full symbol/related stuff
+
+The directive's "those" are the two advisories that receipt names, plus the
+receipt's own mandated persistence (`external-verify.md`); "full
+symbol/related stuff" is the exemption symbol `isMachineLedgerExempt` and every
+consumer atom that judges the same dirt class — triaged to four surfaces, D9 in
+`decisions.md` records the set.
+
 ## Acceptance criteria
 
 Frozen at the cut; `ac-hash:` in the frontmatter is this section's SHA-256
@@ -80,6 +89,7 @@ naming the check that proves it.
 6. **S6 — one policy, three sources that agree.** `bun test scripts/machine-ledger-policy.test.mjs` exits 0: the `machine-ledger-commit@1` block in `LEDGERS.md`, `MACHINE_LEDGER_CLASSES` in the crate, and the `.gitattributes` shared-merge classes name the same path set in both directions, and an injected fourth class on any one side fails.
 7. **S7 — the label's exit is stated in its owner and its step, and pinned.** `bun test scripts/machine-ledger-policy.test.mjs` exits 0 with the case `the triage pass removes needs-triage on every published verdict`, asserting `LABELS.md` carries the removal rule and `ISSUE_PROCESS.md`'s classify step names `--remove-label needs-triage` with the loud-on-failure clause, `remove` included.
 8. **S8 — every suite above landed before its implementation.** `git log --oneline --reverse main..HEAD` lists each new suite's file in a commit that precedes the commit introducing the module it judges, and `bun scripts/red-first.mjs` (when the touched scripts are root scripts) exits 0.
+9. **S9 (fix) — the class exempts every dirty-tree consumer atom, each validator re-running green here.** `bun test scripts/unit-cycle.test.mjs`, `bun test scripts/audit-pr-receipt.test.mjs`, `bun test packages/agentic-workflow/test/machine-ledger-commit.test.mjs`, `bun test packages/pi-agentic-workflow/test/conductor-closeout.test.mjs`, `bun test packages/pi-agentic-workflow/test/receipt-guard.test.mjs` and `bun test packages/agentic-workflow/test/fullauto-merge.test.mjs` each exit 0 — the cases are `sensing: a pending machine-owned ledger row is not the dirty tree the loop stops on`, `hygieneFromState: a pending machine-ledger row is exempt from tree-clean`, `closeout: a pending machine-owned ledger row does not park the conductor`, `#727: a pending machine-owned ledger row never tells the model to commit it` and `a pending machine-owned ledger row is not the dirt this wrapper refuses on` — and `bun test scripts/machine-ledger-policy.test.mjs` exits 0 with the citation case naming the five new consumer surfaces, so no exempting surface argues a second list.
 
 ## Impact
 
@@ -225,9 +235,19 @@ none
   - Relevant files: scripts/local-gate.mjs, scripts/local-gate.test.mjs
 - P8 — the policy, the label exit and every consumer that cites them (validator: `bun test scripts/machine-ledger-policy.test.mjs` exits 0)
   (Implements: S6, S7)
-  - Relevant files: skills/pre-execution-review/references/LEDGERS.md, skills/triage-issue/references/LABELS.md, skills/triage-issue/references/ISSUE_PROCESS.md, skills/review-change/references/PERSIST_AND_DECIDE.md, skills/orchestration-envelope/references/TURN_CONTRACT.md, AGENTS.md, docs/workflow/GATE_INVENTORY.md, docs/workflow/SKILL_CONTEXT_BUDGETS.json, packages/agentic-workflow/README.md, docs/workflow/CLI.md
+  - Relevant files: skills/pre-execution-review/references/LEDGERS.md, skills/triage-issue/references/LABELS.md, skills/triage-issue/references/ISSUE_PROCESS.md, skills/review-change/references/PERSIST_AND_DECIDE.md, skills/orchestration-envelope/references/TURN_CONTRACT.md, AGENTS.md, docs/workflow/GATE_INVENTORY.md, docs/workflow/SKILL_CONTEXT_BUDGETS.json, packages/agentic-workflow/README.md
 - P9 — verify: re-run every validator, the differential, the projection and the gate (validator: `bun scripts/check-skill-context.mjs --documents` exits 0 and `bun scripts/docs-generate.mjs --check` exits 0)
   (Implements: S1, S2, S3, S4, S5, S6, S7, S8)
+  - Relevant files: docs/fix/727-machine-ledger-commits/SPEC.md, docs/fix/727-machine-ledger-commits/planning-obligations.md
+- P10 — red the exemption consumers before the filter lands, in two red commits (`9baa12b3d` — five suites; `d636815c7` — the wrapper's precondition; each observed failing before its implementation landed) (validator: `git show --stat 9baa12b3d` matches the red ordering proof — exactly the five suite files, and `git show --stat d636815c7` naming its suite matches it here, both observed)
+  (Implements: S9)
+  - Relevant files: packages/agentic-workflow/test/machine-ledger-commit.test.mjs, scripts/unit-cycle.test.mjs, scripts/audit-pr-receipt.test.mjs, packages/pi-agentic-workflow/test/conductor-closeout.test.mjs, packages/pi-agentic-workflow/test/receipt-guard.test.mjs
+- P11 — the one porcelain filter and its five consumers: the lane loop's guard, the audit merge gate's `tree-clean`, the automated merge wrapper's clean-tree precondition, the conductor's closeout and the settled-turn notice — box 5's parse folded into the filter (validator: `bun test packages/pi-agentic-workflow/test/receipt-guard.test.mjs` exits 0 with `#727: a pending machine-owned ledger row never tells the model to commit it`, `bun test packages/agentic-workflow/test/fullauto-merge.test.mjs` exits 0 with `a pending machine-owned ledger row is not the dirt this wrapper refuses on`, and `bun test packages/agentic-workflow/test/turn-contract.engine.test.mjs` exits 0 — the folded parse keeps box 5's every case green)
+  (Implements: S9)
+  - Relevant files: packages/agentic-workflow/src/machine-ledger/index.mjs, packages/agentic-workflow/src/machine-ledger/index.d.mts, packages/agentic-workflow/src/turn-contract.mjs, packages/agentic-workflow/src/audit-pr-gate/index.mjs, packages/agentic-workflow/src/fullauto-merge.mjs, scripts/unit-cycle.mjs, packages/pi-agentic-workflow/src/conductor/closeout.ts, packages/pi-agentic-workflow/src/extension/receipt-guard.ts
+- P12 — the policy consumer list, the planning ledgers and the verification receipt (validator: `bun test scripts/machine-ledger-policy.test.mjs` exits 0 with `every exempting surface cites the policy block`, `cat docs/fix/727-machine-ledger-commits/external-verify.md` starts with the dated `EXTERNAL VERIFY` block, and the P8 Relevant-files row names no path the delta never touched)
+  (Implements: S9)
+  - Relevant files: skills/pre-execution-review/references/LEDGERS.md, scripts/machine-ledger-policy.test.mjs, docs/fix/727-machine-ledger-commits/external-verify.md, docs/fix/727-machine-ledger-commits/decisions.md, docs/fix/727-machine-ledger-commits/planning-obligations.md, docs/fix/727-machine-ledger-commits/SPEC.md
 
 The link grammar (`task-spec-link@1`) is owned by the unit-doc template.
 
@@ -241,6 +261,11 @@ lane's plan step, and no triage route is re-derived here.
 
 | id | S# / file:line | axis | severity | impact | class | route |
 |---|---|---|---|---|---|---|
+| ADV-1 | S5 · `scripts/unit-cycle.mjs:88,454` | review-exemption sweep | advisory | the lane loop's `failed: dirty-tree` stop refuses a pending machine row the review's box 5 now passes — the same defect this unit answers, one lane expression behind | F51 consumer (same-defect, one surface behind) | applied (P11, owner-ordered) |
+| ADV-2 | S5 · `packages/agentic-workflow/src/audit-pr-gate/index.mjs:239` | review-exemption sweep | advisory | `tree-clean` refused a pending machine row at merge time: the review passes the row and the merge gate then blocks the same PR (the F51 class the sibling sweep missed because it swept prose, not consumer atoms) | F51 consumer | applied (P11, owner-ordered) |
+| ADV-3 | S5 · `packages/pi-agentic-workflow/src/conductor/closeout.ts:26` + `src/extension/receipt-guard.ts:88` | review-exemption sweep | advisory | a pending machine row marked the conductor's closeout partial (3 partials park the loop for a row only the teardown can commit) and the settled-turn warning named the ledger as uncommitted work, coaching the model to commit it — the anti-pattern the policy forbids | F51 consumer (notice tier, base-side too) | applied (P11, owner-ordered) |
+| ADV-5 | S5 · `packages/agentic-workflow/src/fullauto-merge.mjs:130` | review-exemption sweep (second pass) | advisory | the automated merge wrapper's clean-tree precondition refused a pending machine row: the systematic porcelain sweep now names it too — machinery's row refusing a merge its own prelude commits | F51 consumer | applied (P11, owner-ordered) |
+| ADV-4 | P8 · `docs/fix/727-machine-ledger-commits/SPEC.md` Tasks P8 | documentation | low | the P8 Relevant-files row names `docs/workflow/CLI.md`, which the delta never touches — the CLI surfaces the row means are `packages/agentic-workflow/README.md` and `src/runner/help.mjs`, both carried in the delta | stale planning path (EXTERNAL VERIFY advisory 2) | applied (P12, this batch) |
 
 ## Log
 
@@ -285,7 +310,13 @@ lane's plan step, and no triage route is re-derived here.
 
 - **P1** — 2026-11-26, the budget re-pins were re-applied without re-encoding the manifest (the first hand edit escaped every non-ASCII character, 287 lines of churn for 20 of substance) · `f97b09580`.
 
-- **P2** — 2026-11-26, PR [#731](https://github.com/gtrabanco/agentic-workflow/pull/731) opened against `main` (`feat/727-machine-ledger-auto-commit`, head `009529630`); the roadmap fix row settled to `done` through `roadmap fixrow`. The push skipped the pre-push gate on the documented hatch, because the gate's only red is the base-reproduced `root-suite` failure named above — the same offline subset ran at the pushed head.
+- **P3** — 2026-11-26, correction batch S9 (owner order, verbatim in `## Specs` S9) after the first EXTERNAL VERIFY: one porcelain filter (`foreignPorcelainLines`/`foreignPorcelainPaths`) on the class's own module now backs every dirty-tree consumer — the lane loop's guard (`scripts/unit-cycle.mjs:88,454`), the audit merge gate's `tree-clean` (`audit-pr-gate/index.mjs:239`), the conductor's closeout and the settled-turn notice (pi `conductor/closeout.ts:26`, `extension/receipt-guard.ts:88`) — and box 5's inline parse folds into the same filter. Red commit `9baa12b3d` (5 suites; observed 1 fail+1 error, 2 fail, 1 fail+1 error, 1 fail, 2 fail respectively), green commit `b9a1569bc` (all five green; `turn-contract.engine` 37/0 preserves box 5's every case), and the sweep's second pass lands a fifth consumer — the merge wrapper (`fullauto-merge.mjs`, red `d636815c7` → green `7da96fe0c`, 9/0).
+- **L3** — 2026-11-26, the owner's correction directive after the first EXTERNAL VERIFY, verbatim: `Apply to this repository: triage and fix those that deserve to fix but understand the context before fix and check you haven't broke another different thing, if you have done, start the loop again until you fixed full symbol/related stuff`.
+- **D3** — 2026-11-26, decision D9 (`decisions.md`): the triage found the advisory's fault class on five consumer atoms (the lane loop guard, the audit `tree-clean`, the merge wrapper's precondition, the conductor closeout, the settled-turn notice) and fixed them through the one filter; advisory 2 is a stale planner path, corrected (see P4); the receipt's own mandated persistence is `external-verify.md`.
+- **E11** — 2026-11-26, red across two commits: at `9baa12b3d` (the exempt-consumer cases alone) `bun test scripts/unit-cycle.test.mjs` · 1 fail + 1 error (absent `sensedDirtyFrom`); `bun test scripts/audit-pr-receipt.test.mjs` · 2 fail; `bun test packages/agentic-workflow/test/machine-ledger-commit.test.mjs` · 1 fail + 1 error (absent `foreignPorcelainLines`); `bun test packages/pi-agentic-workflow/test/conductor-closeout.test.mjs` · 1 fail; `bun test packages/pi-agentic-workflow/test/receipt-guard.test.mjs` · 2 fail; and at `d636815c7` the wrapper's precondition fixture red — `bun test packages/agentic-workflow/test/fullauto-merge.test.mjs` · 1 fail (`the machine row never triggers the tree refusal`), re-amended to contain exactly the failing fixture.
+- **E12** — 2026-11-26, green at the batch head: the same six suites · 47/0, 34/0, 14/0 (the projection case included), 8/0, 15/0, 9/0; regressions: `turn-contract.engine` 37/0 (box 5's cases unchanged through the folded parse), pi package full `bun run test` · 1124/0 across 95 files, crate full `bun run test` · 85/85 suites PASS, `machine-ledger-policy` 8/0, `local-gate` 65/0, `session-close` 30/0, `telemetry-reconstruct` 19/0, `ledger-ownership` 15/0, `ledger-commit` 5/0 (all unchanged).
+- **G11** — 2026-11-26, head of the correction batch: `bun scripts/check-skill-context.mjs --documents` / `--routes` · exit 0 (7 documents, 14 routes — the LEDGERS bullet's consumer names stayed inside the ceilings); `bun scripts/docs-generate.mjs --check` · exit 0 (roadmap unchanged); `bun packages/agentic-workflow/bin/agentic-workflow.mjs verify …/SPEC.md` · exit 0 (`ok: true`); `phase-lint …/SPEC.md` · exit 0 — all 12 phases PASS (the first P10 write was refused twice by box 8 and re-phrased); `bun scripts/test-obligation-tags.mjs` · exit 0 · 145 suites / 0 findings; `bun scripts/red-first.mjs` · exit 0 · 0 findings.
+- **P4** — 2026-11-26, planner-path correction (advisory 2 / ADV-4): the P8 Relevant-files row's `docs/workflow/CLI.md` — a path the delta never touches — is dropped; the CLI surfaces it meant (the crate README and `src/runner/help.mjs`) are already in the delta. `ac-hash` recomputed over the amended `## Acceptance criteria` → `49f426ac…`.
 
 ## Next
 
