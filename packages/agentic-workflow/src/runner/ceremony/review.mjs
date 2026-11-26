@@ -17,9 +17,13 @@
  */
 
 import { out, fail, block, onlyFlags, parseFlags, resolveUnit, unitDoc, appendSectionLine, sectionRows, writeSection } from "../lib.mjs";
+import { PRE_EXECUTION_FINDING_CLASSES } from "@gtrabanco/agentic-workflow-schema";
 
-/** The published class/route vocabularies a classified finding must satisfy. */
-export const FINDING_CLASSES = Object.freeze(["product", "plan", "source", "environment", "runtime"]);
+/** The published class/route vocabularies a classified finding must satisfy.
+ *  The class set has one owner (issue #315, `IR1`): this module imports the
+ *  schema's published set instead of keeping a second copy, so `workflow` and
+ *  every later token resolve here without an edit. */
+export const FINDING_CLASSES = PRE_EXECUTION_FINDING_CLASSES;
 export const FINDING_ROUTES = Object.freeze(["fold", "replan-in-unit", "decision-required", "proposal", "ignore"]);
 const SEVERITIES = Object.freeze(["BLOCKER", "CRITICAL", "WARNING", "SUGGESTION"]);
 

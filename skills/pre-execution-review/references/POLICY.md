@@ -45,10 +45,11 @@ what is specific to their artifact set.
 
 The first review emits one complete unioned findings set — never a drip of
 successive surprises. Its owner then classifies **every** finding by root cause
-(`product | plan | source | environment | runtime`) and applies **one**
+(`product | plan | source | environment | runtime | workflow`) and applies **one**
 evidence-bounded repair batch to the owning artifact(s). The batch rotates
 `artifactRevisionId`; by default it is followed by one re-review of the freshly
-rotated snapshot.
+rotated snapshot. A `workflow` finding is the one exception: it is a defect of the
+workflow itself, stays `report-only`, and routes upstream instead of into a repair.
 
 | Class | What the batch may do | What it may not do |
 |---|---|---|
@@ -93,7 +94,7 @@ CONVERGENCE-ANOMALY — <unit> <spec|plan>
 - Finding ids: <repeated> / <new>
 - Snapshots: <previous digest> → <current digest> (artifactRevisionId <old> → <new>)
 - Missed: <evidence row | obligation | scenario | validator>
-- Owning stage: <product | plan | source | environment | runtime>
+- Owning stage: <product | plan | source | environment | runtime | workflow>
 - Why the prior <readiness|review|repair> failed: <one line>
 - Route to owner: <exact skill and step>
 ```

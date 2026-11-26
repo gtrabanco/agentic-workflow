@@ -18,6 +18,7 @@
  *   O7  the wrong grammar (or the superseded one) is reported, and refused for writing
  *   O8  the legacy side ledger stays readable and is never rewritten
  *   O17 the carrier's unchanged behaviour still answers the same way
+ *   AC3  the class cell resolves against the published set
  */
 
 import { test } from "node:test";
@@ -27,6 +28,8 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "nod
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
+
+import { PRE_EXECUTION_FINDING_CLASSES } from "@gtrabanco/agentic-workflow-schema";
 
 const BIN = fileURLToPath(new URL("../bin/agentic-workflow.mjs", import.meta.url));
 
@@ -271,4 +274,58 @@ test("O17 the unchanged carrier still appends, reads, groups, deletes and merges
   const deleted = run(root, "findings", "delete", "--slug", "77-toy", "--severity", "BLOCKER");
   assert.equal(json(deleted)["deleted-count"], 1);
   assert.match(findingsOf(spec()), /^\| id \| S# \/ file:line \|/mu, "an emptied carrier keeps its header");
+});
+
+test("O20 a workflow row must be report-only", (t) => {
+  const { root, spec } = makeUnit(t, { findingsBody: TABLE_V1 });
+  const before = spec();
+  for (const impact of ["blocking", "docs-only"]) {
+    const refused = run(root, "findings", "append", "--slug", "77-toy", "--file", "docs/workflow/SETUP.md", "--line", "1", "--axis", "workflow", "--severity", "WARNING", "--impact", impact, "--class", "workflow", "--route", "report upstream");
+    assert.equal(refused.code, 1, `${impact}: ${refused.stdout}${refused.stderr}`);
+    assert.equal(json(refused).error, "workflow-cannot-block");
+    assert.equal(spec(), before, "a refused workflow row writes nothing");
+  }
+  // The class cell is the published set, not free text.
+  const offSet = run(root, "findings", "append", "--slug", "77-toy", "--file", "docs/workflow/SETUP.md", "--line", "1", "--axis", "workflow", "--severity", "WARNING", "--impact", "report-only", "--class", "ceremony", "--route", "report upstream");
+  assert.equal(offSet.code, 1, offSet.stdout + offSet.stderr);
+  assert.equal(json(offSet).error, "unknown-vocabulary");
+  assert.equal(json(offSet).flag, "--class");
+});
+
+test("O20 a workflow row is persisted report-only and keeps its class", (t) => {
+  const { root, spec } = makeUnit(t, { findingsBody: TABLE_V1 });
+  const appended = run(root, "findings", "append", "--slug", "77-toy", "--file", "docs/workflow/SETUP.md", "--line", "1", "--axis", "workflow", "--severity", "WARNING", "--impact", "report-only", "--class", "workflow", "--route", "report upstream");
+  assert.equal(appended.code, 0, appended.stdout + appended.stderr);
+  assert.equal(json(appended).finding.class, "workflow");
+  assert.equal(json(appended).finding.impact, "report-only");
+  assert.match(findingsOf(spec()), /^\| F1 \| docs\/workflow\/SETUP\.md:1 \| workflow \| WARNING \| report-only \| workflow \| report upstream \|$/mu);
+  const read = run(root, "findings", "read", "--slug", "77-toy");
+  assert.equal(json(read).findings[0].class, "workflow");
+  assert.equal(json(read).findings[0].impact, "report-only");
+  // Flipping a persisted source row to workflow with a blocking impact is refused too.
+  const flip = run(root, "findings", "update", "--slug", "77-toy", "--id", "F1", "--class", "workflow", "--impact", "blocking");
+  assert.equal(flip.code, 1, flip.stdout + flip.stderr);
+  assert.equal(json(flip).error, "workflow-cannot-block");
+});
+
+test("the class cell resolves against the published set", (t) => {
+  const { root } = makeUnit(t, { findingsBody: TABLE_V1 });
+  // Every published owning-stage token resolves on write, and only those: the
+  // class cell is validated against PRE_EXECUTION_FINDING_CLASSES — one owner,
+  // never free text (issue #698 AC3).
+  for (const [index, token] of [...PRE_EXECUTION_FINDING_CLASSES].entries()) {
+    const impact = token === "workflow" ? "report-only" : "docs-only";
+    const route = token === "workflow" ? "report upstream" : "fold";
+    const appended = run(root, "findings", "append", "--slug", "77-toy", "--file", "docs/workflow/SETUP.md", "--line", String(index + 1), "--axis", "code", "--severity", "WARNING", "--impact", impact, "--class", token, "--route", route);
+    assert.equal(appended.code, 0, `${token}: ${appended.stdout}${appended.stderr}`);
+    assert.equal(json(appended).finding.class, token);
+  }
+  // An off-set cell resolves nowhere: refused as unknown-vocabulary, naming the flag.
+  const offSet = run(root, "findings", "append", "--slug", "77-toy", "--file", "docs/workflow/SETUP.md", "--line", "9", "--axis", "code", "--severity", "WARNING", "--impact", "blocking", "--class", "workflowy", "--route", "fold");
+  assert.equal(offSet.code, 1, offSet.stdout + offSet.stderr);
+  assert.equal(json(offSet).error, "unknown-vocabulary");
+  assert.equal(json(offSet).flag, "--class");
+  // The carrier holds exactly one row per published class, in the set's order.
+  const read = run(root, "findings", "read", "--slug", "77-toy");
+  assert.deepEqual(json(read).findings.map((row) => row.class), [...PRE_EXECUTION_FINDING_CLASSES]);
 });

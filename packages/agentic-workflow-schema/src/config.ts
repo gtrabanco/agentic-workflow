@@ -447,6 +447,36 @@ export function mergePathProtectionOverrides(globalValue: unknown, projectValue:
   return out;
 }
 
+/**
+ * The batch scheduler's lane vocabulary (issue #716).
+ *
+ * The producer turns a path into a lane key, and until this section existed the
+ * only keys it could produce were this repository's own trees — so every other
+ * project degraded to `surface-unknown`, one `general` lane and fully serial
+ * execution. The declaration is data, never a new envelope field: `lane.surface`
+ * stays the bounded string `batch-plan@4` already validates (decision D8).
+ *
+ * An empty list is the shipped posture and means *undeclared*: the shipped roots
+ * are recognized and the project's own directories answer for everything else.
+ * A non-empty list is authoritative for the project, because a project that
+ * declares its lanes has said which trees may run beside each other. Each entry
+ * is one project-relative directory; a wildcard, an absolute path or a
+ * metavariable is refused rather than silently resolved to something else.
+ */
+export const BATCH_SCHEDULER_SCHEMA: JsonSchema = publish({
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    surfaces: {
+      type: "array",
+      maxItems: 64,
+      description:
+        "This project's lane trees, one project-relative directory per entry (`src/pages`, `apps/web`). Empty means undeclared: the shipped roots plus the project's own directories answer.",
+      items: { type: "string", minLength: 1, maxLength: 200, pattern: "^[^/*<>][^<>*]*$" },
+    },
+  },
+});
+
 /** The feature sections every agentic-workflow install shares, tool-agnostic. */
 export const BASE_CONFIG_SECTIONS: readonly ConfigSectionSpec[] = [
   {
@@ -572,6 +602,15 @@ export const BASE_CONFIG_SECTIONS: readonly ConfigSectionSpec[] = [
     description: "Document retention: whether a merged unit's process artifacts are trimmed into the gitignored archive, and how the archive is kept (issue #651).",
     schema: DOC_RETENTION_SCHEMA,
     defaults: DOC_RETENTION_DEFAULTS,
+  },
+  {
+    key: "batchScheduler",
+    category: "feature",
+    file: BASE_CONFIG_FILE,
+    path: ["batchScheduler"],
+    description: "The batch scheduler's lane vocabulary: this project's own tree roots, so a tree that is not this repository's layout plans in parallel lanes instead of degrading to surface-unknown (issue #716).",
+    schema: BATCH_SCHEDULER_SCHEMA,
+    defaults: { surfaces: [] },
   },
 ];
 

@@ -94,13 +94,15 @@ this surface, it is not rediscovered at review.
 
 The batch scheduler's lane keys this unit occupies, one per line, so a plan can
 tell which units collide before one is launched. The vocabulary is the
-scheduler's own: `packages/<name>`, `skills/<name>`, `scripts`, `docs`,
-`template`, `.github`. Write `surface-unknown` when the unit cannot name them —
+project's own: the shipped roots plus `batchScheduler.surfaces`, else the
+project's directories (owner:
+[`skills/batch-scheduler/references/PLAN.md`](../../skills/batch-scheduler/references/PLAN.md)
+§ The surface vocabulary). Write `surface-unknown` when the unit cannot name them —
 an honest unknown is a legal answer, and the plan reports it. Advisory only: no
 reader requires this section, and an absent one falls back to the issue body and
 then to this document's `Relevant files:` lines.
 
-- `packages/<name>`
+- <the project's lane key>
 
 ## Retirements
 
@@ -244,7 +246,7 @@ target | S<n> · <file>:<line> | the requirement or the location the finding nam
 axis | <axis> | the review axis that found it
 severity | BLOCKER \| CRITICAL \| WARNING \| SUGGESTION | the published ladder (meanings owned by `skills/review-implementation/references/CLASSIFY.md` §Severity ladder): `BLOCKER` requires a reproducer and is never a conversion target
 impact | blocking \| docs-only \| report-only | whether the finding affects behaviour, only documents, or nothing that blocks: `blocking`/`docs-only` for a `BLOCKER`, and `report-only` for a pre-existing advisory, which never earns a correction round
-class | product \| plan \| source \| environment \| runtime | the owner that repairs it
+class | product \| plan \| source \| environment \| runtime \| workflow | the owner that repairs it; `workflow` names the workflow's own scaffold, gate or carrier and is `report-only`, routed upstream (issue #698)
 route | fold \| replan-in-unit \| decision-required \| product owner — … \| <free prose> | where the row goes; the router reads this column's head first (`agentic-workflow unit-route`), and `class` names the owner that repairs it
 ```
 

@@ -126,6 +126,12 @@ to interpret a field the script emitted.
   declare nothing: report it, run it beside nothing, hand the declaration to
   triage; two or more in one batch are the `blind-spot` finding. Never guess a
   lane to make the plan look complete.
+- **A lane key is the project's path, not this workflow's folder names.** The
+  vocabulary is the shipped roots plus `batchScheduler.surfaces` in the
+  project's config, else the project's own directories (owner:
+  [PLAN.md](references/PLAN.md) § The surface vocabulary). When a plan on a
+  project you do not recognize resolves nothing, the fix is that key — not a
+  hand-written lane in an issue body.
 - **In flight is evidence, never a unit doc.** A merged or parked unit doc is
   not a running lane; `launched[]` names the PR or branch that says otherwise.
   If the forge is unreadable, say so — the branch evidence is what remains.

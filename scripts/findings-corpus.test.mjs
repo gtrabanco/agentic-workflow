@@ -15,7 +15,7 @@
  *               metric and the ARW code-net ratio with its band.
  *
  * Fixtures are throwaway trees under the OS temp dir; the real tree is read
- * once to prove the counts the planning ledger froze (1166 findings, 56 legacy
+ * once to prove the counts the planning ledger froze (1178 findings, 56 legacy
  * ledgers, 229 fold-annotated rows).
  */
 
@@ -183,17 +183,21 @@ test("reader reconciliation: a settled carrier keeps its one-line marks and open
 
 test("harvest: the real tree yields the counts the planning ledger froze", () => {
   const corpus = buildCorpus(ROOT, { resolveFold: () => null });
-  // 1173 = 1166 + feature 719's seven `F1`–`F7` rows (the review-change persist
-  // commit) — its `F8` was folded, which deletes the row: the corpus counts the
-  // finding rows the tree actually carries, so a closed row lowers it (the same
-  // mechanism this line documents for `reviewMarks` below).
-  assert.equal(corpus.findings.length, 1173, "every finding row in either carrier is in the corpus");
+  // 1178 = 1173 + feature 719's five rows `F9`–`F13` (the review-receipt,
+  // verify and lineage findings recorded after the 1173 re-pin landed): the
+  // corpus counts the finding rows the tree actually carries, so a unit that
+  // records one raises it (the same mechanism this line documents for
+  // `reviewMarks` below). Re-frozen during the 2026-11-26 main integration,
+  // where origin/main's own tip proved red (1178 ≠ 1173) before any branch
+  // content joined it — exact equality kept, no assertion relaxed.
+  assert.equal(corpus.findings.length, 1178, "every finding row in either carrier is in the corpus");
   assert.equal(corpus.legacyLedgers, 56);
   assert.equal(corpus.foldAnnotated, 229);
-  // 176 = 174 + feature 719's own `R1` line + its `R2` line (the cycle-2
-  // re-review): the corpus counts the review marks the tree actually carries, so a
-  // unit that records one raises it.
-  assert.equal(corpus.reviewMarks, 176);
+  // 178 = 177 + unit 728's `R1` line (its own review cycle, recorded on the
+  // branch the 2026-11-26 main integration merged): the corpus counts the review
+  // marks the tree actually carries, so a unit that records one raises it — the
+  // same mechanism the 176 and 177 re-pins above document.
+  assert.equal(corpus.reviewMarks, 178);
   assert.ok(corpus.units.length >= 171);
   assert.deepEqual(corpus.unparsable, []);
   assert.ok(corpus.findings.every((row) => row.provenance.includes(":") && row.digest.length === 12));

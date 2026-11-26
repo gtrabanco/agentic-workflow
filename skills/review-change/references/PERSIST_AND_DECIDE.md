@@ -110,9 +110,7 @@ exact command tokens.
    fix that before printing anything in step 13, and never recommend
    `/audit-pr` while the receipt is not current.
 
-   `REVIEW-FAIL` and `NEEDS-DECISION` post **no** passing receipt: record the
-   status and continue to step 13. No PR → the documented pre-PR path, and the
-   receipt box reads `n/a: no PR`.
+   `REVIEW-FAIL` and `NEEDS-DECISION` post their **own** typed receipt (issue #698 S7) — the pass marker is never reused for a non-pass verdict: `runner review-receipt emit --verdict REVIEW-FAIL|NEEDS-DECISION --pr <N> --head "$(git rev-parse HEAD)" --cycle <n> --findings <open count> --summary "<one line>"`. It posts the `review-change:fail` / `review-change:needs-decision` marker and exits non-zero unless it landed. `verify` reports it as `status: failed` beside the pass status; it is a trace, never currency. Record the status and continue to step 13. No PR → the documented pre-PR path, and the receipt box reads `n/a: no PR`.
 
    Read-only check, any time: `runner review-receipt verify --pr <N>`
    prints `current | absent | stale` and exits `0 | 3 | 4`.

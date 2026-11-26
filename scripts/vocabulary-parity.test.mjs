@@ -169,7 +169,7 @@ test("the ceremony-profile runtime copies equal the canonical declarations (F22 
 });
 
 test("the findings-table class vocabulary is the published PRE_EXECUTION_FINDING_CLASSES set", () => {
-  assert.deepEqual([...PRE_EXECUTION_FINDING_CLASSES], ["product", "plan", "source", "environment", "runtime"]);
+  assert.deepEqual([...PRE_EXECUTION_FINDING_CLASSES], ["product", "plan", "source", "environment", "runtime", "workflow"]);
 });
 
 test("both unit-doc templates publish the canonical findings-table vocabularies", () => {
