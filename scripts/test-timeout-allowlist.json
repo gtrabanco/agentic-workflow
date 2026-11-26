@@ -7,9 +7,10 @@
   },
   {
     "path": "scripts/red-first.test.mjs",
-    "timeoutMs": 60000,
-    "reason": "the shipped-history case walks the repository's full git history through the red-first gate — the cost is the walk itself, not waste; bun's own 5s default already failed this suite standalone before this unit (pre-existing, measured at f349d7b5), and the walk grows with every unit the repository lands (54 pairs, 29 after the cutoff at issue #504's cut, against the count the 30s budget was set on)",
-    "measured": "29.2s the shipped-history walk standalone (34.4s suite) on 2026-11-17 at 1fcb5359 under a busy box, and >30s in a `--jobs auto` gate run the same day — the earlier ~12s reading is 2026-11-10 at 54 fewer landed units"
+    "timeoutMs": 120000,
+    "suiteTimeoutMs": 240000,
+    "reason": "the shipped-history case walks the repository's full git history through the red-first gate — the cost is the walk itself, not waste; bun's own 5s default already failed this suite standalone before this unit (pre-existing, measured at f349d7b5), and the walk grows with every unit the repository lands — the 120s cover walks at up to ~4x the idle cost; the suite bound covers the walk plus the sibling cases under the same concurrency, since 60s+ of walk leaves the suite past the shared 120s default",
+    "measured": "29.2s the shipped-history walk standalone (34.4s suite) on 2026-11-17 at 1fcb5359 under a busy box, and >30s in a `--jobs auto` gate run the same day — the earlier ~12s reading is 2026-11-10 at 54 fewer landed units; 2026-11-26: the walk killed at its 60078ms (suite 63.2-63.5s) twice by external gate runs at load 8-19 with ≤6 concurrent agent gates (fix-729 external-verify G3/G4), zero assertion failures inside"
   },
   {
     "path": "scripts/secret-scan.test.mjs",
@@ -47,5 +48,18 @@
     "suiteTimeoutMs": 240000,
     "reason": "the suite's e2e cases spawn the shipped doc-index CLI per case (real tsc-free node spawns over a fixture tree), so the spawn cost is the behaviour under test; standalone it measures ~64s, but under the gate pool with concurrent sessions on the box it inflates to 110-163s and dies with SUITE TIMEOUT at the shared 120s bound while every case inside passes (runs 44894795525 and 44895748471) — the per-suite bound carries the load, and the per-test budget covers the same load inflating the CLI spawns toward the 10s default",
     "measured": "64.2s suite standalone (2026-11-21); 110.7s in a green jobs-1 gate run, 120.2s SUITE TIMEOUT under concurrent gates (load 14.5), and 163.2s in a green explicit --suite-timeout 240 run the same day"
+  },
+  {
+    "path": "scripts/ceremony-findings-ledger.test.mjs",
+    "timeoutMs": 30000,
+    "reason": "the suite drives the shipped ceremony CLI end to end (findings/ledger append/read/update/delete spawn the real bin per case), so its cost is the spawn itself; under the root gate's pool with concurrent agent gates on the box that wall-clock inflated past the per-test budget while the same tests hold under 7s idle — behaviour under test, not waste; it is the ledger family's third spawn-per-case suite and carries the siblings' declared allowance",
+    "measured": "10061ms (findings append/read/update), 10026ms (unknown-flag usage error) and 10018ms (delete by id/axis/severity) killed at the 10s bound under a 4-worker root-suite run with concurrent agent gates on the 6-CPU box, 2026-11-26; the same tests hold 0.9-6.7s idle (suite 25.4s standalone at the batch head)"
+  },
+  {
+    "path": "scripts/phase-lint.test.mjs",
+    "timeoutMs": 30000,
+    "suiteTimeoutMs": 240000,
+    "reason": "the suite lints 162 plan and unit-doc fixtures through the real linter and its node-fallback subprocesses, so under concurrent agent gates on the box the per-test wall-clock inflates and the suite's accumulated spawn cost exceeded the shared 120s suite bound while 162 of 162 cases passed inside the timed-out run — the declared suite bound carries the load exactly as doc.structure's",
+    "measured": "SUITE TIMEOUT at the 120s shared bound twice under concurrent agent gates on 2026-11-26 (G3/G4 external-verify lineage), zero per-test assertion failures inside; 57.6s suite standalone and 33.9s at the batch head the same day — slowest case 5.0s idle (the engine-limit target agrees across runtimes)"
   }
 ]
