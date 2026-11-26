@@ -339,11 +339,12 @@
       }
     },
     "pre-execution-review": {
-      "referenceEstimateMax": 4979,
+      "referenceEstimateMax": 5914,
       "referenceSources": {
         "triage 32 F29 fold": "the owner-entry wording correction grew LEDGERS.md from the measured 3930 to 3931; ceiling re-based to ceil(3931 x 1.10) = 4325",
         "feature 32 (P4)": "the gate-ran@1 appended-text mark section in LEDGERS.md grew the reference from the measured 3462 (main) to 3930 (re-measured at this re-basis, after the F4 gate-ran edit); ceiling re-based to ceil(3930 x 1.10) = 4323. This single per-skill referenceEstimateMax bounds every reference file this skill loads (LEDGERS.md 3930, POLICY.md 3529, SNAPSHOT.md 1981 as measured at this re-basis), so the smaller references carry declared sibling headroom under the per-skill schema; no per-reference ceiling exists in schemaVersion 1.",
-        "issue #308 (unit 79 review fold)": "LEDGERS.md states the collapsed carrier's mark grammar per truth class — `review-mark@1` row ↔ `## Log` R line, `gate-ran@1` ↔ G, `finding-mark@1` ↔ V, the folded flip ↔ the F line, seven-column row ↔ six-column `findings-table@1` — so the side-file mandate cannot be read as the only mandate (F5's fold). Grew from 3932 to 4526; ceiling re-based to ceil(4526 × 1.10) = 4979, reason declared; POLICY.md and SNAPSHOT.md stay under it."
+        "issue #308 (unit 79 review fold)": "LEDGERS.md states the collapsed carrier's mark grammar per truth class — `review-mark@1` row ↔ `## Log` R line, `gate-ran@1` ↔ G, `finding-mark@1` ↔ V, the folded flip ↔ the F line, seven-column row ↔ six-column `findings-table@1` — so the side-file mandate cannot be read as the only mandate (F5's fold). Grew from 3932 to 4526; ceiling re-based to ceil(4526 × 1.10) = 4979, reason declared; POLICY.md and SNAPSHOT.md stay under it.",
+        "issue #728 (the gate receipt's producer)": "LEDGERS.md gains the `gate-producer@1` block: the six fields that order who runs the gate through the producer, what the mark's `manifest <sha>` slot carries, and the ordering law that keeps the receipt current at the audited head. Measured by `bun scripts/check-skill-context.mjs` at this re-basis: LEDGERS.md 5,376 est; ceiling re-based to ceil(5376 x 1.10) = 5914, growth source declared. POLICY.md and SNAPSHOT.md stay under it."
       },
       "referenceLinesMax": 316
     },
@@ -386,8 +387,9 @@
         "issue #269 (per-phase Relevant-files read-set consumption)": "the Scope section gains the read-set-around-the-diff rule (the unit's lists resolved by scripts/relevant-files.mjs --phase all; git still owns review scope); measured by the checker at this re-basis: 3450 est / 248 lines; ceilings re-based to ceil(3450 × 1.10) = 3795 / ceil(248 × 1.10) = 273",
         "issue #646 (docs + skills reconciliation, 2026-11-20)": "pointer conversion (S6): the duplicated rule becomes a citation of the one surface that owns it, so the citation sentence is what moves the bytes — 3,522 est / 252 machine -> 3,604 / 257. Named growth, never a silent one: the same change deletes a second wording of the rule from the tree, and every measurement stays inside its unchanged mainEstimateMax, so no ceiling is re-based. Measured with `bun scripts/check-skill-context.mjs` at this unit's head against a `git archive` of `8fc204abb`."
       },
-      "referenceEstimateMax": 3079,
+      "referenceEstimateMax": 3434,
       "referenceSources": {
+        "issue #728 (the gate receipt's producer)": "PERSIST_AND_DECIDE.md's step 11 gains the producer ordering: the reviewer's own gate run is executed as `runner gate-receipt run` after the ledger append and before the commit that carries it, because the append is a signed byte. Measured by `bun scripts/check-skill-context.mjs` at this re-basis: PERSIST_AND_DECIDE.md 3,121 est; ceiling re-based to ceil(3121 x 1.10) = 3434, growth source declared.",
         "feature 30 / issue #170": "delta-mode + escalation growth in REVIEW_PROCESS.md (measured 2746)",
         "feature 32 (P4)": "the P4 budget re-basis swept the route ceilings but left the per-skill ceiling at the stale floor 2800 (measured 2799); re-based to ceil(2799 x 1.10) = 3079 (review finding F17)"
       }

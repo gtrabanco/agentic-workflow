@@ -151,8 +151,6 @@ test("gate-producer-drift: a tree that cites nothing is a named finding per surf
   assert.deepEqual(
     result.findings.map((finding) => finding.code).sort(),
     [
-      "caller-command-missing",
-      "caller-owner-missing",
       ...PRODUCER_CALLERS.map(() => "caller-command-missing"),
       ...PRODUCER_CALLERS.map(() => "caller-owner-missing"),
       "owner-block-missing",
@@ -179,12 +177,12 @@ test("gate-producer-drift: a block missing one field is a finding naming the fie
   const root = toyRoot({ [PRODUCER_OWNER]: `# Ledgers\n\n\`\`\`text\n${PRODUCER_BLOCK}\nfield | rule\nowner | a step\ncommand | runner gate-receipt run\n\`\`\`\n` });
 
   const result = audit({ root });
-  assert.deepEqual(result.owner.missing, ["absent", "mark-slot", "ordering", "precondition"]);
+  assert.deepEqual(result.owner.missing, ["mark-slot", "ordering", "precondition", "absent"]);
   assert.deepEqual(result.findings.filter((finding) => finding.code === "owner-field-missing").map((finding) => finding.detail), [
-    "the block declares no `absent` field",
     "the block declares no `mark-slot` field",
     "the block declares no `ordering` field",
     "the block declares no `precondition` field",
+    "the block declares no `absent` field",
   ]);
 });
 

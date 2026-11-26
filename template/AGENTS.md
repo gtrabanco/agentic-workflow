@@ -411,6 +411,22 @@ Fill in your project's real commands. The agentic workflow refers to the
 <type-check> && <test> && <build>
 ```
 
+**Gate receipt.** The workflow's lane does not call the gate bare: it runs it
+through `runner gate-receipt run`, so the run that goes green is also the
+machine evidence a review and the merge gate read. That needs a gate **script**
+that writes the handshake document, so declare it here — or declare that you
+have none, which is a recorded absence and never a silent one:
+
+```text
+gate receipt | <the gate script that writes a `local-gate-result@1` document when invoked with `--json <path>`, or none → no receipt>
+```
+
+With `none` the lane runs your gate command directly and the unit carries no
+gate receipt; a project that wants one wraps its steps in such a script (this
+repository's is `scripts/local-gate.mjs`). The rule the lane applies, and its
+six fields, are owned by `skills/pre-execution-review/references/LEDGERS.md`
+§The producer.
+
 **Gate integrity floor.** Two properties a green receipt must actually have, or
 it is not a receipt:
 

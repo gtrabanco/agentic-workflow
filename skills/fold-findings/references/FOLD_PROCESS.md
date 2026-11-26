@@ -21,7 +21,9 @@
 3. **Repair one group at a time.** Diagnose the shared cause, implement the
    smallest complete correction, and add/update regression coverage for every
    behavioral member. Use the strongest tier required by the most subtle member.
-4. **Verify.** Run the group's validators plus the normal project gate. Red →
+4. **Verify.** Run the group's validators plus the project gate **as the
+   producer** — `runner gate-receipt run`, so the group's gate run is also the
+   receipt a consumer reads (owner: `LEDGERS.md` §The producer, `gate-producer@1`). Red →
    continue repairing only this group. Same failure with no diff twice →
    `BLOCKED NO-PROGRESS`; never commit red or weaken a check.
 5. **Persist atomically.** Flip every group row `folded: no → yes`; stage the
@@ -32,7 +34,9 @@
    ```
 
    If the PR is open, push immediately. Emit one `FOLDED <same-sha>` line per
-   member so no finding disappears inside the batch.
+   member so no finding disappears inside the batch. The producer ran before
+   this commit (step 4), because the ledger flip is a signed byte: producing
+   after it would leave the receipt stale the moment the commit lands.
 6. **Continue groups.** A blocked/disputed group does not prevent independent
    groups from folding. Leave its rows `no` and emit individual outcomes.
    **Failed gate:** if the group's gate is red, do not fold the group — the

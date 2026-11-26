@@ -47,6 +47,10 @@ Load and verify the **canonical** [Turn contract](../orchestration-envelope/refe
   `runner unit-route --triage <slug>` output block (PREFLIGHT.md)
 ✓ Unit doc read and step selected (explicit P<k> or first unfinished)
 ✓ Step executed and committed (one commit per step, conventional format)
+✓ Gate produced — the step's verification gate ran as `runner gate-receipt run`,
+  so the `GATE-RAN` mark's `manifest <sha>` slot carries the receipt digest and
+  the receipt is current at this head; a project with no handshake gate records
+  the declared absence instead (owner: LEDGERS.md §The producer)
 ✓ Phase read set consumed — the phase read its `Relevant files:` targets
   (`runner relevant-files <unit-doc> --phase P<k>`) instead of
   surveying the repo, and discovered-file appends landed at phase close

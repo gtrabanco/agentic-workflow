@@ -73,6 +73,13 @@ GATE-RAN | HEAD <40-hex sha> | <cmds> | exit <code>
 - **Record**: whoever runs the gate records a mark at the head the gate
   actually ran (green or red). A red run (exit code ≠ 0) is recorded as
   evidence, not silence.
+- **Produce**: the recorded run *is* the receipt's run — the step's verification
+  gate is executed as `runner gate-receipt run`, and the mark's `manifest <sha>`
+  slot carries the receipt's `manifest.digest`. It is the step's **last
+  signed-byte write**, after the step's final document edit and before the commit
+  that closes the step; a step whose project declares no handshake gate runs its
+  own gate command and records that absence instead. The rule and its six fields
+  are `LEDGERS.md` §The producer (`gate-producer@1`).
 - **Consume**: any skill may consume a green run only at the identical HEAD.
   A changed head ⇒ re-run the gate.
 - **Recorder column-sets**: `execute-phase:gate-ran-marks` (executor steps)
