@@ -482,8 +482,8 @@ export const HELP_REGISTRY = Object.freeze({
   },
   telemetry: {
     family: "sensor",
-    summary: "the manual telemetry reconciliation and the merge driver's installation gate",
-    ops: ["reconstruct", "merge-install"],
+    summary: "the manual telemetry reconciliation, the machine-ledger commit and the merge driver's installation gate",
+    ops: ["reconstruct", "commit", "merge-install"],
   },
 });
 

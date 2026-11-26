@@ -31,6 +31,7 @@ import {
   isMachineLedgerPath,
 } from "../src/machine-ledger/index.mjs";
 import { main as sessionCloseMain } from "../src/session-close/index.mjs";
+import { COLUMNS } from "../src/telemetry/ledger.mjs";
 import { main as reconstructMain } from "../src/telemetry/reconstruct.mjs";
 
 const IDENTITY = ["-c", "user.name=Fixture Human", "-c", "user.email=fixture@example.com", "-c", "commit.gpgsign=false"];
@@ -176,11 +177,11 @@ test("session-close close commits the log alone, then the ledger alone", () => {
     process.chdir(previous);
   }
 
-  assert.match(subjects(dir), /^chore\(telemetry\)/mu, "the ledger's own commit follows the log's");
-  const [subject, files] = mustGit(dir, ["log", "-2", "--format=%s", "--name-only"]).split("\n\n");
-  assert.match(subject, /^docs\(log\): second entry/u, "the log commit keeps its own message and range");
-  assert.match(files, /docs\/LOGS\.md/u);
+  const [head, previousHead] = mustGit(dir, ["log", "-2", "--format=%s"]).split("\n");
+  assert.match(head, /^chore\(telemetry\)/u, "the ledger's own commit follows the log's");
+  assert.match(previousHead, /^docs\(log\): second entry/u, "the log commit keeps its own message and range");
   assert.equal(mustGit(dir, ["show", "--name-only", "--format=", "HEAD"]), "docs/workflow/TIER_COST.md");
+  assert.equal(mustGit(dir, ["show", "--name-only", "--format=", "HEAD~1"]), "docs/LOGS.md", "the log was committed alone first");
   assert.equal(mustGit(dir, ["status", "--porcelain"]), "", "the tree the session leaves is clean");
 });
 
@@ -195,20 +196,9 @@ test("reconstruct write commits the ledger it appended to", () => {
     message: { role: "assistant", model: "fixture/model", usage: { totalTokens: 120, input: 100, output: 20 }, durationMs: 1000 },
   };
   fs.writeFileSync(path.join(sessionDir, "transcript.jsonl"), `${JSON.stringify(header)}\n${JSON.stringify(message)}\n`);
-  const ledgerHeader = fs.readFileSync(path.join(dir, "docs", "workflow", "TIER_COST.md"), "utf8");
-  fs.writeFileSync(
-    path.join(dir, "docs", "workflow", "TIER_COST.md"),
-    [
-      "# Tier cost",
-      "",
-      "```text",
-      "tier-cost@2",
-      "unit | phase | version | model | changed_paths | tokens | turns | input_tokens | output_tokens | cache_read_tokens | cache_write_tokens | reasoning_tokens | model_ms | tool_ms | observed | source",
-      "```",
-      "",
-      ledgerHeader.split("\n").slice(2).join("\n"),
-    ].join("\n"),
-  );
+  const grammar = ["```text", "tier-cost@2", ...COLUMNS.map((column) => `${column} | \`<cell>\` | fixture`), "```"].join("\n");
+  const table = [`| ${COLUMNS.join(" | ")} |`, `| ${COLUMNS.map(() => "---").join(" | ")} |`].join("\n");
+  fs.writeFileSync(path.join(dir, "docs", "workflow", "TIER_COST.md"), `# Tier cost\n\n${grammar}\n\n${table}\n`);
   mustGit(dir, ["add", "."]);
   mustGit(dir, ["commit", "-q", "-m", "docs: ledger grammar"]);
 
@@ -225,7 +215,7 @@ test("reconstruct write commits the ledger it appended to", () => {
 
   assert.match(subjects(dir), /^chore\(telemetry\)/mu, "the reconstruction commits the rows it appended");
   assert.equal(mustGit(dir, ["show", "--name-only", "--format=", "HEAD"]), "docs/workflow/TIER_COST.md");
-  assert.match(mustGit(dir, ["log", "-1", "--format=%B"]), /pi:reconstruct=session-727/u);
+  assert.match(mustGit(dir, ["show", "HEAD", "--", "docs/workflow/TIER_COST.md"]), /\+\|.*pi:reconstruct=session-727/u, "the commit carries the row it appended");
 });
 
 test("reconstruct write leaves a project without a ledger alone", () => {

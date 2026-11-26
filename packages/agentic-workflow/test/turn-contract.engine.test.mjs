@@ -139,6 +139,8 @@ test("box5: a human-uncommitted ordinary file still fails dirty-tree", () => {
   commitFile(dir, "docs/features/humandirty/SPEC.md", "unit doc\n");
   commitFile(dir, "src/app.ts", "export const one = 1;\n");
   writeFileSync(path.join(dir, "src/app.ts"), "export const one = 1;\nexport const two = 2;\n");
+  // An exempt row beside the human one proves the filter is not a blanket pass.
+  mkdirSync(path.join(dir, "docs", "workflow"), { recursive: true });
   writeFileSync(path.join(dir, "docs/workflow/TIER_COST.md"), `${LEDGER_HEADER}| 1 | 10 |\n`);
   const r = ctx.runEngine(dir);
   assert.equal(r.stdout, "TURN-CONTRACT fail box5: dirty-tree\n");
@@ -148,6 +150,7 @@ test("box5: a human-uncommitted ordinary file still fails dirty-tree", () => {
 test("box5: an exempt row does not hide an ahead-of-remote branch", () => {
   // fx.ahead is pushed and then carries one local commit: clean, but unpublished.
   // An exempt ledger row must not turn that into an ok receipt.
+  mkdirSync(path.join(ctx.fx.ahead, "docs", "workflow"), { recursive: true });
   writeFileSync(path.join(ctx.fx.ahead, "docs/workflow/TIER_COST.md"), `${LEDGER_HEADER}| 1 | 10 |\n`);
   const r = ctx.runEngine(ctx.fx.ahead);
   assert.equal(r.stdout, "TURN-CONTRACT fail box5: ahead-of-remote\n");

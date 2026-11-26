@@ -26,6 +26,7 @@ import { spawnSync } from "node:child_process";
 import { existsSync, statSync } from "node:fs";
 
 import { detectForge, prLine } from "./forge.mjs";
+import { isMachineLedgerExempt } from "./machine-ledger/index.mjs";
 
 const USAGE =
   "usage: turn-contract [--finished|--remote <name>|--forge <name>|--help]\n\n" +
@@ -189,8 +190,26 @@ export function main(argv, options = {}) {
   // that cannot be answered is never proof of a clean tree: it fails closed as
   // dirty-tree. `--untracked-files=all` overrides a repo-local
   // status.showUntrackedFiles=no, which would otherwise hide an untracked file (F8).
+  //
+  // Issue #727 S1d: the machine-owned ledger class is exempt. Its writer is
+  // machinery — the telemetry sink, the journal aggregator, the annotators — so
+  // its pending row lands after the session's last chance to commit it, and
+  // refusing every review over a row no session can commit is the defect. The
+  // exemption set is the class's own declaration, never a pattern invented here;
+  // a human-uncommitted file still fails, and `ahead-of-remote` below is
+  // untouched, so an exempt row can never excuse an unpublished commit.
   const status = git(root, ["status", "--porcelain", "--untracked-files=all"]);
-  if (!status.ok || status.out !== "") return fail(5, "dirty-tree");
+  if (!status.ok) return fail(5, "dirty-tree");
+  const foreign = status.out
+    .split("\n")
+    .filter((line) => line.trim() !== "")
+    .map((line) => {
+      const raw = line.slice(3).trim();
+      const target = raw.includes(" -> ") ? raw.split(" -> ")[1] : raw;
+      return target.replace(/^"|"$/gu, "");
+    })
+    .filter((file) => !isMachineLedgerExempt(file));
+  if (foreign.length > 0) return fail(5, "dirty-tree");
   const upstreamAgain = git(root, ["rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{upstream}"]);
   if (upstreamAgain.ok && upstreamAgain.out !== "") {
     const ahead = count(root, `${upstreamAgain.out}..HEAD`);
