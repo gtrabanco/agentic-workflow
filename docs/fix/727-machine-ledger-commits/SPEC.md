@@ -283,6 +283,8 @@ lane's plan step, and no triage route is re-derived here.
 - **G9** — 2026-11-26, HEAD `027f8ef79`, `bun scripts/run-root-suite.mjs` (no bail) · **four reds, each reproduced byte-identically at the base checkout**: `findings-corpus` (pin 1173 vs tree 1178), `workflow-doctor` (the fix #729 battery defect), `red-first` (5s per-test bound) and `phase-lint` (120s suite bound under load; 45.9s standalone). Every other root suite exits 0.
 - **G10** — 2026-11-26, correction: G1's claim that `crate-suite-bun`/`crate-suite-node` exited 0 in that gate run is superseded — the two steps were *skipped* there (root-suite failed first under the dependency graph), and their real results are G7/G8, run directly at the same head.
 
+- **P1** — 2026-11-26, the budget re-pins were re-applied without re-encoding the manifest (the first hand edit escaped every non-ASCII character, 287 lines of churn for 20 of substance) · `f97b09580`.
+
 ## Next
 
 P2: land the five suites red, then implement P3.
