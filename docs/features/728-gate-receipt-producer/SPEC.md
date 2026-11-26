@@ -254,9 +254,9 @@ none
 
 ## Tasks
 
-- P1 — Land the frozen-failure corpus alone: the producer-routing suite, observed
-  red against the unchanged tree on the issue's own measurement (four step
-  owners, zero citations).
+- P1 — Land the frozen-failure corpus alone: `scripts/gate-producer-drift.test.mjs`,
+  observed red against the unchanged tree on the issue's own measurement (four
+  step owners, zero citations).
   (validator: `bun test scripts/gate-producer-drift.test.mjs` exits 1 naming `Cannot find module './gate-producer-drift.mjs'` at the red commit)
   (Implements: S2, S3)
   - Relevant files: scripts/gate-producer-drift.test.mjs
