@@ -52,9 +52,8 @@ The tally is `skills/review-implementation/references/FINDER_CONTRACT.md`
 ✓ **Gate evidence is consumed, not re-run.** Run `runner gate-receipt verify`; it answers the receipt's state: `current` + `pass` (exit 0) means the
   declared closure has not moved — cite its `checks[]` ids and `manifest.digest`
   as the gate evidence; `missing` (3), `stale` (4) or `invalid` (5) is a finding
-  routed to the step owner that produces the receipt — it runs the gate as
-  `runner gate-receipt run` (`LEDGERS.md` §The producer) — never a prompt to run
-  the gate from this review and never an implicit pass; a current `fail`/`degraded`
+  routed to `runner gate-receipt run`, never a prompt to run the gate
+  from this review and never an implicit pass; a current `fail`/`degraded`
   receipt fails the review with the failing check ids and their fragments
 ✓ The change's primary claimed behavior was exercised for real (run the
   CLI/endpoint/function; paste the actual observed output) — *in addition to*

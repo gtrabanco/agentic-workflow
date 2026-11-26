@@ -2,7 +2,7 @@
 type: feature
 scope: large
 roadmap_summary: Issue [#728](https://github.com/gtrabanco/agentic-workflow/issues/728) (L): the gate receipt gains a producer in the lane's execution path — `execute-phase`, `fold-findings`, `unit-lane` and `review-change` run their verification gate *as* `runner gate-receipt run`, the `GATE-RAN` mark fills its reserved `manifest <sha>` slot with the receipt's digest, the run is the step's last signed-byte write so the receipt is current at the audited head, a project declares the handshake gate that makes it possible, and a deterministic drift gate refuses a step owner shipped with zero citations.
-ac-hash: 61db1db28348df5d28e8b9d12a082c0021d84f7a522c1da14cd8497687a4c2d0
+ac-hash: c06777dedca0fd6f15f42c5cb43c6e50dfaa2f35ffc85847ba4a4eabd97f6e9b
 ---
 
 # 728 — gate-receipt-producer
@@ -88,7 +88,7 @@ criterion per requirement, each naming the check that proves it.
 4. **S4 — the run is recorded where the head is decided, never after it.** The owner block declares the ordering rule and the receipt the mark cites: `bun test scripts/gate-producer-drift.test.mjs` exits 0 with `the owner block publishes every producer field and keeps the mark's manifest slot`, and `rg -n 'ordering \|' skills/pre-execution-review/references/LEDGERS.md` answers one line naming the step's last signed-byte write.
 5. **S5 — the executor produces.** `skills/execute-phase` is one of the four callers the drift gate reads, and its step-completion gate names the producer: `bun scripts/gate-producer-drift.mjs` exits 0 with `execute-phase` in its four callers, and `rg -c 'gate-receipt run' skills/execute-phase` is ≥ 2.
 6. **S6 — the hook route is deliberately not taken, and the reason is recorded.** `test -d .husky` answers absent (no pre-commit gate to route) and `rg -n 'install-hook' scripts/local-gate.mjs` shows the installed hook is `pre-push`; `## Non-goals` states the route and that evidence.
-7. **S7 — the consumer side is untouched and now has a step to route to.** `bun test scripts/audit-pr-receipt.test.mjs` exits 0 and `bun test scripts/gate-receipt.test.mjs` exits 0 (the merge gate's receipt judgment and the freshness predicate are byte-identical), and `skills/review-verify/SKILL.md`'s re-route names the owner that produces the receipt.
+7. **S7 — the consumer side is untouched, and the review pack's frozen checklists stay frozen.** `bun test scripts/audit-pr-receipt.test.mjs` exits 0 and `bun test scripts/gate-receipt.test.mjs` exits 0 (the merge gate's receipt judgment and the freshness predicate are byte-identical), and `git diff --name-only $(git merge-base origin/main HEAD)..HEAD -- skills/review-verify skills/audit-pr skills/review-*` lists **0** paths — `scripts/review-pack-preamble.test.mjs` protects those checklist bytes and passes.
 
 ## Impact
 
@@ -111,8 +111,6 @@ product's substrate for every project that installs the workflow:
   reads the receipt it produces), `relay`'s closeout leg.
 - `skills/review-change` — the reviewer's own gate run. Consumers: `audit-pr`'s
   receipt gate, the `REVIEW-PASS` receipt's precondition.
-- `skills/review-verify` — one clause of its consumer checklist names the owner
-  a re-route goes to. Consumers: the review pack's composition.
 - `template/AGENTS.md` — the Commands block gains the declared gate script a
   project's producer needs. Consumers: `init-workspace`'s scaffold (it exports
   this file), `scaffold-contract`'s section contract (unchanged: the slot is a
@@ -133,6 +131,14 @@ product's substrate for every project that installs the workflow:
 filling it; and a project with no handshake gate is no longer an implicit "run
 the gate" — it is a declared absence with a recorded reason.
 
+**A consumer clause was planned and withdrawn.** The cut also named the owner a
+consumer's re-route goes to inside `skills/review-verify/SKILL.md`'s checklist.
+`scripts/review-pack-preamble.test.mjs` pins those checklist blocks byte for byte
+("an extraction that edits a checklist has edited the review"), and it failed by
+name when the edit landed. The clause is withdrawn rather than the pin re-frozen:
+a producer unit does not get to rewrite a review pass's brief (`D9`). The owner
+the re-route needs is reachable from the rule itself, which is where it belongs.
+
 **Nothing live is touched:** the receipts and logs the producer writes land under
 `.agentic-workflow/gate/`, which is gitignored in this repository and absent from
 the receipt's own signed closure, so producing a receipt never stales it.
@@ -143,7 +149,6 @@ the receipt's own signed closure, so producing a receipt never stales it.
 - `skills/fold-findings`
 - `skills/unit-lane`
 - `skills/review-change`
-- `skills/review-verify`
 - `skills/pre-execution-review`
 - `template`
 - `scripts`
@@ -153,14 +158,26 @@ the receipt's own signed closure, so producing a receipt never stales it.
 ## Retirements
 
 Strictly additive: no surface is retired, renamed or removed. The computed
-surface inventory (`runner residual-classify --inventory --base <base>`) is the
-receipt for that answer:
+surface inventory (`bun packages/agentic-workflow/bin/agentic-workflow.mjs
+residual-classify --inventory --base origin/main`, 14 rows) is the receipt for
+that answer:
 
-| surface | state | consumer |
-|---|---|---|
-
-The inventory is filled at P7 from the classifier's own output; an empty table
-here would be the omitted receipt the section exists to prevent.
+| surface | kind | state | reason |
+|---|---|---|---|
+| `CALLER_TOKENS` | symbol | used | live-consumer |
+| `GATE_DEFAULT_SCRIPT` | symbol | used | live-consumer |
+| `PRODUCER_BLOCK` | symbol | used | live-consumer |
+| `PRODUCER_CALLERS` | symbol | used | live-consumer |
+| `PRODUCER_FIELDS` | symbol | used | live-consumer |
+| `PRODUCER_OWNER` | symbol | used | live-consumer |
+| `TEMPLATE_GUIDE` | symbol | used | live-consumer |
+| `TEMPLATE_TOKENS` | symbol | used | live-consumer |
+| `audit` | symbol | used | live-consumer |
+| `main` | symbol | used | live-consumer |
+| `producerFields` | symbol | used | live-consumer |
+| `render` | symbol | used | live-consumer |
+| `scripts/gate-producer-drift.mjs` | file | used | live-consumer |
+| `scripts/gate-producer-drift.test.mjs` | file | andamio | recorded-planned-consumer |
 
 ## Non-goals
 
@@ -238,58 +255,74 @@ none
 
 ## Known pre-existing issues
 
-- **`scripts/unit-doc-contract.test.mjs`'s train-stamp case is red on `main` and
-  on this branch alike** — the unit-doc templates stamp `4.10.0` while the train
-  is `4.10.1`. `does-not-affect` any path this change touches; verified at the
-  base commit `022769f8b`.
-- **`workspace-install` is red on `main` and on this branch alike** — the pi
-  package pins the crate one patch behind the local version, so the workspace
-  link resolves the registry copy. `affects` the local gate's dependant set
-  (every dependent step is run by hand and recorded in this doc's `G` line);
-  not repaired here — the train version and the sibling pin are the release
-  machinery's owner decision.
-- **The roadmap carries a duplicate feature row for one number** (a pre-existing
-  index artifact): `roadmap-settle` reports it, no emitter deletes a row.
-  `does-not-affect` any path this change touches.
+Each is reproduced at the base commit `022769f8b`, not inherited from another
+unit's notes.
+
+- **`scripts/findings-corpus.test.mjs` is red on `main` and on this branch
+alike** — its live-tree case freezes **1173** finding rows and the tree carries
+**1178**. Measured at the base commit: `bun test`, 16 pass / 1 fail (the same
+case). The same suite also runs `bun packages/agentic-workflow/bin/agentic-workflow.mjs
+findings-corpus --json` → 1178 findings at base and at head, so this unit adds no
+row. `affects` the root-suite step of the local gate (`G1`); not repaired here —
+re-freezing a corpus count nobody moved is a different unit's receipt.
+- **`scripts/workflow-doctor.test.mjs` is red on `main` and on this branch
+alike** — `FAIL` in both root-suite runs (head 1.4s, base 2.7s). `does-not-affect`
+any path this change touches.
+- **`packages/agentic-workflow/test/doc.structure.test.mjs` hits its own declared
+240s suite bound on this box** — `SUITE TIMEOUT` in both the bun and the node
+legs of the crate suite, while all **19** cases pass standalone (`bun test
+--timeout 60000`, 208s at head). Measured at the base commit: **291s** for the
+same suite, so the bound is load-driven and base-present, not a regression.
+`affects` the crate-suite legs of the local gate (`G1`); the bound is the
+allowlist's owner decision and stays untouched here.
+- **`scripts/ceremony-findings-ledger.test.mjs` reddens under the root gate's
+per-test budget** — 19/19 pass at a 60s budget in 21.7s; under the 4-worker pool
+several spawn-heavy cases cross 10s. Base-identical (5 of the same cases were
+red at base under the 5s standalone default). `does-not-affect` the cases this
+change adds, which spawn nothing.
+- **The roadmap carries a duplicate feature row for one number** — pre-existing
+index artifact; `roadmap-settle` reports `violations: []` at this head and
+`docs-generate --check` answers `0 stale`, so nothing here requires it. Reported,
+never hand-deleted (no emitter deletes a feature row).
 
 ## Tasks
 
-- P1 — Land the frozen-failure corpus alone: `scripts/gate-producer-drift.test.mjs`,
+- [x] P1 — Land the frozen-failure corpus alone: `scripts/gate-producer-drift.test.mjs`,
   observed red against the unchanged tree on the issue's own measurement (four
   step owners, zero citations).
   (validator: `bun test scripts/gate-producer-drift.test.mjs` exits 1 naming `Cannot find module './gate-producer-drift.mjs'` at the red commit)
   (Implements: S2, S3)
   - Relevant files: scripts/gate-producer-drift.test.mjs
-- P2 — Publish the producer's rule: the `gate-producer@1` block in the gate-run
+- [x] P2 — Publish the producer's rule: the `gate-producer@1` block in the gate-run
   mark's owner (six fields: owner, command, mark-slot, ordering, precondition,
   absent), its `normative-surfaces@1` row, and the gate inventory row that claims
   it.
   (validator: `bun test scripts/normative-drift.test.mjs` exits 0 and `bun test scripts/prose-gate-inventory.test.mjs` exits 0)
   (Implements: S3, S4)
   - Relevant files: skills/pre-execution-review/references/LEDGERS.md, AGENTS.md, docs/workflow/GATE_INVENTORY.md
-- P3 — Ship the routing gate red-first's green half: the deterministic
+- [x] P3 — Ship the routing gate red-first's green half: the deterministic
   `gate-producer-drift` gate the corpus judges.
   (validator: `bun test scripts/gate-producer-drift.test.mjs` exits 0)
   (Implements: S2, S3, S4)
   - Relevant files: scripts/gate-producer-drift.mjs
-- P4 — Point the producer's default at the named constant instead of a literal,
+- [x] P4 — Point the producer's default at the named constant instead of a literal,
   so the drift gate reads one home.
   (validator: `bun test scripts/gate-receipt.test.mjs` exits 0 with its default-gate case green)
   (Implements: S2)
   - Relevant files: packages/agentic-workflow/src/gate-receipt/index.mjs
-- P5 — Route the four gate-running step owners through the producer: the
+- [x] P5 — Route the four gate-running step owners through the producer: the
   executor's step gate and its `gate-ran@1` marks section, the fold's gate and
   its `REPAIR-RECEIPT` line, the lane's close-out receipt stage, and the
   reviewer's own gate run.
   (validator: `bun scripts/gate-producer-drift.mjs` exits 0 printing `verdict: PASS`)
   (Implements: S2, S3, S4, S5)
   - Relevant files: skills/execute-phase/SKILL.md, skills/execute-phase/references/EXECUTION_CONTRACT.md, skills/execute-phase/references/FOLDING.md, skills/fold-findings/SKILL.md, skills/fold-findings/references/FOLD_PROCESS.md, skills/unit-lane/SKILL.md, skills/review-change/references/PERSIST_AND_DECIDE.md
-- P6 — Declare the precondition where a project fills it in, and name the owner a
+- [x] P6 — Declare the precondition where a project fills it in, and name the owner a
   consumer's re-route goes to.
   (validator: `bun test scripts/gate-producer-drift.test.mjs` exits 0 with its template case green)
   (Implements: S5, S6, S7)
   - Relevant files: template/AGENTS.md, skills/review-verify/SKILL.md, packages/agentic-workflow/README.md
-- P7 — Ship the declared state and verify like a writer: the unit doc's evidence
+- [x] P7 — Ship the declared state and verify like a writer: the unit doc's evidence
   and log, the roadmap row through `roadmap rowUpsert`, the changeset, the
   generated projection, the session fragment, the derived test-impact set, the
   differential against the base commit and the local gate.
@@ -338,10 +371,126 @@ for this change (it would be a second, competing step list).`
   `review-change` — answer **0** each. The producer's mechanic was measured
   against a toy project and against this repository's real gate before any file
   changed (PE-012–PE-015).
+- **L4** — 2026-11-26, the consumer clause withdrawn (`D9`): the cut planned one
+  clause in `skills/review-verify/SKILL.md`'s checklist naming the owner a
+  re-route goes to. `bun test scripts/review-pack-preamble.test.mjs` refused it
+  by name — `review-verify: the checklist items are byte-identical to the
+  pre-change block` — so the clause is withdrawn, the file is byte-identical to
+  the base commit, and criterion 7 states the untouched consumer instead (its
+  `ac-hash` re-frozen to the amended section).
+- **L5** — 2026-11-26, the context budgets re-based (`D10`): two reference
+  ceilings, twelve route ceilings and two document ceilings, each measured and
+  each with its growth source recorded in the manifest's own `sources` map. The
+  gate caught it exactly as designed (`check-skill-context.test.mjs` red on
+  `--routes --json`), which is why the re-basis is a recorded row and not a
+  silent raise.
+- **L6** — 2026-11-26, one obligation validator corrected before its run, not
+  after: O7's cell claimed `rg -c 'gate-receipt run' skills/review-change` would
+  match ≥ 2, and the shipped text carries one (the step-11 ordering). The cell
+  now states the count the tree actually holds, so `verified` is truthful.
+- **E1** — 2026-11-26, the frozen corpus alone at `caf8f996f`, red against the
+  unchanged tree: `bun test scripts/gate-producer-drift.test.mjs` · exit 1 ·
+  `Cannot find module './gate-producer-drift.mjs'` · **0 pass / 1 fail**.
+- **E2** — 2026-11-26, the green half (`ed1ffdab4`): `bun test
+  scripts/gate-producer-drift.test.mjs` · exit 0 · **9 pass / 0 fail**.
+- **E3** — 2026-11-26, the gate itself at the same head: `bun
+  scripts/gate-producer-drift.mjs` · exit 0 · `gate-producer-drift —
+  feat-728-gate-receipt-producer · 4 callers · 1 owner block · 1 template guide
+  · 0 findings` then `verdict: PASS`.
+- **E4** — 2026-11-26, the owner block and the mark: `bun test
+  scripts/gate-receipt.test.mjs` · exit 0 · **10 pass**, the freshness case
+  (`freshness ignores the HEAD sha and unsigned files, and flips on a signed
+  byte`) among them; `bun test scripts/gate-producer-drift.test.mjs` · exit 0 ·
+  its two owner-field cases green (the real block publishes all six fields and
+  the mark's `manifest <sha>` slot).
+- **E5** — 2026-11-26, the mechanic measured before any file changed
+  (`mktemp -d`, PE-005–PE-009): a handshake gate → `run` exit 0 / `verdict:
+  pass`, `verify` exit 0 `current` + `pass`; a write inside the signed closure (a
+  file under the fixture's `docs/`) after it → `verify` exit **4** naming that
+  path; a write under the fixture's `.agentic-workflow/` → still `current`; a
+  gate that rejects `--json` → `run` exit **2** with `verdict: degraded`; a gate
+  that ignores it and exits 0 → `run` exit **1**, `degraded`.
+- **E6** — 2026-11-26, the four callers cite the producer (`rg -c 'gate-receipt
+  run'`, per skill tree): `execute-phase` **3**, `fold-findings` **2**,
+  `unit-lane` **1**, `review-change` **1** — every one of them zero at the base
+  commit.
+- **E7** — 2026-11-26, the precondition and the default: `bun test
+  scripts/gate-producer-drift.test.mjs` · exit 0 with `the template guide
+  declares the handshake and the producer command` and `the producer's default
+  gate is this repository's real handshake gate`; the test imports both tokens
+  (`GATE_DEFAULT_SCRIPT`, `GATE_RESULT_SCHEMA`) from their own homes and asserts
+  they are equal — `scripts/local-gate.mjs` publishes `local-gate-result@1`.
+- **E8** — 2026-11-26, S6's premise checked rather than assumed: `test -d .husky`
+  · exit 1 (absent) and `rg -n 'install-hook' scripts/local-gate.mjs` names
+  `.git/hooks/pre-push` (lines 51-52, 734) — the hook route is withdrawn in
+  `## Non-goals` with that evidence, not silently.
+- **E9** — 2026-11-26, the consumer half untouched: `bun test
+  scripts/audit-pr-receipt.test.mjs` · exit 0 · **32 pass**; `bun test
+  scripts/gate-receipt.test.mjs` · exit 0 · **10 pass**; `git diff --stat
+  $(git merge-base origin/main HEAD)..HEAD -- packages/agentic-workflow-schema`
+  · **0 lines**.
+- **E10** — 2026-11-26, the declared state: `bun
+  packages/agentic-workflow/bin/agentic-workflow.mjs docs-generate --check` ·
+  exit 0 · `3 checked · 0 missing · 0 stale · 0 orphaned` / `Roadmap: unchanged`
+  · `verdict: PASS`; `bun scripts/lint-changeset.mjs
+  .changeset/728-gate-receipt-producer.md` · `ok` · exit 0; `roadmap read
+  docs/ROADMAP.md --nn 728` · the row reads `in-progress` with the emitter's
+  summary; `roadmap check docs/features/728-gate-receipt-producer/SPEC.md` ·
+  `violations: []` scrolls.
+- **E11** — 2026-11-26, the branch's own subjects (`git log --format=%s
+  022769f8b..HEAD`): three `docs(728)`, one `test(gate-producer)`, one
+  `feat(gate-producer)` — no review, fold or audit commit, and the red commit
+  touches the suite alone.
+- **E12** — 2026-11-26, the routing gate's neighbours at the final head: `bun
+  test scripts/normative-drift.test.mjs` · exit 0 · **24 pass**; `bun test
+  scripts/prose-gate-inventory.test.mjs` · exit 0 · **22 pass**; `bun test
+  scripts/skill-lint.test.mjs` · exit 0 · **20 pass**; `bun test
+  scripts/test-obligation-tags.test.mjs` · exit 0 · **22 pass**; `bun test
+  scripts/structural-sibling-pins.test.mjs` · exit 0 · **8 pass**; `bun scripts/
+  check-skill-context.mjs` · `PASS context budgets: 33 skills`, `PASS route
+  budgets: 14 routes`, `PASS context documents: 7 budgeted documents`; `bun test
+  scripts/red-first.test.mjs` · exit 0 · **9 pass** (its declared 60s bound).
+- **E13** — 2026-11-26, the differential (§6): a `mktemp` toy project (one
+  handshake gate writing a `passed` step) driven by the base commit's
+  `gate-receipt.mjs` (`022769f8b` in the main checkout) and by this branch's,
+  then compared — `run` stdout **identical**, `verify --json` stdout
+  **identical**, and the receipt **identical** modulo `generated_at`,
+  `gate_command`, `duration_ms` (the only fields the named-constant refactor
+  cannot touch). No unrequested stdout, stderr or exit difference.
+- **E14** — 2026-11-26, the derived test impact: `runner test-impact --base
+  origin/main` · `TEST IMPACT — targeted` · 24 changed paths, 4 executable, 166
+  suites derived; the set is the conservative whole-estate answer, and the
+  local gate's own suites subsume it (`G1`).
+- **E15** — 2026-11-26, the review pack's frozen checklists after `D9`:
+  `bun test scripts/review-pack-preamble.test.mjs` · PASS (0 fail) and `git diff
+  --name-only $(git merge-base origin/main HEAD)..HEAD -- skills/review-verify
+  skills/audit-pr skills/review-*` · **0 paths**.
+- **E16** — 2026-11-26, the root suite with the bound the reds were hiding:
+  `bun scripts/run-root-suite.mjs --jobs 4 --test-timeout 60` · two reds only,
+  `scripts/findings-corpus.test.mjs` (the frozen 1173 count against the tree's
+  1178 — reproduced at the base commit, 16 pass / 1 fail there) and
+  `scripts/workflow-doctor.test.mjs` (red at the base commit too); every other
+  suite green, including `scripts/ceremony-findings-ledger.test.mjs` (19/19 with
+  headroom, red only under the 5s standalone default) and
+- **G1** — 2026-11-26, GATE-RAN | HEAD 9addb0bc9 | `bun scripts/gate-receipt.mjs
+  run -- --jobs 4 --no-bail` | exit 1 | manifest
+  e0cf41118e15a788d058bd76b918264d92d5ce273ef21c30506934510cb84207 — the run
+  through the producer at that head: **14 passed / 1 failed / 5 skipped**, the
+  failed check `root-suite`, `verdict: fail`, `manifest.entries` 2,431. The five
+  skipped dependents were run by hand at the same head: `crate-suite-bun` exit
+  1 (its sole red `doc.structure.test.mjs`, SUITE TIMEOUT at its own declared
+  240s bound — 19/19 cases pass standalone in 208s against the base commit's
+  291s), `crate-suite-node` exit 1 (the same single red), `schema-node-compat`
+  exit 0 (**953 pass / 0 fail**), `pi-node-compat` exit 0 (**1,114 pass / 0
+  fail / 1 skipped**), `pi-compat-guard` exit 0 (`pi leg floor` and `pi leg
+  latest: tsc --noEmit clean`). The root suite's own reds are the two
+  base-present ones named in `## Known pre-existing issues`.
 
 ## Next
 
-P5 — route the four gate-running step owners through the producer.
+The external verifier's verdict — the diff, the obligations ledger (`16 rows ×
+`verified`) and the verification block above are handed over as one batch; no
+repository review machinery ran on this change.
 
 ## References
 

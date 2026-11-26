@@ -98,3 +98,31 @@ path-protection-records@1
 kind | paths | phase | date | authority | justification
 justification | scripts/gate-producer-drift.test.mjs | P1 | 2026-11-26 | execute-phase | the new gate's sibling suite is created by this unit and is the frozen-failure corpus P1 lands alone; the test-file class's freeze does not cover its own first landing
 ```
+
+## D9 — The consumer's checklist is withdrawn, not the pin re-frozen
+
+The cut also planned one clause in `skills/review-verify/SKILL.md`'s checklist
+naming the owner a re-route goes to. Landing it turned
+`scripts/review-pack-preamble.test.mjs` red by name: that suite pins every review
+pass's checklist block byte for byte, on the stated ground that "an extraction
+that edits a checklist has edited the review, not its preamble".
+
+Re-freezing the hash would have bought a documentation clause at the price of the
+pin that keeps a review pass's brief honest, in a unit whose subject is a
+producer. So the clause is withdrawn (`skills/review-verify/SKILL.md` is
+byte-identical to the base commit) and the consumer half is verifiably untouched
+instead. The owner a re-route needs is stated where the rule lives
+(`gate-producer@1`'s `owner` and `command` fields), which is the right home for
+it either way.
+
+## D10 — The context budgets move to the exact boundary, with their reasons
+
+Three budget classes answer to this change: two reference ceilings
+(`pre-execution-review`'s LEDGERS.md, `review-change`'s PERSIST_AND_DECIDE.md),
+twelve route ceilings (`execute-phase:*`, `review-change:*`), and two document
+ceilings (`AGENTS.md`'s one new machine row, the gate inventory's one new row).
+Each is re-based to the checker's own arithmetic — `ceil(measured x 1.10)` where
+the manifest's note says so, and the exact measured boundary where the
+`#571`/`#703` precedent for `machineLines` and the guide's `linesMax` says so —
+with the measured numbers and the growth source recorded in the manifest's own
+`sources` map. No ceiling moves without that row.

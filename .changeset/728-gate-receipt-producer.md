@@ -3,7 +3,6 @@
 "fold-findings": minor
 "unit-lane": minor
 "review-change": minor
-"review-verify": patch
 "pre-execution-review": minor
 "@gtrabanco/agentic-workflow": patch
 "@gtrabanco/pi-agentic-workflow": patch
