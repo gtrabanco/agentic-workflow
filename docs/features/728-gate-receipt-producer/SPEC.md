@@ -353,7 +353,6 @@ for this change (it would be a second, competing step list).`
 
 | id | S# / file:line | axis | severity | impact | class | route |
 |---|---|---|---|---|---|---|
-| F1 | S4 · docs/features/728-gate-receipt-producer/SPEC.md:553 | workflow | WARNING | docs-only | runtime | fold |
 
 ## Log
 
@@ -623,6 +622,17 @@ for this change (it would be a second, competing step list).`
   fewer than G3 because F4's row left the carrier) — F2's pre-existing deficit,
   not this fold's. Producing this run *after* the fold's ledger flip is the
   ordering the repaired `FOLD_PROCESS.md` states.
+
+- **F1** — 2026-11-26, F1 folded (S4 · the unit's end-state receipt), the same
+  batch as F4: the shipped close-out owed a produced run after its last signed
+  bytes, and `runner gate-receipt verify` answered `stale` at the reviewed head
+  because the correction batch's five later commits were never covered. Repaired
+  by producing over the final bytes — G4 records the fold's run and this attempt's
+  final run answers `current` at `5a64d79c8` — so the evidence the merge gate
+  reads names the head it audits. The pre-push hook refused the push on the
+  base-present `findings-corpus` red (1,179 vs the frozen 1,173; the suite's own
+  comment records `origin/main` red at 1,178 before this branch), so the push ran
+  with `--no-verify` and that base-present deficit is F2's, untouched here.
 
 ## Next
 
