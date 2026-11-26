@@ -84,6 +84,12 @@ What the fix touches beyond its own lines:
 - The surviving observation that the installed pi tree carries no literal
   launcher pin (so any undeclared resolution to it yields `pin-absent`) is
   disclosed here and left to #703's domain — see `## Non-goals`.
+- The unit's own review mark raises the harvest's frozen count: its `R1` line
+  (`10b086702`) is one more `R` mark in the tree, so
+  `scripts/findings-corpus.test.mjs`'s `reviewMarks` constant moves 174 → 175
+  (`3ab8b15d6`) — the same mechanism fix/701's re-freeze documented, never a
+  relaxed assertion. The unit's second non-doc hunk, four lines of constant and
+  comment.
 
 ## Surfaces
 
@@ -140,6 +146,8 @@ none.
 - `env AGENTIC_WORKFLOW_SKILLS_ROOT=$(pwd)/skills bun test scripts/workflow-doctor.test.mjs` — the hermetic suite under a host declaration.
 - `env -u AGENTIC_WORKFLOW_SKILLS_ROOT bun test scripts/workflow-doctor.test.mjs` — the same suite in a clean environment.
 - `bun scripts/run-root-suite.mjs` under both environments (S2's gate run).
+- `bun test scripts/findings-corpus.test.mjs` — the frozen harvest counts the
+  unit's own `R1` line moves.
 - `bun scripts/docs-generate.mjs --check`, `bun scripts/skill-lint.mjs`,
   `bun packages/agentic-workflow/bin/agentic-workflow.mjs verify docs/fix/729-workflow-doctor-hermetic-battery/SPEC.md --no-git`
   — the doc-state checks this unit's documents carry.
@@ -180,6 +188,7 @@ none.
 | PE-003 | sampled-tool-behaviour | the ambient `AGENTIC_WORKFLOW_SKILLS_ROOT` is published once per session by the installed pi package (`5.0.0-canary.20261125.1`, `dist/runtime.js:30`), so every local Pi session on that install carries it | installed package bytes + `env` of this session, sampled 2026-11-25 | current | O1, O2 |
 | PE-004 | sampled-tool-behaviour | at the cut head with an explicit declaration the suite answers 20 pass / 3 fail (the three ambient calls); without it, 23 pass / 0 fail | the two foreground runs in `## Log` E1/E2 | current | O1, O2 |
 | PE-005 | known (read this session) | the test file's module-level import of `upstream.mjs` is what the tier classifier reads as `signal: destructive` — the escalation is pre-existing, every edit to the file escalates | `runner ceremony tier classify` verdict (Risk tier section) + `scripts/workflow-doctor.test.mjs` imports | current | D1 |
+| PE-006 | known (read this session) | the harvest pins the counts the tree actually carries, so a unit that records a review or finding line raises the constant by hand — the mechanism issue #651 introduced and fix/701 re-froze for its own `F1` row | `scripts/findings-corpus.test.mjs:189-197` + `7d1634811` | current | O4 |
 
 ### Obligations
 
@@ -188,6 +197,7 @@ none.
 | O1 | S1 | the battery suite answers green with and without an ambient host declaration: the three discovery cases state their scenario env, every assertion byte unchanged | P2 | P2 | direct application | `env AGENTIC_WORKFLOW_SKILLS_ROOT=$(pwd)/skills bun test scripts/workflow-doctor.test.mjs` exits 0 AND `env -u AGENTIC_WORKFLOW_SKILLS_ROOT bun test scripts/workflow-doctor.test.mjs` exits 0 | E lines in SPEC `## Log` naming both exits | verified |
 | O2 | S2 | the root gate answers green in both environments — no session's host declaration can redden it | P3 | P3 | direct application | `env AGENTIC_WORKFLOW_SKILLS_ROOT=$(pwd)/skills bun scripts/run-root-suite.mjs` exits 0 AND `env -u AGENTIC_WORKFLOW_SKILLS_ROOT bun scripts/run-root-suite.mjs` exits 0 | E line in SPEC `## Log` with both exits | verified |
 | O3 | S3 | the repair changes inputs only: no assertion line is deleted, relaxed or edited | P2 | P2 | direct application | `git diff origin/main..HEAD -- scripts/workflow-doctor.test.mjs \| rg '^-[^-]' \| rg 'assert'` matches nothing (exit 1) | E line in SPEC `## Log` | verified |
+| O4 | S1 (post-cut, D4's closure) | the harvest's frozen counts match the tree this unit ships: the unit's own `R1` mark is counted, so `reviewMarks` reads 175 and the constant moves with it | P2 | P2 | direct application | `bun test scripts/findings-corpus.test.mjs` exits 0 | E line in SPEC `## Log` naming the exit and the constant's old and new value | verified |
 
 ## Triaged steps
 
@@ -248,6 +258,12 @@ artifact); the suite runs are this unit's evidence step and P3's validators.
 - **V1** — 2026-11-26, docs/fix/729-workflow-doctor-hermetic-battery/SPEC.md:65 · reviewer review-change · HEAD 27842a182cad566667eb89f63d82a6f86f7d76ec · recheck direct read of AC2 against `skills/verification-contract/SKILL.md` section "Every criterion names its demonstrating command (S5)": the criterion carries no backticked command and no `manual:`/`read-verified:` label while its claim is command-settleable (O3's validator in this same doc settles it), so S5 fails it closed at review · confirmed
 - **R1** — 2026-11-26, review at HEAD 27842a182cad566667eb89f63d82a6f86f7d76ec · verdict REVIEW-FAIL · cycle 1 · gate exit 0 · 1 fix-now row (F1, plan-owned, route replan-in-unit); 1 report-only ignore row (machine gate receipt absent — `runner gate-receipt verify` exit 3); 1 candidate refuted (missing `ac-hash` — the design step was triaged out and the verification contract requires only the `## Acceptance criteria` section plus its E-line receipts)
 - **F1** — 2026-11-26, REPLANNED IN UNIT — AC2 (`SPEC.md:65`) carried no demonstrating command (verification-contract S5); the plan re-cut delivers it at `3132d8f8a` (the criterion now embeds the O3 validator's own command, claim text otherwise intact), owner-confirmed 2026-11-26 (`selected minimal-recut`, decisions D3/D4). Never folded: the row's `replan-in-unit` class freezes the fold batch (FOLD_PROCESS §7); recorded per the migrated precedent fix-319 F4/F5 — row removed from `## Findings`, delivery commit and confirmation cited here.
+
+- **E6** — 2026-11-26, the base-vs-delivered differential S2 was missing (E4 recorded only the delivered arm): a `--shared` clone of this repository checked out at base `207147ff1` ran `env -u AGENTIC_WORKFLOW_SKILLS_ROOT bun scripts/run-root-suite.mjs` · exit 1 · **142 PASS / 2 FAIL** (`scripts/doc-discipline.test.mjs`, `scripts/local-gate.test.mjs` — clone-environment artifacts, identical in both arms) and the same command under `AGENTIC_WORKFLOW_SKILLS_ROOT=/home/agent/.pi/agent/npm/node_modules/@gtrabanco/pi-agentic-workflow/skills` · exit 1 · **141 PASS / 3 FAIL** — the one-suite delta is `scripts/workflow-doctor.test.mjs`, E1's corpus reaching the gate. The clone lived under `/tmp` and is removed after this line.
+- **E7** — 2026-11-26, the suite-level differential, one head each side: at `207147ff1` in that same clone `env -u AGENTIC_WORKFLOW_SKILLS_ROOT bun test scripts/workflow-doctor.test.mjs` · exit 0 · **23 pass / 0 fail**, and the declaration arm · exit 1 · **20 pass / 3 fail** (E1's three cases, unchanged); at `3ab8b15d6` the three arms — `env -u`, the pi canary skills dir, `$(pwd)/skills` — each · exit 0 · **23 pass / 0 fail**.
+- **E8** — 2026-11-26, the harvest re-freeze this unit's own `R1` line forced (O4): `bun test scripts/findings-corpus.test.mjs` at `3170bf346` · exit 1 · **16 pass / 1 fail** (`corpus.reviewMarks` 175 against the frozen 174), then after `scripts/findings-corpus.test.mjs`'s constant moved 174 → 175 (`3ab8b15d6`) · exit 0 · **17 pass / 0 fail**. The tree carries 175 `R` marks: 174 + this unit's `R1` — the mechanism issue #651 introduced, never a relaxed assertion (the four moved lines are the constant and its comment).
+- **E9** — 2026-11-26, the re-read of V1's blocker (AC2 carried no demonstrating command) at HEAD `3ab8b15d6`: AC2 now names its own command and that command was run — `git diff origin/main..HEAD -- scripts/workflow-doctor.test.mjs \| rg '^-[^-]' \| rg 'assert'` · exit 1 (matches nothing), exactly the criterion's claim — so S5's demand is met by `3132d8f8a` under D3/D4. Evidence, not a review mark: the cycle-2 `review-change` pass is the reviewer's write.
+- **G2** — 2026-11-26, GATE-RAN · HEAD `3ab8b15d6` · `env -u AGENTIC_WORKFLOW_SKILLS_ROOT bun scripts/run-root-suite.mjs` | `env AGENTIC_WORKFLOW_SKILLS_ROOT=/home/agent/.pi/agent/npm/node_modules/@gtrabanco/pi-agentic-workflow/skills bun scripts/run-root-suite.mjs` · exit 0 · **144 suites PASS / 0 FAIL** in both environments, run after the re-freeze.
 - **V2** — 2026-11-26, docs/fix/729-workflow-doctor-hermetic-battery/SPEC.md:65 · outer driver recheck of F1 · HEAD 3132d8f8a · recheck direct read of AC2 against verification-contract S5 (the materialized `finding-mark@1` method from V1) + live `git diff origin/main..HEAD -- scripts/workflow-doctor.test.mjs | rg '^-[^-]' | rg 'assert'` → exit 1 (matches nothing) · the criterion now carries its backticked command and S5 passes it · confirmed fixed; dispute resolved by the pre-recorded owner decision D3.
 - **P3** — 2026-11-26, verification (both root-suite environments 144/144, O3 diff check, doc-state checks green — E4/E5; re-run at the reviewed head as G1) → `fb63c118e` — next: review cycle 2.
 ## Next
