@@ -22,6 +22,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { out, fail, onlyFlags, parseFlags, gitOrFail, resolveUnit, readRepoFile } from "../lib.mjs";
 import { classifyTier, RISK_TIER_KINDS, RISK_TIER_SIGNAL_KINDS, RISK_TIERS_CONTRACT_ID } from "../risk-tiers.mjs";
+import { isMachineLedgerExempt } from "../../machine-ledger/index.mjs";
 
 export { RISK_TIER_KINDS, RISK_TIER_SIGNAL_KINDS };
 
@@ -58,7 +59,10 @@ function scopePaths(flags, cwd) {
   const dirty = gitOrFail(["status", "--porcelain=v1", "-b"], cwd)
     .split("\n")
     .filter((line) => line !== "" && !line.startsWith("## "))
-    .map((line) => line.slice(3).trim());
+    .map((line) => line.slice(3).trim())
+    // Issue #727: a pending machine-owned ledger row (`machine-ledger-commit@1`,
+    // LEDGERS.md) is not a high-risk edit — its writer is machinery, not the change.
+    .filter((path) => path !== "" && !isMachineLedgerExempt(path));
   return [...new Set([...committed, ...dirty])].filter(Boolean).sort();
 }
 

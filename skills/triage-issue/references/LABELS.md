@@ -92,6 +92,37 @@ are. The reason is not tidiness: `workflow-status` reads label **presence** as
 signal for every consumer. Label ownership and the injection-safety invariant
 stay untouched — the issue's own Non-goals forbid otherwise.
 
+## The triage-state label (owned here)
+
+The label a file arrives with, and the one this skill takes off. Both halves are
+owned here: a label whose removal no surface defines keeps claiming "needs
+triage" on an issue three passes have already decided (issue #727).
+
+| Label | Color | Meaning |
+|---|---|---|
+| `needs-triage` | `#FBCA04` | Filed and not yet decided: the intake state the issue templates apply. |
+
+**Apply on filing.** The issue templates (`.github/ISSUE_TEMPLATE/*.yml`) add
+`needs-triage` at creation; an owner may add it by hand to re-open the question.
+No skill applies it as a verdict — a verdict *clears* it.
+
+**Exit on a published verdict — part of the verdict, never a later chore.** After
+a pass reaches a published verdict (the dated verdict comment posted and its
+disposition label applied), `needs-triage` is removed:
+
+1. `gh issue edit <N> --remove-label needs-triage`
+2. If that call fails (missing triage+ permission, a label never applied, a forge
+   error), the verdict comment **states that failure explicitly** — the same
+   loud-on-`gh`-failure rule steps 1–3 of the urgency vocabulary state. The run is
+   unaffected either way; a label that could not be removed is reported, never
+   silently assumed gone.
+
+Every published verdict clears it, `remove` included — the issue is triaged
+whether or not the work is kept. A pass that reached no verdict (a blocked
+`unresolved` classification, a setup defect whose move has not been applied) leaves
+the label in place: it still describes the issue. `human-revision-needed` is
+untouched by this rule and stays agent-apply-only (`IR5`).
+
 ## Review-gate label vocabulary (human-owned)
 
 Not a verdict this skill reaches: this label is a **human's hold**, applied when

@@ -42,6 +42,7 @@ import process from "node:process";
 
 import { assertFragment } from "../journal/fragment.mjs";
 import { currentBranch, readSessionFacts, renderEntryBlock, resolveBase } from "../journal/block.mjs";
+import { commitMachineLedgers } from "../machine-ledger/index.mjs";
 
 /** The documented default; a project's documentation map may point elsewhere. */
 export const DEFAULT_LOG = "docs/LOGS.md";
@@ -185,7 +186,9 @@ const USAGE = `usage: session-close <command> [options]
 
   close   [--log <path>] [--base <ref>]
           Refuse unless the log was appended to (never rewritten), commit it
-          alone, then report what is still uncommitted.
+          alone, then commit the pending machine-owned ledger class and report
+          what is still uncommitted (issue #727 S1b — the class's commit point
+          for a skills-only install, where no extension teardown exists).
           In a fragment-carrier project (issue #405), refuse unless new
           fragments were added under .agentic-workflow/journal/ and
           docs/LOGS.md was NOT touched — the aggregator owns the journal there.
@@ -284,7 +287,8 @@ function committedFragments(rel) {
  * `journalRel` is the file the guard protects — `--log` when the caller names one,
  * so the explicit flag selects which journal must stay untouched, never ignored. */
 function closeFragments(rel, journalRel) {
-  const dir = path.join(mustGit(["rev-parse", "--show-toplevel"]).trim(), rel);
+  const top = mustGit(["rev-parse", "--show-toplevel"]).trim();
+  const dir = path.join(top, rel);
   const committed = committedFragments(rel);
   const working = fs.readdirSync(dir).filter((name) => fs.statSync(path.join(dir, name)).isFile()).sort();
 
@@ -335,6 +339,7 @@ function closeFragments(rel, journalRel) {
   mustGit(["add", "--", ...added.map((name) => `${rel}/${name}`)]);
   mustGit(["commit", "-m", `docs(log): ${subject}`, "--", rel]);
   const sha = mustGit(["rev-parse", "HEAD"]).trim();
+  const machineLedgers = sweepMachineLedgers(top);
 
   const leftovers = parsePorcelain(git(["status", "--porcelain"]).stdout).map((item) => `${item.status} ${item.path}`);
   return {
@@ -344,6 +349,7 @@ function closeFragments(rel, journalRel) {
     log: journalRel,
     fragments: added.length,
     subject,
+    machineLedgers,
     preExistingDirty: preDirty.map((item) => item.path),
     leftovers,
     clean: leftovers.length === 0,
@@ -351,7 +357,19 @@ function closeFragments(rel, journalRel) {
 }
 
 /**
- * The command: `render` prints the entry's facts, `close` refuses unless the log
+ * The machine-owned ledgers this close leaves pending, committed by the class's
+ * own reader (issue #727 S1b). The log or the fragment was committed above, by
+ * this command, alone; what remains is the telemetry ledger and any fragment a
+ * previous writer left behind. A clean class and a held lock are both `clean`
+ * outcomes for the session — the class is append-only, so the next cycle carries
+ * the row — while a failed commit is reported by name.
+ */
+function sweepMachineLedgers(top) {
+  const outcome = commitMachineLedgers({ root: top, zone: "auto" });
+  return { status: outcome.status, sha: outcome.sha, paths: outcome.paths, subject: outcome.subject };
+}
+
+/** The command: `render` prints the entry's facts, `close` refuses unless the log
  * was appended to, commits it alone and reports what is left. The project it
  * acts on is the working directory, exactly as it always was.
  */
@@ -427,6 +445,7 @@ function run(argv) {
   mustGit(["add", "--", rel]);
   mustGit(["commit", "-m", `docs(log): ${subject}`, "--", rel]);
   const sha = mustGit(["rev-parse", "HEAD"]).trim();
+  const machineLedgers = sweepMachineLedgers(top);
 
   const leftovers = parsePorcelain(git(["status", "--porcelain"]).stdout).map((item) => `${item.status} ${item.path}`);
   const report = {
@@ -434,6 +453,7 @@ function run(argv) {
     sha: sha.slice(0, 8),
     log: rel,
     subject,
+    machineLedgers,
     preExistingDirty: preDirty.map((item) => item.path),
     leftovers,
     clean: leftovers.length === 0,

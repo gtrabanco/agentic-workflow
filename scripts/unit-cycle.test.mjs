@@ -30,6 +30,7 @@ import {
   phaseOrder,
   runCycle,
   OUTCOME,
+  sensedDirtyFrom,
 } from "./unit-cycle.mjs";
 import { checkUnitDoc } from "../packages/agentic-workflow/src/edit/Roadmap.mjs";
 
@@ -73,6 +74,22 @@ test("decide: the terminal state is done when the audit is merge-ready at the he
 test("decide: a dirty tree stops before anything else (step never committed)", () => {
   const action = decide(at({ dirty: true, pendingInput: 3, designed: false }));
   assert.deepEqual(action, { type: "stop", reason: "failed", detail: "dirty-tree" });
+});
+
+test("sensing: a pending machine-owned ledger row is not the dirty tree the loop stops on (issue #727)", () => {
+  // The telemetry ledger, the session log and a journal fragment are all rows of
+  // the class `machine-ledger-commit@1` declares (zone != out-of-scope) —
+  // machinery wrote them, so stopping a lane on them is the same defect box 5
+  // stopped showing the review.
+  assert.equal(
+    sensedDirtyFrom(" M docs/workflow/TIER_COST.md\n M docs/LOGS.md\n?? .agentic-workflow/journal/2026-11-27-abc.md\n"),
+    false,
+  );
+});
+
+test("sensing: a foreign file still stops the loop, and the exemption never eats one", () => {
+  assert.equal(sensedDirtyFrom(" M src/app.ts\n"), true);
+  assert.equal(sensedDirtyFrom(" M docs/workflow/TIER_COST.md\n M src/app.ts\n"), true);
 });
 
 test("decide: working on main stops before anything else", () => {

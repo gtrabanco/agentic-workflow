@@ -40,8 +40,17 @@
        scope-returned, not as new work.
    - No candidate matched → fall through to the published classification
      below — the seven rows of `triage-verdict@1`, unchanged by this step.
-4. **Classify** into exactly one of the seven published verdicts. The set is
-   machine grammar — `TRIAGE_VERDICTS` in
+4. **Classify** into exactly one of the seven published verdicts. **Then close the
+   intake state:** once the verdict is published (step 6's dated comment and its
+   disposition label), remove `needs-triage` —
+   `gh issue edit <N> --remove-label needs-triage` — because the label means "not
+   yet decided" and the pass just decided it. Every published verdict clears it,
+   `remove` included; a failed removal is stated explicitly in the verdict comment
+   (loud, exactly like the urgency labels' failure rule in `LABELS.md` steps 1–3),
+   and a pass that reached no verdict leaves the label alone. The rule and its
+   reasoning are owned by `LABELS.md` § The triage-state label (owned here).
+
+   The set is machine grammar — `TRIAGE_VERDICTS` in
    `@gtrabanco/agentic-workflow-schema`, mirrored by the block below — so a
    verdict spelled here and published nowhere is a defect, not a nuance. The
    rows are ordered the way the classification walks: the cheapest organic

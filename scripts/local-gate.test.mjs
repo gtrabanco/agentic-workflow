@@ -179,6 +179,7 @@ test("every former remote check survives as a step, and the ids are unique", () 
     "pi-node-compat",
     "pi-compat-guard",
     "dependency-pin-gate",
+    "machine-ledger-commit",
     "dependency-advisories",
   ]);
 });
@@ -807,6 +808,7 @@ test("--push-base with an empty verdict plans the gate without the test steps", 
       "worktree-guard",
       "rigidity-review",
       "dimension-regression",
+      "machine-ledger-commit",
     ], "only the offline non-test steps survive an empty impact set");
     assert.match(result.stdout, /skipping .*test step/, "the skip names what it skipped and why");
     assert.match(result.stdout, /test-impact/);
@@ -1105,4 +1107,65 @@ test("the receipt measures the command the hook runs, so a hook flag change cann
     assert.ok(hookBody().includes(flag), `the hook still passes ${flag}`);
   }
   assert.equal(PRE_PUSH_BUDGET_SECONDS > 0, true);
+});
+
+// ---------------------------------------------------------------------------
+// The machine-owned ledger prelude (issue #727 S1c). A push already runs this
+// gate, so the gate is where the pending rows of the `.gitattributes` class get
+// their commit — before any step is dispatched, never inside the pool.
+// ---------------------------------------------------------------------------
+
+/** A throwaway checkout carrying the ledger class's path and one base commit. */
+function ledgerSandbox() {
+  const dir = sandbox();
+  const gitIn = (args) => {
+    const result = spawnSync("git", [...FIXTURE_IDENTITY, ...args], { cwd: dir, encoding: "utf8" });
+    assert.equal(result.status, 0, `git ${args.join(" ")} failed: ${result.stderr}`);
+    return result.stdout.trim();
+  };
+  fs.mkdirSync(path.join(dir, "docs", "workflow"), { recursive: true });
+  fs.writeFileSync(path.join(dir, "docs", "workflow", "TIER_COST.md"), "| unit | tokens |\n| --- | --- |\n| 1 | 10 |\n");
+  fs.writeFileSync(path.join(dir, "app.ts"), "export const one = 1;\n");
+  gitIn(["add", "."]);
+  gitIn(["commit", "-q", "-m", "chore: base"]);
+  return { dir, gitIn };
+}
+
+test("the machine-ledger prelude commits before any step runs", () => {
+  const { dir, gitIn } = ledgerSandbox();
+  fs.appendFileSync(path.join(dir, "docs", "workflow", "TIER_COST.md"), "| 2 | 20 |\n");
+  fs.writeFileSync(path.join(dir, "app.ts"), "export const one = 1;\nexport const two = 2;\n");
+  gitIn(["add", "app.ts"]);
+
+  const run = gate(["--only", "machine-ledger-commit", "--jobs", "1", "--skip-network", "--repo", dir]);
+
+  assert.equal(run.status, 0, run.stderr);
+  assert.match(run.stdout, /machine-ledger-commit: committed/u, "the receipt names the commit it made");
+  assert.match(gitIn(["log", "-1", "--format=%s"]), /^chore\(telemetry\)/u);
+  assert.equal(gitIn(["show", "--name-only", "--format=", "HEAD"]), "docs/workflow/TIER_COST.md", "the ledger alone is committed");
+  assert.match(gitIn(["status", "--porcelain"]), /^M  app\.ts$/mu, "a foreign staged file is never swept in");
+});
+
+test("the prelude is planned by --dry-run and commits nothing there", () => {
+  const { dir, gitIn } = ledgerSandbox();
+  fs.appendFileSync(path.join(dir, "docs", "workflow", "TIER_COST.md"), "| 2 | 20 |\n");
+  const before = gitIn(["rev-list", "--count", "HEAD"]);
+
+  const run = gate(["--only", "machine-ledger-commit", "--dry-run", "--repo", dir]);
+
+  assert.equal(run.status, 0, run.stderr);
+  assert.match(run.stdout, /plan: machine-ledger-commit —/u);
+  assert.equal(gitIn(["rev-list", "--count", "HEAD"]), before, "a dry run writes nothing");
+});
+
+test("the pool's progress counter numbers its own dispatch, so the prelude never shifts it", () => {
+  const { dir, gitIn } = ledgerSandbox();
+  fs.appendFileSync(path.join(dir, "docs", "workflow", "TIER_COST.md"), "| 2 | 20 |\n");
+
+  const run = gate(["--only", "machine-ledger-commit,log-immutability", "--jobs", "1", "--skip-network", "--repo", dir]);
+
+  assert.match(run.stdout, /\[prelude\] machine-ledger-commit/u);
+  assert.match(run.stdout, /\[1\/1\] log-immutability/u, "one pooled step is 1/1, not 0/1");
+  assert.doesNotMatch(run.stdout, /\[0\//u, "no pooled step is ever numbered zero");
+  assert.equal(gitIn(["log", "-1", "--format=%s"]), "chore(telemetry): machine ledger rows");
 });

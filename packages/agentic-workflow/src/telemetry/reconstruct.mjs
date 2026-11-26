@@ -33,6 +33,7 @@ import path from "node:path";
 
 import { TELEMETRY_SAMPLE_FIELDS } from "@gtrabanco/agentic-workflow-schema";
 
+import { commitMachineLedgers } from "../machine-ledger/index.mjs";
 import { LEDGER_PATH, appendJsonlSample, appendLedgerSample, orderedSample, parseLedger, prepareLedgerAppend, sessionKeyOf } from "./ledger.mjs";
 import { armTelemetryMerge } from "./merge-install.mjs";
 
@@ -574,6 +575,15 @@ function write(flags, { cwd, env }) {
   for (const record of jsonlAdded) appendJsonlSample({ path: jsonl, sample: record });
   for (const apply of ledgerPlans) apply();
 
+  // Issue #727 S1b: a reconstruction is usually the *only* writer a
+  // never-closed session gets, so the rows it just appended are committed here.
+  // The class's own reader does the commit: path-scoped, lock-serialised, and a
+  // clean or locked answer is a status, never a refusal of the write above.
+  const ledgerCommit =
+    ledgerPlans.length === 0
+      ? { status: "clean", sha: null, paths: [] }
+      : commitMachineLedgers({ root: project, classes: ["telemetry"] });
+
   return {
     contract: RECONSTRUCT_CONTRACT_ID,
     project,
@@ -586,6 +596,7 @@ function write(flags, { cwd, env }) {
       status: ledgerExists ? "merged" : "absent",
       added: ledgerAdded.length,
       skipped: ledgerExists ? records.length - ledgerAdded.length : 0,
+      commit: { status: ledgerCommit.status, sha: ledgerCommit.sha, paths: ledgerCommit.paths },
     },
     merge_driver: mergeDriver,
   };

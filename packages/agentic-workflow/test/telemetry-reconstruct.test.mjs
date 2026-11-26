@@ -335,7 +335,15 @@ test("merge: write adds only the sessions a destination does not already carry, 
   const second = run(["reconstruct", "write", "--jsonl", jsonl, "--ledger", ledger], { cwd: root, env: { PI_CODING_AGENT_DIR: agent } });
   assert.equal(second.code, 0);
   assert.deepEqual(JSON.parse(second.stdout).jsonl, { path: jsonl, status: "merged", added: 0, skipped: 2 });
-  assert.deepEqual(JSON.parse(second.stdout).ledger, { path: ledger, status: "merged", added: 0, skipped: 2 });
+  assert.deepEqual(JSON.parse(second.stdout).ledger, {
+    path: ledger,
+    status: "merged",
+    added: 0,
+    skipped: 2,
+    // Issue #727: the receipt names the commit the write performed over the class
+    // it appended to (`clean` here — nothing was left pending for the class).
+    commit: { status: "clean", sha: null, paths: [] },
+  });
 });
 
 test("merge: write refuses before writing anything when a destination is not a ledger", () => {
@@ -381,6 +389,9 @@ test("merge: an absent default ledger with records to merge is reported absent, 
     status: "absent",
     added: 0,
     skipped: 0,
+    // Issue #727: the absent ledger appended nothing, so the class had nothing
+    // to commit and the receipt says so instead of implying a write.
+    commit: { status: "clean", sha: null, paths: [] },
   });
   assert.equal(fs.existsSync(path.join(root, "docs/workflow/TIER_COST.md")), false, "an absent ledger is never created");
   assert.equal(receipt.jsonl.added, 1, "the JSONL destination still merges");

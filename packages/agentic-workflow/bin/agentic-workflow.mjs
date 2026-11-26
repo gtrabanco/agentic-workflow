@@ -752,6 +752,13 @@ switch (command) {
   // ── telemetry — the manual reconstruction of the session samples (#624) ──
   // and the merge driver's installation gate (#630).
   case "telemetry": {
+    // `telemetry commit` (issue #727): the machine-owned ledger's one command —
+    // the point the pi teardown spawns and a skills-only install can type.
+    if (restArgs[0] === "commit") {
+      const { main } = await import("../src/telemetry/commit.mjs");
+      process.exit(main(restArgs.slice(1)));
+      break;
+    }
     if (restArgs[0] === "merge-install") {
       const { main } = await import("../src/telemetry/merge-install.mjs");
       process.exit(main(restArgs.slice(1)));

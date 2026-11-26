@@ -7,6 +7,10 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
+import { spawnSync } from "node:child_process";
+import { mkdtempSync, rmSync, writeFileSync, chmodSync, mkdirSync } from "node:fs";
+import { tmpdir } from "node:os";
+
 import { main } from "../src/fullauto-merge.mjs";
 
 /** Run the wrapper with both streams captured; no git, no forge, no cwd. */
@@ -70,3 +74,78 @@ test("an unknown remote is refused before any forge is asked", () => {
   assert.equal(result.code, 1);
   assert.match(result.stderr, /the remote "nowhere" is not a remote of this repository/u);
 });
+
+// --- the clean-tree precondition (issue #727) ------------------------------
+// The precondition gates run in order, so the fixture reaches the tree gate (a
+// stub `gh` on PATH satisfies the forge CLI carrier) and reads the NEXT
+// refusal — the cases prove the gate's decision without ever reaching a merge.
+
+
+function dirtFixture(tailDirty) {
+  const dir = mkdtempSync(`${tmpdir()}/fullauto-727-`);
+  const id = ["-c", "user.name=T", "-c", "user.email=t@t", "-c", "commit.gpgsign=false"];
+  const git = (args) => spawnSync("git", ["-C", dir, ...id, ...args], { encoding: "utf8" });
+  git(["init", "-q"]);
+  mkdirSync(`${dir}/docs/workflow`, { recursive: true });
+  writeFileSync(`${dir}/docs/workflow/TIER_COST.md`, "| unit | t |\n");
+  writeFileSync(`${dir}/app.ts`, "export const one = 1;\n");
+  git(["add", "."]);
+  git(["commit", "-q", "-m", "chore: base"]);
+  git(["remote", "add", "origin", "https://github.com/x/y.git"]);
+  const branch = spawnSync("git", ["-C", dir, "symbolic-ref", "--short", "HEAD"], { encoding: "utf8" }).stdout.trim();
+  git(["config", `branch.${branch}.remote`, "origin"]);
+  git(["config", `branch.${branch}.merge`, "refs/heads/main"]);
+  // A self-synchronized tracking ref: the sync precondition passes offline and
+  // the first forge call is what follows the tree gate.
+  git(["update-ref", "refs/remotes/origin/main", "HEAD"]);
+  if (tailDirty) {
+    writeFileSync(`${dir}/app.ts`, "export const one = 2;\n");
+  } else {
+    // The machine row the class declares: pending, uncommitted, and written by
+    // the machinery that owns it — the state the policy says never blocks.
+    writeFileSync(`${dir}/docs/workflow/TIER_COST.md`, "| unit | t |\n| 1 | 10 |\n");
+  }
+
+  // The stub `gh` answers nothing: the wrapper's forge calls only come after
+  // the git preconditions these cases pin. It lives OUTSIDE the repo so its
+  // own untracked bytes never dirty the tree the wrapper probes.
+  const stub = mkdtempSync(`${tmpdir()}/fullauto-gh-`);
+  const bin = `${stub}/bin`;
+  mkdirSync(bin);
+  const gh = `${bin}/gh`;
+  writeFileSync(gh, "#!/usr/bin/env node\nprocess.exit(1);\n");
+  chmodSync(gh, 0o755);
+  const previousPath = process.env.PATH;
+  process.env.PATH = `${bin}:${previousPath}`;
+  const run = () => {
+    try {
+      const out = [];
+      const err = [];
+      const code = main(["--pr", "12", "--run-id", "r1"], { stdout: (t) => out.push(t), stderr: (t) => err.push(t), cwd: dir, env: { ...process.env } });
+      return { code, stderr: err.join(""), stdout: out.join("") };
+    } finally {
+      process.env.PATH = previousPath;
+      rmSync(dir, { recursive: true, force: true });
+      rmSync(stub, { recursive: true, force: true });
+    }
+  };
+  return run;
+}
+
+test("a dirty foreign file refuses with the tree's own message before any upstream is read", () => {
+  const run = dirtFixture(true);
+  const result = run();
+  assert.equal(result.code, 1);
+  assert.match(result.stderr, /working tree is not clean/u);
+});
+
+test("a pending machine-owned ledger row is not the dirt this wrapper refuses on (issue #727)", () => {
+  const run = dirtFixture(false);
+  // Only the machine row is pending; the forge precondition is what greets a
+  // tree-gate pass offline (the stub `gh` cannot answer).
+  const result = run();
+  assert.equal(result.code, 1);
+  assert.ok(!/not clean/u.test(result.stderr), `the machine row never triggers the tree refusal: ${result.stderr}`);
+  assert.match(result.stderr, /could not answer for PR/u, `the tree gate passed, the forge gate refused: ${result.stderr}`);
+});
+

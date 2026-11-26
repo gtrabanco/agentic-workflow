@@ -176,3 +176,23 @@ test("every sensor refuses an unknown flag instead of guessing", (t) => {
     assert.notEqual(answer.code, 0, `${sensor} must refuse an unknown flag`);
   }
 });
+
+test("workflow-status: a pending machine-owned ledger row is not dirt the sensor reports", () => {
+  const root = mkdtempSync(join(tmpdir(), "sensor-machine-ledger-"));
+  execFileSync("git", ["init", "-q", "-b", "work", root], { encoding: "utf8" });
+  mkdirSync(join(root, "docs", "workflow"), { recursive: true });
+  writeFileSync(join(root, "docs", "workflow", "TIER_COST.md"), "| unit | tokens |\n");
+  execFileSync("git", ["add", "."], { cwd: root });
+  execFileSync("git", ["-c", "user.name=F", "-c", "user.email=f@example.com", "-c", "commit.gpgsign=false", "commit", "-q", "-m", "base"], { cwd: root });
+  writeFileSync(join(root, "docs", "workflow", "TIER_COST.md"), "| unit | tokens |\n| 727 | 10 |\n");
+
+  const exempt = run(root, "workflow-status", "--json-only");
+  assert.equal(exempt.code, 0, exempt.stderr);
+  const envelope = JSON.parse(exempt.stdout);
+  assert.equal(envelope.detail.urgent.interruptibility.dirty, false, "a machine row is not dirt the sensor reports");
+
+  writeFileSync(join(root, "note.txt"), "human\n");
+  const foreign = JSON.parse(run(root, "workflow-status", "--json-only").stdout);
+  assert.equal(foreign.detail.urgent.interruptibility.dirty, true, "a human-uncommitted file still is");
+  rmSync(root, { recursive: true, force: true });
+});

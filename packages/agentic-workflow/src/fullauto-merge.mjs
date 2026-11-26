@@ -33,6 +33,7 @@ import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
 import { comment, defaultBase, detectForge, forgeCli, mergePr, prJson, prNotes, requireForgeCli } from "./forge.mjs";
+import { foreignPorcelainLines } from "./machine-ledger/index.mjs";
 
 const USAGE =
   "usage: fullauto-merge --pr <number> --run-id <id> [--method merge|squash|rebase] [--remote <name>] [--forge <name>]\n";
@@ -127,7 +128,11 @@ export function main(argv, options = {}) {
   }
 
   const status = git(["status", "--porcelain"]);
-  if (!status.ok || status.out.trim() !== "") {
+  // Issue #727: the machine-owned ledger class (`machine-ledger-commit@1`,
+  // LEDGERS.md) is exempt — a pending row's commit is the teardown's or the
+  // gate prelude's, and refusing the merge on it would strand the branch the
+  // merge exists to publish. The filter is the class module's own.
+  if (!status.ok || foreignPorcelainLines(status.out).length > 0) {
     fail(stderr, "working tree is not clean");
     return 1;
   }

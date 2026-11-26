@@ -53,6 +53,7 @@ import { openFence, closesFence, sectionBounds, parseLog } from "../unit-doc-pha
 // Issue #360 — the risk tier of the change in scope. The classifier decides it
 // (one home, `../risk-tiers.mjs`); this sensor only projects the verdict.
 import { classifyTier, taskSizeOf, sizeTierOf } from "../risk-tiers.mjs";
+import { foreignStatusPaths } from "../../machine-ledger/index.mjs";
 // Issue #470 — forge text is third-party content. The guard runs in this
 // collection step, so every consumer of `forge.openIssues`/`forge.openPrs` reads
 // the guarded value: no title reaches the envelope without passing the sanitizer
@@ -285,7 +286,10 @@ function readGitState() {
   const status = git("status", "--porcelain=v1", "-b") ?? "";
   const lines = status === "" ? [] : status.split("\n");
   const header = lines[0]?.startsWith("## ") ? lines[0] : "";
-  const dirtyFiles = lines.filter((line) => line && !line.startsWith("## "));
+  // Issue #727: a pending machine-owned ledger row (`machine-ledger-commit@1`,
+  // LEDGERS.md) is not dirt this sensor reports — its writer is machinery, and a
+  // model told it is uncommitted would commit what the policy forbids it to.
+  const dirtyFiles = foreignStatusPaths(lines.filter((line) => line && !line.startsWith("## ")).join("\n"));
   const ahead = /\[ahead (\d+)/.exec(header)?.[1];
   const observations = [];
   if (dirtyFiles.length > 0) {

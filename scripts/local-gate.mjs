@@ -392,6 +392,20 @@ export const STEPS = [
     mirrors: "dependency-pin-gate job",
   },
   {
+    id: "machine-ledger-commit",
+    title: "Commit the pending machine-owned ledger rows before any step (offline)",
+    // Issue #727 S1c: a push already runs this gate, so the gate is where the
+    // class's pending rows get their commit — before any step is dispatched,
+    // never inside the pool, which would race every suite reading the same
+    // bytes (a `--only` selection runs it alone, and `--dry-run` plans it like
+    // any other step). Not `tests:` on purpose: a prose-only push is exactly
+    // the push that leaves the ledger dirty.
+    run: machineLedgerPrelude,
+    prelude: true,
+    tests: false,
+    mirrors: "no former remote job — the teardown and the push are the class's only points (issue #727)",
+  },
+  {
     id: "dependency-advisories",
     title: "Dependency advisories (OSV — report-only, never fails the gate)",
     cwd: ".",
@@ -459,6 +473,10 @@ export const DEPS = {
   // dist because the step started before the install linked the workspace and
   // schema-build emitted dist/.
   "dependency-advisories": ["workspace-install", "schema-build"],
+  // The prelude reads the ledger's own module (node builtins only) and the
+  // checkout, so it waits for nothing — it runs before the pool by its own
+  // declaration, never by a graph edge.
+  "machine-ledger-commit": [],
 };
 
 /** The default worker count: one per CPU, capped at 4 — the steps are full
@@ -626,6 +644,23 @@ export async function scheduleSteps(runnable, runStep, { jobs = defaultJobs(), b
  * output prints atomically after its completion line. `run:` steps execute in
  * process and stream directly (they manage their own output).
  */
+/**
+ * The machine-owned ledger's commit, as the gate's prelude (issue #727 S1c).
+ *
+ * A push already runs this gate, so the ledger's pending rows are committed here
+ * — by the class's own module, path-scoped and lock-serialised — before any step
+ * is dispatched. A held lock is a no-op receipt rather than a blocked push (the
+ * class is append-only; the next cycle carries the row), while a failed commit
+ * fails the gate: a commit git refused is a real defect, not a timing artifact.
+ */
+async function machineLedgerPrelude({ root }) {
+  const module = await import(new URL("../packages/agentic-workflow/src/machine-ledger/index.mjs", import.meta.url).href);
+  const outcome = module.commitMachineLedgers({ root, zone: "auto" });
+  const where = outcome.paths.length === 0 ? "nothing pending" : outcome.paths.join(", ");
+  process.stdout.write(`machine-ledger-commit: ${outcome.status}${outcome.sha === null ? "" : ` ${outcome.sha}`} (${where})\n`);
+  return outcome.status === "failed" ? 1 : 0;
+}
+
 async function runStepAsync(step, root, onSpawnOutput, { pushBase = null, remote = null } = {}) {
   if (step.run) return step.run({ root });
   const argv = step.argv.slice(1);
@@ -1029,8 +1064,31 @@ async function main(argv) {
     return 0;
   }
 
+  // The gate's preludes run sequentially, before the pool is dispatched: a step
+  // that commits must not overlap the suites reading the same bytes (issue #727
+  // S1c). They are still selected, skipped by the impact gate and planned by
+  // `--dry-run` like every other step.
+  const preludes = runnable.filter((step) => step.prelude === true);
+  const pooled = runnable.filter((step) => step.prelude !== true);
+  for (const step of preludes) {
+    process.stdout.write(`\n[prelude] ${step.id} — ${step.title}\n`);
+    const exit = await runStepAsync(step, options.root, (target, stdout, stderr) => {
+      if (stdout.length > 0) process.stdout.write(stdout);
+      if (stderr.length > 0) process.stderr.write(stderr);
+    }, { pushBase: options.pushBase ?? null, remote: options.remote ?? null });
+    process.stdout.write(`${step.id}: ${exit === 0 ? "exit 0" : `exit ${exit}`}\n`);
+    if (exit !== 0 && options.bail) {
+      process.stderr.write(`\nlocal-gate: FAILED at ${step.id} (${step.mirrors})\n`);
+      return 1;
+    }
+  }
+  if (pooled.length === 0) {
+    process.stdout.write("\nlocal-gate: PASS — prelude only\n");
+    return 0;
+  }
+
   const started = Date.now();
-  const total = runnable.length;
+  const total = pooled.length;
   let dispatched = 0;
   const exits = new Map();
   const durations = new Map();
@@ -1045,11 +1103,13 @@ async function main(argv) {
     });
   };
   const result = await scheduleSteps(
-    runnable,
+    pooled,
     async (step) => {
       dispatched += 1;
       const stepStarted = Date.now();
-      process.stdout.write(`\n[${total - runnable.length + dispatched}/${total}] ${step.id} — ${step.title}\n`);
+      // The counter numbers the pool's own dispatch: preludes are reported
+      // before it, so they never shift the numerator (issue #727 F8).
+      process.stdout.write(`\n[${dispatched}/${total}] ${step.id} — ${step.title}\n`);
       const exit = await runStepAsync(step, options.root, onSpawnOutput, { pushBase: options.pushBase ?? null, remote: options.remote ?? null });
       exits.set(step.id, exit);
       durations.set(step.id, Date.now() - stepStarted);
@@ -1064,7 +1124,7 @@ async function main(argv) {
       options.json,
       JSON.stringify(
         gateResultDocument({
-          steps: runnable,
+          steps: pooled,
           statuses: result.statuses,
           exits,
           durations,
