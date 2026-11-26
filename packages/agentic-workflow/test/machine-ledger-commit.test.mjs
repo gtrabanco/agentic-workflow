@@ -28,6 +28,7 @@ import {
   MACHINE_LEDGER_ZONES,
   autoLedgerPaths,
   commitMachineLedgers,
+  foreignPorcelainLines,
   isMachineLedgerPath,
 } from "../src/machine-ledger/index.mjs";
 import { main as sessionCloseMain } from "../src/session-close/index.mjs";
@@ -98,6 +99,19 @@ test("the class recognises its own paths and nothing else", () => {
   assert.equal(isMachineLedgerPath("docs/features/61-x/decisions.md"), true);
   assert.equal(isMachineLedgerPath("docs/fix/727-machine-ledger-commits/SPEC.md"), false);
   assert.equal(isMachineLedgerPath("app.ts"), false);
+});
+
+test("foreignPorcelainLines names every non-exempt path and never the class's (the filter every verdict refuses foreign files through)", () => {
+  const porcelain = " M docs/workflow/TIER_COST.md\n M src/app.ts\n?? docs/LOGS.md\n M docs/features/502-nan-publish-stable/review-findings.md\n";
+  assert.deepEqual(foreignPorcelainLines(porcelain), ["src/app.ts"]);
+});
+
+test("foreignPorcelainLines keeps git's rename and quoting shapes", () => {
+  assert.deepEqual(foreignPorcelainLines('R  a.txt -> b.txt\n M "weird name.txt"\n'), ["b.txt", "weird name.txt"]);
+});
+
+test("foreignPorcelainLines answers an empty porcelain with an empty list", () => {
+  assert.deepEqual(foreignPorcelainLines(""), []);
 });
 
 test("commits the named paths alone under the class subject and leaves a foreign staged file behind", () => {

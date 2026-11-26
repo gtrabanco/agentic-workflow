@@ -104,6 +104,21 @@ test("#182: a long dirty list is previewed and summarised", () => {
   assert.ok(!warning.includes("file-8.ts"), `the tail is summarised, not dumped: ${warning}`);
 });
 
+test("#727: a pending machine-owned ledger row never tells the model to commit it", () => {
+  // The class `machine-ledger-commit@1` declares commits by machinery, so an
+  // exempt-only porcelain must stay silent — the old warning's instruction
+  // ("commit or stash") was exactly the model-commits-the-ledger defect.
+  assert.equal(dirtyWorktreeWarning(" M docs/workflow/TIER_COST.md\n M docs/LOGS.md\n"), undefined);
+  assert.equal(dirtyWorktreeWarning("?? .agentic-workflow/journal/2026-11-27-abc.md\n"), undefined);
+});
+
+test("#727: the settled-turn warning names the foreign files and not the ledger", () => {
+  const warning = dirtyWorktreeWarning(" M docs/workflow/TIER_COST.md\n M src/app.ts\n");
+  assert.equal(typeof warning, "string");
+  assert.match(warning, /src\/app\.ts/);
+  assert.ok(!warning.includes("TIER_COST"), `the ledger is never named as uncommitted work: ${warning}`);
+});
+
 // --- settled-turn git probe -----------------------------------------------
 
 /** Run `fn` with a fake `git` first on PATH, then restore PATH and clean up. */

@@ -240,6 +240,21 @@ test("hygieneFromState: a dirty tree names every path and offers no repair — i
   assert.deepEqual(state.repairs, [], "only the draft flag has a mechanical repair");
 });
 
+test("hygieneFromState: a pending machine-ledger row is exempt from tree-clean (issue #727)", () => {
+  // The class `machine-ledger-commit@1` declares commits by machinery (the
+  // teardown, the gate prelude) — the merge gate refusing on it is the defect
+  // the review's box 5 already stopped carrying: review passes, audit blocks.
+  const state = hygieneFromState({ treePorcelain: " M docs/workflow/TIER_COST.md\n M docs/LOGS.md\n", branchAhead: 0, isDraft: false });
+  assert.equal(state.gates["tree-clean"], "pass");
+  assert.deepEqual(state.blockers, []);
+});
+
+test("hygieneFromState: the exemption never hides a foreign dirty file", () => {
+  const state = hygieneFromState({ treePorcelain: " M docs/workflow/TIER_COST.md\n M src/app.ts\n", branchAhead: 0, isDraft: false });
+  assert.equal(state.gates["tree-clean"], "fail");
+  assert.deepEqual(state.blockers, ["uncommitted changes: src/app.ts"]);
+});
+
 test("hygieneFromState: an unpushed branch blocks and is not silently pushed", () => {
   const state = hygieneFromState({ treePorcelain: "", branchAhead: 3, isDraft: false });
   assert.equal(state.gates["branch-pushed"], "fail");
