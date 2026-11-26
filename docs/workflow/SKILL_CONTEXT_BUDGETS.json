@@ -487,8 +487,8 @@
         "audit-pr"
       ],
       "templates": [],
-      "routeEstimateMax": 12016,
-      "routeLinesMax": 720,
+      "routeEstimateMax": 12148,
+      "routeLinesMax": 726,
       "sources": {
         "fix #182 (deterministic receipts + PR hygiene)": "three terminal-hygiene gates (tree-clean / branch-pushed / pr-ready) added to the merge contract, plus the receipt and gate runtimes named in the Turn contract and the process step; ceiling = ceil(measured x 1.10)",
         "fix 285 (lane-era lineage gate)": "02_CLOSURE_AND_SCOPE_GATES.md rewritten for the lane-era surfaces (triage-block currency + unit-doc obligations, legacy verify path retained); route measured estimate 9193, lines 574; ceiling = ceil(measured x 1.10)",
@@ -511,7 +511,7 @@
         "issue #646 (docs + skills reconciliation, 2026-11-20)": "the D-table pointer conversions and the new references the affected skills link moved this route: measured 10392 est / 625 lines at this head, ceilings re-based to the checker's own ceiling over that measurement. Growth source: each converted rule carries a citation of its owner instead of a copy, and `skills/resolve-repository-state/references/STATE_CONTRACT.md` / `skills/audit-docs/references/RESTATEMENT.md` join the routes whose skills link them.",
         "issue #702 (the merge gate's own outcomes)": "the audit route loads `audit-pr`'s process, whose BLOCKED verdict now names the outcome each gate holds (failed · skipped · unevaluatable with its reason) and persists only a `failed` one as a finding, so an environment the checkout cannot read routes instead of accusing content nobody observed; measured at this change with `bun scripts/check-skill-context.mjs --routes --json`: 10560 est / 635 lines; ceilings re-based to the exact ceil(10560 x 1.10) = 11616 est and ceil(635 x 1.10) = 699 lines, growth source = skills/audit-pr/references/03_AUDIT_PROCESS.md",
         "issue #698 (repair receipt)": "issue #698 (repair receipt): the merge gate and the review close-out name the typed repair receipt and the non-pass verdict families they consume, and CLASSIFY.md's sixth owning stage loads on every review-change route. Measured at the change with `bun scripts/check-skill-context.mjs --routes`; ceilings re-based to the checker's exact ceil(measured x 1.10) at this re-basis. Growth source = issue #698 S3/S4/S7/S8.",
-        "ceilingRebase": "issue #698 external-verify correction batch (2026-11-25): the non-pass receipt box and mutation list in review-change SKILL.md and audit-pr's verdict-receipt + repair-currency wording in SKILL.md and references 01/03/04/05; measured with bun scripts/check-skill-context.mjs --routes at the batch head; ceilings re-based to the checker's exact ceil(measured x 1.10). Growth source = the #698 blocker batch (B6/B7/B8 siblings)."
+        "ceilingRebase": "issue #698 external-verify correction batch 2 (2026-11-26): the B1/B2 blockers — skills/audit-pr/SKILL.md receipt-gate branches, when-to-use, done-when, relationship diagram and Turn-contract line now carry the repair-currency exception (03 step 1), with the matching index rows; measured with bun scripts/check-skill-context.mjs --routes: 11043 est / 660 lines; ceilings re-based to the checker exact ceil(measured x 1.10) = 12148 est and 726 lines. Growth source = the #698 B1/B2 sibling-fix batch."
       }
     },
     "audit-pr:fix": {
@@ -519,8 +519,8 @@
         "audit-pr"
       ],
       "templates": [],
-      "routeEstimateMax": 12016,
-      "routeLinesMax": 720,
+      "routeEstimateMax": 12148,
+      "routeLinesMax": 726,
       "sources": {
         "fix #182 (deterministic receipts + PR hygiene)": "three terminal-hygiene gates (tree-clean / branch-pushed / pr-ready) added to the merge contract, plus the receipt and gate runtimes named in the Turn contract and the process step; ceiling = ceil(measured x 1.10)",
         "fix 285 (lane-era lineage gate)": "02_CLOSURE_AND_SCOPE_GATES.md rewritten for the lane-era surfaces (triage-block currency + unit-doc obligations, legacy verify path retained); route measured estimate 9193, lines 574; ceiling = ceil(measured x 1.10)",
@@ -542,7 +542,7 @@
         "feature 91 / issue #352 (runner prose)": "measured 10361 est / 623 lines, the runner re-point and each citing skill's pin pointer; ceiling re-based to ceil(10361 x 1.10) = 11398 / ceil(623 x 1.10) = 686",
         "issue #646 (docs + skills reconciliation, 2026-11-20)": "the D-table pointer conversions and the new references the affected skills link moved this route: measured 10392 est / 625 lines at this head, ceilings re-based to the checker's own ceiling over that measurement. Growth source: each converted rule carries a citation of its owner instead of a copy, and `skills/resolve-repository-state/references/STATE_CONTRACT.md` / `skills/audit-docs/references/RESTATEMENT.md` join the routes whose skills link them.",
         "issue #698 (repair receipt)": "issue #698 (repair receipt): the merge gate and the review close-out name the typed repair receipt and the non-pass verdict families they consume, and CLASSIFY.md's sixth owning stage loads on every review-change route. Measured at the change with `bun scripts/check-skill-context.mjs --routes`; ceilings re-based to the checker's exact ceil(measured x 1.10) at this re-basis. Growth source = issue #698 S3/S4/S7/S8.",
-        "ceilingRebase": "issue #698 external-verify correction batch (2026-11-25): the non-pass receipt box and mutation list in review-change SKILL.md and audit-pr's verdict-receipt + repair-currency wording in SKILL.md and references 01/03/04/05; measured with bun scripts/check-skill-context.mjs --routes at the batch head; ceilings re-based to the checker's exact ceil(measured x 1.10). Growth source = the #698 blocker batch (B6/B7/B8 siblings)."
+        "ceilingRebase": "issue #698 external-verify correction batch 2 (2026-11-26): the B1/B2 blockers — skills/audit-pr/SKILL.md receipt-gate branches, when-to-use, done-when, relationship diagram and Turn-contract line now carry the repair-currency exception (03 step 1), with the matching index rows; measured with bun scripts/check-skill-context.mjs --routes: 11043 est / 660 lines; ceilings re-based to the checker exact ceil(measured x 1.10) = 12148 est and 726 lines. Growth source = the #698 B1/B2 sibling-fix batch."
       }
     },
     "execute-phase:descope": {

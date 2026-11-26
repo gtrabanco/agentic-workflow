@@ -76,7 +76,7 @@ architectural change:
 | `execute-phase` | Verify frozen acceptance and recorded invariants before each step; use a fresh worker context, bounded repair attempts, and stop on no progress or a required decision. |
 | `review-change` | Authoritative for final diff quality, frozen-acceptance coverage, current-unit classification (fix-now / replan-in-unit / decision-required / proposal), and invariant preservation. Reports findings; posts exact-SHA REVIEW-PASS receipt on clean table. Never emits MERGE-READY. |
 | `review-change` + `fold-findings` (manual path) | Own the manual review→fold loop: run `/fold-findings`, then re-run `/review-change` on a changed HEAD, bounded at two cycles (`LOOP CAP REACHED`), and route unresolved findings to `triage-issue --prioritize-now` for replan or manual phase execution. Never merge or silently discard findings. |
-| `audit-pr` | Consumes current review-change REVIEW-PASS receipt (absent/stale → BLOCKED, never re-reviews diff). Owns delivery gates only (phases/docs/CI/mergeability/traceability/closure + receipt invariants result). Emits MERGE-READY or evidenced BLOCKED; never edits/merges. |
+| `audit-pr` | Consumes current review-change REVIEW-PASS receipt (absent/stale with no current repair receipt → BLOCKED, never re-reviews diff). Owns delivery gates only (phases/docs/CI/mergeability/traceability/closure + receipt invariants result). Emits MERGE-READY or evidenced BLOCKED; never edits/merges. |
 
 ## Evidence and compatibility
 
