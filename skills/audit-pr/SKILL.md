@@ -28,7 +28,8 @@ its separate fail-closed merge step.
 
 `audit-pr` does **not** re-review the diff. It consumes the current SHA-bound
 `review-change` receipt (the `REVIEW-PASS` comment marker) as the review
-evidence, blocks on a missing or stale receipt routed to `/review-change`, and
+evidence, blocks on a missing or stale receipt routed to `/review-change`
+(unless a current repair receipt answers this gate — 03 step 1), and
 independently evaluates only the delivery gates below.
 
 ## Turn contract
@@ -39,7 +40,10 @@ Load and verify the **canonical** [Turn contract](../orchestration-envelope/refe
 ✓ The review receipt was consumed from one PR snapshot: `headRefOid` + newest
   matching `review-change:pass` marker fetched together; absent or any SHA
   mismatch → blocker routed to `/review-change`, current → its scope/axes/
-  acceptance coverage/manual checks acknowledged without re-review
+  acceptance coverage/manual checks acknowledged without re-review; a current
+  **repair receipt** answers current too (`repairJudge`) — a ceremony/docs-only
+  fold over an unchanged acceptance blob and a green gate is merge currency,
+  never a re-review (issue #698 S4/S5)
 ✓ Gate evidence: `runner gate-receipt verify` answered `current` +
   `pass` (missing/stale/invalid → BLOCKER, route `gate-receipt.mjs run`)
 ✓ Terminal hygiene was read from state, not assumed: tree clean, branch pushed,
@@ -51,13 +55,15 @@ Load and verify the **canonical** [Turn contract](../orchestration-envelope/refe
 ✓ The PR's FULL URL is printed in the verdict header (the user may be juggling
   several projects and agents without a CI monitor — the link in the chat is
   the contract, never "PR #N" alone)
-✓ MERGE-READY verdict? Then the comment was POSTED by
-  `runner audit-pr-gate comment` (re-reads, exits non-zero unless the newest marker
-  names the head) — a comment, never a commit-message tag. BLOCKED → no comment
+✓ The verdict receipt was POSTED by `runner audit-pr-gate comment` — the
+  merge-ready marker on MERGE-READY and the typed `audit-pr:blocked` marker on
+  BLOCKED (re-reads, exits non-zero unless the newest marker names the head) —
+  a comment, never a commit-message tag, and never a verdict left receipt-less
 ✓ Nothing was edited, refactored, or merged; merge authorization is outside
   this skill and cannot be inherited from docs or an earlier session
-✓ No review pass was composed or reconstructed: a missing/stale receipt is a
-  blocker, never a prompt to re-run review axes from this skill
+✓ No review pass was composed or reconstructed: a missing/stale receipt with
+  no current repair receipt (03 step 1) is a blocker, never a prompt to re-run
+  review axes from this skill
 ✓ **Every AC links a demonstration artifact (S3, S7).** Read the unit doc's
   `## Acceptance criteria` (or `## Specs` S# + `## Acceptance criteria` in
   the re-cut shape). For each AC, verify it links a demonstration:
@@ -86,7 +92,8 @@ end-of-document duties; this list is first on purpose).
 `review-change` reviews the *diff* for quality and posts its SHA-bound receipt;
 `audit-pr` consumes that receipt and audits the *PR as a unit of delivery* — that
 everything the SPEC promised is present, traceable, and green. A missing or stale
-receipt is a blocker routed back to `/review-change`, never re-litigated here.
+receipt with no current repair receipt (03 step 1) is a blocker routed back to
+`/review-change`, never re-litigated here.
 
 **Cost-scaling invariant (S7).** Reviewers dig into code only when evidence is
 absent or contradicts — so review cost scales with the change, not the project.
@@ -135,7 +142,8 @@ runner forge-read pr <N> --comments
   its scope/axes, acceptance coverage, invariant result, and manual checks as the
   review evidence, then evaluate the delivery gates below.
 - **absent** — no matching marker on the PR → **BLOCKER**: no review evidence at
-  the head; route to `/review-change`.
+  the head; route to `/review-change` — unless a current `fold-findings:repair`
+  receipt satisfies this gate (03 step 1).
 - **stale** — a marker exists but its `sha` does not equal `headRefOid`. Before
   voiding, apply the scope-aware judge (fix/286, #182 AC 3/9): a receipt that
   recorded a scope manifest (`scope=<64-hex>` in the marker) stays **current**
@@ -147,13 +155,15 @@ runner forge-read pr <N> --comments
   locally and answers `current` (exit 0) or `stale` (exit 4, naming the
   affecting paths). A legacy receipt without a scope attribute, an affecting
   delta, or an unresolvable delta voids the receipt → **BLOCKER**: route to
-  `/review-change` for a re-review. Do not use a local `git diff` to override
+  `/review-change` for a re-review — unless a current `fold-findings:repair`
+  receipt satisfies this gate (03 step 1). Do not use a local `git diff` to override
   the PR-head comparison — the delta check only ever *keeps* a scoped receipt
   current; it never manufactures currency for a scope-less one.
 
 Never compose, reconstruct, or "spot-check" the review from the diff to clear a
-missing/stale receipt — that is `review-change`'s turn, and re-litigating axes
-here is exactly what the receipt gate removes (AC 13).
+missing/stale receipt — with no current repair receipt (03 step 1) that is
+`review-change`'s turn, and re-litigating axes here is exactly what the receipt
+gate removes (AC 13).
 
 
 ## Progressive loading — mandatory audit route
@@ -167,7 +177,7 @@ every audit loads and applies exactly these five mandatory resources in order:
 2. [02 closure and scope gates](references/02_CLOSURE_AND_SCOPE_GATES.md) for
    capability closure and descope provenance.
 3. [03 audit process](references/03_AUDIT_PROCESS.md) to gather, decide, persist
-   blockers, and post the SHA-bound MERGE-READY comment.
+   blockers, and post the SHA-bound verdict receipt (merge-ready or blocked).
 4. [04 verdict](references/04_VERDICT.md) before output, then
    [05 routing and guardrails](references/05_ROUTING_AND_GUARDRAILS.md). These
    mandatory resources own the `docs/workflow/REPOSITORY_STATE.md` evidence
@@ -204,7 +214,7 @@ in [portability](references/PORTABILITY.md).
 ```
 execute-phase (all phases done) ─▶ review-change (REVIEW-PASS receipt posted) ─▶ audit-pr ─▶ merge
                                                                                 │
-                     blockers ─┬─ receipt absent/stale ──▶ /review-change ──────┘ (re-review, re-audit)
+                     blockers ─┬─ receipt absent/stale ──▶ /review-change ──────┘ (re-review, re-audit — only when no current repair receipt answers the gate, 03 step 1)
                                ├─ in-scope            ──▶ execute-phase ────────┘ (fold, re-audit)
                                ├─ out-of-scope        ──▶ unit-lane --fix
                                └─ deferral            ──▶ triage-issue
@@ -219,8 +229,8 @@ execute-phase (all phases done) ─▶ review-change (REVIEW-PASS receipt posted
 ## Done when
 
 - The review receipt was consumed: a current marker was acknowledged, or a
-  missing/stale one became a blocker routed to `/review-change` (never re-reviewed
-  here).
+  missing/stale one with no current repair receipt (03 step 1) became a blocker
+  routed to `/review-change` (never re-reviewed here).
 - Every applicable gate has a pass / blocker / n-a verdict backed by cited evidence.
 - A single top-line verdict (**MERGE-READY** or **BLOCKED** with ranked blockers) is
   reported **with the PR's full URL in the header**, each blocker routed, with the

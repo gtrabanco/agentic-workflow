@@ -45,6 +45,7 @@ import { main as runAuditPrGate } from "../audit-pr-gate/index.mjs";
 import { main as runAdversarialVerdict } from "../adversarial-verdict/index.mjs";
 import { main as runGateReceipt } from "../gate-receipt/index.mjs";
 import { main as runReviewReceipt } from "../review-receipt/index.mjs";
+import { main as runRepairReceipt } from "../repair-receipt/index.mjs";
 import { main as runScopeManifest } from "../scope-manifest/index.mjs";
 import { main as runReviewState } from "../review-state/index.mjs";
 import { main as runDifferentialBaseline } from "../differential-baseline/index.mjs";
@@ -99,6 +100,7 @@ export const RUNNER_COMMANDS = Object.freeze({
   "adversarial-verdict": runAdversarialVerdict,
   "gate-receipt": runGateReceipt,
   "review-receipt": runReviewReceipt,
+  "repair-receipt": runRepairReceipt,
   "scope-manifest": runScopeManifest,
   "review-state": runReviewState,
   "differential-baseline": runDifferentialBaseline,

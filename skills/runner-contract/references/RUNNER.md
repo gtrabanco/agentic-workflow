@@ -181,6 +181,7 @@ shell fallback.
 | `review-state` | the per-unit review-state ledger — which axes ran, at which head (feature 32) |
 | `scope-manifest` | the digest-bound scope manifest — `sign` and `verify` (feature 25) |
 | `review-receipt` | the SHA-bound review receipt — `emit`, `verify`, `post` (feature 25) |
+| `repair-receipt <emit\|verify> [flags]` | the fold's typed repair receipt — `emit` derives and posts the encoded re-review route, `verify` re-derives every claim and answers merge currency (issue #698) |
 | `gate-receipt` | the gate receipt — `run` records the gate's evidence, `verify` re-derives it (fix #338) |
 | `adversarial-verdict` | the adversarial pass's checker over its record and the reviewed diff (issue #358) |
 | `audit-pr-gate <evaluate\|hygiene\|comment> [flags]` | the merge gate — the verdict from the review receipt, the gate receipt and the terminal hygiene, plus its one idempotent marker writer |

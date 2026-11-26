@@ -539,7 +539,11 @@ test("audit-pr-gate live: the tool reaches the script's own report contract", as
     assert.equal(result.isError, true);
     assert.equal(result.structuredContent.verdict, "BLOCKED");
     assert.equal(result.structuredContent.head, head);
-    assert.equal(result.structuredContent.action, "none");
+    // Issue #698 S7 re-cut: a BLOCKED verdict posts its own typed receipt, so the
+    // reported action is `post` (the `comment` command writes it) and the route
+    // names the continuation the facts support.
+    assert.equal(result.structuredContent.action, "post");
+    assert.equal(result.structuredContent.route, "/review-change");
     checkSchema(gate.outputSchema, result.structuredContent, "audit-pr-gate live blocked");
   } finally {
     process.env.PATH = previousPath;

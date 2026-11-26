@@ -232,7 +232,7 @@ target | S<n> · <file>:<line> | the requirement or the location the finding nam
 axis | <axis> | the review axis that found it
 severity | BLOCKER \| CRITICAL \| WARNING \| SUGGESTION | the published ladder (meanings owned by `skills/review-implementation/references/CLASSIFY.md` §Severity ladder): `BLOCKER` requires a reproducer and is never a conversion target
 impact | blocking \| docs-only \| report-only | whether the finding affects behaviour, only documents, or nothing that blocks: `blocking`/`docs-only` for a `BLOCKER`, and `report-only` for a pre-existing advisory, which never earns a correction round
-class | product \| plan \| source \| environment \| runtime | the owner that repairs it
+class | product \| plan \| source \| environment \| runtime \| workflow | the owner that repairs it; `workflow` names the workflow's own scaffold, gate or carrier and is `report-only`, routed upstream (issue #698)
 route | fold \| replan-in-unit \| decision-required \| product owner — … \| <free prose> | where the row goes; the router reads this column's head first (`runner unit-route`), and `class` names the owner that repairs it
 ```
 

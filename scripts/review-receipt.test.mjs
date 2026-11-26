@@ -25,6 +25,10 @@ import { fileURLToPath } from "node:url";
 import {
   REVIEW_CONTRACT,
   REVIEW_MARKER_RE,
+  REVIEW_VERDICTS,
+  latestVerdictReceipt,
+  parseVerdictReceipt,
+  renderVerdictBody,
   judgeReceipt,
   latestReceipt,
   parseReviewReceipt,
@@ -161,6 +165,44 @@ test("the rendered body carries every required evidence line, in order", () => {
 test("body round-trips: render → parse yields the same sha", () => {
   const body = renderReceiptBody({ sha: SHA_A, ...fields() });
   assert.equal(parseReviewReceipt(body).sha, SHA_A);
+});
+
+test("the pass receipt body is byte-identical", () => {
+  // The exact bytes the emitter posts, pinned against the base implementation
+  // (issue #698 O11): the non-pass verdict family added beside this body must
+  // never move a byte of it. Both shapes are pinned — the plain receipt and
+  // the scope-manifest one fix/286 added.
+  const digest = "d".repeat(64);
+  const plain = [
+    `<!-- review-change:pass sha=${SHA_A} contract=v1 -->`,
+    "## review-change: REVIEW-PASS",
+    "",
+    `- Reviewed head: \`${SHA_A}\``,
+    "- Scope and applicable axes: code, security, verify, perf",
+    "- Acceptance coverage: AC1–AC9 mapped to the suite output; no unverified criterion",
+    "- Architectural invariants: n/a",
+    "- Current-unit findings open: 0",
+    "- Future-capability proposals: 0",
+    "- Manual verification: none",
+    "",
+  ].join("\n");
+  assert.equal(renderReceiptBody({ sha: SHA_A, ...fields() }), plain);
+
+  const scoped = [
+    `<!-- review-change:pass sha=${SHA_A} contract=v1 scope=${digest} -->`,
+    "## review-change: REVIEW-PASS",
+    "",
+    `- Reviewed head: \`${SHA_A}\``,
+    `- Scope manifest: \`sha256:${digest}\``,
+    "- Scope and applicable axes: code, security, verify, perf",
+    "- Acceptance coverage: AC1–AC9 mapped to the suite output; no unverified criterion",
+    "- Architectural invariants: n/a",
+    "- Current-unit findings open: 0",
+    "- Future-capability proposals: 0",
+    "- Manual verification: none",
+    "",
+  ].join("\n");
+  assert.equal(renderReceiptBody({ sha: SHA_A, ...fields({ scopeManifest: digest }) }), scoped);
 });
 
 test("no hand-escaping artifacts and no shell interpolation survive rendering", () => {
@@ -532,3 +574,37 @@ test("emit/render derives the scope manifest from --scope-base (the skill never 
 });
 
 console.log("PASS review-receipt: marker grammar, newest-wins, current/absent/stale, idempotent post, injection-safe body, emit refuses a moved head");
+
+test("a REVIEW-FAIL receipt names the head, the cycle and the open finding count", () => {
+  const body = renderVerdictBody({ verdict: "REVIEW-FAIL", sha: SHA_A, cycle: 2, findings: 3, summary: "the delta was docs-only" });
+  const parsed = parseVerdictReceipt(body);
+  assert.equal(parsed.verdict, "REVIEW-FAIL");
+  assert.equal(parsed.sha, SHA_A);
+  assert.equal(parsed.cycle, 2);
+  assert.equal(parsed.findings, 3);
+  assert.equal(parsed.contract, REVIEW_CONTRACT);
+  const decision = renderVerdictBody({ verdict: "NEEDS-DECISION", sha: SHA_B, cycle: 1, findings: 0 });
+  assert.equal(parseVerdictReceipt(decision).verdict, "NEEDS-DECISION");
+  assert.equal(latestVerdictReceipt([comment(body), comment(decision)]).verdict, "NEEDS-DECISION");
+  // The pass family is a different parser: a fail marker never satisfies receiptStatus.
+  assert.equal(receiptStatus([comment(body)], SHA_A).status, "absent");
+  // The CLI reports the failed verdict beside the status and never reads as current.
+  const { status, json } = runVerify([comment(body)], SHA_A);
+  assert.equal(status, 4);
+  assert.equal(json.current, false);
+  assert.equal(json.status, "failed");
+  assert.equal(json.code, "failed-review-receipt");
+  assert.equal(json.verdictReceipt.cycle, 2);
+  assert.equal(json.verdictReceipt.findings, 3);
+});
+
+test("non-pass emit renders the typed marker without a forge call", () => {
+  const emitted = spawnSync(process.execPath, [script, "emit", "--verdict", "REVIEW-FAIL", "--head", SHA_A, "--cycle", "2", "--findings", "3", "--summary", "the delta was docs-only", "--dry-run"], { encoding: "utf8" });
+  assert.equal(emitted.status, 0, emitted.stderr);
+  assert.match(emitted.stdout, new RegExp(`<!-- review-change:fail sha=${SHA_A} contract=${REVIEW_CONTRACT} cycle=2 findings=3 -->`));
+  assert.match(emitted.stdout, /## review-change: REVIEW-FAIL/);
+  // A non-pass receipt without its required cells refuses before any body.
+  const missing = spawnSync(process.execPath, [script, "emit", "--verdict", "REVIEW-FAIL", "--head", SHA_A, "--dry-run"], { encoding: "utf8" });
+  assert.equal(missing.status, 1);
+  assert.match(missing.stderr, /--cycle/i);
+});

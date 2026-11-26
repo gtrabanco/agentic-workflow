@@ -109,9 +109,12 @@ export const PRE_EXECUTION_FINDING_SEVERITIES = Object.freeze([
   "info", "low", "medium", "high", "critical",
 ] as const);
 
-/** The five root-cause owners a finding can be routed to (SPEC Design §4). */
+/** The six root-cause owners a finding can be routed to (SPEC Design §4).
+ *  `workflow` is the ceremony owner: the agentic-workflow scaffold, gate or
+ *  carrier is defective, so the finding routes upstream and never lands as an
+ *  in-unit blocking row (issue #698). */
 export const PRE_EXECUTION_FINDING_CLASSES = Object.freeze([
-  "product", "plan", "source", "environment", "runtime",
+  "product", "plan", "source", "environment", "runtime", "workflow",
 ] as const);
 
 export const PRE_EXECUTION_FINDING_VERIFICATION = Object.freeze(["verified", "unverified"] as const);

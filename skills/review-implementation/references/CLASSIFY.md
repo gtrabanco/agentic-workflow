@@ -261,10 +261,10 @@ your domains):
 ## Owning stage: which artifact is actually wrong
 
 Class says what to do with the finding; the **owning stage** says which artifact
-must change, and it is the owning stage that picks the hand-off. Use the five values
+must change, and it is the owning stage that picks the hand-off. Use the six values
 published by `pre-execution-review` (`product | plan | source | environment |
-runtime`) — this skill classifies, it does not redefine them — and state one per
-finding in its `Route` cell.
+runtime | workflow`) — this skill classifies, it does not redefine them — and
+state one per finding in its `Route` cell.
 
 | Owning stage | Hand-off | Never |
 |---|---|---|
@@ -272,11 +272,27 @@ finding in its `Route` cell.
 | `plan` | run `runner unit-route <unit>` → `route: replan`; the planning author re-cuts the artifact (SPEC `## Phases`, an obligation row, an acceptance mapping, a ledger) on the same branch with the user's confirmation, then the lane's **`review` step** precedes `execute-phase` | fold it in code and leave the plan describing the old build |
 | `product` | run `runner unit-route <unit>` → `route: product` → `/unit-lane <slug>` (feature) or `/unit-lane --fix <n>` (fix): the lane repairs the half through its `design` step, its `review` step re-judges it | patch the product claim into agreement in code |
 | `environment` / `runtime` | the existing retry/`BLOCKED` paths | translate into a PASS, or an issue |
+| `workflow` | surface the advisory: the defect is agentic-workflow's, so search the upstream tracker (#170, #301, #260, #698) and, if unreported, offer to file it as a new upstream issue (#703's report vehicle); the row persists `report-only` and grants no repair round | fold it inside the project, mark it `fix-now`, or force a re-review |
 
 - `fix-now` with a `plan` or `product` owner keeps its severity but is **not**
   foldable: it appears in the report as replan/re-review work, because the loop that
   folds source cannot repair authority (see the no-progress/convergence rule in
   `pre-execution-review`).
+- `workflow` is never persisted as a blocking row: the findings writer refuses any
+  class/impact other than `workflow · report-only` (issue #698 S3), so a ceremony
+  defect cannot become the project's blocker. It is an advisory, not a class choice.
+
+**The workflow advisory (issue #698 S8).** When a review, fold or audit cycle
+classifies a finding as `workflow`, surface the advisory to the owner in the
+report: this finding looks like an agentic-workflow defect, not a defect of the
+project under development; search the upstream tracker first (#170, #301, #260,
+#698 are the known prior art) and, if unreported, offer to file it. The advisory
+carries the minimal anonymized bundle (runner pin + installed skill versions,
+unit slug + PR number, the markers in play with their SHAs and scopes, the exact
+runner commands with exit codes and the failing check names — nothing else), and
+it is never a blocker and never a repair round. The report vehicle is
+`/agentic-workflow-doctor` (#703), deterministic and read-only, and it runs only
+on the user's explicit initiative.
 - Cite the artifact beside the owner — `SPEC.md ## Phases`, the obligation id, the
   acceptance id — an owning stage without a citation is a guess.
 - When both `source` and `plan` look culpable, name the one check that distinguishes

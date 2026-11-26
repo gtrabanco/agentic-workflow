@@ -78,7 +78,7 @@ test("the dispatch table is the whole surface and a foreign name is refused", as
       "decision-promotion", "dimension-regression", "journal-corpus", "coverage-gap", "repository-state",
       "residual-classify", "restatement-sweep", "batch-scheduler", "promise-coherence", "skill-context",
       "dependency-advisory-pass", "unit-lineage", "audit-pr-gate", "adversarial-verdict", "gate-receipt",
-      "review-receipt", "scope-manifest", "review-state", "differential-baseline", "correction-budget",
+      "review-receipt", "repair-receipt", "scope-manifest", "review-state", "differential-baseline", "correction-budget",
       "findings-corpus", "session-close", "test-impact", "shared-merge", "docs-generated-merge",
       "docs-generate", "roadmap-settle", "relevant-files", "scaffold-contract",
       // #704: the delivery-condition carrier adds its guard and its sweep.

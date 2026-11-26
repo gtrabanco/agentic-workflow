@@ -22,7 +22,7 @@ whole tree.
 
 | id | flags | admitted |
 |---|---|---|
-| `SL-01` html-comment | a comment whose body is prose — the hidden-instruction vector an agent reads and a human never sees | a declared machine marker: a body shaped `<namespace>:<field>`, optionally followed by `key=value` tokens — the receipt markers (`review-change:pass`, `audit-pr:merge-ready`) and the `unit-lane` region markers |
+| `SL-01` html-comment | a comment whose body is prose — the hidden-instruction vector an agent reads and a human never sees | a declared machine marker: a body shaped `<namespace>:<field>`, optionally followed by `key=value` tokens — the receipt markers (`review-change:pass`/`:fail`/`:needs-decision`, `audit-pr:merge-ready`/`:blocked`, `fold-findings:repair`) and the `unit-lane` region markers |
 | `SL-02` frontmatter-tag | an XML/HTML tag in the frontmatter `description:` (the text an agent reads to choose the skill) | plain text; `<placeholder>` argument hints live in `argument-hint:`, which this check never reads |
 | `SL-03` invisible-codepoint | a soft hyphen, a zero-width or bidi control, a Unicode tag character — on any line | nothing: no instruction has a legitimate reason to hide a byte from its reader |
 | `SL-04` unpinned-url | an external URL with no version, tag, commit or tree/blob ref | a URL carrying `@<version>`, `/v<X.Y[.Z]>`, `/tree/<ref>`, `/blob/<ref>`, `/tags/<ref>`, or a 7–40 hex commit |

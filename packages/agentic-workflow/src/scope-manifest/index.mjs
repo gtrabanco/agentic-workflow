@@ -63,6 +63,38 @@ export function isNonAffecting(relPath) {
     || NON_AFFECTING_DIRS.some((dir) => rel.startsWith(dir));
 }
 
+/**
+ * The ceremony-bookkeeping class (issue #698 S4/S6): the carrier files a fold,
+ * a review or a receipt writes about a unit, and nothing a unit's feature owns.
+ * It is a **separate** closed class from `NON_AFFECTING_*` on purpose: an
+ * unrelated commit must not invalidate a signature, but a bookkeeping commit
+ * must still be provable as bookkeeping — that is the difference between "the
+ * gate was not re-run" and "the gate signed bytes nobody changed meaningfully".
+ *
+ * The repair receipt consumes this matcher; the scope digest does not, so no
+ * published scope rotates when the class grows (a new carrier extends these
+ * frozen lists in the same change as its test).
+ */
+export const CEREMONY_BOOKKEEPING_PATHS = Object.freeze([
+  "docs/LOGS.md",
+  "docs/ROADMAP.md",
+  "CHANGELOG.md",
+]);
+export const CEREMONY_BOOKKEEPING_DIRS = Object.freeze([
+  ".agentic-workflow/",
+  "docs/generated/",
+]);
+/** A unit folder's every file is its own record: carrier, ledgers, log, receipts. */
+export const CEREMONY_BOOKKEEPING_UNIT_ROOT = /^docs\/(?:fix|features)\/[0-9][^/]*\//u;
+
+/** Is this path the workflow's own bookkeeping about a unit? Fail closed: no. */
+export function isCeremonyBookkeeping(relPath) {
+  const rel = String(relPath ?? "").replace(/^\.\//, "");
+  return CEREMONY_BOOKKEEPING_PATHS.includes(rel)
+    || CEREMONY_BOOKKEEPING_DIRS.some((dir) => rel.startsWith(dir))
+    || CEREMONY_BOOKKEEPING_UNIT_ROOT.test(rel);
+}
+
 /** The manifest the scope digest is computed over — key order is the contract.
  * The `head` is deliberately NOT part of the digested object: binding the head
  * into the scope digest would re-create the head-bound defect (any commit — a
