@@ -355,6 +355,8 @@ applied inline by the owner's workflow (`## Log` L2), so no review pack, no
 - **P6** — 2026-11-24, the emitter resolves through the same vocabulary and names the config key once on stderr. Commit `82b530930`.
 - **P7** — 2026-11-24, docs currency across the owner page, the config guides, the scaffold offer, triage's contract and the crate README. Commit `82b530930`.
 - **P8** — 2026-11-24, the roadmap row through `docs-generate`, the changeset, the materialized config section and the journal fragment. Commit `82b530930`.
+- **P9** — 2026-11-24, verification: the frozen corpus green, the differential on both corpora, the twelve gate steps proven individually (E6–E12, E15), the obligations ledger closed (`19 verified`) and the two pre-existing reds recorded as K6/K8 with their base-commit reproduction. Commit `a77928c17`.
+- **D10** — 2026-11-24, the session fragment is the one the writer accepted, not the one I would have written last: `journal write` computed its commit count (2) at the moment it ran, and its errata route is closed for this repository's shared `local` identity — `--supersedes` is refused with "cannot correct the shared local identity — it is not a conversation, and an errata corrects one conversation's entry (`journal-write-grammar@1`)". The fragment therefore stands as the snapshot it is, and this `## Log` carries the full evidence.
 
 ## Next
 
