@@ -310,7 +310,7 @@ truth-class row's owner cell extended with the two recorder column-sets:
 ```text
 gate-ran@1
 id | file:line | cmds | exit | [additive-slots ...]
-GATE-RAN | HEAD <40-hex sha> | <cmds> | exit <code> | [reserved trailing slot: `manifest <sha>`]
+GATE-RAN | HEAD <40-hex sha> | <cmds> | exit <code> | [additive trailing slot: `manifest <sha>`]
 ```
 
 - **Fixed format** (the one grammar; every consumer cites this block):
@@ -318,8 +318,9 @@ GATE-RAN | HEAD <40-hex sha> | <cmds> | exit <code> | [reserved trailing slot: `
   the commands run, and the exit code (green and red alike; `exit 0` is green).
   `<cmds>` is the runnable command(s) the gate ran, joined by ` | ` when several.
 - **Additive slots**: fields after `HEAD` are additive; consumers ignore unknown
-  trailing fields (feature 35's `manifest <sha>` slot is reserved, not yet
-  consumed).
+  trailing fields. Feature 35's `manifest <sha>` slot is filled by the producer
+  below — a reserved slot no producer ever filled was the structural gap issue
+  #728 fixed.
 - **Identical-head reuse**: any skill may consume a **green** run only at the
   identical HEAD; a changed head ⇒ re-run the gate. A red mark is never
   consumed as a pass.
@@ -332,3 +333,26 @@ GATE-RAN | HEAD <40-hex sha> | <cmds> | exit <code> | [reserved trailing slot: `
   was retired at P8b because the unit doc carries its evidence sections.
 - **No new truth-class row**: the grammar admits no new row — the existing
   `review-findings.md` ledger pattern is reused with extended owner cells.
+
+#### The producer — who runs the gate, and when
+
+A mark is worth consuming only if the run it records is the run a consumer can
+read. The gate receipt's producer is therefore part of this grammar's rule, not a
+separate ceremony: the step that runs the gate runs it **as** the producer, so
+one event leaves both the mark and the receipt. Which step that is, and under
+what condition, is this block's whole content.
+
+```text
+gate-producer@1
+field | rule
+owner | the step that runs a verification gate — `execute-phase` (the step gate), `fold-findings` (the group's gate), `unit-lane` (the close-out receipt stage), `review-change` (the review's own run)
+command | `runner gate-receipt run` — the gate is executed by the producer, never beside it, so a step pays one gate run and not two
+mark-slot | `manifest <sha>` carries the receipt's `manifest.digest`, so the mark names the bytes the receipt signed rather than a run nobody can re-derive
+ordering | the producer is the step's **last signed-byte write**: it runs after the step's final document edit and before the commit that closes the step, because one later signed write (`docs/**`, `skills/**`, `scripts/**`, `template/**`, `packages/**/*`) makes the receipt stale
+precondition | the project's gate is a script that writes a `local-gate-result@1` document when given `--json <path>` — this repository's `scripts/local-gate.mjs` is; the project declares that script where its commands live (`AGENTS.md` §Commands in the scaffold)
+absent | with no such script, run the project's declared gate command directly and record the mark without a manifest slot, naming the absence — a receipt whose per-check rows cannot be produced is `degraded` by contract, so it is never fabricated
+```
+
+A consumer reads the receipt (`runner gate-receipt verify`), never the mark, and
+never re-runs the gate: a `missing`, `stale` or `invalid` receipt means the
+producer's own step has to run again.

@@ -516,6 +516,7 @@ ledger-ownership-map | skills/pre-execution-review/references/LEDGERS.md | block
 ledger-review-mark-shape | skills/pre-execution-review/references/LEDGERS.md | block:review-mark@1 | n/a | no
 ledger-finding-mark-shape | skills/pre-execution-review/references/LEDGERS.md | block:finding-mark@1 | n/a | no
 ledger-gate-ran-mark | skills/pre-execution-review/references/LEDGERS.md | block:gate-ran@1 | n/a | no
+gate-producer-grammar | skills/pre-execution-review/references/LEDGERS.md | block:gate-producer@1 | n/a | no
 machine-ledger-commit-policy | skills/pre-execution-review/references/LEDGERS.md | block:machine-ledger-commit@1 | n/a | no
 tier-cost-ledger | docs/workflow/TIER_COST.md | block:tier-cost@2 | n/a | no
 tier-cost-comparison | docs/workflow/TIER_COST.md | block:tier-cost-compare@1 | n/a | no

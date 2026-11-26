@@ -82,7 +82,11 @@ Every verification gate this cycle runs records a `GATE-RAN` mark at the head it
 actually ran — a row in the legacy `review-findings.md`, a `## Log` `G` line for a
 re-cut unit (#308):
 `GATE-RAN | HEAD <40-hex sha> | <cmds> | exit <code>`. A green run is recorded;
-a red run is also recorded (exit code ≠ 0 is evidence, not silence). Any skill
+a red run is also recorded (exit code ≠ 0 is evidence, not silence). The run is
+also the receipt's run: the gate is executed as `runner gate-receipt run` and the
+mark's `manifest <sha>` slot carries the receipt's digest, produced as the step's
+last signed-byte write (owner: `LEDGERS.md` §The producer, `gate-producer@1`).
+Any skill
 may consume a green mark only at the identical HEAD — a changed head re-runs
 the gate. The recorders are `execute-phase:gate-ran-marks` and
 `review-change:review-gate-ran-marks` (the shape and ownership live in

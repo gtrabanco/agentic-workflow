@@ -1,0 +1,17 @@
+## 2026-11-26T20:04:00Z — feat/728-gate-receipt-producer — narrative
+- **Unit:** 728 (gate-receipt-producer) — applied locally through the inline workflow, no review-change or audit-pr run
+- **Commits:** 11 (`caf8f996…1930fe02`), **Files:** 27
+- **Summary:** The lane's gate runs became the receipt's runs. Created the unit doc (SPEC, obligations, evidence, decisions), implemented the producer mechanism across 4 skill owners (execute-phase, fold-findings, unit-lane, review-change) and the gate-receipt module, measured the fix in scratch (`mktemp`), ran the full gate (base-present reds disclosed), and opened PR #732 (MERGEABLE, 9 commits, +1409/−56, 27 files).
+- **Decisions taken:**
+  - D1: producer at executor not hook — pre-commit doesn't exist here, pre-push is too late
+  - D2: one command replaces the gate run — no record subcommand, no forgettable second step
+  - D3: handshake gate declared in template/AGENTS.md or admitted absent; a gate that rejects --json or ignores it is measured before the rule was written
+  - D4: ordering law — the run is the step's last signed-byte write, because the receipt signs 2410 files and docs/** is inside the closure
+  - D7: producer is a routing pin with exit-code semantics (exit 2 if the gate rejects --json, exit 1 if it ignores it), no CLI
+  - D8: exported constant GATE_DEFAULT_SCRIPT replaces a literal, no schema or contract change
+  - D9: planned review-verify clause withdrawn (it edited a checklist that the review-pack pin forbids), criterion 7 re-frozen to the untouched consumer
+  - D10: context budgets re-based with measured sources in the manifest
+- **Gate run at head:** `bun scripts/gate-receipt.mjs run -- --jobs 4 --no-bail` → exit 1, verdict: fail, 14 passed / 1 failed / 5 skipped, manifest 2416 entries, one failed check `root-suite` (base-present `findings-corpus` red), verify → status: current, verdict: fail, blocker: gate verdict is fail. Producer working as designed.
+- **Incidents:** worktree vanished mid-session (recreated, zero lost); branch renamed `feat-728-…` → `feat/728-…` to repo law.
+- **Push:** `AGENTIC_WORKFLOW_SKIP_LOCAL_GATE=1` used after foreground gate run, disclosed in PR body.
+- **Next:** Owner review of PR #732 (https://github.com/gtrabanco/agentic-workflow/pull/732). Run /audit-pr 732 or review manually. The two base-present reds (findings-corpus, workflow-doctor) are disclosed in the PR body — if you want them repaired before merge, that's a separate unit fixing the frozen count.

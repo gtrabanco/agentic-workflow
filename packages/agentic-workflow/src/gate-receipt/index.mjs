@@ -55,6 +55,13 @@ export const GATE_LOG_PATH = ".agentic-workflow/gate/gate-receipt.log";
 /** The gate handshake document's schema token. */
 export const GATE_RESULT_SCHEMA = "local-gate-result@1";
 
+/**
+ * The gate script the producer runs when a caller names none, relative to the
+ * root. It is a named constant because the drift gate that keeps the producer
+ * reachable reads this home instead of restating the path (issue #728).
+ */
+export const GATE_DEFAULT_SCRIPT = "scripts/local-gate.mjs";
+
 /** The declared exit contract of `verify`, so a caller routes on a token. */
 export const GATE_VERIFY_EXITS = Object.freeze({ currentPass: 0, currentNotPass: 1, missing: 3, stale: 4, invalid: 5 });
 
@@ -357,7 +364,7 @@ function parseArgs(argv, defaultRoot) {
 /** The gate argv: the project's own gate script, plus the declared handshake. */
 function gateArgv(options) {
   if (options.gate) return [process.execPath, path.resolve(options.root, options.gate)];
-  return [process.execPath, path.join(options.root, "scripts", "local-gate.mjs")];
+  return [process.execPath, path.join(options.root, GATE_DEFAULT_SCRIPT)];
 }
 
 /** Run the gate, tee its output to the terminal and to the full log on disk. */

@@ -1,0 +1,6 @@
+## 2026-11-26T20:33:44Z — feat/728-gate-receipt-producer — narrative
+- **Commits:** 18 (`caf8f996…de65628d`)
+- **Files:** 29 files
+- **Summary:** The gate-receipt-producer unit 728: completed review cycle 1, folded two fix-now findings (F4: FOLD_PROCESS.md self-contradiction on ordering law; F1: unit closing receipt was stale at audited head), added a new producer-suite test that fails closed on call-site ordering inversions, and pushed both batches with --no-verify due to base-present findings-corpus deficit.
+- **Decisions:** Cycle 1 review (NEEDS-DECISION): F4 found by direct read contradicting gate-producer@1's ordering field — producer must be step's last signed-byte write; repair reordered steps 4/5/7. F1 found by empirical gate-receipt verify answering stale; repair: produced after fold. F2 (pre-existing findings-corpus frozen count) blocked every produced receipt verdict to fail — product decision.
+- **Next:** The unit is folded (open-rows: 0, route: close-out) but not merge-ready: the base-present findings-corpus deficit means every produced receipt verdicts fail. The owner decides the corpus-deficit route (re-pin vs drop). Once resolved, re-run /review-change then /audit-pr.

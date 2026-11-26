@@ -31,7 +31,11 @@ Load and verify the **canonical** [Turn contract](../orchestration-envelope/refe
      REPLAN <proposed phase(s)>) — no finding silently skipped.
 ✓ 2. For each FOLDED batch: the gate was RUN (not assumed) and green, one
      atomic commit was RUN with its sha pasted, and (if the branch has an open PR)
-     `git push` was RUN immediately after that commit.
+     `git push` was RUN immediately after that commit. The gate was run **as the
+     producer** (`runner gate-receipt run`, owner: `LEDGERS.md` §The producer, `gate-producer@1`), so
+     the batch's gate run is the receipt a consumer reads. A project with
+     no handshake gate runs its declared gate command directly and records
+     the declared absence instead (owner block's `absent` field).
 ✓ 3. The ledger row for each FOLDED finding was flipped `folded: no → yes`
      in the same commit — never a bare code fix with the ledger left stale.
 ✓ 4. No finding was reclassified: no severity downgrade, no fix-now →
@@ -232,7 +236,8 @@ no schema field). Six fields, always present:
 - The `Gate` line carries the actual exit codes observed at the head the gate
   ran on — green or red. A **failed gate never silences the receipt**: the
   batch is reported with the observed exit codes and nothing folded (a red gate
-  is not a silent gap).
+  is not a silent gap). The producer ran there, so append the receipt's
+  `manifest <sha>` digest after the exit code: the same run is both.
 - **The command derives the branch, the fold never hand-picks it.** After the
   bookkeeping commits and the gate run, emit the machine receipt:
   `runner repair-receipt emit --pr <N> --unit <NN-slug> --reviewed <the reviewed head>`.
@@ -242,10 +247,14 @@ no schema field). Six fields, always present:
   `Branch:` above prints that route verbatim. `RE-REVIEW-SKIPPED` and
   `RE-REVIEW-OPTIONAL` are merge currency; the other three grant nothing and
   keep their existing continuation (issue #698 S4/S9).
-- **Emission order (issue #698 S6):** bookkeeping commits first, then the gate
-  run, then the receipt. `emit` posts a comment and **commits nothing**; a
-  re-pin after it is a new head and needs a new receipt. That order is what
-  stops the receipts from voiding each other.
+- **Emission order (issue #698 S6):** bookkeeping commits first and the repair
+  receipt last, and the gate evidence it reads is the producer's own run: by
+  `gate-producer@1`'s `ordering` (issue #728) that run signs the closing
+  commit's exact bytes — after the step's last document edit, before the commit
+  that closes it — so a re-run after the commit is never the currency. `emit`
+  posts a comment and **commits nothing**; a re-pin after it is a new head and
+  needs a new receipt. That order is what stops the receipts from voiding each
+  other.
 - **A `workflow` row is not folded.** A ceremony finding is
   an agentic-workflow defect, not the project's: search the upstream tracker
   (#170, #301, #260, #698) and offer to file it (issue #698 S8). It is

@@ -187,12 +187,16 @@ sibling `bun test scripts/worktree-guard.test.mjs` for the delegated prune path.
 
 ## Known pre-existing issues
 
-- `scripts/roadmap-settle.test.mjs`'s live-tree check fails on
-  `docs/features/98-deterministic-tool-doctor/SPEC.md` (the issue-98 row's topic
-  cell reads `finding-severity-ladder`). **does-not-affect** — the row's bytes
-  and the folder are identical to `origin/main` (measured: this branch's
-  roadmap diff is only the #693 row), so the drift is the roadmap's to settle,
-  not this unit's; the root gate reports it red here and on `main`'s tree alike.
+- `scripts/roadmap-settle.test.mjs`'s live-tree check failed on feature number
+  98, which two rows claimed (the second re-registered issue #537 under a number
+  whose topic cell reads `finding-severity-ladder`). **does-not-affect** — the
+  row's bytes and the duplicate folder were identical to `origin/main`
+  (measured: this branch's roadmap diff is only the #693 row), so the drift was
+  the roadmap's to settle, not this unit's; the root gate reported it red here
+  and on `main`'s tree alike. **Repaired 2026-11-26** by the owner's order:
+  number 98 returned to `finding-severity-ladder`, the duplicate #537
+  registration and its stub folder left the tree, and `runner roadmap-settle`
+  passes on the live tree.
 - `scripts/unit-doc-contract.test.mjs`'s `#462 …train version` case fails:
   `packages/agentic-workflow` is `4.10.1` while `packages/agentic-workflow-schema`
   is `4.10.0` (D-40-14). **does-not-affect** — this branch touches no

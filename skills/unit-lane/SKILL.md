@@ -303,8 +303,15 @@ When all triaged steps are done, in order:
    `detail.retention.pending_trim[]` row: when `docRetention.mode` allows, offer
    the row's own `doc archive` command (dry-run first); report it otherwise,
    never apply it silently (owner: [`docs/workflow/RETENTION.md`](../../docs/workflow/RETENTION.md)).
-4. **Receipt stage.** The in-doc verdict is not the machine receipt. Verify
-   the PR's review receipt (`runner review-receipt verify --pr <N>`):
+4. **Receipt stage.** The in-doc verdict is not the machine receipt, and this
+   step is the unit's **last signed-byte write** — so it produces one receipt
+   before it verifies the other. **Produce the gate receipt first:** run the
+   project gate as the producer (`runner gate-receipt run`, owner:
+   `LEDGERS.md` §The producer, `gate-producer@1`) after the unit doc's last edit and before the
+   commit that closes it, so the receipt is current at the head the merge gate
+   audits; a project with no handshake gate records that absence instead of
+   fabricating one. Then verify the PR's review receipt
+   (`runner review-receipt verify --pr <N>`):
    - **exit 0** (a current `review-change:pass` receipt at the settled head) →
      the closing `→ Next:` recommends `/audit-pr <PR-url>` as the terminal
      stage, with the receipt stated as its precondition.
