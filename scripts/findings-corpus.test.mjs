@@ -183,21 +183,18 @@ test("reader reconciliation: a settled carrier keeps its one-line marks and open
 
 test("harvest: the real tree yields the counts the planning ledger froze", () => {
   const corpus = buildCorpus(ROOT, { resolveFold: () => null });
-  // 1178 = 1173 + feature 719's five rows `F9`–`F13` (the review-receipt,
-  // verify and lineage findings recorded after the 1173 re-pin landed): the
-  // corpus counts the finding rows the tree actually carries, so a unit that
-  // records one raises it (the same mechanism this line documents for
-  // `reviewMarks` below). Re-frozen during the 2026-11-26 main integration,
-  // where origin/main's own tip proved red (1178 ≠ 1173) before any branch
-  // content joined it — exact equality kept, no assertion relaxed.
+  // 1178 findings, 56 legacy ledgers, 229 fold-annotated rows and 180 review
+  // marks were measured on the tree this merge produces, not on either parent:
+  // origin/main's commits carry feature 719's `F9`-`F13` rows and its `R3` line,
+  // fix/729 adds its own `R1` and `R2` lines, and unit 728 contributes its `R1`
+  // line for this branch's review cycle. The corpus counts what the tree
+  // actually carries — the mechanism issue #651 introduced — so a unit that
+  // records a finding or a review mark raises it and a folded row lowers it; the
+  // assertions stay exact, nothing is relaxed.
   assert.equal(corpus.findings.length, 1178, "every finding row in either carrier is in the corpus");
   assert.equal(corpus.legacyLedgers, 56);
   assert.equal(corpus.foldAnnotated, 229);
-  // 178 = 177 + unit 728's `R1` line (its own review cycle, recorded on the
-  // branch the 2026-11-26 main integration merged): the corpus counts the review
-  // marks the tree actually carries, so a unit that records one raises it — the
-  // same mechanism the 176 and 177 re-pins above document.
-  assert.equal(corpus.reviewMarks, 178);
+  assert.equal(corpus.reviewMarks, 180);
   assert.ok(corpus.units.length >= 171);
   assert.deepEqual(corpus.unparsable, []);
   assert.ok(corpus.findings.every((row) => row.provenance.includes(":") && row.digest.length === 12));
