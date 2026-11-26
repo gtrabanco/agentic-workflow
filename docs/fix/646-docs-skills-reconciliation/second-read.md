@@ -158,6 +158,7 @@ docs/passive/2026-11-10-park-269-verify-findings.md | 2-rarely | scanned | struc
 docs/passive/2026-11-15-settle-odd-hybrid-direction.md | 2-rarely | scanned | structural scan: headings, owner pointers and the unit's patterns
 docs/passive/2026-11-20-issue-663-skill-surface-diagnosis.md | 2-rarely | full | the ceremony CLI's own record of this session's passive unit; read back as written
 docs/pre-spec/2026-11-17-526-elicitation-layer.md | 2-rarely | scanned | structural scan: headings, owner pointers and the unit's patterns
+docs/pre-spec/2026-11-24-719-nan-default-embed.md | 2-rarely | scanned | structural scan: headings, owner pointers and the unit's patterns
 docs/research/2026-11-12-input-quality-and-editing/README.md | 2-rarely | scanned | structural scan: headings, owner pointers and the unit's patterns
 docs/research/2026-11-12-input-quality-and-editing/papers-sweep.md | 2-rarely | scanned | structural scan: headings, owner pointers and the unit's patterns
 docs/research/2026-11-13-tool-doctor-inventory.md | 2-rarely | scanned | structural scan: headings, owner pointers and the unit's patterns

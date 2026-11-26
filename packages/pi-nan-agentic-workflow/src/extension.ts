@@ -1,8 +1,9 @@
 // src/extension.ts
 // The companion's Pi extension entry: registers the NaN preset into the main
 // package's provider-preset seam at load time (issue #388; amendment 2 adds
-// the named profile catalog), and — issue #632 — the phase-batching command
-// that prints the preset's recommendation for a unit.
+// the named profile catalog), applies that profile's doc-index default (issue
+// #719 D5), and — issue #632 — the phase-batching command that prints the
+// preset's recommendation for a unit.
 // The main package never names a provider; this file is the only place the two
 // meet.
 //
@@ -13,6 +14,7 @@
 
 import { registerProviderPreset } from "@gtrabanco/pi-agentic-workflow/dist/config/presets.js";
 import { loadConfig } from "@gtrabanco/pi-agentic-workflow/dist/config/load.js";
+import { applyEmbedDefaultOn } from "@gtrabanco/pi-agentic-workflow/dist/config/embed-profile.js";
 import { getAgentDir } from "@earendil-works/pi-coding-agent";
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { PROVIDER, PROFILES, DEFAULT_PROFILE, resolvePresetProfile } from "./preset.js";
@@ -31,6 +33,51 @@ function register(): void {
     resolveProfile: ({ config, profile }) =>
       resolvePresetProfile({ tierRouting: config.tierRouting, profile }),
   });
+}
+
+/**
+ * Issue #719 S1/S4 (decision D5) — apply this preset's doc-index embedding
+ * profile by default, right after the registration that publishes it.
+ *
+ * The trigger lives here, with the profile's owner, and deliberately not in the
+ * main package: Pi loads extensions in an order it does not promise, so a
+ * registry read from another package's load could find the registry empty and
+ * silently answer keyword-only. Called from the module top *after* `register()`,
+ * the profile exists by construction.
+ *
+ * `applyEmbedDefaultOn` owns the whole decision — an operator's committed block
+ * withholds it, an absent key withholds it, and a trio this resolver wrote is
+ * withdrawn before the next decision, so the call is safe to repeat.
+ *
+ * The plan's `detail` is what the operator gets to hear, and it is the whole
+ * report: a plan that carries one applied (or refused to read the config, which
+ * the operator has to act on) and is said once per process, because a second load
+ * would say the same thing. Every other withhold stays silent — a keyword-only
+ * session is a supported state, not a fault to announce per load.
+ */
+function applyEmbedDefault(deps: { report?: EmbedDefaultReport } = {}): void {
+  const report = deps.report ?? reportToStderr;
+  const result = applyEmbedDefaultOn({ entry: { provider: PROVIDER, profile: NAN_EMBED_PROFILE }, root: process.cwd() });
+  if (result.plan.detail === null) return;
+  // Once per process: a second load reaches the same decision, so saying it twice
+  // would be noise. A refusal is said on the load that hits it, the same way.
+  const line = `pi-nan-agentic-workflow: ${result.plan.detail}`;
+  if (reported.has(line)) return;
+  reported.add(line);
+  report(line, result.plan.reason === "unreadable-config" ? "warning" : "info");
+}
+
+/** The lines this process already said — one per distinct decision, never per load. */
+const reported = new Set<string>();
+
+/** Clears the once-per-process memo; the seam's tests own their own dialect. */
+export function resetEmbedDefaultReports(): void {
+  reported.clear();
+}
+
+/** Where a report goes when no host seam is injected: stderr, never stdout. */
+export function reportToStderr(line: string, kind: "info" | "warning"): void {
+  process.stderr.write(`${kind === "warning" ? "warning: " : ""}${line}\n`);
 }
 
 /**
@@ -96,8 +143,14 @@ function registerPhaseBatchingCommand(pi?: ExtensionAPI): void {
 }
 
 register();
+applyEmbedDefault();
+
+export type EmbedDefaultReport = (line: string, kind: "info" | "warning") => void;
+
+export { applyEmbedDefault };
 
 export default function extension(pi?: ExtensionAPI): void {
   register();
+  applyEmbedDefault();
   registerPhaseBatchingCommand(pi);
 }

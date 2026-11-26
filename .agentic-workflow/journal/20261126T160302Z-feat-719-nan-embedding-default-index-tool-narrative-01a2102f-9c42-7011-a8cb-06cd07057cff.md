@@ -1,0 +1,6 @@
+## 2026-11-26T16:03:02Z — feat/719-nan-embedding-default-index-tool — narrative
+- **Commits:** 55 (`e8d7e1ab…70788b4c`)
+- **Files:** 36 files
+- **Summary:** Fold-findings batch for feature 719 (PR #720): F1-F7 frozen by F6's replan-in-unit route (batch class: frozen (replan present)). All seven findings — F1 (CRITICAL load-order race), F2 (IO crash), F3 (env shadowing), F4 (docs currency), F5 (schema mislabel), F6 (malformed G1 receipt), F7 (dead code) — routed to /unit-lane 719-nan-default-embed for the lane's plan step to cut the missing phase ledger and G1 receipt repair.
+- **Decisions:** The review-change result was REVIEW-FAIL (7 findings). The fold-findings batch was frozen because F6's frozen route was replan-in-unit, not fix-now — meaning nothing folded, no commits were made, and the batch class became 'frozen (replan present)'. The router (unit-route) concluded route: replan, directing the unit-lane as the hand-off consumer. This is the first time the fold-findings batch was frozen by a replan-class row — the fix-now rows (F1-F5, F7) cannot be repaired until the plan-class row (F6) is resolved through the unit-lane.
+- **Next:** /unit-lane 719-nan-default-embed — the lane re-runs plan to append phases covering F1-F7 to the unit doc, including the G1 receipt line fix (plan class)

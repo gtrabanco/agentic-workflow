@@ -183,15 +183,17 @@ test("reader reconciliation: a settled carrier keeps its one-line marks and open
 
 test("harvest: the real tree yields the counts the planning ledger froze", () => {
   const corpus = buildCorpus(ROOT, { resolveFold: () => null });
-  // 1166 = 1165 + fix/701's own `F1` row: the corpus counts the finding rows
-  // the tree actually carries, so a unit that records one raises it (the same
+  // 1173 = 1166 + feature 719's seven `F1`–`F7` rows (the review-change persist
+  // commit) — its `F8` was folded, which deletes the row: the corpus counts the
+  // finding rows the tree actually carries, so a closed row lowers it (the same
   // mechanism this line documents for `reviewMarks` below).
-  assert.equal(corpus.findings.length, 1166, "every finding row in either carrier is in the corpus");
+  assert.equal(corpus.findings.length, 1173, "every finding row in either carrier is in the corpus");
   assert.equal(corpus.legacyLedgers, 56);
   assert.equal(corpus.foldAnnotated, 229);
-  // 174 = 173 + this unit's own `R1` line (issue #651): the corpus counts the
-  // review marks the tree actually carries, so a unit that records one raises it.
-  assert.equal(corpus.reviewMarks, 174);
+  // 176 = 174 + feature 719's own `R1` line + its `R2` line (the cycle-2
+  // re-review): the corpus counts the review marks the tree actually carries, so a
+  // unit that records one raises it.
+  assert.equal(corpus.reviewMarks, 176);
   assert.ok(corpus.units.length >= 171);
   assert.deepEqual(corpus.unparsable, []);
   assert.ok(corpus.findings.every((row) => row.provenance.includes(":") && row.digest.length === 12));

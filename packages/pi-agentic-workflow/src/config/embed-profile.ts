@@ -21,10 +21,13 @@
 //
 // Nothing here names a provider: the profile is data handed in by the seam.
 
+import { readFileSync } from "node:fs";
+
 import type { IndexConfig, PacingConfig, ProviderConfig } from "@gtrabanco/agentic-workflow/src/doc/config.mjs";
 import {
   DEFAULT_MAX_REQUEST_CHARS,
   DEFAULT_PACING,
+  MAX_REQUEST_CHARS_ENV,
   configPath,
   validateIndexConfigObject,
 } from "@gtrabanco/agentic-workflow/src/doc/config.mjs";
@@ -309,4 +312,289 @@ export function renderEmbedProfileReport(plan: EmbedProfilePlan): string[] {
       : `  ${plan.fills.length} key(s) to fill from the preset · ${plan.rows.length - plan.fills.length} kept as written`,
   );
   return lines;
+}
+
+// ---------------------------------------------------------------------------
+// Default-on resolution (issue #719 S1/S4)
+// ---------------------------------------------------------------------------
+//
+// A session that carries the preset and the provider's key variable but no
+// committed provider block used to answer keyword-only until somebody
+// discovered the preset, materialized it and ran a sync. The resolver removes
+// that ceremony without a crate change and without rewriting anything:
+//
+//   * the crate already resolves a provider from three direct env vars, and the
+//     **key variable is the whole gate** — the preset names it
+//     (`envVar`, `NAN_API_KEY` for NaN) and nothing else is needed once
+//     `baseUrl` + `model` come from the profile;
+//   * the committed `index.json` is a decision surface, so a provider block an
+//     operator wrote always wins and is never merged into — the default only
+//     applies to an **absent** block (`provider` unset or `null`);
+//   * the values are exported into the host process, which every spawned runner
+//     child inherits, so `doc --sync` and `doc --query` resolve the provider
+//     env-only. No file is written: the materialization route stays opt-in.
+
+/**
+ * The crate's direct env-var names, spelled here because the crate keeps its
+ * copy private (`embeddings.mjs`'s `DIRECT_ENV`). These three names *are* the
+ * crate's public surface — `AGENTIC_WORKFLOW_DOC_EMBEDDINGS_BASE_URL/MODEL/
+ * API_KEY` is the documented env-only provider path — so the resolver names them
+ * once and every caller imports this object instead of re-typing a string.
+ */
+export const EMBED_DIRECT_ENV = Object.freeze({
+  baseUrl: "AGENTIC_WORKFLOW_DOC_EMBEDDINGS_BASE_URL",
+  model: "AGENTIC_WORKFLOW_DOC_EMBEDDINGS_MODEL",
+  apiKey: "AGENTIC_WORKFLOW_DOC_EMBEDDINGS_API_KEY",
+});
+
+/** Why the default-on decision went the way it did — the closed reason set. */
+export const EMBED_DEFAULT_ON_REASONS = Object.freeze([
+  "default-on",
+  "explicit-provider-block",
+  "no-provider-key",
+  "operator-environment",
+  "unreadable-config",
+] as const);
+export type EmbedDefaultOnReason = (typeof EMBED_DEFAULT_ON_REASONS)[number];
+
+/** The decision: whether to inject, why, and the exact variables to export. */
+export interface EmbedDefaultOnPlan {
+  readonly provider: string;
+  readonly reason: EmbedDefaultOnReason;
+  /** True only when every variable in `env` may be exported. */
+  readonly inject: boolean;
+  /** The variables to export; empty whenever `inject` is false. */
+  readonly env: Readonly<Record<string, string>>;
+  /** The operator-facing line the extension prints when the default applies. */
+  readonly detail: string | null;
+}
+
+export interface EmbedDefaultOnDeps {
+  readonly entry: EmbedProfileEntry;
+  readonly root: string;
+  /**
+   * Where the preset's `envVar` key is read from; defaults to `process.env`.
+   * Kept separate from `processEnv` so a caller can inject a credential without
+   * pretending it already lives in the process.
+   */
+  readonly env?: Record<string, string | undefined>;
+  /**
+   * The process surface the exported variables land in, and the one an operator's
+   * own exports are read from. Defaults to `process.env` — production passes
+   * nothing.
+   */
+  readonly processEnv?: Record<string, string | undefined>;
+  /**
+   * Reads one absolute path's text, or `null` when the file is absent. Defaults
+   * to the real filesystem: the extension load is the production caller and it
+   * has no file seam of its own, so the resolver owns the default read and a
+   * suite injects its own bytes.
+   */
+  readonly readFile?: (path: string) => string | null;
+}
+
+/**
+ * The request budget the profile's measured pair implies, or an empty object when
+ * the profile declares no usable pair (D3). One derivation, so the trios that
+ * carry it agree.
+ */
+function budgetVariable(profile: ProviderConfig): Record<string, string> {
+  const chunkLimit = profile.chunk_limit;
+  const batchSize = profile.pacing?.batchSize;
+  if (typeof chunkLimit !== "number" || typeof batchSize !== "number" || chunkLimit <= 0 || batchSize <= 0) return {};
+  return { [MAX_REQUEST_CHARS_ENV]: String(chunkLimit * batchSize) };
+}
+
+/**
+ * The variables this resolver exports: the crate's three direct env names with
+ * the credential in force, plus the profile's request budget.
+ */
+function profileTrio(profile: ProviderConfig, apiKey: string): Record<string, string> {
+  // Tuning parity (D3): the preset's measured chunk × batch pair is what one
+  // request may carry, and the crate adopts the request budget as the chunk limit
+  // when no explicit `chunk_limit` is configured — so the pair travels as the
+  // budget, with no crate change and no new env name.
+  return {
+    [EMBED_DIRECT_ENV.baseUrl]: profile.baseUrl ?? "",
+    [EMBED_DIRECT_ENV.model]: profile.model ?? "",
+    [EMBED_DIRECT_ENV.apiKey]: apiKey,
+    ...budgetVariable(profile),
+  };
+}
+
+/**
+ * The trios this resolver exported in this process, keyed by provider — the one
+ * witness of authorship that an operator's hand-written export can never produce.
+ * Value equality alone cannot tell the two apart (an operator exporting the same
+ * values writes an identical shape), so the record is kept where the write
+ * happens and every later decision reads it back.
+ */
+const selfExported = new Map<string, Record<string, string>>();
+
+/**
+ * Forget every trio this process recorded as its own write. A caller that shares
+ * one process across independent surfaces owns its dialect of that state, the same
+ * way it owns any other once-per-process memo.
+ */
+export function resetSelfExported(): void {
+  selfExported.clear();
+}
+
+/**
+ * The names of `env` this resolver wrote and may withdraw: only the values that
+ * are still exactly what it exported. A name the operator has since changed is
+ * theirs again, and a trio never exported here is never withdrawn (D7).
+ */
+function selfInjectedNames(
+  provider: string,
+  env: Record<string, string | undefined>,
+): string[] {
+  const exported = selfExported.get(provider);
+  if (exported === undefined) return [];
+  return Object.keys(exported).filter((name) => env[name] === exported[name]);
+}
+
+/**
+ * The provider block the file holds, `null` when absent, or the refusal text.
+ *
+ * Only absence is a decision (`provider` unset ⇒ the default applies). A read the
+ * process cannot complete — a 0-mode file's `EACCES`, a directory's `EISDIR`, a
+ * vanished path's `ENOENT` race — leaves the block unknown, so it becomes the
+ * `unreadable-config` refusal carrying the error text instead of a throw into
+ * whatever loaded the extension.
+ */
+function readProviderBlock(
+  path: string,
+  readFile: (path: string) => string | null,
+): { ok: true; provider: ProviderConfig | null } | { ok: false; detail: string } {
+  let text: string | null;
+  try {
+    text = readFile(path);
+  } catch (error) {
+    const cause = error as NodeJS.ErrnoException;
+    if (cause?.code === "ENOENT") return { ok: true, provider: null };
+    const message = error instanceof Error ? error.message : String(error);
+    return { ok: false, detail: `${path} cannot be read (${message})` };
+  }
+  if (text === null) return { ok: true, provider: null };
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(text);
+  } catch (error) {
+    return { ok: false, detail: `${path} is not valid JSON (${error instanceof Error ? error.message : String(error)})` };
+  }
+  if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed)) {
+    return { ok: false, detail: `${path} must be a JSON object` };
+  }
+  const provider = (parsed as IndexConfig).provider;
+  // `null`/absent is the crate's own keyword-only default; anything else — even
+  // an empty object — is a block the operator wrote, so it withholds the default.
+  return { ok: true, provider: provider ?? null };
+}
+
+/** The default read: a file's text, `null` when it does not exist. Every other
+ *  failure is left to `readProviderBlock`, which knows absence from a refusal. */
+function readTextFileOrNull(path: string): string | null {
+  try {
+    return readFileSync(path, "utf8");
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") return null;
+    throw error;
+  }
+}
+
+/**
+ * Decide whether the preset's profile applies to this project by default.
+ * Pure with respect to the filesystem beyond the injected `readFile` and to the
+ * process beyond the injected `env`.
+ */
+export function planEmbedDefaultOn({
+  entry,
+  root,
+  env = process.env,
+  processEnv = process.env,
+  readFile = readTextFileOrNull,
+}: EmbedDefaultOnDeps): EmbedDefaultOnPlan {
+  const profile = entry.profile;
+  const withholds = (reason: EmbedDefaultOnReason, detail: string | null): EmbedDefaultOnPlan => ({
+    provider: entry.provider,
+    reason,
+    inject: false,
+    env: {},
+    detail,
+  });
+
+  const path = configPath(root);
+  const read = readProviderBlock(path, readFile);
+  if (!read.ok) return withholds("unreadable-config", read.detail);
+  if (read.provider !== null) return withholds("explicit-provider-block", null);
+
+  // The key variable is the gate (`envVar`); an empty or whitespace value is an
+  // absent credential, never one this resolver makes up.
+  // An operator who exported the crate's own variables already chose a provider;
+  // a partial set is still their choice, and half-injecting around it would
+  // produce a mixture nobody asked for. That choice outranks the key gate: a
+  // session with no preset key and a hand-written export answers `operator-
+  // environment`, which is what it is. A trio this resolver exported itself is not
+  // a choice — it is withdrawn before the decision runs, so a provider block
+  // written after the injection wins and a second load plans the surface it found
+  // instead of the one it wrote.
+  const selfInjected = selfInjectedNames(entry.provider, processEnv);
+  const foreign = Object.values(EMBED_DIRECT_ENV).filter(
+    (name) => (processEnv[name] ?? "") !== "" && !selfInjected.includes(name),
+  );
+  if (foreign.length > 0) return withholds("operator-environment", null);
+
+  const keyName = profile.envVar;
+  const apiKey = keyName ? env[keyName]?.trim() : undefined;
+  if (!keyName || !apiKey) return withholds("no-provider-key", null);
+  if (!profile.baseUrl || !profile.model) return withholds("no-provider-key", null);
+
+  const variables = profileTrio(profile, apiKey);
+
+  return {
+    provider: entry.provider,
+    reason: "default-on",
+    inject: true,
+    env: variables,
+    detail: `${entry.provider} doc-index embeddings resolved by default (${profile.baseUrl}, ${profile.model}) — no index.json provider block was found`,
+  };
+}
+
+/** What applying the plan did to the process surface. */
+export interface EmbedDefaultOnResult {
+  readonly applied: boolean;
+  /** True when a trio this resolver exported earlier was withdrawn before planning. */
+  readonly abstained: boolean;
+  readonly plan: EmbedDefaultOnPlan;
+}
+
+/**
+ * Apply the plan to the process environment — the one impure step, and the only
+ * thing the extension load has to do.
+ *
+ * Idempotent by withdrawal, not by skipping: a trio this resolver exported
+ * earlier in the same process is detached before the decision runs and re-exported
+ * whenever it still holds, so the second load reaches the same conclusion the
+ * first one did — and a provider block the operator wrote after the injection
+ * wins inside the same session instead of being shadowed by the environment it
+ * replaced. Any plan whose `env` is empty leaves the process as it found it.
+ */
+export function applyEmbedDefaultOn(deps: EmbedDefaultOnDeps): EmbedDefaultOnResult {
+  const target = deps.processEnv ?? process.env;
+  const env = deps.env ?? process.env;
+  const provider = deps.entry.provider;
+  const withdrawn = selfInjectedNames(provider, target);
+  for (const name of withdrawn) delete target[name];
+  if (withdrawn.length > 0) selfExported.delete(provider);
+
+  const plan = planEmbedDefaultOn({ ...deps, processEnv: target, env });
+  if (!plan.inject) return { applied: false, abstained: withdrawn.length > 0, plan };
+  const written: Record<string, string> = {};
+  for (const [name, value] of Object.entries(plan.env)) {
+    written[name] = value;
+    target[name] = value;
+  }
+  selfExported.set(provider, written);
+  return { applied: true, abstained: withdrawn.length > 0, plan };
 }

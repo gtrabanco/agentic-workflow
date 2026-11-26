@@ -14,10 +14,13 @@ import { mkdtempSync, mkdirSync, rmSync, writeFileSync, readFileSync } from "nod
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { execFileSync } from "node:child_process";
+import { createServer } from "node:http";
 
 import { runDocOp } from "@gtrabanco/agentic-workflow/src/doc/retrieval.mjs";
 import { applyEmbedProfile, planEmbedProfile } from "../dist/config/embed-profile.js";
 import { sandboxGitEnv } from "./git-sandbox.mjs";
+
+const PKG_ROOT = join(import.meta.dirname, "..");
 
 const PROFILE = {
   baseUrl: "https://acme.example/v1",
@@ -128,6 +131,109 @@ test("S9 AC1: the second sync is a warm run — zero provider calls, still nothi
     assert.equal(second.store.pending, 0);
     assert.equal(second.store.lastSync.embedded, 0);
   } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// Issue #719 AC6: the default-on resolution reaches a query through the tool
+// ---------------------------------------------------------------------------
+//
+// The whole point of resolving at load is that a caller who never learned the
+// shell incantation still gets semantic results. This case runs the real chain:
+// a fixture project with no provider block, the profile applied by the load seam,
+// then `doc_search` spawning the real runner bin in that project's process —
+// and the answer must be a hybrid one, not the keyword-only degradation.
+
+test("#719 AC6: a query through the tool seam resolves the default provider (no degradation)", async () => {
+  const { applyEmbedDefaultOn } = await import("../dist/config/embed-profile.js");
+  const { createWorkflowTools } = await import("../dist/extension/workflow-tools.js");
+
+  const root = mkdtempSync(join(tmpdir(), "embed-default-on-e2e-"));
+  const saved = Object.fromEntries([
+    "AGENTIC_WORKFLOW_DOC_EMBEDDINGS_BASE_URL",
+    "AGENTIC_WORKFLOW_DOC_EMBEDDINGS_MODEL",
+    "AGENTIC_WORKFLOW_DOC_EMBEDDINGS_API_KEY",
+    "AGENTIC_WORKFLOW_DOC_EMBEDDINGS_MAX_REQUEST_CHARS",
+    "ACME_API_KEY",
+    "AGENTIC_WORKFLOW_RUNNER",
+  ].map((name) => [name, process.env[name]]));
+  const restore = () => {
+    for (const [name, value] of Object.entries(saved)) {
+      if (value === undefined) delete process.env[name];
+      else process.env[name] = value;
+    }
+  };
+  try {
+    mkdirSync(join(root, ".agentic-workflow"), { recursive: true });
+    git(root, ["init", "-q"]);
+    for (const [name, body] of Object.entries(DOCS)) writeFileSync(join(root, name), body);
+    git(root, ["add", "-A"]);
+    git(root, ["commit", "-qm", "fixture"]);
+
+    // The provider the tool's child will really talk to: a local
+    // OpenAI-compatible endpoint serving the same deterministic axes the sync
+    // embedded with. Offline, and the child's request is genuinely answered.
+    const server = createServer((request, response) => {
+      let body = "";
+      request.on("data", (chunk) => {
+        body += chunk;
+      });
+      request.on("end", () => {
+        const { input } = JSON.parse(body);
+        const embedder = fixtureEmbedder(PROFILE.model);
+        embedder.embed(input).then((vectors) => {
+          response.writeHead(200, { "content-type": "application/json" });
+          response.end(JSON.stringify({ data: vectors.map((embedding, index) => ({ index, embedding })) }));
+        });
+      });
+    });
+    await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+    const port = server.address().port;
+    const profile = { ...PROFILE, baseUrl: `http://127.0.0.1:${port}/v1` };
+
+    try {
+      // 1. The decision is made from an absent block plus the key variable —
+      //    the exact shape the issue describes, with no `index.json` written.
+      process.env.ACME_API_KEY = "acme-key";
+      const plan = applyEmbedDefaultOn({
+        root,
+        entry: { provider: "acme", profile },
+        processEnv: process.env,
+      });
+      assert.equal(plan.applied, true, "the profile resolved by default");
+      assert.equal(plan.abstained, false, "nothing was written by an earlier load");
+      assert.equal(process.env.AGENTIC_WORKFLOW_DOC_EMBEDDINGS_MODEL, PROFILE.model);
+      assert.equal(process.env.AGENTIC_WORKFLOW_DOC_EMBEDDINGS_BASE_URL, profile.baseUrl);
+
+      // 2. A sync the tool's own query depends on, through the crate's op (the
+      //    store is what makes a hybrid answer possible at all).
+      await runDocOp({ op: "sync" }, { rootDir: root, embedder: fixtureEmbedder(PROFILE.model) });
+
+      // 3. The query as a caller reaches it now: the deferred tool, spawning the
+      //    real pinned runner in the fixture project, which inherits the
+      //    environment the load seam exported.
+      process.env.AGENTIC_WORKFLOW_RUNNER = `bun ${join(PKG_ROOT, "..", "agentic-workflow", "bin", "agentic-workflow.mjs")}`;
+      const search = createWorkflowTools().find((tool) => tool.name === "doc_search");
+      const result = await search.execute({ query: "zanzibar" }, root);
+
+      assert.equal(result.isError, undefined, "a hybrid answer is not a red gate");
+      const envelope = result.structuredContent;
+      assert.equal(envelope.ok, true);
+      assert.equal(envelope.command, "query");
+      assert.deepEqual(
+        envelope.degradations,
+        [],
+        "no unavailable-embeddings-not-configured — the provider resolved by default",
+      );
+      assert.ok(envelope.results.length > 0, "the fused search answered");
+      assert.equal(envelope.results[0].path, "b.md", "the chunk naming the term ranks first");
+      assert.deepEqual(envelope.results[0].lines.length, 2, "the 1-based inclusive line pair is typed");
+    } finally {
+      await new Promise((resolve) => server.close(resolve));
+    }
+  } finally {
+    restore();
     rmSync(root, { recursive: true, force: true });
   }
 });

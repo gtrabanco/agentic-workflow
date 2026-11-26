@@ -167,8 +167,32 @@ doc-index embedding profile — <provider>
   equals the preset's (whoever wrote it); `user` means a different value is in
   force; `default` means the key is absent and the crate's shipped value is what
   runs today. Nothing is stored in your file to say so.
-- **Why not automatically.** Nothing is written at extension load, in a query, or
-  by `doc --sync`: a committed config file changes only when you say so.
+- **Why the file is not written automatically.** No query, no `doc --sync` and
+  no extension load writes a committed config file: it changes only when you say
+  so. What *is* default-on is the resolution itself — see
+  [Default-on resolution](#default-on-resolution-issue-719) below.
+
+## Default-on resolution (issue #719)
+
+A project carrying a preset's profile, its key variable and **no** `provider`
+block in `index.json` used to answer keyword-only until somebody found the
+preset, materialized it and ran `/aw-index` — the "0 embedding tokens used"
+surprise. It now resolves at extension load:
+
+- **An absent block plus a present key.** The package exports the crate's own
+  `AGENTIC_WORKFLOW_DOC_EMBEDDINGS_BASE_URL/MODEL/API_KEY` into the session
+  process, plus the profile's measured chunk × batch pair (6000 × 6) as its
+  request budget (`…_MAX_REQUEST_CHARS=36000`) — the chunk limit the crate adopts
+  when none is configured. Every runner child (`doc --sync`, `doc --query`, the
+  [`doc_search`](#workflow-tools-deferred--issue-274) tool) then resolves the
+  provider env-only. The materialization action above stays what writes a file.
+- **Your block always wins.** A `provider` block — complete or partial — withholds
+  the default wholesale; the file is never merged into and stays byte-identical.
+- **No key, nothing changes.** Nothing is exported and the keyword-only
+  `unavailable-embeddings-not-configured` behaviour is untouched — as it is once
+  you export any of those three variables yourself.
+- **Prose retrieval only.** `rg` stays the tool for exact strings and regex in
+  code, LSP for symbols, and the corpus stays markdown.
 
 ## Unattended durability — supervisor resume (issue #284)
 
@@ -257,7 +281,6 @@ scripts — plus one generic door for the subcommands without a typed tool — a
 **deferred pi tools** in the `agentic-workflow` namespace. Deferred means the
 model is never shown them: there is no standing token cost, `tool_search` can
 find and activate them, and codemode scripts can call them by name at any time.
-
 | Tool | Wraps | Returns as `structuredContent` |
 | --- | --- | --- |
 | `agentic_workflow_status` | `agentic-workflow workflow-status --json-only` | The validated Envelope v2 (the schema package's published `envelope.schema.json`, reused verbatim) |
@@ -265,6 +288,7 @@ find and activate them, and codemode scripts can call them by name at any time.
 | `agentic_workflow_phase_lint` | `agentic-workflow phase-lint` | `{ verdict, fingerprint, phases[], docFindings[] }` parsed from the byte-stable block |
 | `agentic_workflow_audit_pr_gate` | `scripts/audit-pr-gate.mjs evaluate` | The merge verdict report (`verdict`, `action`, `actionReason`, head/pr) |
 | `agentic_workflow_snapshot_verify` | `agentic-workflow pre-execution-snapshot verify` | The freshness report (`current`, `digestMatches`, `structural`) |
+| `doc_search` | `agentic-workflow doc --query <term> [--mode …] --json-only` | The crate's query envelope: `{ ok, command, results[], degradations[], store }` with `{ path, section, lines, score, meta }` rows. Prose retrieval — `rg` stays the tool for exact strings and LSP for symbols; an absent `mode` is resolved by the crate itself |
 | `agentic_workflow_run` | any other runner subcommand (`unit-route`, `needs-input`, `ceremony`, …) | `{ subcommand, stdout, stderr, exitCode }` — the command's own output, and a non-zero exit arrives as `isError` carrying it |
 
 Two properties hold for every tool:

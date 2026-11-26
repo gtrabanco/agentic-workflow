@@ -255,7 +255,31 @@ evidence is the change the trigger forbids.
 The agentic workflow's retrieval index embeds your project's markdown so a query
 can rank semantically as well as by keyword. It reads one block for that — the
 `provider` block of the committed `.agentic-workflow/index.json` — and nobody
-wants to hand-derive it, so this package ships it. With the preset installed,
+wants to hand-derive it, so this package ships it.
+
+**It applies by default.** With this package installed and `NAN_API_KEY` present,
+loading the session resolves the profile below for the doc index with no
+ceremony: no `/agentic-workflow-settings` visit, no `/aw-index` run, no
+hand-written `index.json`. The three `AGENTIC_WORKFLOW_DOC_EMBEDDINGS_*`
+variables every runner child inherits are exported from the profile, so
+`doc --sync` and `doc --query` — and the `doc_search` tool — resolve the provider
+env-only. Nothing is written, and the committed file stays byte-identical.
+
+Three things withhold it, and all three are silent because each one is a
+supported state rather than a fault:
+
+- **A provider block you wrote**, whole or partial, in
+  `.agentic-workflow/index.json`. Yours is the instruction; the default never
+  merges into it, and a block written mid-session wins for the rest of it.
+- **No `NAN_API_KEY`**, or an empty one. Nothing changes and the index stays
+  keyword-only.
+- **Your own export of the `AGENTIC_WORKFLOW_DOC_EMBEDDINGS_*` variables**, which
+  says you already chose a provider. A trio this package exported itself is
+  recognised and withdrawn before the next decision, so it never masquerades as
+  your choice.
+
+To pin a value — a conservative pace, another `baseUrl` — write it. The settings
+console is still the route that writes a block for you:
 `/agentic-workflow-settings` → **`Doc index embedding profile`** shows the block,
 per key, with where each value came from (the preset, you, or the engine's
 default), and writes it after you say yes:
