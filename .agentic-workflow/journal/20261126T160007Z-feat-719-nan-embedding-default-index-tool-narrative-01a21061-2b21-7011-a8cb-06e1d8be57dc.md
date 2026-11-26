@@ -1,6 +1,0 @@
-## 2026-11-26T16:00:07Z — feat/719-nan-embedding-default-index-tool — narrative
-- **Commits:** 53 (`e8d7e1ab…ea019c24`)
-- **Files:** 34 files
-- **Summary:** Replan pass for feature 719 fold batch: the lane re-ran the plan step over the review's seven confirmed findings (F1–F7), appending phases P6–P13 — F2→P6 (unreadable-config refusal), F3→P7 (self-injection withdrawal), F1→P8 (donor-trigger for default-on, retire at-load registry read), F5→P9 (doc_search score fix), F4→P10 (README statement), F7→P11 (dead surface cleanup), P12 fold-batch verification, P13 settle re-check. Also ran the replan pass cutting phases P6-P13 — phase-lint PASS 13/13, verify passing (obligations open at planned status, closed by P12). PR #720 MERGEABLE.
-- **Decisions:** D5: default-on trigger moved to pi-nan profile donor (order-proof vs pi's unguaranteed load order); D6: plan.detail gains consumer (stderr report for applied defaults, silent for withholds); D7: self-injected trio value-matched and withdrawn on withhold (operator blocks win within-session). Phase-lint box 4 forbids (a)/(b) enumerations in a single task bullet — one finding per phase required.
-- **Next:** /execute-phase 719-nan-default-embed P6 (tier: cheap) to begin the fold batch implementation; the lane resumes after P13. If REVIEW-FAIL → /fold-findings; after REVIEW-PASS → /audit-pr.

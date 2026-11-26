@@ -1,6 +1,0 @@
-## 2026-11-26T19:22:05Z — feat/698-ceremony-rule-a-ceremony-shaped-finding-never-bl — narrative
-- **Commits:** 20 (`71421c3b…ff17f65e`)
-- **Files:** 60 files
-- **Summary:** Applied the second external-verify correction batch on #698 (verdict NEEDS-DECISION, open B1/B2): every missing/stale review-receipt statement in skills/audit-pr/SKILL.md (8 sites) and the README / docs-workflow SKILLS / WORKFLOW_INVARIANTS rows (3) now carries the repair-currency exception (03 step 1), the SKILLS row names the verdict receipt, and the crate README names both comment markers (A1). The differential loop caught one breakage: the additions blew audit-pr route ceilings, re-based through runner budgets after scratch validation. Targeted gates all green.
-- **Decisions:** One batch for B1+B2+A1; A2 (host AGENTIC_WORKFLOW_SKILLS_ROOT) and A3 (red-first allowlist, owner call) untouched by design. Budget re-basis used the sanctioned budgets writer with the growth source declared in both routes, validated on a mktemp copy first (12 lines moved, live receipts byte-identical). No obligation row flipped - no O-validator reads the four files.
-- **Next:** External verifier re-runs the EXTERNAL VERIFY reproducers as a delta verdict over this batch's diff, then PR #725 review.
