@@ -39,6 +39,9 @@ const WRITER_MODULES = [
   // The writer's own module (issue #553): the repository script is a shim over
   // the crate command, so a fixture that copies it copies what it resolves.
   "packages/agentic-workflow/src/session-close/index.mjs",
+  // Issue #727: `close` now sweeps the machine-owned ledger class after the log,
+  // so the fixture stages the class's own module beside it.
+  "packages/agentic-workflow/src/machine-ledger/index.mjs",
   "packages/agentic-workflow/src/journal/fragment.mjs",
   "packages/agentic-workflow/src/journal/block.mjs",
   "packages/agentic-workflow/src/log/render.mjs",

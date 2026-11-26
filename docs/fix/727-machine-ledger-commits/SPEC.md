@@ -184,9 +184,16 @@ none
 - `scripts/workflow-doctor.test.mjs` fails three battery cases at the base
   checkout too (the `AGENTIC_WORKFLOW_SKILLS_ROOT` defect fix #729 is open on):
   `does-not-affect` this unit.
-- `scripts/red-first.test.mjs` and `scripts/ceremony-findings-ledger.test.mjs`
-  are wall-clock red under load (a 5s per-test bound): both pass alone and both
-  fail identically at the base checkout — `does-not-affect`, environmental.
+- `scripts/red-first.test.mjs`, `scripts/ceremony-findings-ledger.test.mjs`,
+  `scripts/phase-lint.test.mjs` and `packages/pi-agentic-workflow/test/workflow-tools.test.mjs`
+  are wall-clock red under load (a 5s per-test or 120s suite bound): each passes
+  alone, both package suites pass in full when the box is quiet (pi 1120/0), and
+  each fails identically at the base checkout — `does-not-affect`, environmental.
+- `packages/agentic-workflow/test/doc.structure.test.mjs` exceeds its declared
+  240s suite bound on this tree (280s standalone, 240s SUITE TIMEOUT under the
+  runner) while its allowlist records 163.2s measured 2026-11-21 — the document
+  tree grew since; `does-not-affect` this unit's suites, and the bound is a data
+  receipt for the tree's owner, not for this diff.
 - The `feat-728-gate-receipt-producer` worktree and this unit's own worktree
   directory were removed by an unidentified actor during this session
   (2026-11-26 16:18 UTC). `does-not-affect` this unit's content: the branch was
@@ -270,6 +277,11 @@ lane's plan step, and no triage route is re-derived here.
 - **G4** — 2026-11-26, HEAD `50229f0b`, `bun packages/agentic-workflow/bin/agentic-workflow.mjs phase-lint docs/fix/727-machine-ledger-commits/SPEC.md` · exit 0 · all nine phases PASS.
 - **G5** — 2026-11-26, HEAD `50229f0b`, `bun packages/agentic-workflow/bin/agentic-workflow.mjs prose-gate-inventory` · exit 0 · `verdict: PASS` (the new surface claimed, the new gate row cited); `test-obligation-tags` · exit 0 · 145 suites / 0 findings.
 - **G6** — 2026-11-26, HEAD `50229f0b`, `rg -n 'review-change|audit-pr|fold-findings' docs/fix/727-machine-ledger-commits/` matches only this unit's prohibition and its citations — no review pack, no audit and no fold cycle ran on it (criterion 1).
+
+- **G7** — 2026-11-26, HEAD `027f8ef79`, `bun run test` in `packages/agentic-workflow` · every suite green except `test/doc.structure.test.mjs`, which hits the runner's declared 240s suite bound (280s standalone on this tree; see Known pre-existing issues) — base-affected, not this diff.
+- **G8** — 2026-11-26, HEAD `027f8ef79`, `bun run test` in `packages/pi-agentic-workflow` · exit 0 · **1120 pass / 0 fail across 95 files**, the new `ledger-commit` suite included (5/0) and the `log-session-command` fixture extended with the class module `close` now imports.
+- **G9** — 2026-11-26, HEAD `027f8ef79`, `bun scripts/run-root-suite.mjs` (no bail) · **four reds, each reproduced byte-identically at the base checkout**: `findings-corpus` (pin 1173 vs tree 1178), `workflow-doctor` (the fix #729 battery defect), `red-first` (5s per-test bound) and `phase-lint` (120s suite bound under load; 45.9s standalone). Every other root suite exits 0.
+- **G10** — 2026-11-26, correction: G1's claim that `crate-suite-bun`/`crate-suite-node` exited 0 in that gate run is superseded — the two steps were *skipped* there (root-suite failed first under the dependency graph), and their real results are G7/G8, run directly at the same head.
 
 ## Next
 
