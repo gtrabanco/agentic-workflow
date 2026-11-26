@@ -302,6 +302,8 @@ ledger (grammar: `findings-table@1`).
 | F9 | docs/features/719-nan-default-embed/decisions.md:14,16 + packages/pi-agentic-workflow/src/config/embed-profile.ts:446 + docs/features/719-nan-default-embed/SPEC.md:362 | workflow | WARNING | docs-only | plan | fold |
 | F10 | .agentic-workflow/gate/gate-receipt.json + docs/features/719-nan-default-embed/SPEC.md:362 | verify | WARNING | docs-only | environment | fold |
 | F11 | docs/features/719-nan-default-embed/planning-evidence.md:18-24 | verify | WARNING | docs-only | plan | fold |
+| F12 | PR #720 comments at head 37fe07b03 (Review receipt gate) | Review receipt | BLOCKER | blocking | plan | /review-change — no REVIEW-PASS marker exists at the audited head (R1–R3 all REVIEW-FAIL); re-review after the open folds land |
+| F13 | docs/features/719-nan-default-embed/planning-obligations.md:9 | Lineage | BLOCKER | blocking | plan | /unit-lane 719-nan-default-embed — the ledger header is `id`, so `unit-lineage` reads no ledger and answers LINEAGE BLOCKED |
 
 ## Log
 
