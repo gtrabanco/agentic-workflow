@@ -607,17 +607,21 @@ test("F9: a `<…>` vocabulary placeholder is never a surface — no lane, and n
 });
 
 test("T1: the templates declare the `## Surfaces` section the parser reads, and the contract keeps it optional", () => {
-  // This repository's own templates name the six lane keys the planner resolves.
+  // This repository's own templates teach the rule the parser implements and
+  // point at its owner: a closed list of this tree's folders is the #716 defect,
+  // and the scaffold copies already say "the project's lane key".
   const TEMPLATES = ["docs/fix/_TEMPLATE/SPEC.md", "docs/features/_TEMPLATE/SPEC.md"];
   for (const rel of TEMPLATES) {
     const text = fs.readFileSync(path.join(repoRoot, rel), "utf8");
     const at = text.indexOf("\n## Surfaces\n");
     assert.notEqual(at, -1, `${rel} carries ## Surfaces — triage cuts a unit from it`);
     const body = text.slice(at + 1, text.indexOf("\n## ", at + 1));
-    for (const key of ["packages/<name>", "skills/<name>", "scripts", "docs", "template", ".github"]) {
-      assert.ok(body.includes(key), `${rel}: the section names the lane key ${key} the parser resolves`);
-    }
     assert.ok(body.includes("surface-unknown"), `${rel}: an unknown declaration is a legal answer`);
+    assert.ok(body.includes("batchScheduler.surfaces"), `${rel}: the project's declaration is named as the vocabulary's source`);
+    assert.ok(body.includes("skills/batch-scheduler/references/PLAN.md"), `${rel}: the vocabulary's owner is cited, never restated`);
+    for (const key of ["packages/<name>", "skills/<name>"]) {
+      assert.ok(!body.includes(key), `${rel} restates this repository's closed lane list (${key})`);
+    }
     assert.ok(at > text.indexOf("\n## Impact\n"), `${rel}: the section follows ## Impact`);
   }
 
@@ -640,9 +644,8 @@ test("T1: the templates declare the `## Surfaces` section the parser reads, and 
   for (const rel of FORMS) {
     const text = fs.readFileSync(path.join(repoRoot, rel), "utf8");
     assert.match(text, /^\s+id: surfaces$/mu, `${rel} asks for the surfaces`);
-    for (const key of ["packages/<name>", "skills/<name>", "scripts", "docs", "template", ".github"]) {
-      assert.ok(text.includes(key), `${rel}: the field names the lane key ${key}`);
-    }
+    assert.ok(text.includes("batchScheduler.surfaces"), `${rel}: the field names the project's declaration as the vocabulary`);
+    assert.ok(text.includes("surface-unknown"), `${rel}: the honest unknown is part of the field`);
   }
   for (const rel of ["template/.github/ISSUE_TEMPLATE/fix.yml", "template/.github/ISSUE_TEMPLATE/feature.yml"]) {
     const text = fs.readFileSync(path.join(repoRoot, rel), "utf8");

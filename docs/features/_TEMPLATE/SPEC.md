@@ -91,7 +91,7 @@ an honest unknown is a legal answer, and the plan reports it. Advisory only: no
 reader requires this section, and an absent one falls back to the issue body and
 then to this document's `Relevant files:` lines.
 
-- `packages/<name>`
+- <the project's lane key>
 
 ## Retirements
 

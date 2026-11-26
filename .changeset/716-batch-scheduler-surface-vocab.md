@@ -2,6 +2,8 @@
 "@gtrabanco/agentic-workflow": minor
 "@gtrabanco/agentic-workflow-schema": minor
 "batch-scheduler": minor
+"init-workspace": minor
+"triage-issue": minor
 ---
 
 fix(batch-scheduler): the lane vocabulary is the project's, not this repository's tree (issue #716)
