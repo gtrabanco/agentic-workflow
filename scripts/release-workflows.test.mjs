@@ -467,6 +467,7 @@ test("every former remote check survives as a step of the local gate", () => {
     "pi-node-compat",
     "pi-compat-guard",
     "dependency-pin-gate",
+    "machine-ledger-commit",
     "dependency-advisories",
   ], "a check that disappears with the job that carried it is the defect this list prevents");
   for (const needle of ["--frozen-lockfile", "run-root-suite.mjs", "version-parity-gate.mjs", "--content", "--pins", "dependency-advisory-pass"]) {

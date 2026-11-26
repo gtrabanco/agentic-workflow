@@ -94,11 +94,9 @@
      Untracked, non-ignored harness/toolstate nobody authored for this unit
      (.engram/, .pi/, .serena/, session files) is committed once or added to
      .gitignore — named here, never reviewed. A verdict on a workspace whose
-     state the forge cannot see is withheld, not filed. **One class never stops
-     the review:** a machine-owned ledger row (block `machine-ledger-commit@1`,
-     `LEDGERS.md`) is generated after the session's own commit, so box 5 exempts
-     it — do not block on it, do not "fix" it, and never revert one; the gate's
-     prelude commits it on the next push.
+     state the forge cannot see is withheld, not filed. A machine-owned ledger row
+     (`machine-ledger-commit@1`, `LEDGERS.md`) never stops the review: box 5
+     exempts it, never "fix" or revert one.
    ```
 
    Run the greps/`git log`/`git status` — don't infer compliance.

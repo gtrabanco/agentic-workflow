@@ -67,10 +67,9 @@ exact command tokens.
    performed and consumes an identical-head green mark instead of re-running,
    see `LEDGERS.md` §gate-ran@1; `docs(<unit>): persist review findings`);
    pushed when a PR is open;
-   an uncommitted append hands the next review a dirty-tree stop, **except** for
-   the machine-owned ledger class (block `machine-ledger-commit@1`,
-   `LEDGERS.md`), which box 5 exempts — a pending machine row is never a stop,
-   never a finding, and never something a review "fixes". On
+   an uncommitted append hands the next review a dirty-tree stop — except a
+   machine-owned ledger row (`machine-ledger-commit@1`, `LEDGERS.md`), which box 5
+   exempts. On
    `REVIEW-PASS` with an open PR the SHA-bound receipt is the durable record:
    head and posted receipt stay identical.
    This skill's only mutations are the rows + `REVIEW-RAN` + `GATE-RAN` marks

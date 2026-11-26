@@ -176,6 +176,17 @@ none
   the roadmap at some base revisions (`roadmap-settle` red). `does-not-affect`
   this unit: the row exists at this base (`| 494 | telemetry-by-turn | done …`),
   and the gate's roadmap step is green at the cut.
+- `scripts/findings-corpus.test.mjs` pins the corpus at 1173 rows and the tree
+  carries 1178 — `does-not-affect` this unit: reproduced byte-identically at the
+  base checkout (`/tmp/base-727`, `main` @ `022769f8b`, 33 pass / 1 fail), so it
+  is a stale data receipt on `main`, not this diff's row. Routed to the owner;
+  not repaired here because a count pin belongs to the unit that added the rows.
+- `scripts/workflow-doctor.test.mjs` fails three battery cases at the base
+  checkout too (the `AGENTIC_WORKFLOW_SKILLS_ROOT` defect fix #729 is open on):
+  `does-not-affect` this unit.
+- `scripts/red-first.test.mjs` and `scripts/ceremony-findings-ledger.test.mjs`
+  are wall-clock red under load (a 5s per-test bound): both pass alone and both
+  fail identically at the base checkout — `does-not-affect`, environmental.
 - The `feat-728-gate-receipt-producer` worktree and this unit's own worktree
   directory were removed by an unidentified actor during this session
   (2026-11-26 16:18 UTC). `does-not-affect` this unit's content: the branch was
@@ -244,6 +255,21 @@ lane's plan step, and no triage route is re-derived here.
 - **D1** — 2026-11-26, design docket: the binary under `.gitattributes` classes are the class, committed by one module; a ledger's commit happens in a zone, not per file (D2), and the pi extension spawns the crate command rather than re-implementing git. Full rows in `decisions.md`.
 - **E1** — 2026-11-26, `git worktree list` · exit 0 — this unit's worktree and `feat-728-gate-receipt-producer` were deleted and de-registered by an unidentified actor at 16:18 UTC; the branch was at `main` (no commits), so nothing was lost. Restored with `git worktree add .worktrees/feat-727-machine-ledger-auto-commit feat-727-machine-ledger-auto-commit` · exit 0 · `HEAD is now at 022769f8b`.
 - **D2** — 2026-11-26, the incident disclosure rule applied: the wipe is reported to the owner in the handoff, never silently repaired beyond restoring this unit's own worktree.
+
+- **E2** — 2026-11-26, `bun test packages/agentic-workflow/test/machine-ledger-commit.test.mjs` at `50229f0b` · exit 0 · 10 pass / 0 fail (the class table, the path-scoped commit, the clean and locked no-ops, `session-close close`, both `reconstruct write` cases).
+- **E3** — 2026-11-26, `bun test packages/agentic-workflow/test/turn-contract.engine.test.mjs` at `50229f0b` · exit 0 · 37 pass / 0 fail; the four box-5 cases are the exemption, the untracked fragment, the human-uncommitted file and the `ahead-of-remote` guard.
+- **E4** — 2026-11-26, `bun test packages/pi-agentic-workflow/test/ledger-commit.test.mjs` at `50229f0b` · exit 0 · 5 pass / 0 fail (teardown argv and runtime, once per session, absent crate, failed spawn, disabled switch).
+- **E5** — 2026-11-26, `bun test scripts/local-gate.test.mjs` at `50229f0b` · exit 0 · 65 pass / 0 fail (the prelude commits the ledger alone, `--dry-run` plans it and writes nothing).
+- **E6** — 2026-11-26, `bun test scripts/machine-ledger-policy.test.mjs` at `50229f0b` · exit 0 · 8 pass / 0 fail (three-source parity, the injected one-sided class, the prelude declaration, the triage-state exit).
+- **E7** — 2026-11-26, `bun test scripts/ledger-ownership.test.mjs` at `50229f0b` · exit 0 · 15 pass / 0 fail — the map's writers are unchanged.
+- **E8** — 2026-11-26, red-first proof: `bun test scripts/machine-ledger-policy.test.mjs` and the crate suite exited 1 with `Cannot find module '../packages/agentic-workflow/src/machine-ledger/index.mjs'` at `2dcebf5cb`, the commit that landed the suites alone (engine 4 fail / 33 pass, local-gate 2 fail / 63 pass with the module absent).
+- **E9** — 2026-11-26, differential against `/tmp/base-727` (`main` @ `022769f8b`, `bun install --frozen-lockfile`): `telemetry reconstruct stats` and `ledger-provenance --check` byte-identical; `session-close render` differs only by its UTC timestamp; `turn-contract` on a clean tree byte-identical; a `note.txt` modification fails `box5: dirty-tree` identically on both sides, while a `docs/LOGS.md` modification fails at base and passes at head — the change S5 asks for, and nothing else moved.
+- **G1** — 2026-11-26, HEAD `50229f0b`, `bun scripts/local-gate.mjs --skip-network --jobs 4` · offline steps 16/17 after the two fixes below; `root-suite` exits 1 on the base-reproduced `findings-corpus` pin (1173 vs 1178) and, under load, on `red-first`/`ceremony-findings-ledger`'s 5s bounds — all reproduced at the base checkout and disclosed under Known pre-existing issues; `crate-suite-bun`, `crate-suite-node`, `schema-build`, `docs-generated-projection`, `skill-context-budgets`, `journal-carrier-check`, `log-immutability`, `push-identity`, `secret-scan`, `temp-hygiene`, `tmp-gc`, `worktree-guard`, `rigidity-review`, `dimension-regression`, `version-parity-content` and the `machine-ledger-commit` prelude exit 0.
+- **G2** — 2026-11-26, HEAD `50229f0b`, `bun scripts/check-skill-context.mjs` / `--documents` / `--routes` · exit 0 · 33 skills PASS, 7 documents PASS, 14 routes PASS after the two declared re-bases (the guide's one new machine row; the review-change routes' exemption line).
+- **G3** — 2026-11-26, HEAD `50229f0b`, `bun scripts/docs-generate.mjs --check` · exit 0 · 3 files / 0 stale / 0 orphaned, roadmap unchanged.
+- **G4** — 2026-11-26, HEAD `50229f0b`, `bun packages/agentic-workflow/bin/agentic-workflow.mjs phase-lint docs/fix/727-machine-ledger-commits/SPEC.md` · exit 0 · all nine phases PASS.
+- **G5** — 2026-11-26, HEAD `50229f0b`, `bun packages/agentic-workflow/bin/agentic-workflow.mjs prose-gate-inventory` · exit 0 · `verdict: PASS` (the new surface claimed, the new gate row cited); `test-obligation-tags` · exit 0 · 145 suites / 0 findings.
+- **G6** — 2026-11-26, HEAD `50229f0b`, `rg -n 'review-change|audit-pr|fold-findings' docs/fix/727-machine-ledger-commits/` matches only this unit's prohibition and its citations — no review pack, no audit and no fold cycle ran on it (criterion 1).
 
 ## Next
 
