@@ -1,6 +1,0 @@
-## 2026-11-25T01:24:08Z — fix/706-logs-write-path — narrative
-- **Commits:** 18 (`7f7a0e96…6d92ac2e`)
-- **Files:** 22 files
-- **Summary:** Correction batch on the external verify of fix/706-log-write-path: all 5 blockers folded — O11's validator now matches the committed fragment's path, P8's validator is the reproducing pair (full gate green post-push by #539, authorized log-rewritten+log-hand-appended under the pinned merge-base) with the receipts appended not edited, and the three surviving pre-#706 wiring-parity sentences (src/journal/aggregate.mjs, bin header, template workflow comment) now name their CI context, pinned by a new journal.surfaces case (red 5af85b28b, green 6d92ac2e7).
-- **Decisions:** Advisories 1-5 triaged and none folded: the LOGS.md header pair would need a second unauthorized write beyond D1's one-time exception, 405's AC5 is another unit's frozen receipt, the planning-evidence freshness cells sit behind the ledgers' cut-time freeze, and S2's 347-file count is the issue's verbatim quote. E6 was corrected by appending (E9), never edited: ## Log is append-only.
-- **Next:** Delta external verify of the five blockers on the new head (the batch's full-gate run is reported in the handoff); D3's owner-side sentence still applies.

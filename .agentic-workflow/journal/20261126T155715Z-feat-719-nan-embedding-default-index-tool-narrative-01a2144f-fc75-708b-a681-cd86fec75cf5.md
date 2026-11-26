@@ -1,6 +1,0 @@
-## 2026-11-26T15:57:15Z — feat/719-nan-embedding-default-index-tool — narrative
-- **Commits:** 50 (`e8d7e1ab…7cdf4c01`)
-- **Files:** 31 files
-- **Summary:** Feature 719 resolved NaN embedding profile default-on and exposed doc index as tool; went from design+plan to code, evidence, review (cycles 1-2), fold batch with main integration, and audit-pr. Two parallel threads: fix/706 log-write-path restructure (fragment carrier, log-immutability, gate refusal of direct LOGS.md edits) with external-verify; fix(release) #723 stamp-to-projection rebind. Feature 719: 13 phases (P1-P13), 8 review findings fixed (F1-F8), 2 subsessions, red-first pattern, fold batch verified.
-- **Decisions:** F1: retired at-load registry read; the donor package is the canonical trigger. F2: refuse unreadable index.json with guard instead of throwing. F3: withdraw resolver own injected trio before planning to prevent circular self-reference. F8: authorship not value shape decides what the resolver withdraws. fix/706: fragment carrier over direct LOGS.md append. fix(release) #723: stamp must re-derive projection digest before moving.
-- **Next:** Complete feature 719: run /review-change on PR #720 to get REVIEW-PASS marker, /audit-pr, then merge and publish changeset.
