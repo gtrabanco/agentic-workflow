@@ -1,0 +1,6 @@
+## 2026-11-26T16:02:00Z — feat/719-nan-embedding-default-index-tool — narrative
+- **Commits:** 52 (`e8d7e1ab…4d88bb45`)
+- **Files:** 33 files
+- **Summary:** Root-caused why unit-lane did not dispatch pi-relay legs for feat/719-nan-default-embed — found the contract gap in RELAY.md §Bootstrap/§Degradation that allowed the conductor to silently degrade to inline /execute-phase while pi-web was present; filed issue #722 (bug, needs-triage) documenting the non-deterministic seam between 719 (silent inline) and sosfelinosbasti fix/334 (correct ask-and-stop).
+- **Decisions:** Root cause: RELAY.md §Bootstrap step 3 states human approval as a CONDITION but never mandates an ASK-AND-STOP step, and §Degradation only covers pi-web absent — the undefined state was filled by the model, producing different outcomes per session. Not a config or version difference (no relay* config key exists anywhere; installed release matches worktree). Fixed output: RELAY.md needs an explicit ask-and-stop at the seam + optional config key for owner default (ask | inline; auto cannot bypass pi-web's dispatch_relay gate).
+- **Next:** Owner to review issue gtrabanco/agentic-workflow#722 at triage. feat/719-nan-embedding-default-index-tool (PR #720) is already merged to main — unit doc in docs/features/719-nan-default-embed/ remains unbootstrapped for relay until #722's fix lands.
