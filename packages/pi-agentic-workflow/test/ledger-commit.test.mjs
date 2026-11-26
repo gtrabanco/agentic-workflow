@@ -16,7 +16,16 @@ import { test } from "node:test";
 import { createLedgerCommit } from "../dist/ledger-commit.js";
 import { createTelemetryWiring } from "../dist/extension/telemetry-wiring.js";
 
-const sandbox = () => fs.mkdtempSync(path.join(os.tmpdir(), "pi-ledger-commit-"));
+/** Every scratch directory this suite makes, removed once the suite is done. */
+const scratch = [];
+const sandbox = () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "pi-ledger-commit-"));
+  scratch.push(dir);
+  return dir;
+};
+test.after(() => {
+  for (const dir of scratch) fs.rmSync(dir, { recursive: true, force: true });
+});
 
 function recorders() {
   const lines = [];
