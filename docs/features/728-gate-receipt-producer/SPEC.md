@@ -353,6 +353,8 @@ for this change (it would be a second, competing step list).`
 
 | id | S# / file:line | axis | severity | impact | class | route |
 |---|---|---|---|---|---|---|
+| F1 | S4 · docs/features/728-gate-receipt-producer/SPEC.md:553 | workflow | WARNING | docs-only | runtime | fold |
+| F4 | S4 · skills/fold-findings/references/FOLD_PROCESS.md:40 | code | WARNING | docs-only | source | fold |
 
 ## Log
 
@@ -562,6 +564,40 @@ for this change (it would be a second, competing step list).`
   run in 72s, so its earlier red was the per-test budget under load, exactly as
   recorded. A receipt that cannot say `pass` says `fail` and names the check —
   the one behaviour this unit exists to make reachable.
+
+- **G3** — 2026-11-26, GATE-RAN | HEAD b54671fb7 | `runner gate-receipt run`
+  (`bun packages/agentic-workflow/bin/agentic-workflow.mjs gate-receipt run -- --jobs 4
+  --no-bail`) | exit 1 | manifest
+  269651b4…afe0 — the review's own produced run at `b54671fb7` (cycle 1):
+  **14 passed / 1 failed / 5 skipped**, the first red again
+  `scripts/findings-corpus.test.mjs` — the tree's open findings now 1,180 rows
+  against the frozen 1,173 (the corpus freeze deficatie above, plus the two
+  open rows this review persisted).
+
+- **R1** — 2026-11-26, review at HEAD b54671fb7 · verdict NEEDS-DECISION ·
+  cycle 1 · gate exit 1 — axes run: review-code, review-security,
+  review-verify, review-perf, usage-docs (inline); skipped: review-design,
+  review-a11y, review-seo (no UI/web surface), review-brand (no brand doc);
+  fix-now rows F1 and F4 persisted (`external-verify` process again:
+  F2 is a decision-required pre-existing deficit and is not persisted).
+
+- **V1** — docs/features/728-gate-receipt-producer/SPEC.md:553 · reviewer
+  review-change · HEAD b54671fb7 · recheck `reproducible command output:`
+  `bun packages/agentic-workflow/bin/agentic-workflow.mjs gate-receipt verify`
+  answers `status: stale` at `b54671fb7` (changed: the eight signed paths the
+  correction batch wrote after the last produced receipt), with
+  `git log --format='%h %ad' --date=format:'%H:%M'` (68f85b545 17:49 <
+  27cbc26a3 19:29) · confirmed
+
+- **V2** — skills/fold-findings/references/FOLD_PROCESS.md:40 · reviewer
+  review-change · HEAD b54671fb7 · recheck `direct read:` lines 24-27 (the
+  producer at step 4) plus line 40 ("The producer ran before this commit
+  (step 4), because the ledger flip is a signed byte: producing after it
+  would leave the receipt stale the moment the commit lands") contradict
+  `gate-producer@1`'s `ordering` field (LEDGERS.md:304, "the producer is the
+  step's last signed-byte write") and the pinned freshness behaviour
+  (`gate-receipt.test.mjs`: a signed byte after a run flips it stale, so
+  producing AFTER the flip is what covers it) · confirmed
 
 ## Next
 
