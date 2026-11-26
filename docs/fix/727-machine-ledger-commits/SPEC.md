@@ -285,9 +285,11 @@ lane's plan step, and no triage route is re-derived here.
 
 - **P1** — 2026-11-26, the budget re-pins were re-applied without re-encoding the manifest (the first hand edit escaped every non-ASCII character, 287 lines of churn for 20 of substance) · `f97b09580`.
 
+- **P2** — 2026-11-26, PR [#731](https://github.com/gtrabanco/agentic-workflow/pull/731) opened against `main` (`feat/727-machine-ledger-auto-commit`, head `009529630`); the roadmap fix row settled to `done` through `roadmap fixrow`. The push skipped the pre-push gate on the documented hatch, because the gate's only red is the base-reproduced `root-suite` failure named above — the same offline subset ran at the pushed head.
+
 ## Next
 
-P2: land the five suites red, then implement P3.
+Owner external verification of PR [#731](https://github.com/gtrabanco/agentic-workflow/pull/731): merge after it, and route the two base-reproduced reds (`findings-corpus` count pin, `doc.structure` suite bound) to their owners.
 
 ## References
 
