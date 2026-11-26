@@ -507,6 +507,9 @@ repository review machinery ran on this change.
 
 ## References
 
+- Pull request [#732](https://github.com/gtrabanco/agentic-workflow/pull/732) —
+  this unit's delivery vehicle; merge state lives in the forge, not the roadmap
+  row.
 - Issue [#728](https://github.com/gtrabanco/agentic-workflow/issues/728) — the
   consumer-only ceremony this unit gives a producer.
 - `docs/features/108-machine-gate-receipts/` — `gate-receipt@1`, the receipt's
