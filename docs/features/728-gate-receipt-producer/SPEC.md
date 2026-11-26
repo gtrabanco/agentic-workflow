@@ -614,6 +614,16 @@ for this change (it would be a second, competing step list).`
   swept: `/producing\s+after\s+(it|them|that|this)\s+would\s+leave\s+the\s+receipt\s+stale/iu` → expected 0 in skills/**
   swept: `/producer ran before/` → expected 0 in skills/**
 
+- **G4** — 2026-11-26, GATE-RAN | HEAD 1cf9c68b0 | `runner gate-receipt run`
+  (`bun packages/agentic-workflow/bin/agentic-workflow.mjs gate-receipt run -- --jobs 4
+  --no-bail`) | exit 1 | manifest
+  55cc4363…6b05 — the fold's produced run: **14 passed / 1 failed / 5 skipped**,
+  the one failed check `root-suite`, whose first red is still
+  `scripts/findings-corpus.test.mjs` (1,179 rows against the frozen 1,173, one
+  fewer than G3 because F4's row left the carrier) — F2's pre-existing deficit,
+  not this fold's. Producing this run *after* the fold's ledger flip is the
+  ordering the repaired `FOLD_PROCESS.md` states.
+
 ## Next
 
 The external verifier's verdict — the diff, the obligations ledger (`16 rows ×
