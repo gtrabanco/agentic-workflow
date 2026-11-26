@@ -208,6 +208,14 @@ test("gate-producer-drift: a missing or silent default gate is a finding, never 
   assert.deepEqual(audit({ root: silent }).findings.map((finding) => finding.code), ["default-gate-schema-missing"]);
 });
 
+test("gate-producer-drift: no call site inverts the ordering law the owner block states", () => {
+  const result = audit({ root: REPO_ROOT });
+  assert.deepEqual(result.orderingViolations, [], "every call site agrees the producer runs after the step's signed bytes settle");
+
+  const root = toyRoot({ ["skills/fold-findings/SKILL.md"]: `# fold-findings\n\nRun \`runner gate-receipt run\` (\`${PRODUCER_BLOCK}\`) before this commit, because producing after it would leave the receipt stale.\n` });
+  assert.deepEqual(audit({ root }).orderingViolations, [{ path: "skills/fold-findings", detail: "a call site claims producing after the step's signed bytes would stale the receipt" }]);
+});
+
 test("gate-producer-drift: the rendered block is fixed and byte-stable", () => {
   assert.equal(
     render(audit({ root: toyRoot() }), "toy-root"),
