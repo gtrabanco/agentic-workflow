@@ -36,6 +36,19 @@ test("clean-check detects dirty worktree with porcelain rows", () => {
   assert.deepEqual(r.json["dirty-files"].sort(), ["draft.md", "staged.md"]);
 });
 
+test("clean-check: a pending machine-owned ledger row is exempt, a foreign file still dirties", () => {
+  const dir = makeRepo();
+  commitFile(dir, "docs/workflow/TIER_COST.md", "| unit | tokens |\n");
+  fs.appendFileSync(path.join(dir, "docs", "workflow", "TIER_COST.md"), "| 727 | 10 |\n");
+  const exempt = cer(["workspace", "clean-check"], dir);
+  assert.equal(exempt.json.clean, true, "the machine class is not the dirt this check refuses on");
+  assert.deepEqual(exempt.json["dirty-files"], []);
+  fs.writeFileSync(path.join(dir, "note.txt"), "human\n");
+  const foreign = cer(["workspace", "clean-check"], dir);
+  assert.equal(foreign.json.clean, false);
+  assert.deepEqual(foreign.json["dirty-files"], ["note.txt"]);
+});
+
 test("status reports index/working/staged per file", () => {
   const dir = makeRepo();
   fs.writeFileSync(path.join(dir, "a.md"), "a\n");

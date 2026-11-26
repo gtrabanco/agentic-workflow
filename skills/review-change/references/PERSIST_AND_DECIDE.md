@@ -75,7 +75,9 @@ exact command tokens.
    field). A receipt produced before the append is stale the moment the commit
    lands, and the merge gate then blocks on it.
    pushed when a PR is open;
-   an uncommitted append hands the next review a dirty-tree stop. On
+   an uncommitted append hands the next review a dirty-tree stop — except a
+   machine-owned ledger row (`machine-ledger-commit@1`, `LEDGERS.md`), which box 5
+   exempts. On
    `REVIEW-PASS` with an open PR the SHA-bound receipt is the durable record:
    head and posted receipt stay identical.
    This skill's only mutations are the rows + `REVIEW-RAN` + `GATE-RAN` marks

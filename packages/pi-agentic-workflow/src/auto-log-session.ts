@@ -30,6 +30,7 @@ import path from "node:path";
 import { execFileSync } from "node:child_process";
 
 import type { LogFacts } from "@gtrabanco/agentic-workflow/src/log/render.mjs";
+import { isMachineLedgerExempt } from "@gtrabanco/agentic-workflow/src/machine-ledger/index.mjs";
 
 /** The project journal, relative to the project root (the template's default). */
 export const JOURNAL_PATH = "docs/LOGS.md";
@@ -259,9 +260,15 @@ export function collectFiles(options: { root: string; startSha?: string | null; 
   for (const line of (git(["status", "--porcelain=v1"]) ?? "").split("\n")) {
     if (line.trim() === "") continue;
     // `XY path`, and `R  old -> new` for a rename: the new path is the file that
-    // exists after the session, which is what a reader would look for.
-    const entry = line.slice(3);
-    add(entry.includes(" -> ") ? entry.split(" -> ")[1] : entry);
+    // exists after the session, which is what a reader would look for. The arrow
+    // belongs to the rename letters alone — a quoted path keeps its bytes.
+    const rest = line.slice(3);
+    const renamed = (line[0] === "R" || line[0] === "C") && !rest.startsWith('"');
+    const path = renamed ? rest.slice(rest.indexOf(" -> ") + " -> ".length) : rest;
+    // Issue #727: the machine-owned ledger class (`machine-ledger-commit@1`,
+    // LEDGERS.md) is not this session's work — its writer is machinery.
+    if (isMachineLedgerExempt(path.trim())) continue;
+    add(path);
   }
   return [...seen];
 }

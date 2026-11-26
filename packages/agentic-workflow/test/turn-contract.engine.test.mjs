@@ -101,3 +101,58 @@ test("unreadable .git fails closed with a fail line", (t) => {
     chmodSync(dotgit, 0o755);
   }
 });
+
+// ---------------------------------------------------------------------------
+// Box 5 and the machine-owned ledger class (issue #727 S1d). The class's writer
+// is machinery, so its pending bytes are not the dirty tree the box exists to
+// refuse — while a human-uncommitted file still is, and an exempt row can never
+// excuse an unpublished commit.
+// ---------------------------------------------------------------------------
+
+const LEDGER_HEADER = "| unit | tokens |\n| --- | --- |\n";
+
+test("box5: a pending machine-ledger row is exempt from dirty-tree", () => {
+  const dir = newRepo(ctx.root, "exemptledger", "main");
+  git(dir, "checkout", "-q", "-b", "feat/exemptledger");
+  commitFile(dir, "docs/features/exemptledger/SPEC.md", "unit doc\n");
+  commitFile(dir, "docs/workflow/TIER_COST.md", `${LEDGER_HEADER}| 1 | 10 |\n`);
+  writeFileSync(path.join(dir, "docs/workflow/TIER_COST.md"), `${LEDGER_HEADER}| 1 | 10 |\n| 2 | 20 |\n`);
+  const r = ctx.runEngine(dir);
+  assert.equal(r.stdout, "TURN-CONTRACT ok\n");
+  assert.equal(r.code, 0);
+});
+
+test("box5: an untracked journal fragment is exempt too", () => {
+  const dir = newRepo(ctx.root, "exemptfragment", "main");
+  git(dir, "checkout", "-q", "-b", "feat/exemptfragment");
+  commitFile(dir, "docs/features/exemptfragment/SPEC.md", "unit doc\n");
+  mkdirSync(path.join(dir, ".agentic-workflow/journal"), { recursive: true });
+  writeFileSync(path.join(dir, ".agentic-workflow/journal/20261126T160000Z-fixture.md"), "- **Summary:** fixture\n");
+  const r = ctx.runEngine(dir);
+  assert.equal(r.stdout, "TURN-CONTRACT ok\n");
+  assert.equal(r.code, 0);
+});
+
+test("box5: a human-uncommitted ordinary file still fails dirty-tree", () => {
+  const dir = newRepo(ctx.root, "humandirty", "main");
+  git(dir, "checkout", "-q", "-b", "feat/humandirty");
+  commitFile(dir, "docs/features/humandirty/SPEC.md", "unit doc\n");
+  commitFile(dir, "src/app.ts", "export const one = 1;\n");
+  writeFileSync(path.join(dir, "src/app.ts"), "export const one = 1;\nexport const two = 2;\n");
+  // An exempt row beside the human one proves the filter is not a blanket pass.
+  mkdirSync(path.join(dir, "docs", "workflow"), { recursive: true });
+  writeFileSync(path.join(dir, "docs/workflow/TIER_COST.md"), `${LEDGER_HEADER}| 1 | 10 |\n`);
+  const r = ctx.runEngine(dir);
+  assert.equal(r.stdout, "TURN-CONTRACT fail box5: dirty-tree\n");
+  assert.equal(r.code, 1);
+});
+
+test("box5: an exempt row does not hide an ahead-of-remote branch", () => {
+  // fx.ahead is pushed and then carries one local commit: clean, but unpublished.
+  // An exempt ledger row must not turn that into an ok receipt.
+  mkdirSync(path.join(ctx.fx.ahead, "docs", "workflow"), { recursive: true });
+  writeFileSync(path.join(ctx.fx.ahead, "docs/workflow/TIER_COST.md"), `${LEDGER_HEADER}| 1 | 10 |\n`);
+  const r = ctx.runEngine(ctx.fx.ahead);
+  assert.equal(r.stdout, "TURN-CONTRACT fail box5: ahead-of-remote\n");
+  assert.equal(r.code, 1);
+});

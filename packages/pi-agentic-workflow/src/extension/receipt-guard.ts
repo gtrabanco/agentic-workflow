@@ -18,6 +18,8 @@
 
 import { spawnSync } from "node:child_process";
 
+import { foreignPorcelainLines } from "@gtrabanco/agentic-workflow/src/machine-ledger/index.mjs";
+
 /** The narrow slice of a Pi `tool_call` the guard reads. */
 export interface ToolCallLike {
   toolName: string;
@@ -79,10 +81,11 @@ const WARNING_PREVIEW = 5;
  * git and delivers the message.
  */
 export function dirtyWorktreeWarning(porcelain: string): string | undefined {
-  const lines = String(porcelain ?? "")
-    .split("\n")
-    .map((line) => line.trim())
-    .filter(Boolean);
+  // Issue #727: the machine-owned ledger class (`machine-ledger-commit@1`,
+  // LEDGERS.md) is exempt — the warning must never tell the model to commit a
+  // row the policy forbids it from committing. An exempt-only porcelain stays
+  // silent.
+  const lines = foreignPorcelainLines(porcelain);
   if (lines.length === 0) return undefined;
   const preview = lines.slice(0, WARNING_PREVIEW).join(", ");
   const rest = lines.length > WARNING_PREVIEW ? `, +${lines.length - WARNING_PREVIEW} more` : "";

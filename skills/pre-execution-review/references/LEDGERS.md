@@ -199,6 +199,53 @@ of this file, and for `delegated-evidence.md`: a versioned artifact of a delegat
 reading pass, whose writer and zones are stated by the triage/research step's
 documentation, not by this map.
 
+### The machine-owned ledger commit policy
+
+The map says *who may write* a ledger. It never said *when* a ledger whose writer
+is a **process** gets committed, and that is a separate defect (issue #727): the
+telemetry sink, the journal aggregator and the annotators produce their last row
+after the session's last chance, so "the session commits it" is impossible for
+them. One policy answers it for the class; no document negotiates its own. The
+machine statement is `MACHINE_LEDGER_CLASSES`
+(`packages/agentic-workflow/src/machine-ledger/index.mjs`), the table below is its
+projection and `.gitattributes` is the merge layer's; a suite refuses a one-sided
+addition to any of the three.
+
+```text
+machine-ledger-commit@1
+# exempt-from-dirty-tree: every row whose zone is not out-of-scope
+class | paths | merge | zone | commit-point | subject
+telemetry | docs/workflow/TIER_COST.md | agentic-shared-telemetry | auto | pi teardown · session-close close · reconstruct write · gate prelude | chore(telemetry)
+session-log | docs/LOGS.md | agentic-shared-logs | auto | session-close close · gate prelude (the aggregator's write is a step's, not machinery's) | docs(log)
+journal-corpus | .agentic-workflow/journal | none | auto | session-close close · gate prelude | docs(log)
+roadmap | docs/ROADMAP.md | agentic-shared-roadmap | writer-step | the step that writes the row | docs(roadmap)
+budgets | docs/workflow/SKILL_CONTEXT_BUDGETS.json | agentic-shared-budgets | writer-step | the step that re-pins a ceiling | docs(budgets)
+repo-state | docs/workflow/REPOSITORY_STATE.md | agentic-shared-repo-state | writer-step | the step that freezes a fact | docs(state)
+unit-ledgers | docs/{features,fix}/<unit>/{review-findings,known-issues,decisions,planning-findings}.md | none | writer-step | the step that writes the mark | docs(ledger)
+session-store | .pi/.telemetry/sessions.jsonl | agentic-shared-telemetry | out-of-scope | none — gitignored by design (issue #504) | chore(telemetry)
+```
+
+- **A zone is the commit point.** `auto`: the machinery that writes the byte
+  commits it — one lock, `git commit -- <paths>`, never `git add -A` (#182); a
+  clean or locked class is a no-op the next cycle carries. `writer-step`: the
+  writing step commits it and machinery only annotates. `out-of-scope`: untracked.
+- **Exempt from the dirty-tree verdicts and notices.** The one filter —
+  `foreignPorcelainLines`/`foreignPorcelainPaths` in the class's own module —
+  is what every consumer runs before judging, so no second list exists: box 5
+  (`TURN_CONTRACT.md`) for reviews, `audit-pr-gate`'s `tree-clean` and
+  `fullauto-merge`'s clean-tree precondition for merges and publishes,
+  `unit-cycle`'s loop guard for the lane, the settled-turn notice in the pi
+  extension, and the read-only surfaces a model reasons from — the
+  `workflow-status` sensor's `dirty`/`dirtyFiles`, `runner clean-check`,
+  the ceremony tier's dirty list and `auto-log-session`'s session scope — which
+  run the same filter (`isMachineLedgerExempt`) rather than a porcelain test of
+  their own. A pending machine row never blocks any of them (never "fix" or
+  revert one), and a human-uncommitted file still fails; `ahead-of-remote` is
+  untouched.
+- **The pre-push pairing is the gate's.** Its `machine-ledger-commit` prelude
+  commits the pending `auto` rows before any step; no teardown pushes, because
+  that would bypass the gate or launch it at every close.
+
 ### The durable review mark
 
 A review that ends with no fix-now finding writes no finding row, so the map gives

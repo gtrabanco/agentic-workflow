@@ -42,6 +42,7 @@ const BIN = fileURLToPath(new URL("../../bin/agentic-workflow.mjs", import.meta.
 // fix/286 adds the scope-aware judge to the same import.
 import { judgeReceipt, latestReceipt, receiptStatus } from "../review-receipt/index.mjs";
 import { changedPathsBetween } from "../scope-manifest/index.mjs";
+import { foreignPorcelainLines } from "../machine-ledger/index.mjs";
 import { collectRepairFacts, judgeRepair, latestRepairReceipt } from "../repair-receipt/index.mjs";
 
 export const AUDIT_CONTRACT = "v1";
@@ -310,10 +311,11 @@ export function renderMergeReadyBody({ sha, gates = [], hygiene = [], mergeabili
  * fix, and a dirty tree names its files so the report is actionable.
  */
 export function hygieneFromState({ treePorcelain = "", branchAhead = 0, isDraft = null } = {}) {
-  const dirty = String(treePorcelain)
-    .split("\n")
-    .map((line) => line.trim())
-    .filter(Boolean);
+  // Issue #727 S5: the machine-owned ledger class (`machine-ledger-commit@1`,
+  // LEDGERS.md) is exempt — its writer is machinery, and refusing the merge on
+  // a pending row is the same defect the review's box 5 stopped carrying. The
+  // filter is the class module's own, never a second list here.
+  const dirty = foreignPorcelainLines(treePorcelain);
   const ahead = branchAhead === null ? null : Number(branchAhead) || 0;
   return {
     gates: {
