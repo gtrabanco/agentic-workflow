@@ -59,6 +59,11 @@ Requirements, each numbered `S#` quoting the issue's own words verbatim.
 **S3 — the repair touches inputs, never assertions.**
 > The diff of `scripts/workflow-doctor.test.mjs` adds only env isolation (the `env:` argument and its comment) — every assertion line is byte-identical to base.
 
+## Acceptance criteria
+
+- **AC1** — `env AGENTIC_WORKFLOW_SKILLS_ROOT=<any existing dir> bun test scripts/workflow-doctor.test.mjs` exits 0, and the same command without the variable also exits 0. (S1)
+- **AC2** — The diff of `scripts/workflow-doctor.test.mjs` adds only env isolation (the `env:` argument and its comment) — every assertion line is byte-identical to base. (S3)
+- **AC3** — `env -u AGENTIC_WORKFLOW_SKILLS_ROOT bun scripts/run-root-suite.mjs` and the same run **with** the variable set both exit 0. (S2)
 ## Impact
 
 What the fix touches beyond its own lines:
