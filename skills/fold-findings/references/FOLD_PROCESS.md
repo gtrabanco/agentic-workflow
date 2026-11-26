@@ -94,3 +94,12 @@ The claim-evidence table the fold prints before this block (§ Claim-evidence
 loop in SKILL.md) is what makes `Closure:` a receipt rather than a claim: a row
 with `status: ✗` means the fold is not closed, and `Closure: complete` is only
 printable once every row reads ✓.
+
+**The block is machine-emitted.** `runner repair-receipt emit --pr <N> --unit
+<NN-slug> --reviewed <the reviewed head>` derives every fact the block claims
+(delta class, scope digest, acceptance hash, gate evidence, open
+`BLOCKER`/`CRITICAL` count) and prints/posts the typed `fold-findings:repair`
+marker with the route the facts support (issue #698 S4). `Branch:` prints that
+route verbatim — a hand-picked `RE-REVIEW-SKIPPED` has no marker, so no consumer
+accepts it. The emission order is bookkeeping commits first, gate run next, the
+receipt last; `emit` commits nothing.

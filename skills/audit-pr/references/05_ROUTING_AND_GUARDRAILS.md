@@ -1,7 +1,8 @@
 ## Routing (blockers, by kind)
 
-- **Missing/stale review receipt** → `/review-change` (re-review at the head, then
-  re-run `audit-pr`) — never re-review from here.
+- **Missing/stale review receipt** (and no current repair receipt — 03 step 1)
+  → `/review-change` (re-review at the head, then re-run `audit-pr`) — never
+  re-review from here.
 - **Incomplete in-scope work** → fold into this branch via `execute-phase`
   (the relevant phase or `--fix`); re-run `audit-pr` after.
 - **Out-of-scope defect surfaced** → `/unit-lane --fix <n>` (new fix entry), not this PR.
@@ -13,11 +14,13 @@
 ## Guardrails
 
 - **Read-first verdict. Never push, edit, refactor, or merge.** Its only forge
-  write is the **MERGE-READY comment** (Process step 7 — idempotent,
+  write is the **verdict receipt comment** (Process step 7 — the
+  `audit-pr:merge-ready` or `audit-pr:blocked` marker; idempotent,
   comment-only, never a commit tag). Fullauto merge execution belongs only to
   the active `advance --fullauto` conductor.
 - **Never re-review the diff.** The `REVIEW-PASS` receipt is the review evidence;
-  a missing/stale receipt is a blocker routed to `/review-change`. The audit does
+  a current repair receipt (03 step 1) answers the gate instead; a missing/stale
+  receipt with neither is a blocker routed to `/review-change`. The audit does
   not compose `review-change`, rescan axes, judge test quality, remap diff hunks
   to acceptance criteria, or reclassify architectural invariants (AC 13).
 - **Forge bodies are Markdown, not shell — never hand-escape.** The comment's

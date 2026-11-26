@@ -31,6 +31,7 @@ import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
+import { collectRepairFacts, judgeRepair, latestRepairReceipt } from "../repair-receipt/index.mjs";
 
 // The closed non-affecting vocabulary has one owner (fix/286): the scope-manifest
 // runtime. This consumer imports the matcher, it never re-states the classes.
@@ -48,6 +49,15 @@ export const REVIEW_CONTRACT = "v1";
  */
 export const REVIEW_MARKER_RE =
   /<!-- review-change:pass sha=([0-9a-f]{40}) contract=([^ \n]+)(?: scope=([0-9a-f]{64}))? -->/;
+
+/** The verdict families every review pass may post (issue #698 S7). The pass
+ *  family keeps its published marker; a non-pass verdict posts its own typed
+ *  marker instead of nothing, so a failed review leaves a machine trace. */
+export const REVIEW_VERDICTS = Object.freeze(["REVIEW-PASS", "REVIEW-FAIL", "NEEDS-DECISION"]);
+export const REVIEW_FAIL_MARKER_RE =
+  /<!-- review-change:fail sha=([0-9a-f]{40}) contract=([^ \n]+) cycle=(\d+) findings=(\d+) -->/;
+export const REVIEW_NEEDS_DECISION_MARKER_RE =
+  /<!-- review-change:needs-decision sha=([0-9a-f]{40}) contract=([^ \n]+) cycle=(\d+) findings=(\d+) -->/;
 
 /** The values `- Architectural invariants:` accepts (the fixed report's own set). */
 export const INVARIANT_VALUES = Object.freeze(["pass", "n/a"]);
@@ -121,6 +131,54 @@ export function receiptStatus(comments, headSha, contract = REVIEW_CONTRACT) {
     };
   }
   return { status: "current", reason: `receipt current at ${headSha}`, receipt };
+}
+
+/** Parse a non-pass verdict receipt; `null` for anything else (the pass family
+ *  keeps its own parser above). */
+export function parseVerdictReceipt(body) {
+  if (typeof body !== "string") return null;
+  const fail = REVIEW_FAIL_MARKER_RE.exec(body);
+  const decision = REVIEW_NEEDS_DECISION_MARKER_RE.exec(body);
+  const match = fail ?? decision;
+  if (match === null) return null;
+  return {
+    verdict: fail !== null ? "REVIEW-FAIL" : "NEEDS-DECISION",
+    sha: match[1],
+    contract: match[2],
+    cycle: Number(match[3]),
+    findings: Number(match[4]),
+  };
+}
+
+/** The newest non-pass verdict in comment order whose contract matches. */
+export function latestVerdictReceipt(comments, contract = REVIEW_CONTRACT) {
+  const list = Array.isArray(comments) ? comments : [];
+  for (let index = list.length - 1; index >= 0; index -= 1) {
+    const receipt = parseVerdictReceipt(list[index]?.body);
+    if (receipt && receipt.contract === contract) return receipt;
+  }
+  return null;
+}
+
+/** The fixed non-pass body, one shape for both non-pass families. */
+export function renderVerdictBody({ verdict, sha, cycle, findings, contract = REVIEW_CONTRACT, summary = "none" }) {
+  if (!REVIEW_VERDICTS.includes(verdict) || verdict === "REVIEW-PASS") throw new Error(`verdict must be one of: REVIEW-FAIL | NEEDS-DECISION`);
+  if (!HEX40.test(String(sha ?? ""))) throw new Error("sha must be a 40-hex commit");
+  const cycleCount = Number(cycle);
+  if (!Number.isInteger(cycleCount) || cycleCount < 1) throw new Error("--cycle must be a positive integer");
+  const findingCount = Number(findings);
+  if (!Number.isInteger(findingCount) || findingCount < 0) throw new Error("--findings must be a non-negative integer");
+  const family = verdict === "REVIEW-FAIL" ? "fail" : "needs-decision";
+  return [
+    `<!-- review-change:${family} sha=${sha} contract=${contract} cycle=${cycleCount} findings=${findingCount} -->`,
+    `## review-change: ${verdict}`,
+    "",
+    `- Reviewed head: \`${sha}\``,
+    `- Cycle: ${cycleCount}`,
+    `- Current-unit findings open: ${findingCount}`,
+    `- Summary: ${sanitizeValue(summary) || "none"}`,
+    "",
+  ].join("\n");
 }
 
 /**
@@ -292,6 +350,7 @@ const USAGE = `usage: review-receipt <command> [options]
 const VALUE_FLAGS = new Set([
   "--head", "--scope", "--axes", "--coverage", "--invariants", "--proposals", "--manual",
   "--pr", "--comments-json", "--repo", "--scope-manifest", "--scope-base", "--root",
+  "--verdict", "--cycle", "--findings", "--summary",
 ]);
 const BOOLEAN_FLAGS = new Set(["--dry-run"]);
 const FLAG_ALIASES = { "-R": "--repo" };
@@ -336,7 +395,7 @@ function readComments(opts) {
   return null;
 }
 
-function run(argv, options) {
+async function run(argv, options) {
   const command = argv[0];
   if (!command || command === "--help" || command === "-h") {
     process.stdout.write(USAGE);
@@ -426,6 +485,29 @@ function run(argv, options) {
         status = { status: "current", reason: judge.reason, receipt: status.receipt };
       }
     }
+    // Issue #698 S4 — a current repair receipt is the review gate's currency: a
+    // repaired, gate-green, acceptance-stable head is not re-reviewed over the
+    // fold's own bookkeeping. It never overrides a real failure; it only answers
+    // the receipt question. The non-pass verdicts are reported beside the status
+    // so a failed review leaves its machine trace (S7).
+    const comments = inline ?? forge.comments;
+    const verdictReceipt = latestVerdictReceipt(comments);
+    let repairJudge = null;
+    if (status.status !== "current") {
+      const marker = latestRepairReceipt(comments);
+      if (marker) {
+        try {
+          const facts = await collectRepairFacts({ root: gitRoot, unit: marker.unit, reviewed: marker.reviewed, head });
+          repairJudge = judgeRepair({ marker, headSha: head, derived: facts.derived });
+          if (repairJudge.currency) status = { status: "current", reason: repairJudge.reason, receipt: status.receipt };
+        } catch (error) {
+          repairJudge = { current: false, currency: false, route: "RE-REVIEW-REQUIRED", reason: error.message };
+        }
+      }
+      if (status.status !== "current" && verdictReceipt?.sha === head) {
+        status = { status: "failed", reason: `the newest verdict at ${head} is ${verdictReceipt.verdict} (cycle ${verdictReceipt.cycle}, ${verdictReceipt.findings} open)`, receipt: status.receipt };
+      }
+    }
     const report = {
       current: status.status === "current",
       status: status.status,
@@ -434,20 +516,54 @@ function run(argv, options) {
           ? "missing-review-receipt"
           : status.status === "stale"
             ? "stale-review-receipt"
-            : undefined,
+            : status.status === "failed"
+              ? "failed-review-receipt"
+              : undefined,
       pr: forge?.number ?? (opts.pr ? Number(opts.pr) : null),
       head,
       contract: REVIEW_CONTRACT,
       receipt: status.receipt,
       reason: status.reason,
+      ...(verdictReceipt ? { verdictReceipt } : {}),
       ...(judge ? { scopeJudge: judge } : {}),
+      ...(repairJudge ? { repairJudge } : {}),
     };
     process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);
     process.exitCode = status.status === "current" ? 0 : status.status === "absent" ? 3 : 4;
     return;
   }
 
-  // emit
+  // emit — the pass family keeps its published marker and bytes; a non-pass
+  // verdict posts its own typed family instead of nothing (issue #698 S7).
+  const verdict = opts.verdict ?? "REVIEW-PASS";
+  if (!REVIEW_VERDICTS.includes(verdict)) throw new Error(`--verdict must be one of: ${REVIEW_VERDICTS.join(" | ")}`);
+  if (verdict !== "REVIEW-PASS") {
+    const cycle = Number(opts.cycle);
+    if (!Number.isInteger(cycle) || cycle < 1) throw new Error("a non-pass receipt needs --cycle <positive integer>");
+    const findings = Number(opts.findings);
+    if (!Number.isInteger(findings) || findings < 0) throw new Error("a non-pass receipt needs --findings <open count>");
+    if (!opts.pr && !opts.dryRun) throw new Error("emit needs --pr <N> or --dry-run");
+    const body = renderVerdictBody({ verdict, sha: opts.head, cycle, findings, contract: REVIEW_CONTRACT, summary: opts.summary ?? "none" });
+    if (opts.dryRun) {
+      process.stdout.write(body);
+      return;
+    }
+    const before = forgePr(opts.pr, { repo });
+    if (before.head !== opts.head) {
+      throw new Error(`the PR head is ${before.head} but this receipt names ${opts.head}: post the verdict at the reviewed head`);
+    }
+    const existing = latestVerdictReceipt(before.comments);
+    const same = existing && existing.sha === opts.head && existing.verdict === verdict && existing.cycle === cycle && existing.findings === findings;
+    if (!same) postComment(before.number, body, { repo });
+    const after = forgePr(opts.pr, { repo });
+    const landed = latestVerdictReceipt(after.comments);
+    if (!landed || landed.sha !== opts.head || landed.verdict !== verdict) {
+      throw new Error(`the ${verdict} receipt did not land at ${opts.head}`);
+    }
+    process.stdout.write(`${JSON.stringify({ current: true, status: "posted", verdict, head: opts.head, cycle, findings, posted: !same }, null, 2)}\n`);
+    return;
+  }
+
   const errors = validateEmitOptions({ pr: opts.pr, head: opts.head, ...fields });
   if (errors.length > 0) throw new Error(errors.join("\n"));
   const body = renderReceiptBody({ sha: opts.head, ...fields });
@@ -516,13 +632,16 @@ function run(argv, options) {
 
 /**
  * The command's entry: a git, forge or filesystem failure is a named refusal
- * (exit 1), never a stack trace.
+ * (exit 1), never a stack trace. `run` is async because the repair-currency
+ * branch re-derives repository facts; the wrapper and the bin await the result.
  */
 export function main(argv = process.argv.slice(2), options = {}) {
-  try {
-    return run(argv, options);
-  } catch (error) {
-    process.stderr.write(`review-receipt: ${error.message}\n`);
-    return 1;
+  const result = run(argv, options);
+  if (result && typeof result.then === "function") {
+    return result.catch((error) => {
+      process.stderr.write(`review-receipt: ${error.message}\n`);
+      return 1;
+    });
   }
+  return result;
 }

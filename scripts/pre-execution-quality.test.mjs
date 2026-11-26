@@ -77,7 +77,7 @@ const SPEC_VERDICTS = ["SPEC-REVIEW-PASS", "SPEC-REVIEW-FAIL", "NEEDS-DESIGN"];
 // fix/162 (Decision 11): the plan stage carries ONLY the two plan verdicts — the
 // design-verdict token belongs to review-spec, so it is not a review-plan verdict.
 const PLAN_VERDICTS = ["PLAN-REVIEW-PASS", "PLAN-REVIEW-FAIL"];
-const FINDING_CLASSES = ["product", "plan", "source", "environment", "runtime"];
+const FINDING_CLASSES = ["product", "plan", "source", "environment", "runtime", "workflow"];
 const SEVERITIES = ["info", "low", "medium", "high", "critical"];
 const MATERIAL = SEVERITIES.filter((s) => s !== "info");
 const PRODUCT_CHECKS = ["C1", "C2", "C3", "C4", "C5", "C6", "C7", "C8", "C9", "C10", "C11", "C12", "C13", "C14"];

@@ -52,7 +52,7 @@ test("receipt vocabularies are frozen and closed", () => {
   // list pin the suite lacked, red until the map drops the member.
   assert.deepEqual([...VERDICTS_BY_STAGE.plan], ["plan-review-pass", "plan-review-fail"]);
   assert.deepEqual([...VERDICTS_BY_STAGE.spec], ["spec-review-pass", "spec-review-fail", "needs-design"]);
-  assert.deepEqual([...PRE_EXECUTION_FINDING_CLASSES], ["product", "plan", "source", "environment", "runtime"]);
+  assert.deepEqual([...PRE_EXECUTION_FINDING_CLASSES], ["product", "plan", "source", "environment", "runtime", "workflow"]);
   assert.deepEqual([...PRE_EXECUTION_FINDING_VERIFICATION], ["verified", "unverified"]);
   assert.deepEqual([...PRE_EXECUTION_FINDING_RESOLUTIONS], ["open", "resolved", "dismissed"]);
   assert.deepEqual([...PRE_EXECUTION_PARENT_ROLES], ["critic", "synthesis", "arbitration"]);

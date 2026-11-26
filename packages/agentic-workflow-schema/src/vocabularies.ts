@@ -38,8 +38,10 @@ export type FindingsTableImpact = (typeof FINDINGS_TABLE_IMPACTS)[number];
 
 // The findings-table class vocabulary (`finding-class`) is already published
 // canonically: `PRE_EXECUTION_FINDING_CLASSES` in `pre-execution.ts` is exactly
-// the `product | plan | source | environment | runtime` set the
-// `findings-table@1` block cites — no second const is created here.
+// the `product | plan | source | environment | runtime | workflow` set the
+// `findings-table@1` block cites — no second const is created here. `workflow`
+// names the workflow's own scaffold, gate or carrier and routes upstream as a
+// `report-only` row, never an in-unit blocker (issue #698).
 
 /** The `## Log` line-kind vocabulary (`log-kind`), published by the
  *  `log-kind@1` block. The reader const is `LOG_KINDS` in

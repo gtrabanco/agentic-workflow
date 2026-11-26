@@ -516,6 +516,23 @@
           "description": "The project-declared offsite copy, run after the local archive is durable."
         }
       }
+    },
+    "batchScheduler": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "surfaces": {
+          "type": "array",
+          "maxItems": 64,
+          "description": "This project's lane trees, one project-relative directory per entry (`src/pages`, `apps/web`). Empty means undeclared: the shipped roots plus the project's own directories answer.",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200,
+            "pattern": "^[^/*<>][^<>*]*$"
+          }
+        }
+      }
     }
   }
 }

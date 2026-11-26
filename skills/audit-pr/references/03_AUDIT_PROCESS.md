@@ -7,9 +7,17 @@
    absent, `4` stale. Its `headRefOid` is the current head SHA: a marker for any
    other SHA is stale, never preserved from a local diff.
    - **current (0)** → acknowledge scope/axes, acceptance coverage, invariant
-     result, manual checks; continue to the gates.
+     result, manual checks; continue to the gates. A repaired head may be
+     current **by repair receipt** (`repairJudge` in the report): the fold
+     proved a ceremony/docs-only delta, an unchanged acceptance blob, zero open
+     `BLOCKER`/`CRITICAL` rows and a green gate, so the head is merge currency
+     and no re-review is due (issue #698 S4/S5).
    - **absent / stale** → **BLOCKER** (no review evidence at the head), routed to
-     `/review-change`; never re-review from here.
+     `/review-change`; never re-review from here. Before that route, the
+     `fold-findings:repair` marker that `verify` rejected is named with its own
+     route (`RE-REVIEW-REQUIRED`/`REPLAN-ROUTE`/`PRODUCT-ROUTE`), so the
+     blocker says which continuation the facts support; a
+     `RE-REVIEW-SKIPPED`/`OPTIONAL` receipt is never a blocker.
 3. **Walk the contract** — evaluate every gate above against evidence, recording
    pass / blocker / n-a with the artifact that proves it. The three
    terminal-hygiene gates (`tree-clean`, `branch-pushed`, `pr-ready`) are **read
@@ -59,14 +67,17 @@
    Re-runs **dedupe by `file:line` + axis**, identical to `review-change`'s
    rule — a blocker already on the ledger at that `file:line`+axis is not
    re-appended; a genuinely new blocker gets the next `Fn` id.
-7. **Post the MERGE-READY comment on the PR (MERGE-READY only).** The verdict
-   must be visible on the PR itself — as a **comment**, never in a commit
-   message. Run `runner audit-pr-gate comment --pr <N> --head <head
-   SHA> --gates-json <gate map>`: it builds the fixed body, posts once, re-reads,
-   and **exits non-zero unless the newest `<!-- audit-pr:merge-ready sha=… -->`
-   marker names the head**. **Idempotent by marker** — same SHA skips, an older
-   SHA re-posts (newest wins) — and it **refuses to post for a BLOCKED verdict**,
-   so the page never shows a stale green flag.
+7. **Post the verdict receipt on the PR (both verdicts).** The verdict must be
+   visible on the PR itself — as a **comment**, never in a commit message. Run
+   `runner audit-pr-gate comment --pr <N> --head <head
+   SHA> --gates-json <gate map>`: it builds the fixed body for the verdict it
+   derived — the `audit-pr:merge-ready` marker on MERGE-READY and
+   the `audit-pr:blocked` marker on BLOCKED (issue #698
+   S7) — posts once, re-reads, and **exits non-zero unless the newest marker
+   names the head**. **Idempotent by marker** — same SHA skips, an older SHA
+   re-posts (newest wins). A BLOCKED verdict never leaves the page green: its
+   receipt carries the blockers and the route, so the failure survives the
+   session.
 8. **Report** — the verdict block below, always headed by the PR's full URL.
    In an active `advance --fullauto` AUDIT stage, return the verdict to the
    conductor; never run its merge wrapper from this skill.

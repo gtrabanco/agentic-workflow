@@ -71,9 +71,9 @@ addition bumps the version, which is the rule its first landing missed. Issue
 |---|---|
 | `contract` / `version` / `schema` | `agentic-workflow/batch-plan` · `4` · `batch-plan@4` |
 | `source_revision` | the git revision the plan was computed at |
-| `degraded[]` | what could not be read, `unavailable-<source>-<cause>`; the plan still prints. Second family: `surface-unknown-issue-<n>` — every source *was* read but the issue still declares no surface. Third family: the content guard's decisions (issue #470) — `excluded-forge-content-<source>-<id>-<reason>` (untrusted/unknown author, so no title/body) and `stripped-forge-content-<source>-<id>-<kind>-<count>` (the source was read and the layer reduced it). Fourth: `unavailable-launch-evidence-diff-issue-<n>-<cause>` — a live branch's diff against the trunk could not be computed, so its coverage is unknown rather than empty (issue #621). All four are declared. |
+| `degraded[]` | what could not be read, `unavailable-<source>-<cause>`; the plan still prints. Second family: `surface-unknown-issue-<n>` — every source *was* read but the issue still declares no surface. Third family: the content guard's decisions (issue #470) — `excluded-forge-content-<source>-<id>-<reason>` (untrusted/unknown author, so no title/body) and `stripped-forge-content-<source>-<id>-<kind>-<count>` (the source was read and the layer reduced it). Fourth: `unavailable-launch-evidence-diff-issue-<n>-<cause>` — a live branch's diff against the trunk could not be computed, so its coverage is unknown rather than empty (issue #621). Fifth: `unavailable-surface-vocabulary-<cause>` — the project config that carries the vocabulary was refused, so the shipped roots answer alone and no tree is discovered (issue #716). All five are declared. |
 | `batches[].n` | 1 = runnable now; N+1 when batch N completes |
-| `lanes[].surface` | one lane per touched surface — `skills/<name>`, `packages/<name>`, `scripts`, `docs`, `template`, `.github`, or `general` when nothing resolved. Keys come from the issue body, then the unit doc (see *Where the surfaces come from*) |
+| `lanes[].surface` | one lane per touched surface — a key from the project's surface vocabulary (see *The surface vocabulary*), or `general` when nothing resolved. Keys come from the issue body, then the unit doc |
 | `lanes[].occupied_by` | the **evidence** of the in-flight unit on the surface (`branch fix/1-x + unit-doc docs/fix/1-x`), or `null` |
 | `lanes[].issues[]` | the issues serialized in the lane, in run order |
 | `issue.worktree` | `<feat\|fix>/<issue>-<slug>` — reported, never created. Slug falls back to `unit` when the title is empty (an excluded title, below) |
@@ -100,8 +100,9 @@ addition bumps the version, which is the rule its first landing missed. Issue
    previous plan saw open and the forge no longer lists is closed and resolved;
    an open undelivered one is named; with an unreadable open set the state is
    `unknown` — never assumed resolved, never invented as an orphan.
-3. **One lane per surface**, soft-ordered inside the lane; a tree-root token
-   joins every declared child lane so a broad issue never runs beside it.
+3. **One lane per surface**, soft-ordered inside the lane; a token that is a
+   strict prefix of another row's key joins that row's lanes, so a broad issue
+   never runs beside the concrete lane it covers — whatever the vocabulary.
 4. **In flight is evidence** (rule 5's `launched[]`): a merged or parked unit
    doc is not an in-flight unit, and the unit occupies every surface it declares.
 5. **A hold label wins** over every other status (`label_blocked[]`).
@@ -120,6 +121,37 @@ addition bumps the version, which is the rule its first landing missed. Issue
    possible". A no-branch issue has nothing to verify, a merged branch cannot
    conflict, and a diff that could not be computed is declared in `degraded[]` —
    none of the three becomes a `claimed_surface` row.
+
+## The surface vocabulary
+
+A lane key is a *path* the project really has, never a folder name this
+workflow ships with. One owner decides which paths are lanes
+(`packages/agentic-workflow/src/batch-scheduler/vocabulary.mjs`) and every
+reader goes through it: the declared side, the branch-diff side and
+`--infer-surfaces`. Three layers, in order:
+
+1. **The shipped roots** — `skills/<name>`, `packages/<name>`, `scripts`,
+   `docs`, `template`, `.github`. Always recognized, so a project that declares
+   extra trees and a declaration written before this vocabulary existed both
+   keep resolving exactly as they did.
+2. **The project's declared roots** — `batchScheduler.surfaces` in
+   `.pi/agentic-workflow.json`, one project-relative directory per entry
+   (`["src/pages","src/shared","migrations"]`). Authoritative: a directory the
+   list omits resolves to nothing rather than quietly opening a lane. An empty
+   list means *undeclared*, never "no lanes". Writer and offer:
+   [CONFIG.md](../../../docs/workflow/CONFIG.md),
+   [`init-workspace`](../../init-workspace/references/CONFIG.md).
+3. **The project's own tree**, only while nothing is declared: its top-level
+   directories and each of their children, hidden directories and
+   `node_modules` never lanes, deepest match wins — so
+   `src/pages/api/ledger.ts` is `src/pages`. That is what keeps a foreign tree
+   schedulable before anyone configures it: real lanes, batched together,
+   instead of one `general` lane, a `blind-spot` and serial runs.
+
+A config the resolver refuses degrades by name
+(`unavailable-surface-vocabulary-<cause>`) and leaves the shipped roots alone:
+a broken file is never read as "this project declares nothing". The vocabulary is
+data, not a contract change — no envelope field, no `surface` enumeration.
 
 ## Where the surfaces come from
 
@@ -189,6 +221,10 @@ runner batch-scheduler --infer-surfaces <n> [--issues-file <json>]
 `node` is the fallback. `--remote <url>` names the forge for the three reads
 (issues, relations, PRs). `--infer-surfaces <n>` is triage's emitter (issue
 #574): the `## Surfaces` block to paste, `- surface-unknown` when nothing
-resolves, no write at all. Exit codes: `0` printed (degradations are reported,
-not fatal); `1` the document failed `batch-plan@4` validation or the issue is
-unreadable; `2` usage error. One call per dimension, never per issue.
+resolves, no write at all. It resolves the body through the same vocabulary the
+plan reads (issue #716), so the keys triage pastes are the keys the plan will
+use; when the keys came from the project's tree rather than a declaration it
+says so once on stderr and names the `config set` line that would pin them.
+stdout stays the paste block alone. Exit codes: `0` printed (degradations are
+reported, not fatal); `1` the document failed `batch-plan@4` validation or the
+issue is unreadable; `2` usage error. One call per dimension, never per issue.
