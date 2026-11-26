@@ -68,6 +68,9 @@ test("the teardown commits the ledger alone through the crate command at the run
 
 test("the wiring commits after the final flush, once per session", () => {
   const root = sandbox();
+  // The unit comes from the command's argument resolved against the project's
+  // own trees, so the fixture carries the unit directory it names.
+  fs.mkdirSync(path.join(root, "docs", "fix", "727-machine-ledger-commits"), { recursive: true });
   const recorder = recorders();
   const events = new Map();
   const pi = { on: (name, handler) => events.set(name, [...(events.get(name) ?? []), handler]) };
@@ -94,7 +97,10 @@ test("the wiring commits after the final flush, once per session", () => {
   assert.equal(recorder.writes.filter((entry) => entry.teardown === true).length, 1, "one commit per teardown");
   const last = recorder.writes[recorder.writes.length - 1];
   assert.equal(last.teardown, true, "the commit is the last thing the teardown does — the row is written first");
-  assert.ok(recorder.writes.some((entry) => entry.unit === "727"), "the flush wrote the session's own row before the commit ran");
+  assert.ok(
+    recorder.writes.some((entry) => entry.unit === "727-machine-ledger-commits"),
+    "the flush wrote the session's own row before the commit ran",
+  );
 });
 
 test("an absent crate reports once and never throws", () => {

@@ -30,6 +30,11 @@
  *  - **Off registers no listener at all.** A listener that wakes up to find itself
  *    disabled is a cost with no feature, so `enabled: false` means `pi.on` is
  *    never called.
+ *  - **The teardown commits what it just wrote (#727 S1a).** The sink's last row
+ *    can never be committed by the session that produced it, so the shutdown —
+ *    after the final flush, never before it — asks the machine-ledger commit to
+ *    carry the class alone. The commit spends no model tokens, runs at most once,
+ *    and a failure is reported instead of failing the teardown.
  *  - **A broken destination is said out loud (#690 S3).** The accumulator reports
  *    every sink refusal; this file owns the channel (`onDegraded`, the operator's
  *    `notify` in a session, stderr for a caller that named none) and the latch
@@ -38,6 +43,7 @@
 
 import { randomUUID } from "node:crypto";
 import { execFileSync } from "node:child_process";
+import { createLedgerCommit, type LedgerCommit } from "../ledger-commit.js";
 import { createSessionTelemetry, phaseFromCommand, unitFromCommand, type TelemetrySink } from "../session-telemetry.js";
 import { createJsonlSink, createLedgerSink } from "../telemetry-sinks.js";
 
@@ -90,6 +96,12 @@ export interface TelemetryWiringOptions {
    * that names none gets one stderr line, the one channel every host has.
    */
   readonly onDegraded?: (message: string) => void;
+  /**
+   * The teardown's machine-ledger commit (issue #727 S1a). Absent builds the
+   * real one over this project; the suite injects a recorder so no case spawns a
+   * crate, and a caller can pass `null` to opt a host out entirely.
+   */
+  readonly ledgerCommit?: LedgerCommit | null;
   readonly now?: () => number;
   readonly date?: () => string;
   readonly source?: string;
@@ -185,6 +197,8 @@ export function createTelemetryWiring(options: TelemetryWiringOptions): Telemetr
 
   let unit: string | null = null;
   let phase: string | null = null;
+  /** The teardown commit already ran: a host that fires the shutdown twice does not commit twice. */
+  let ledgerCommitted = false;
   let accumulator: ReturnType<typeof createSessionTelemetry> | null = null;
 
   /**
@@ -194,6 +208,12 @@ export function createTelemetryWiring(options: TelemetryWiringOptions): Telemetr
    * rest of the session's are already represented by it.
    */
   const report = options.onDegraded ?? ((message: string) => void process.stderr.write(`${message}\n`));
+  // A teardown commit that fails is reported through the same channel a broken
+  // sink uses: one line per session, and never a thrown shutdown.
+  const ledgerCommit =
+    options.ledgerCommit === undefined
+      ? createLedgerCommit({ root: options.root, enabled: options.enabled, report })
+      : options.ledgerCommit;
   const reportedSinks = new Set<string>();
 
   function reportSinkFailure(failure: { readonly sink: string; readonly error: unknown }): void {
@@ -266,6 +286,14 @@ export function createTelemetryWiring(options: TelemetryWiringOptions): Telemetr
       pi.on("agent_settled", () => accumulator?.emit());
       pi.on("session_shutdown", () => {
         accumulator?.flush();
+        // After the flush, never before: the row the session just wrote is the
+        // one this commits, which is what made an in-session commit impossible.
+        // Once per session — a host that fires the event twice has nothing more
+        // to carry, and a second commit would be an empty one.
+        if (!ledgerCommitted) {
+          ledgerCommitted = true;
+          ledgerCommit?.commit();
+        }
         // The phase in flight belonged to this session: a later one must not
         // inherit it. Deleting here is the other half of setting it in
         // `noteCommand`.
