@@ -155,6 +155,43 @@ export function isMachineLedgerPath(relative) {
   return machineLedgerClassOf(relative) !== null;
 }
 
+/** The path one porcelain-v1 line names (the rename destination, unquoted). */
+function porcelainPath(line) {
+  // Untrimmed: in porcelain v1 the status letters occupy columns 0-1 and the
+  // path starts at column 3, so a leading space is data, not noise (the same
+  // read `changedPaths` does below).
+  const raw = line.slice(3).trim();
+  const target = raw.includes(" -> ") ? raw.split(" -> ")[1] : raw;
+  return target.replace(/^"|"$/gu, "").replace(/\\/gu, "/").trim();
+}
+
+/**
+ * The porcelain-v1 lines whose path the machine-ledger exemption does not
+ * cover — the foreign work every verdict still refuses, trimmed with the
+ * status letters intact (a consumer that printed paths instead would silently
+ * drop the staged/modified distinction). The class `machine-ledger-commit@1`
+ * declares (`LEDGERS.md`) is the one exemption; nothing else is filtered, and
+ * an empty porcelain answers an empty list (issue #727 S5 and its consumers:
+ * the audit's `tree-clean`, the lane's loop guard, the conductor's closeout
+ * and the settled-turn notice).
+ */
+export function foreignPorcelainLines(porcelain) {
+  return foreignPorcelainEntries(porcelain).map((line) => line.trim());
+}
+
+/** The paths of the foreign porcelain lines, in porcelain order. */
+export function foreignPorcelainPaths(porcelain) {
+  return foreignPorcelainEntries(porcelain).map((line) => porcelainPath(line));
+}
+
+/** The non-empty untrimmed lines whose path is exempt-filtered, once. */
+function foreignPorcelainEntries(porcelain) {
+  return String(porcelain ?? "")
+    .split("\n")
+    .filter((line) => line.trim() !== "")
+    .filter((line) => !isMachineLedgerExempt(porcelainPath(line)));
+}
+
 /**
  * Whether a pending change to this path is exempt from the review's dirty-tree
  * verdict. Every class row is exempt except the untracked store: a document whose

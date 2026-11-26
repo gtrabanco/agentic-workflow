@@ -26,7 +26,7 @@ import { spawnSync } from "node:child_process";
 import { existsSync, statSync } from "node:fs";
 
 import { detectForge, prLine } from "./forge.mjs";
-import { isMachineLedgerExempt } from "./machine-ledger/index.mjs";
+import { foreignPorcelainPaths } from "./machine-ledger/index.mjs";
 
 const USAGE =
   "usage: turn-contract [--finished|--remote <name>|--forge <name>|--help]\n\n" +
@@ -200,16 +200,7 @@ export function main(argv, options = {}) {
   // untouched, so an exempt row can never excuse an unpublished commit.
   const status = git(root, ["status", "--porcelain", "--untracked-files=all"]);
   if (!status.ok) return fail(5, "dirty-tree");
-  const foreign = status.out
-    .split("\n")
-    .filter((line) => line.trim() !== "")
-    .map((line) => {
-      const raw = line.slice(3).trim();
-      const target = raw.includes(" -> ") ? raw.split(" -> ")[1] : raw;
-      return target.replace(/^"|"$/gu, "");
-    })
-    .filter((file) => !isMachineLedgerExempt(file));
-  if (foreign.length > 0) return fail(5, "dirty-tree");
+  if (foreignPorcelainPaths(status.out).length > 0) return fail(5, "dirty-tree");
   const upstreamAgain = git(root, ["rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{upstream}"]);
   if (upstreamAgain.ok && upstreamAgain.out !== "") {
     const ahead = count(root, `${upstreamAgain.out}..HEAD`);

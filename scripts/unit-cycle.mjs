@@ -34,6 +34,7 @@ import path from "node:path";
 import process from "node:process";
 import { spawnSync } from "node:child_process";
 import { parseUnitDocPhases } from "../packages/agentic-workflow/src/runner/unit-doc-phases.mjs";
+import { foreignPorcelainLines } from "../packages/agentic-workflow/src/machine-ledger/index.mjs";
 import { RunnerResolutionError, resolveRunner } from "../packages/agentic-workflow/src/runner/resolve.mjs";
 import { compute as needsInputCompute } from "../packages/agentic-workflow/src/runner/sensors/needs-input.mjs";
 import { checkUnitDoc, findRow, rowUpsert } from "../packages/agentic-workflow/src/edit/Roadmap.mjs";
@@ -75,6 +76,17 @@ export function phaseOrder(declared, done) {
 }
 
 const AC_GUIDANCE = /Design step finalises wording|Numbered list\. Each AC is/;
+
+/**
+ * Whether the loop's dirty-tree stop fires over a porcelain read — the
+ * machine-owned ledger class (`machine-ledger-commit@1`, LEDGERS.md) is not
+ * the dirt the stop exists for: its writer is machinery, so rows pending
+ * between acts proceed to the gate act, which commits them before any step is
+ * dispatched (issue #727 S5/S6, the loop-guard consumer of the class).
+ */
+export function sensedDirtyFrom(porcelain) {
+  return foreignPorcelainLines(porcelain).length > 0;
+}
 
 /** A unit whose AC section still carries template/lane guidance is undesigned. */
 export function designedFrom(acSection) {
@@ -439,7 +451,7 @@ export function sense(token) {
   }
 
   const branch = sh("git", ["rev-parse", "--abbrev-ref", "HEAD"]).stdout.trim();
-  const dirty = sh("git", ["status", "--porcelain"]).stdout.trim() !== "";
+  const dirty = sensedDirtyFrom(sh("git", ["status", "--porcelain"]).stdout);
   const head = sh("git", ["rev-parse", "HEAD"]).stdout.trim();
   const prNumber = parsePrNumber(references);
   const prUrl = parsePrUrl(references);
