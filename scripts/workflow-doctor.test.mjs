@@ -447,7 +447,11 @@ test("the same inputs render the same bundle bytes", () => {
 
 test("the battery embeds the doctor envelope verbatim and reports the runner version and pin", async () => {
   const dir = fixture();
-  const receipt = await buildBattery(dir, { doctor: async () => DOCTOR_ENVELOPE });
+  // A Pi session publishes AGENTIC_WORKFLOW_SKILLS_ROOT (#703), which the
+  // battery resolves ahead of the fixture's conventions when ambient — this
+  // scenario declares its own env, so the suite answers the same in a
+  // decorated session and a clean one (`env: {}` = no declaration).
+  const receipt = await buildBattery(dir, { doctor: async () => DOCTOR_ENVELOPE, env: {} });
 
   assert.equal(receipt.contract, BATTERY_CONTRACT);
   assert.deepEqual(receipt.doctor, DOCTOR_ENVELOPE, "the doctor envelope is carried as-is, never re-derived");
@@ -474,7 +478,7 @@ test("an absent doctor refuses the battery instead of fabricating a healthy row"
     }),
     (error) => error.refusal === "doctor-unavailable" && /inventory-malformed/u.test(error.message),
   );
-  const receipt = await buildBattery(dir, { doctor: async () => DOCTOR_ENVELOPE });
+  const receipt = await buildBattery(dir, { doctor: async () => DOCTOR_ENVELOPE, env: {} });
   assert.equal(receipt.degradations.length, 0, "a present doctor is no degradation");
 });
 
@@ -502,7 +506,7 @@ function relocatedFixture(destination) {
 
 test("the battery locates the installed skills tree through the skills CLI's documented install dirs", async () => {
   // The skills CLI's cross-agent target — a shape the authoring root never has.
-  const agents = await buildBattery(relocatedFixture(".agents/skills"), { doctor: async () => DOCTOR_ENVELOPE });
+  const agents = await buildBattery(relocatedFixture(".agents/skills"), { doctor: async () => DOCTOR_ENVELOPE, env: {} });
   assert.equal(agents.skills.present, true);
   assert.equal(agents.skills.source, "agents");
   assert.equal(agents.skills.count, 2);
@@ -510,7 +514,7 @@ test("the battery locates the installed skills tree through the skills CLI's doc
   assert.equal(agents.runner.pinMatch, "match");
   assert.match(renderBattery(agents), /from agents/u);
 
-  const claude = await buildBattery(relocatedFixture(".claude/skills"), { doctor: async () => DOCTOR_ENVELOPE });
+  const claude = await buildBattery(relocatedFixture(".claude/skills"), { doctor: async () => DOCTOR_ENVELOPE, env: {} });
   assert.equal(claude.skills.source, "claude-code");
   assert.equal(claude.runner.pin, "4.10.1");
 });
