@@ -38,3 +38,22 @@ exit 0, dimension-regression clean, docs-generate --check PASS, package crate
 84/84 suites, schema 953/0). No mutating command was executed against the live
 tree; no commit, branch, push or forge write was made. Corrections belong to
 `/aw-local-apply`.
+
+## Delta recheck — 2026-11-26
+
+Corrections landed since the block above (its head `3eeada824`): the one
+owner-ordered correction batch `52434647c…f0605c875` (6 commits, the §9
+batch this delta re-verifies), plus a foreign journal-only fragment
+`ac5ce204f` (another session's narrative, 2026-11-26T14:41Z, no unit-doc or
+code bytes — disclosed, rides this receipt's push). Re-verified: the eight
+blockers' reproducers, the sibling sweep, the touched obligation rows, then
+one spot check.
+
+EXTERNAL VERIFY — base: 3eeada82494e63715f1e37265b25d10688e471ed · head: ac5ce204f30f6511aedb5509bb9b230b0f3fae55 · 2026-11-26
+Blockers: 0 — B1 `bun scripts/roadmap-settle.mjs` → `verdict: PASS · violations: 0` (row 698 settled through the writer; base red at `3eeada824`); B2 `rg -n 'agentic-workflow defect' skills/review-implementation/references/CLASSIFY.md skills/fold-findings/SKILL.md` → 1 match each, both files (fold-findings reflowed at :250); B3 `bun test scripts/review-receipt.test.mjs -t 'the pass receipt body is byte-identical'` → 1 pass, and the full suite 33/0; B4 `-t 'the class cell resolves against the published set'` → 1 pass (the landed case carries the promised name); B5 `bun test scripts/repair-receipt.test.mjs -t 'emit posts one typed marker per verdict at the head'` → 1 pass, full suite 12/0 (AC4 reworded from its corrupted `OME` name, `ac-hash` re-pinned, D15.1); B6 `rg 'posts nothing|post no receipt' skills/review-change/` → no match; B7 `rg 'BLOCKED posts nothing|BLOCKED posts no comment' packages/ skills/` → no match; B8 `rg -c '03 step 1'` → 01_MERGE_GATES 2, 04_VERDICT 1, 05_ROUTING 2 (all four audit-pr cells name the repair-currency exception). Each reproducer stayed quiet on unrelated changes (stability: they read only the cited surfaces).
+Advisories: 3 — A1 reattributed and closed as a diagnosis: the environmental red was this session's exported `AGENTIC_WORKFLOW_SKILLS_ROOT` (SPEC E21) — host state, base-identical, out of the change's domain, no test weakened; the proper repo fix became issue #729 / PR #730 (separate unit, outside this diff). A2 (garbled `marker marker` sentences) and A3 (dropped `continue to step 13` directive) folded in the batch — sweeps now clean. Carried note: `red-first.test.mjs`'s shipped-history case exceeds its 60 s allowlist grant only under 2+ workers at box load ≥ 10 (63.4/62.8 s); green standalone and at `--jobs 1`; no allowlist entry changed (a re-basis stays the owner's call).
+Sibling sweep: clean — `posts nothing|post no receipt|BLOCKED → no comment|marker marker|the typed the|Use the five values` over `skills/ packages/ template/ docs/workflow/ docs/CAPABILITIES.md` → no match; the dated historical mentions (GOLDEN_FIXTURE 2026-08-05 row, MIGRATION 2026-09-07 entry) survive by design.
+Completeness: S1–S9 resolved (tasks P1–P8, validators green) · O1–O19 all `verified` with re-run evidence this delta: O4 (rg both files), O11 (suite 33/0 + named case), O18 (root suite exit 0 · 145/0, crate exit 0, schema 953/0).
+Spot check: `env -u AGENTIC_WORKFLOW_SKILLS_ROOT bun scripts/run-root-suite.mjs --jobs 4` → match — observed exit 0 · 145 PASS / 0 FAIL against the reported E21 `exit 0 · 145/145 PASS`.
+Verdict: VERIFIED
+
