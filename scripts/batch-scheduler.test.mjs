@@ -35,6 +35,7 @@ const {
   extractProseDependencies,
   printHumanSummary,
   resolveSurfaceVocabulary,
+  SURFACE_UNKNOWN_TOKEN,
   STATE_FILE_NAME,
 } = await import(scriptPath);
 
@@ -2807,7 +2808,7 @@ test("S9: an unreadable config degrades by name and the plan still prints", () =
 });
 
 test("S10: the shipped vocabulary has one owner and no second copy", () => {
-  const src = fs.readFileSync(scriptPath, "utf8");
+  const src = fs.readFileSync(new URL("../packages/agentic-workflow/src/batch-scheduler/index.mjs", import.meta.url), "utf8");
   assert.ok(!src.includes('top === "skills"'), "the producer carries no inline root list");
   assert.ok(src.includes("SHIPPED_SURFACE_ROOTS"), "it reads the one exported list instead");
   const vocabulary = fs.readFileSync(new URL("../packages/agentic-workflow/src/batch-scheduler/vocabulary.mjs", import.meta.url), "utf8");

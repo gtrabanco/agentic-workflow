@@ -28,7 +28,18 @@ const section = (key) => BASE_CONFIG_SECTIONS.find((entry) => entry.key === key)
 
 test("the base registry carries the feature sections the issue names", () => {
   const keys = BASE_CONFIG_SECTIONS.map((entry) => entry.key);
-  assert.deepEqual(keys, ["logSession", "memory", "telemetry", "guard", "gitIdentity", "advance", "pathProtection", "contentGuard", "docRetention"]);
+  assert.deepEqual(keys, [
+    "logSession",
+    "memory",
+    "telemetry",
+    "guard",
+    "gitIdentity",
+    "advance",
+    "pathProtection",
+    "contentGuard",
+    "docRetention",
+    "batchScheduler",
+  ]);
   for (const entry of BASE_CONFIG_SECTIONS) {
     assert.equal(entry.category, "feature");
     assert.equal(entry.file, "agentic-workflow.json");
@@ -291,4 +302,32 @@ test("gitIdentity.approved takes the signing policy and the per-machine key list
   assert.equal(validateSectionValue(identity, { approved: { signing: "opt-in" } }).length, 1, "an unknown policy is refused");
   assert.equal(validateSectionValue(identity, { approved: { signingKeys: [] } }).length, 1, "an empty key list declares nothing");
   assert.equal(validateSectionValue(identity, { approved: { signingKey: "" } }).length, 1, "an empty key is a typo, not a policy");
+});
+
+/**
+ * The lane vocabulary (issue #716). The declaration is a project's own data, so
+ * the contract is what the validator accepts: a project-relative directory per
+ * entry, and a refusal — never a silent coercion — for anything else.
+ */
+test("the batchScheduler section declares the project's lane trees, and refuses a wildcard or an absolute path", () => {
+  const entry = section("batchScheduler");
+  assert.ok(entry, "batchScheduler is a base section");
+  assert.deepEqual(entry.defaults, { surfaces: [] }, "undeclared is the shipped posture");
+  assert.deepEqual(validateSectionValue(entry, entry.defaults), []);
+  assert.deepEqual(validateSectionValue(entry, { surfaces: ["src/pages", "src/shared", "apps/web", "migrations"] }), []);
+
+  const wildcard = validateSectionValue(entry, { surfaces: ["src/*"] });
+  assert.equal(wildcard.length, 1, "a wildcard names no lane");
+  assert.equal(wildcard[0].path, "batchScheduler.surfaces[0]");
+  assert.match(wildcard[0].message, /must match/u);
+
+  assert.equal(validateSectionValue(entry, { surfaces: ["/abs/path"] }).length, 1, "a project-relative directory only");
+  assert.equal(validateSectionValue(entry, { surfaces: ["src/<name>"] }).length, 1, "a metavariable is a template, not a lane");
+  const empty = validateSectionValue(entry, { surfaces: [""] });
+  assert.ok(empty.length >= 1, "an empty entry is refused, never read as undeclared");
+  assert.equal(empty[0].path, "batchScheduler.surfaces[0]");
+  assert.ok(validateSectionValue(entry, { surfacess: ["src"] }).length > 0, "an unknown key is refused by name");
+
+  const composed = composeConfigSchema(BASE_CONFIG_SECTIONS);
+  assert.deepEqual(composed.properties.batchScheduler, entry.schema);
 });

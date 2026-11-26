@@ -2,12 +2,7 @@
 type: fix
 scope: medium
 ac-hash: ac9bcec9f4b7ad76d2eca586e6ec112cd28e9cba1cf5c6e586bcbabf3e0743e0
-roadmap_summary: >
-  Issue [#716](https://github.com/gtrabanco/agentic-workflow/issues/716) (M): the batch
-  scheduler's lane vocabulary stops being agentic-workflow's own tree — a project
-  declares its lane trees in `batchScheduler.surfaces`, an undeclared project's own
-  directories are discovered instead of degrading to `surface-unknown`, and
-  `--infer-surfaces` reads the same vocabulary the sensor reads.
+roadmap_summary: Issue [#716](https://github.com/gtrabanco/agentic-workflow/issues/716) (M): the batch scheduler's lane vocabulary stops being agentic-workflow's own tree — a project declares its lane trees in `batchScheduler.surfaces`, an undeclared project's own directories are discovered instead of degrading to `surface-unknown`, and `--infer-surfaces` reads the same vocabulary the sensor reads.
 ---
 
 # fix/716-batch-scheduler-surface-vocab

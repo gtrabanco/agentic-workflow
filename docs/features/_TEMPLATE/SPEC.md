@@ -83,8 +83,10 @@ rediscovered at review.
 
 The batch scheduler's lane keys this unit occupies, one per line, so a plan can
 tell which units collide before one is launched. The vocabulary is the
-scheduler's own: `packages/<name>`, `skills/<name>`, `scripts`, `docs`,
-`template`, `.github`. Write `surface-unknown` when the unit cannot name them —
+project's own: the shipped roots plus `batchScheduler.surfaces`, else the
+project's directories (owner:
+[`skills/batch-scheduler/references/PLAN.md`](../../skills/batch-scheduler/references/PLAN.md)
+§ The surface vocabulary). Write `surface-unknown` when the unit cannot name them —
 an honest unknown is a legal answer, and the plan reports it. Advisory only: no
 reader requires this section, and an absent one falls back to the issue body and
 then to this document's `Relevant files:` lines.

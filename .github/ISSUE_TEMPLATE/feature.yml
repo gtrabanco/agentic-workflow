@@ -61,8 +61,10 @@ body:
     attributes:
       label: Surfaces
       description: >-
-        The batch scheduler's lane keys this touches, one per line —
-        packages/<name>, skills/<name>, scripts, docs, template, .github. Write
+        The batch scheduler's lane keys this touches, one per line — the
+        project's own trees (its batchScheduler.surfaces declaration, else the
+        directories it carries; a repository that ships skills/, packages/,
+        scripts/, docs/, template/ or .github/ also accepts those). Write
         surface-unknown when you cannot name them; triage infers them and fills
         this in.
       placeholder: |
