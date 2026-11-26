@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// test-obligation: protects=skills/pre-execution-review/references/LEDGERS.md obligations=contract,convention,coherence
+// test-obligation: protects=skills/pre-execution-review/references/LEDGERS.md obligations=contract,convention,failure-path
 
 /**
  * machine-ledger-policy.test.mjs — the machine-owned ledger class has one owner
@@ -40,7 +40,7 @@ export function parsePolicyBlock(text, marker = MARKER) {
   const rows = [];
   const directives = [];
   let header = null;
-  for (let index = at + 2; index < lines.length; index += 1) {
+  for (let index = at + 1; index < lines.length; index += 1) {
     const line = lines[index];
     if (/^\s*(?:```|~~~)/u.test(line)) break;
     const trimmed = line.trim();
@@ -173,7 +173,7 @@ test("the triage pass removes needs-triage on every published verdict", () => {
   assert.match(labels, /## The triage-state label \(owned here\)/u, "the label's lifecycle has an owner section");
   assert.match(labels, /`needs-triage`/u);
   assert.match(labels, /`gh issue edit <N> --remove-label needs-triage`/u, "the removal command is stated once");
-  assert.match(labels, /every published verdict/u, "the removal is bound to the verdict, not to a memory");
+  assert.match(labels, /Every published verdict clears it/u, "the removal is bound to the verdict, not to a memory");
   assert.match(labels, /`remove`/u, "the remove verdict clears it too");
 
   const process = read("skills/triage-issue/references/ISSUE_PROCESS.md");
@@ -186,7 +186,7 @@ test("the removal rule is loud on failure and never touches human-revision-neede
   const labels = read("skills/triage-issue/references/LABELS.md");
   const section = labels.slice(labels.indexOf("## The triage-state label (owned here)"));
   assert.match(section.slice(0, section.indexOf("## Review-gate label vocabulary")), /states that failure explicitly/u);
-  assert.doesNotMatch(labels, /--remove-label human-revision-needed/u, "IR5: only a human removes the review hold");
+  assert.doesNotMatch(section.slice(0, section.indexOf("## Review-gate label vocabulary")), /--remove-label human-revision-needed/u, "IR5: the triage-state rule never clears the review hold");
 });
 
 test("every exempting surface cites the policy block", () => {

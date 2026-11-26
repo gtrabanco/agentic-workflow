@@ -60,6 +60,16 @@ stdout:     exactly one line; diagnostics never (git/forge evidence stays in the
             agent's transcript)
 ```
 
+**Box 5's exemption (issue #727).** A pending change to a *machine-owned ledger*
+— the class the `machine-ledger-commit@1` block declares
+(`skills/pre-execution-review/references/LEDGERS.md`) — is not the dirty tree box
+5 exists to refuse, so the verifier filters exactly those paths out before
+judging: a telemetry row, a journal fragment, a roadmap row or a review mark
+whose writer is machinery never blocks a turn. A human-uncommitted file still
+fails `dirty-tree`, and `ahead-of-remote` is untouched, so an exempt row never
+excuses an unpublished commit. The exemption set is the class's declaration,
+never a pattern a caller invents.
+
 ## Read-only profile (skills that edit nothing)
 
 A skill that edits nothing — the sensors, the auditors that read and
