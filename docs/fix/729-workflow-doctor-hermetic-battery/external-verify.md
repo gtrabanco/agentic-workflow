@@ -1,0 +1,16 @@
+# fix/729-workflow-doctor-hermetic-battery · external verify receipts
+
+```
+2026-11-26 · EXTERNAL VERIFY — base: 207147ff1ffb · head: 94def9518 (delta verdict from review verdict R2 at 3170bf346)
+Delta re-verified (corrections since the last receipt — R2's F2): decisions table rejoined (rows D3/D4 contiguous, decisions.md:8-12, no decision text touched); delta diff 3170bf346..HEAD = 4 files (journal fragment, SPEC: added evidence lines only, decisions: 2 blank lines removed, findings-corpus.test.mjs counts 174→176 with comment rewrite — no assertion touched).
+Blockers: 0
+Advisories: 2 —
+  A1 · scripts/red-first.test.mjs:203 (60s shipped-history walk), scripts/phase-lint.test.mjs (120s suite bound), scripts/ceremony-findings-ledger.test.mjs (10s per-test spawn bound): the both-environment root gate intermittently fails on EXACTLY these three suites when another session's gate runs concurrently on the 6-CPU box (observed: clean arm 141-142/144 twice, then 144/144 green; declaration arm 142/144 once, then 144/144 green; three builds fail suite- or subprocess-timeout, zero change-relevant assertion failures; both suites green standalone at base in a mktemp scratch clone and at head — 19/19, 162/162; red-first's standalone 5s-bound fail is base-present and allowlist-documented). Same class G3/G4 recorded. Environment-bound, not change-caused.
+  A2 · SPEC.md:89 + SPEC.md:200 (O4 row: "reviewMarks reads 175") — the R1-era count; the tree now carries 176 (R2's own mark: 3ab8b15d6's 174→175 bump then 6a69f07c3's 175→176), live truth correctly documented at scripts/findings-corpus.test.mjs:193-197 (emphasis: comment names 176). Invariant "frozen counts match the tree" holds; only the unit doc's illustrative number drifted behind the tree (the mechanism O4 itself describes regenerates it every review cycle). Doc-only drift, advisory. Smallest action: move the O4 row's illustrative count with the tree (one line); route to /aw-local-apply.
+Sibling sweep: clean (no other tree surface pins the old truth: no external reviewMarks/1166/174 count pins; all ambient buildBattery calls declare env or are asserted skills-insensitive; no removed-contract-qualifier above prose).
+Completeness: S1→P2 green, S2→P3 green, S3→P3 green; one independent derived probe per claim (S1: `env AGENTIC_WORKFLOW_SKILLS_ROOT=$(pwd)/docs bun test scripts/workflow-doctor.test.mjs` exit 0 — a decoy dir that is no skills tree; S2: both gate arms exit 0 · 144/144; S3: the same diff also run verbatim — no removed/rewritten line beyond env args + one comment, checked byte-by-byte). Findings table empty; O1-O4 verified, all four validators re-run green here.
+Spot check: `env -u AGENTIC_WORKFLOW_SKILLS_ROOT bun scripts/run-root-suite.mjs` → match (attempt 3: exit 0, 144 PASS; attempts 1-2 mismatched the reported output at 141-142/144 under concurrent other-session gate load — all reds wall-clock-only in suites untouched by the diff, repro'd identically at base in scratch; per the protocol everything reported is therefore read with that environment caveat on gate-run claims).
+Verdict: VERIFIED
+```
+
+Scratch used: a `mktemp --shared` clone at base 207147ff1ffb (schema dist rebuilt inside it) — removed after this line, nothing committed.
