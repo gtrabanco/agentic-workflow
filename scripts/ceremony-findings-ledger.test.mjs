@@ -144,7 +144,7 @@ test("ledger count and read keep the legacy carrier's own vocabulary (R1, O4)", 
 test("a flag the operation does not use is a usage error, never silently ignored (S6, S8)", () => {
   const dir = makeUnit({ findingsRows: ROW("F1") });
   assert.equal(cer(["findings", "read", "--slug", "1-fixture", "--severity", "high"], dir).json.error, "unknown-flag");
-  const appended = cer(["findings", "append", "--slug", "1-fixture", "--file", "a.ts", "--axis", "code", "--severity", "SUGGESTION", "--impact", "report-only", "--class", "c", "--route", "r", "--folded", "true"], dir);
+  const appended = cer(["findings", "append", "--slug", "1-fixture", "--file", "a.ts", "--axis", "code", "--severity", "SUGGESTION", "--impact", "report-only", "--class", "source", "--route", "r", "--folded", "true"], dir);
   assert.equal(appended.code, 1);
   assert.equal(appended.json.error, "unknown-flag");
   assert.equal(cer(["findings", "read", "--slug", "1-fixture"], dir).json.findings.length, 1, "the rejected call wrote nothing");
@@ -173,7 +173,7 @@ test("findings delete by id/axis/severity and delete-all", () => {
   const dir = makeUnit({ findingsRows: [ROW("F1", "SUGGESTION", "report-only"), ROW("F2"), ROW("F3", "SUGGESTION", "report-only")].join("\n") });
   assert.equal(cer(["findings", "delete", "--slug", "1-fixture", "--id", "2"], dir).json["deleted-count"], 1);
   assert.equal(cer(["findings", "delete", "--slug", "1-fixture", "--severity", "SUGGESTION"], dir).json["deleted-count"], 2);
-  assert.equal(cer(["findings", "append", "--slug", "1-fixture", "--file", "c.ts", "--axis", "a", "--severity", "SUGGESTION", "--impact", "report-only", "--class", "c", "--route", "r"], dir).json.finding.id, "F1");
+  assert.equal(cer(["findings", "append", "--slug", "1-fixture", "--file", "c.ts", "--axis", "a", "--severity", "SUGGESTION", "--impact", "report-only", "--class", "source", "--route", "r"], dir).json.finding.id, "F1");
   assert.equal(cer(["findings", "delete-all", "--slug", "1-fixture"], dir).json["deleted-count"], 1);
   assert.deepEqual(cer(["findings", "read", "--slug", "1-fixture"], dir).json.findings, []);
 });

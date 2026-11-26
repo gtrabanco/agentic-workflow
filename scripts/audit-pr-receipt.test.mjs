@@ -29,6 +29,9 @@ import {
   hygieneFromState,
   mergeCommentAction,
   newestAuditComment,
+  renderBlockedBody,
+  blockedCommentAction,
+  renderMergeReadyBody,
   receiptGateOutcome,
 } from "./audit-pr-gate.mjs";
 import { receiptStatus, renderReceiptBody } from "./review-receipt.mjs";
@@ -482,4 +485,62 @@ test("the receipt judge's unreadable subprocess is unevaluatable, a judged recei
   const judged = gateReceiptGate({ root });
   assert.equal(judged.outcome, "fail");
   assert.equal(judged.reason, "missing");
+});
+
+test("a current repair receipt keeps the review gate satisfied and the remaining gates decide", () => {
+  const sha = "a".repeat(40);
+  const gates = Object.fromEntries(GATE_NAMES.map((name) => [name, "pass"]));
+  const repair = { current: true, currency: true, route: "RE-REVIEW-SKIPPED", reason: "ceremony-only repair" };
+  const result = auditVerdict({ comments: [], headSha: sha, gates, repair });
+  assert.equal(result.verdict, "MERGE-READY", JSON.stringify(result));
+  assert.equal(result.gatesEvaluated, true);
+  assert.equal(result.receiptSource, "repair");
+  // The remaining gates still decide: a real failure is never cleared by a repair.
+  gates.traceability = "fail";
+  const failing = auditVerdict({ comments: [], headSha: sha, gates, repair });
+  assert.equal(failing.verdict, "BLOCKED");
+  assert.deepEqual(failing.blockers, ["gate traceability failed"]);
+  // A stale gate receipt cleared by the repair is reported as pass with its reason.
+  const cleared = auditVerdict({ comments: [], headSha: sha, gates: { ...gates, traceability: "pass", "gate-receipt": "fail" }, repair });
+  assert.equal(cleared.gates["gate-receipt"].outcome, "pass");
+  assert.match(cleared.gates["gate-receipt"].reason, /repair/i);
+});
+
+test("a non-current repair receipt keeps today's route to review-change", () => {
+  const sha = "a".repeat(40);
+  const gates = Object.fromEntries(GATE_NAMES.map((name) => [name, "pass"]));
+  const repair = { current: false, currency: false, route: "RE-REVIEW-REQUIRED", reason: "the delta carries a source path" };
+  const result = auditVerdict({ comments: [], headSha: sha, gates, repair });
+  assert.equal(result.verdict, "BLOCKED");
+  assert.equal(result.route, "/review-change");
+  assert.match(result.blockers[0], /repair receipt/i);
+});
+
+test("a BLOCKED verdict posts one blocked receipt and re-auditing the same head skips it", () => {
+  const sha = "a".repeat(40);
+  const body = renderBlockedBody({ sha, blockers: ["gate traceability failed", "gate ci unevaluatable: not-evaluated"], route: "/review-change", gates: { traceability: "fail", ci: "unevaluatable" } });
+  assert.match(body, /<!-- audit-pr:blocked sha=/u);
+  const first = blockedCommentAction({ verdict: "BLOCKED", comments: [], headSha: sha });
+  assert.equal(first.action, "post");
+  const again = blockedCommentAction({ verdict: "BLOCKED", comments: [{ body }], headSha: sha });
+  assert.equal(again.action, "skip");
+  // A later head re-comments; MERGE-READY still posts its own marker.
+  const moved = blockedCommentAction({ verdict: "BLOCKED", comments: [{ body }], headSha: "b".repeat(40) });
+  assert.equal(moved.action, "post");
+});
+
+test("the merge-ready receipt bytes are unchanged", () => {
+  const sha = "a".repeat(40);
+  const expected = [
+    `<!-- audit-pr:merge-ready sha=${sha} -->`,
+    "## audit-pr: MERGE-READY",
+    "",
+    `- Audited head: \`${sha}\``,
+    `- Review receipt: current at \`${sha}\``,
+    "- Gates (2/14): acceptance-coverage, ci",
+    "- Hygiene: tree-clean=pass · branch-pushed=pass · pr-ready=pass",
+    "- Mergeability: unknown",
+    "",
+  ].join("\n");
+  assert.equal(renderMergeReadyBody({ sha, gates: ["acceptance-coverage", "ci"], hygiene: ["tree-clean=pass", "branch-pushed=pass", "pr-ready=pass"], mergeability: "unknown" }), expected);
 });

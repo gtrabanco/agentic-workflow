@@ -188,3 +188,40 @@ test("batch path: mixed affected + non-affecting paths", (t) => {
   assert.deepEqual(paths, ["src/one.ts", "src/two.ts"],
     "only affected paths present; non-affecting dirs excluded");
 });
+
+test("the ceremony-bookkeeping class is closed and named", async () => {
+  const mod = await import("../packages/agentic-workflow/src/scope-manifest/index.mjs");
+  assert.deepEqual([...mod.CEREMONY_BOOKKEEPING_PATHS], ["docs/LOGS.md", "docs/ROADMAP.md", "CHANGELOG.md"]);
+  for (const pathname of [
+    "docs/LOGS.md",
+    "docs/ROADMAP.md",
+    "CHANGELOG.md",
+    ".agentic-workflow/gate/gate-receipt.json",
+    "docs/generated/units.md",
+    "docs/fix/334-pre-commit-sandbox-leak/review-findings.md",
+    "docs/features/698-toy-unit/planning-obligations.md",
+  ]) {
+    assert.equal(mod.isCeremonyBookkeeping(pathname), true, `${pathname} is ceremony bookkeeping`);
+  }
+  for (const pathname of [
+    "docs/workflow/SETUP.md",
+    "README.md",
+    "packages/agentic-workflow/src/core.mjs",
+    "skills/fold-findings/SKILL.md",
+    "template/docs/features/_TEMPLATE/SPEC.md",
+    "scripts/repair-receipt.mjs",
+  ]) {
+    assert.equal(mod.isCeremonyBookkeeping(pathname), false, `${pathname} is not bookkeeping`);
+  }
+});
+
+test("the scope digest is unchanged for every published class", async () => {
+  const mod = await import("../packages/agentic-workflow/src/scope-manifest/index.mjs");
+  // The new matcher never feeds the signer: a bookkeeping path still binds.
+  assert.equal(mod.isNonAffecting("docs/ROADMAP.md"), false);
+  assert.equal(mod.isNonAffecting("docs/LOGS.md"), true);
+  assert.equal(mod.isNonAffecting(".pi/state.json"), true);
+  // The digest is over the manifest object and never binds the head.
+  const manifest = { base: "main", head: "a".repeat(40), paths: [{ path: "docs/ROADMAP.md", digest: "b".repeat(64) }] };
+  assert.equal(mod.scopeDigestOf(manifest), mod.scopeDigestOf({ ...manifest, head: "c".repeat(40) }));
+});

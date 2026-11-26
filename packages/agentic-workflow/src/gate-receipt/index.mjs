@@ -306,6 +306,7 @@ export async function judgeGateReceipt({ root = process.cwd(), receiptPath = DEF
     status: "stale",
     verdict: "fail",
     consumed: false,
+    receiptVerdict: validated.receipt.verdict,
     blockers: [`gate receipt is stale: ${fresh.changedPaths.join(", ") || "signed content changed"}`],
     changedPaths: fresh.changedPaths,
     route: rerun,

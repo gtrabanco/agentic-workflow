@@ -93,6 +93,12 @@ export const HELP_REGISTRY = Object.freeze({
     ops: ["emit", "verify", "post"],
     flags: ["--root", "--dry-run"],
   },
+  "repair-receipt": {
+    family: "lane",
+    summary: "emits and verifies the fold's typed repair receipt: the encoded re-review route a merge gate consumes as currency",
+    ops: ["emit", "verify"],
+    flags: ["--unit", "--reviewed", "--pr", "--head", "--root", "--dry-run"],
+  },
   "review-state": {
     family: "lane",
     summary: "the per-unit record of which review axes ran, at which head, with which evidence",

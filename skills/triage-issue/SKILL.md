@@ -34,7 +34,7 @@ Load and verify the **canonical** [Turn contract](../orchestration-envelope/refe
 ✓ Audit-finding mode (`<audit-id> F<k>`): the audit file carries its `↳ triaged` note, and any opened issue cites `Origin: product audit <id>, finding F<k>`
 ✓ Review-finding mode (`--prioritize-now <unit> F<k>`): every named unresolved finding gets a verdict **and a route** — a `fix-now` row is routed to `/fold-findings` (or an explicit `/execute-phase <unit> P<n>`), never implemented in this turn
 ✓ Batched input? The closing recommendation maps every issue/finding ID to its own next command, joined with ` + `; it never collapses to one generic action
-✓ The issue body carries a `## Surfaces` declaration the batch scheduler can read — written from `--infer-surfaces` output, never hand-typed, never rewritten when one is already there (owner: [ISSUE_PROCESS.md](references/ISSUE_PROCESS.md) step 6)
+✓ The issue body carries a `## Surfaces` declaration the batch scheduler can read — written from `--infer-surfaces` output (which resolves the project's own lane vocabulary, never a fixed folder list; owner: `skills/batch-scheduler/references/PLAN.md` § The surface vocabulary), never hand-typed, never rewritten when one is already there (owner: [ISSUE_PROCESS.md](references/ISSUE_PROCESS.md) step 6)
 ✓ Every verdict's `Criteria:` line carries a **published** provenance token (`TRIAGE_CRITERIA_PROVENANCE`) — never an invented criteria set, never a silent default
 ```
 

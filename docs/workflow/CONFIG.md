@@ -14,7 +14,7 @@ machine contract (section list, defaults, `config.schema.json`) is owned by
 
 - **Base file** — feature config every agentic-workflow install shares:
   `logSession`, `memory`, `telemetry`, `guard`, `gitIdentity`, `advance`,
-  `pathProtection`, `contentGuard`.
+  `pathProtection`, `contentGuard`, `docRetention`, `batchScheduler`.
   It is cross-tool: the value means the same on Claude Code, Codex, OpenCode2
   and π; only the implementation of each feature differs.
 - **Extension file** — package-specific config. The `pi-agentic-workflow`
@@ -63,6 +63,7 @@ project can never silently drop a global glob or lower a requirement.
 | `pathProtection` | base | `{}` | `protectedGlobs` plus `requirements.<pre-freeze\|post-freeze\|always>.<create\|modify\|delete\|rename>` = `none`/`justification`/`approval` |
 | `contentGuard` | base | `{ "trustedRoles": ["OWNER", "MEMBER", "COLLABORATOR"], "allowLogins": [], "denyLogins": [] }` | `trustedRoles` = the author associations whose forge content may be ingested (any value `packages/agentic-workflow-schema/src/content-guard.ts` publishes); `allowLogins` admits a login regardless of association, `denyLogins` refuses one regardless of role. There is no `enabled` switch: the layer is always active and an unconfigured project runs the strictest policy. The merge between scopes tightens only — roles intersect, the login lists union — and a list that is not the declared shape (a wrong type, or an entry that is not a string) is never narrowed into an empty one: the section is refused whole, the caller gets the shipped strictest policy and the refusal is declared (`malformed-config`) |
 | `docRetention` | base | `{ "mode": "keep-all", "pendingTrimAfterDays": 0, "archiveDir": ".agentic-workflow/archive", "archiveRetentionDays": null, "seamHook": null }` | `mode` = `keep-all` (detection only — the shipped posture) or `archive` (the trim step may run); `pendingTrimAfterDays` is the window `workflow-status` waits before offering a merge, measured from the unit's last `## Log` entry; `archiveDir` is the repo-relative, gitignored archive (`doc archive` refuses a directory git does not ignore); `archiveRetentionDays` = `null` never prunes the archive, a number prunes it after that many days; `seamHook` is the project-declared offsite copy, run after the local archive is durable with `AGENTIC_WORKFLOW_UNIT` and `AGENTIC_WORKFLOW_ARCHIVE_DIR` in its environment. The section gates the trim step only — it never makes a document invalid (see [RETENTION.md](RETENTION.md)) |
+| `batchScheduler` | base | `{ "surfaces": [] }` | the project's lane trees for the batch scheduler, one project-relative directory per entry (`src/pages`, `apps/web`). Empty means *undeclared*: the shipped roots are recognized and the project's own top-level directories are discovered, so an unconfigured project still plans in parallel lanes. A non-empty list is authoritative for that project and a directory it omits resolves to nothing. A wildcard, an absolute path and a `<name>` metavariable are refused by path. Owner of the vocabulary's meaning: [PLAN.md](../../skills/batch-scheduler/references/PLAN.md) § The surface vocabulary (issue #716) |
 | `pi` | extension | routing defaults | `default`, `commands`, `onUnavailableRoute`, `onSettle`, `recommendedModels`, `profiles`, `profileOrder`, `profileFallback`, `passes`, `subagents`, `stateFlow`, `toolChoice` (`enabled: true`, `mode: "block"` — the command-time `rg`/`bun` carrier; `mode: "rewrite"` forwards instead of refusing), `phaseBatching` (`enabled: false` — the model-aware phase-batching switch; see [Phase batching](#phase-batching)), `guardPlugins` (`enabled: true`, `guards: {}` — the project's own guards, declared as data; see [Guard plugins](#guard-plugins)) |
 
 Unknown keys are refused, never merged or coerced. `config validate` reports
@@ -284,7 +285,11 @@ publishes, and the default each one resolves to.
 
   // contentGuard — Author-provenance policy for third-party forge content.
   // default: {"trustedRoles":["OWNER","MEMBER","COLLABORATOR"],"allowLogins":[],"denyLogins":[]}
-  // "contentGuard": {"trustedRoles":["OWNER","MEMBER","COLLABORATOR"],"allowLogins":[],"denyLogins":[]}
+  // "contentGuard": {"trustedRoles":["OWNER","MEMBER","COLLABORATOR"],"allowLogins":[],"denyLogins":[]},
+
+  // batchScheduler — The batch scheduler's lane vocabulary.
+  // default: {"surfaces":[]}
+  // "batchScheduler": {"surfaces":[]}
 }
 ```
 

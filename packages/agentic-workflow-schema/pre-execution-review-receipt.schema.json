@@ -342,7 +342,8 @@
             "plan",
             "source",
             "environment",
-            "runtime"
+            "runtime",
+            "workflow"
           ],
           "description": "Root-cause owner the finding routes to."
         },

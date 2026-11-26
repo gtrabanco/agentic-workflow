@@ -127,7 +127,7 @@ status | resolution-evidence | resolving-artifact-revision
 
 - `stage` is `spec` or `plan`; `severity` and `class` use the receipt
   vocabularies (`info|low|medium|high|critical`,
-  `product|plan|source|environment|runtime`). Material is `medium` and above; a
+  `product|plan|source|environment|runtime|workflow`). Material is `medium` and above; a
   `low` row is a persisted **report-note** — visible, non-blocking, and resolved
   by the stage author without a re-review — and `info` is immaterial.
 - Deflating a real defect below the `medium` minimum to unblock a pass is itself
