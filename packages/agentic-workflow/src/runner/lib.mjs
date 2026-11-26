@@ -12,6 +12,7 @@ import { execFileSync } from "node:child_process";
 import process from "node:process";
 import { openFence, closesFence, sectionBounds } from "./unit-doc-phases.mjs";
 import { parseCarrierBody, renderFindingsTable } from "./findings-carrier.mjs";
+import { isMachineLedgerExempt } from "../machine-ledger/index.mjs";
 
 /**
  * The one line every ceremony failure carries (issue #603).
@@ -383,10 +384,13 @@ export function cleanCheck(cwd = process.cwd()) {
   // the whole output, so without a header line the FIRST changed path loses its
   // leading status column and one character of the path itself.
   const raw = gitOrFail(["status", "--porcelain=v1", "-b"], cwd);
+  // Issue #727: a pending machine-owned ledger row (`machine-ledger-commit@1`,
+  // LEDGERS.md) is not the dirt this check refuses on — its writer is machinery.
   const dirty = raw
     .split("\n")
     .filter((line) => line !== "" && !line.startsWith("## "))
-    .map((l) => ({ index: l[0], working: l[1], file: l.slice(3) }));
+    .map((l) => ({ index: l[0], working: l[1], file: l.slice(3) }))
+    .filter((d) => !isMachineLedgerExempt(d.file.trim()));
   return { clean: dirty.length === 0, "dirty-files": dirty.map((d) => d.file) };
 }
 

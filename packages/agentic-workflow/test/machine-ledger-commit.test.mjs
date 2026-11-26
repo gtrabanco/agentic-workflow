@@ -31,9 +31,11 @@ import {
   commitMachineLedgers,
   foreignPorcelainLines,
   foreignPorcelainPaths,
+  foreignStatusPaths,
   isMachineLedgerPath,
 } from "../src/machine-ledger/index.mjs";
 import { main as sessionCloseMain } from "../src/session-close/index.mjs";
+import { main as commitMain } from "../src/telemetry/commit.mjs";
 import { COLUMNS } from "../src/telemetry/ledger.mjs";
 import { main as reconstructMain } from "../src/telemetry/reconstruct.mjs";
 
@@ -122,6 +124,31 @@ test("foreignPorcelain answers an empty porcelain with an empty list", () => {
   assert.deepEqual(foreignPorcelainPaths(""), []);
 });
 
+test("foreignPorcelain reads the arrow as a rename only on the rename letters (a ledger-named file is not a carve)", () => {
+  // A file whose own path carries ` -> ` is data, never a rename: judged by its
+  // tail it would land on an exempt ledger and vanish from every verdict.
+  const spoof = '?? "evil -> docs/LOGS.md"\n M "a -> .agentic-workflow/journal/leak.sh"\n';
+  assert.deepEqual(foreignPorcelainPaths(spoof), ["evil -> docs/LOGS.md", "a -> .agentic-workflow/journal/leak.sh"]);
+  assert.equal(foreignPorcelainLines(spoof).length, 2, "the spoof entries stay foreign");
+  // A real rename is exempt only when BOTH sides are: work moved out of an
+  // ordinary file into a ledger is still work on that file.
+  assert.deepEqual(foreignPorcelainPaths("R  notes.txt -> docs/LOGS.md"), ["docs/LOGS.md"]);
+  assert.deepEqual(foreignPorcelainPaths("R  docs/LOGS.md -> notes.txt"), ["notes.txt"]);
+  assert.deepEqual(foreignPorcelainLines("R  docs/workflow/TIER_COST.md -> docs/LOGS.md"), []);
+});
+
+test("foreignPorcelain resolves git's C-quoted paths to their bytes", () => {
+  assert.deepEqual(foreignPorcelainPaths('?? "caf\\303\\251.txt"'), ["café.txt"]);
+  assert.deepEqual(foreignPorcelainPaths('?? "tab\\there.txt"'), ["tab\there.txt"]);
+});
+
+test("foreignStatusPaths drops the header and returns the paths a sensor reasons about", () => {
+  assert.deepEqual(foreignStatusPaths("## feat/727\n M docs/workflow/TIER_COST.md\n?? app.ts\n M src/app.ts\n"), ["app.ts", "src/app.ts"]);
+  // A rename into an exempt path is still work on the file it came from.
+  assert.deepEqual(foreignStatusPaths("## feat/727\nR  old.txt -> docs/LOGS.md\n"), ["docs/LOGS.md"]);
+  assert.deepEqual(foreignStatusPaths("R  docs/workflow/TIER_COST.md -> docs/LOGS.md\n"), []);
+});
+
 test("the type projection declares exactly the module's exports", async () => {
   // Same rule as `tool-choice/policy.d.mts` F19: the .d.mts beside the module
   // is a projection, and its names never drift from the module's.
@@ -177,6 +204,46 @@ test("a held lock answers locked instead of committing twice", () => {
   // The lock is released, so the next cycle commits the row it left behind.
   const after = commitMachineLedgers({ root: dir, zone: "auto" });
   assert.equal(after.status, "committed");
+});
+
+test("a lock whose writer is gone is evicted, and a live holder keeps it however old the file is", () => {
+  const dir = sandbox();
+  appendRow(dir);
+  const gitPath = mustGit(dir, ["rev-parse", "--git-path", "agentic-machine-ledger.lock"]);
+  const lock = path.isAbsolute(gitPath) ? gitPath : path.join(dir, gitPath);
+  fs.mkdirSync(path.dirname(lock), { recursive: true });
+
+  // A dead writer's lock: the recorded pid exits before the next writer looks.
+  const dead = spawnSync(process.execPath, ["-e", "process.exit(0)"], { encoding: "utf8" });
+  assert.equal(dead.status, 0);
+  fs.writeFileSync(lock, `${dead.pid}\n`);
+  const old = new Date(Date.now() - 10 * 60_000);
+  fs.utimesSync(lock, old, old);
+  const stale = commitMachineLedgers({ root: dir, zone: "auto" });
+  assert.equal(stale.status, "committed", "a lock no live pid owns is abandoned");
+  assert.equal(fs.existsSync(lock), false, "the release removes our own lock and nothing else");
+
+  // A live holder keeps the lock however old its mtime is: its exclusion is the
+  // whole point, and evicting it would let two commits interleave.
+  appendRow(dir, "728");
+  fs.writeFileSync(lock, `${process.pid}\n`);
+  fs.utimesSync(lock, old, old);
+  const held = commitMachineLedgers({ root: dir, zone: "auto" });
+  assert.equal(held.status, "locked");
+  assert.equal(fs.existsSync(lock), true, "a live holder's lock survives a stale mtime");
+  fs.rmSync(lock, { force: true });
+});
+
+test("a class that names no literal path is answered unsweepable, never a confident clean", () => {
+  const dir = sandbox();
+  fs.mkdirSync(path.join(dir, "docs", "fix", "900-x"), { recursive: true });
+  fs.writeFileSync(path.join(dir, "docs", "fix", "900-x", "decisions.md"), "- a decision\n");
+  const result = commitMachineLedgers({ root: dir, classes: ["unit-ledgers"] });
+  assert.equal(result.status, "unsweepable");
+  assert.equal(result.committed, false);
+  assert.match(result.detail, /no literal path/u);
+  const byZone = commitMachineLedgers({ root: dir, zone: "writer-step" });
+  assert.equal(byZone.status, "unsweepable", "a zone mixing literal and pattern rows is refused, not half-swept");
 });
 
 test("a directory outside a checkout answers not-a-repository", () => {
@@ -269,4 +336,36 @@ test("reconstruct write leaves a project without a ledger alone", () => {
     else process.env.PI_CODING_AGENT_DIR = previous.env;
   }
   assert.equal(commits(dir), before, "an absent ledger commits nothing at all");
+});
+
+test("the command honours --json by silencing the human line and keeping the envelope", () => {
+  const dir = sandbox();
+  appendRow(dir);
+  const quiet = { out: "", err: "" };
+  const code = commitMain(["--repo", dir, "--json"], {
+    cwd: dir,
+    stdout: (text) => { quiet.out += text; },
+    stderr: (text) => { quiet.err += text; },
+  });
+  assert.equal(code, 0);
+  assert.deepEqual(JSON.parse(quiet.out), JSON.parse(quiet.out), "stdout stays the envelope");
+  assert.equal(JSON.parse(quiet.out).status, "committed");
+  assert.equal(quiet.err, "", "--json silences the human line it documents as suppressed");
+
+  const loud = { out: "", err: "" };
+  commitMain(["--repo", dir], { cwd: dir, stdout: (text) => { loud.out += text; }, stderr: (text) => { loud.err += text; } });
+  assert.match(loud.err, /machine-ledger-commit: clean/u, "the default still reports on stderr");
+});
+
+test("an unsweepable class exits 1 with its refusal on stderr, never 0 as a clean night", () => {
+  const dir = sandbox();
+  const capture = { out: "", err: "" };
+  const code = commitMain(["--repo", dir, "--class", "unit-ledgers"], {
+    cwd: dir,
+    stdout: (text) => { capture.out += text; },
+    stderr: (text) => { capture.err += text; },
+  });
+  assert.equal(code, 1);
+  assert.equal(JSON.parse(capture.out).status, "unsweepable");
+  assert.match(capture.err, /unsweepable/u);
 });

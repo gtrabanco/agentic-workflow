@@ -36,10 +36,11 @@ const USAGE = `usage: agentic-workflow telemetry commit [flags]
 --subject <s>  the commit subject (default: derived from the classes that changed)
 --repo <dir>   the checkout to commit in (default: cwd)
 --dry-run      print what would be committed and write nothing
---json         print the envelope only (stdout is the envelope either way)
+--json         print the envelope only (the human line still goes to stderr)
 --help         this block
 
-exit: 0 committed · clean · locked · not-a-repository · 1 the commit failed · 2 usage
+exit: 0 committed · clean · locked · not-a-repository · would-commit (dry run) · 1 the commit
+      failed, or a class that names no literal path · 2 usage or a refused class/zone id
 `;
 
 const VALUE_FLAGS = Object.freeze(["--class", "--zone", "--subject", "--repo"]);
@@ -89,6 +90,9 @@ export function main(argv, { cwd = process.cwd(), stdout = (text) => process.std
     stdout(USAGE);
     return 0;
   }
+  // The quiet mode (`--json`) still prints the receipt on stdout; the human
+  // lines stay on stderr, where a quiet run silences them (issue #727 F5).
+  const say = flags.json === true ? () => {} : stderr;
 
   let outcome;
   try {
@@ -101,7 +105,7 @@ export function main(argv, { cwd = process.cwd(), stdout = (text) => process.std
     });
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);
-    stderr(`TELEMETRY COMMIT REFUSAL — ${detail}\n`);
+    say(`TELEMETRY COMMIT REFUSAL — ${detail}\n`);
     stdout(`${JSON.stringify({ contract: COMMIT_CONTRACT_ID, error: "refusal", detail })}\n`);
     return 2;
   }
@@ -119,8 +123,8 @@ export function main(argv, { cwd = process.cwd(), stdout = (text) => process.std
   };
   stdout(`${JSON.stringify(envelope, null, 2)}\n`);
   const where = outcome.paths.length === 0 ? "nothing pending" : outcome.paths.join(", ");
-  stderr(`machine-ledger-commit: ${outcome.status}${outcome.sha === null ? "" : ` ${outcome.sha}`} (${where})\n`);
-  return outcome.status === "failed" ? 1 : 0;
+  say(`machine-ledger-commit: ${outcome.status}${outcome.sha === null ? "" : ` ${outcome.sha}`} (${where})\n`);
+  return outcome.status === "failed" || outcome.status === "unsweepable" ? 1 : 0;
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) process.exit(main(process.argv.slice(2)));

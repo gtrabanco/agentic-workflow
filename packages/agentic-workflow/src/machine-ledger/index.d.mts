@@ -47,7 +47,7 @@ export declare function machineLedgerSubject(rows: readonly MachineLedgerClass[]
 
 /** One machine-owned ledger commit's answer. */
 export interface MachineLedgerOutcome {
-  status: "not-a-repository" | "clean" | "locked" | "committed" | "would-commit" | "failed";
+  status: "not-a-repository" | "clean" | "locked" | "committed" | "would-commit" | "unsweepable" | "failed";
   committed: boolean;
   root: string;
   classes: string[];
@@ -74,3 +74,6 @@ export declare function foreignPorcelainLines(porcelain: string): string[];
 
 /** The paths of the foreign porcelain lines, in porcelain order. */
 export declare function foreignPorcelainPaths(porcelain: string): string[];
+
+/** The paths a `--porcelain=v1 -b` read carries once the exemption is applied (header dropped). */
+export declare function foreignStatusPaths(porcelain: string): string[];

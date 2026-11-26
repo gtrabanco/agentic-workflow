@@ -157,12 +157,62 @@ export function isMachineLedgerPath(relative) {
 
 /** The path one porcelain-v1 line names (the rename destination, unquoted). */
 function porcelainPath(line) {
-  // Untrimmed: in porcelain v1 the status letters occupy columns 0-1 and the
-  // path starts at column 3, so a leading space is data, not noise (the same
-  // read `changedPaths` does below).
-  const raw = line.slice(3).trim();
-  const target = raw.includes(" -> ") ? raw.split(" -> ")[1] : raw;
-  return target.replace(/^"|"$/gu, "").replace(/\\/gu, "/").trim();
+  const entry = porcelainEntry(line);
+  return entry.renamed ? entryPath(entry.target) : entry.path;
+}
+/**
+ * The one porcelain-v1 reader: the status letters and the path a line names.
+ *
+ * The ` -> ` split belongs to the `R`/`C` letters alone. Applied to every line it
+ * reads data as structure: a file called `evil -> docs/LOGS.md` (a directory
+ * `evil -> docs` holding it) would be judged by its tail, land on `docs/LOGS.md`
+ * and be exempted — a carve an attacker names for free (issue #727 F1). A quoted
+ * path is git's C-quoting, never a rename (the arrow is inside its quotes).
+ */
+function porcelainEntry(line) {
+  const raw = String(line ?? "");
+  const code = raw[0] ?? " ";
+  const rest = raw.slice(3);
+  const renamed = (code === "R" || code === "C") && !rest.startsWith('"');
+  if (!renamed) return { code, renamed, path: entryPath(rest), target: rest };
+  // `R  a -> b`: the destination is what the working tree holds. Split at the
+  // first arrow, so a destination that itself carries one stays whole.
+  const arrow = rest.indexOf(" -> ");
+  return { code, renamed, path: entryPath(rest.slice(0, arrow)), target: rest.slice(arrow + " -> ".length) };
+}
+
+/** The path cell a porcelain line names, with git's quoting resolved. */
+function entryPath(cell) {
+  const raw = String(cell ?? "").trim();
+  return normalise(raw.startsWith('"') ? cUnquote(raw) : raw);
+}
+
+/**
+ * Git's C-quoted path back to its bytes: a quoted path is the only porcelain
+ * form that carries an escape, so `\NNN` octal escapes, `\t`, `\n`, `\"` and
+ * `\\` are resolved exactly as `core.quotePath` wrote them.
+ */
+function cUnquote(quoted) {
+  // Octal escapes are bytes, not characters: git quotes UTF-8 byte by byte, so
+  // they are collected and decoded together (`caf\303\251` is `café`).
+  const body = quoted.slice(1, quoted.endsWith('"') ? -1 : undefined);
+  const bytes = [];
+  for (let index = 0; index < body.length; index += 1) {
+    if (body[index] !== "\\") {
+      bytes.push(...Buffer.from(body[index], "utf8"));
+      continue;
+    }
+    const octal = /^[0-7]{3}/u.exec(body.slice(index + 1));
+    if (octal !== null) {
+      bytes.push(Number.parseInt(octal[0], 8));
+      index += 3;
+      continue;
+    }
+    const escaped = body[index + 1] ?? "";
+    bytes.push(...Buffer.from({ n: "\n", t: "\t", r: "\r", b: "\b", f: "\f", v: "\v" }[escaped] ?? escaped, "utf8"));
+    index += 1;
+  }
+  return Buffer.from(bytes).toString("utf8");
 }
 
 /**
@@ -174,14 +224,31 @@ function porcelainPath(line) {
  * an empty porcelain answers an empty list (issue #727 S5 and its consumers:
  * the audit's `tree-clean`, the lane's loop guard, the conductor's closeout
  * and the settled-turn notice).
+ *
+ * A line is exempt only when BOTH of its paths are: a rename out of an ordinary
+ * file into a ledger path is still a foreign change to that file.
  */
 export function foreignPorcelainLines(porcelain) {
   return foreignPorcelainEntries(porcelain).map((line) => line.trim());
 }
 
-/** The paths of the foreign porcelain lines, in porcelain order. */
+/** The paths the foreign porcelain lines name, in porcelain order. */
 export function foreignPorcelainPaths(porcelain) {
   return foreignPorcelainEntries(porcelain).map((line) => porcelainPath(line));
+}
+
+/**
+ * The paths a `--porcelain=v1 -b` read carries once the exemption is applied —
+ * the reading a consumer that reasons over paths wants, with the `##` header line
+ * dropped and every exempt row removed. The letters stay with each path, so a
+ * consumer that needs the status columns reads `foreignPorcelainLines` instead.
+ */
+export function foreignStatusPaths(porcelain) {
+  return String(porcelain ?? "")
+    .split("\n")
+    .filter((line) => line !== "" && !line.startsWith("## "))
+    .filter((line) => isForeignEntry(porcelainEntry(line)))
+    .map(porcelainPath);
 }
 
 /** The non-empty untrimmed lines whose path is exempt-filtered, once. */
@@ -189,7 +256,18 @@ function foreignPorcelainEntries(porcelain) {
   return String(porcelain ?? "")
     .split("\n")
     .filter((line) => line.trim() !== "")
-    .filter((line) => !isMachineLedgerExempt(porcelainPath(line)));
+    .filter((line) => isForeignEntry(porcelainEntry(line)));
+}
+
+/**
+ * Whether a porcelain entry names work the exemption does not cover. A rename is
+ * foreign unless BOTH sides are the class's: a change moved out of an ordinary
+ * file into a ledger path is still a change to that file, and one moved out of a
+ * ledger is still foreign work at its destination.
+ */
+function isForeignEntry(entry) {
+  if (entry.path === "" || isMachineLedgerExempt(entry.path)) return entry.renamed && !isMachineLedgerExempt(entryPath(entry.target));
+  return true;
 }
 
 /**
@@ -200,7 +278,7 @@ function foreignPorcelainEntries(porcelain) {
  * set is the policy block's declared directive, never a caller's opinion.
  */
 export function isMachineLedgerExempt(relative) {
-  const row = machineLedgerClassOf(relative);
+  const row = machineLedgerClassOf(entryPath(relative));
   return row !== null && row.zone !== "out-of-scope";
 }
 
@@ -225,20 +303,15 @@ function git(root, args) {
 /** `git status --porcelain` over the selected paths, as normalised paths. */
 function changedPaths(root, paths) {
   if (paths.length === 0) return [];
-  // Untrimmed: in porcelain v1 the status letters occupy columns 0-1 and the
-  // path starts at column 3, so a leading space is data, not noise.
   const result = spawnSync("git", ["-C", root, "status", "--porcelain", "--untracked-files=all", "--", ...paths], {
     encoding: "utf8",
     maxBuffer: 64 * 1024 * 1024,
   });
-  if (result.error || result.status !== 0) return [];
+  if (result.error || result.status !== 0) return null;
   const seen = new Set();
   for (const line of String(result.stdout ?? "").split("\n")) {
     if (line.trim() === "") continue;
-    // A rename prints `R  a -> b`; the destination is what the working tree holds.
-    const raw = line.slice(3).trim();
-    const target = raw.includes(" -> ") ? raw.split(" -> ")[1] : raw;
-    const clean = normalise(target.replace(/^"|"$/gu, ""));
+    const clean = entryPath(porcelainEntry(line).target);
     if (clean !== "") seen.add(clean);
   }
   return [...seen].sort();
@@ -252,7 +325,15 @@ export function machineLedgerSubject(rows) {
   return "chore(machine-ledger): machine ledger rows";
 }
 
-/** Take the lock, or answer why it could not be taken. */
+/**
+ * Take the lock, or answer why it could not be taken.
+ *
+ * The lock names its owner, so a takeover can prove the holder is gone before
+ * it evicts anything (issue #727 F7): a lock whose pid is alive is never
+ * removed, however old its mtime — a slow holder kept exactly the exclusion
+ * that is its whole purpose, and the eviction is a rename, so the `wx` create
+ * behind it can never overwrite a takeover that won the race.
+ */
 function takeLock(lockPath) {
   try {
     fs.writeFileSync(lockPath, `${process.pid}\n`, { flag: "wx" });
@@ -260,26 +341,53 @@ function takeLock(lockPath) {
   } catch (error) {
     if (error?.code !== "EEXIST") return { ok: false, reason: `unwritable: ${error?.message ?? String(error)}` };
   }
-  // A lock left by a dead writer must not stop every later cycle: a commit takes
-  // milliseconds, so a lock past the stale bound is abandoned, and the takeover
-  // is retried exactly once.
+  return evictDeadLock(lockPath);
+}
+
+/** Whether the pid a lock file names is a live process. */
+function lockHolderAlive(lockPath) {
   try {
-    const stat = fs.statSync(lockPath);
-    if (Date.now() - stat.mtimeMs > LOCK_STALE_MS) {
-      fs.rmSync(lockPath, { force: true });
-      fs.writeFileSync(lockPath, `${process.pid}\n`, { flag: "wx" });
-      return { ok: true, tookOver: true };
-    }
-  } catch {
-    // The holder released between the two reads: the next attempt finds it free.
-    try {
-      fs.writeFileSync(lockPath, `${process.pid}\n`, { flag: "wx" });
-      return { ok: true };
-    } catch {
-      // Still held; answer locked below.
-    }
+    const pid = Number.parseInt(fs.readFileSync(lockPath, "utf8"), 10);
+    if (!Number.isInteger(pid) || pid <= 0) return false;
+    process.kill(pid, 0);
+    return true;
+  } catch (error) {
+    if (error?.code !== "EPERM") return false;
   }
-  return { ok: false, reason: "another writer holds the lock" };
+  // EPERM: the process exists and belongs to someone else — alive by definition.
+  return true;
+}
+
+/** Evict a lock whose writer is gone, then take it; a live holder keeps it. */
+function evictDeadLock(lockPath) {
+  let stale = false;
+  try {
+    stale = Date.now() - fs.statSync(lockPath).mtimeMs > LOCK_STALE_MS;
+  } catch {
+    return retakeLock(lockPath);
+  }
+  if (stale && !lockHolderAlive(lockPath)) {
+    const graveyard = `${lockPath}.${process.pid}.evicted`;
+    try {
+      fs.renameSync(lockPath, graveyard);
+      fs.rmSync(graveyard, { force: true });
+    } catch {
+      // Another writer evicted or released it first: the retake below decides.
+    }
+  } else if (!stale) {
+    return { ok: false, reason: "another writer holds the lock" };
+  }
+  return retakeLock(lockPath);
+}
+
+/** One attempt to take a lock nothing appears to hold. */
+function retakeLock(lockPath) {
+  try {
+    fs.writeFileSync(lockPath, `${process.pid}\n`, { flag: "wx" });
+    return { ok: true };
+  } catch {
+    return { ok: false, reason: "another writer holds the lock" };
+  }
 }
 
 /**
@@ -298,11 +406,29 @@ export function commitMachineLedgers(options = {}) {
     return { status: "not-a-repository", committed: false, root, classes: classIds, paths: [], sha: null, subject: null };
   }
   const tree = top.out;
+  // A pattern-only row (`unit-ledgers`) names no literal path, so a commit cannot
+  // sweep it: answering it `clean` would report machinery for a class it never
+  // looked at (issue #727 F6). The zone is still refused, never silently empty.
   const literals = selected.flatMap((row) => [...(row.paths ?? [])]);
-  const pending = literals.length === 0 ? [] : changedPaths(tree, literals);
+  if (selected.some((row) => row.paths === undefined) || literals.length === 0) {
+    return {
+      status: "unsweepable",
+      committed: false,
+      root,
+      classes: classIds,
+      paths: [],
+      sha: null,
+      subject: null,
+      detail: `no literal path to commit for ${classIds.join(", ")} — the writer's own step commits this class`,
+    };
+  }
+  const pending = changedPaths(root, literals);
+  if (pending === null) {
+    return { status: "failed", committed: false, root, classes: classIds, paths: [], sha: null, subject: null, detail: "git status could not be read" };
+  }
 
   if (pending.length === 0) {
-    return { status: "clean", committed: false, root: tree, classes: classIds, paths: [], sha: null, subject: null };
+    return { status: "clean", committed: false, root, classes: classIds, paths: [], sha: null, subject: null };
   }
   const rows = [...new Set(pending.map((file) => machineLedgerClassOf(file)).filter(Boolean))];
   const subject = options.subject ?? machineLedgerSubject(rows);
@@ -338,6 +464,16 @@ export function commitMachineLedgers(options = {}) {
       subject,
     };
   } finally {
+    releaseLock(lockPath);
+  }
+}
+
+/** Release a lock this writer holds — never one a takeover replaced. */
+function releaseLock(lockPath) {
+  try {
+    if (fs.readFileSync(lockPath, "utf8").trim() !== String(process.pid)) return;
     fs.rmSync(lockPath, { force: true });
+  } catch {
+    // Already released: removing nothing is the whole job.
   }
 }

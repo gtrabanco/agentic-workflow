@@ -1107,7 +1107,9 @@ async function main(argv) {
     async (step) => {
       dispatched += 1;
       const stepStarted = Date.now();
-      process.stdout.write(`\n[${total - runnable.length + dispatched}/${total}] ${step.id} — ${step.title}\n`);
+      // The counter numbers the pool's own dispatch: preludes are reported
+      // before it, so they never shift the numerator (issue #727 F8).
+      process.stdout.write(`\n[${dispatched}/${total}] ${step.id} — ${step.title}\n`);
       const exit = await runStepAsync(step, options.root, onSpawnOutput, { pushBase: options.pushBase ?? null, remote: options.remote ?? null });
       exits.set(step.id, exit);
       durations.set(step.id, Date.now() - stepStarted);

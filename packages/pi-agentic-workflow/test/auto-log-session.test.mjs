@@ -106,6 +106,21 @@ test("AM-05 a detached HEAD is named `detached`, not left empty", () => {
   fs.rmSync(root, { recursive: true, force: true });
 });
 
+test("AM-10 a pending machine-owned ledger row is not this session's work", () => {
+  const { root, run } = repo();
+  // The seed is committed first so the ledger exists in HEAD; the pending row is
+  // the one the telemetry sink appends after the session's last commit.
+  fs.mkdirSync(path.join(root, "docs", "workflow"), { recursive: true });
+  fs.writeFileSync(path.join(root, "docs", "workflow", "TIER_COST.md"), "| unit | tokens |\n");
+  run(["add", "."]);
+  run(["commit", "-q", "-m", "ledger seed"]);
+  assert.match(run(["status", "--porcelain=v1"]), /^$/u, "the fixture starts clean");
+  fs.appendFileSync(path.join(root, "docs", "workflow", "TIER_COST.md"), "| 727 | 10 |\n");
+  fs.writeFileSync(path.join(root, "mine.txt"), "m\n");
+  assert.deepEqual(collectFiles({ root, startSha: null }), ["mine.txt"], "the machine row is excluded, the human file is not");
+  fs.rmSync(root, { recursive: true, force: true });
+});
+
 test("AM-06 the path list unions the committed range with what is still uncommitted", () => {
   const { root, run } = repo();
   const start = run(["rev-parse", "--short", "HEAD"]).trim();

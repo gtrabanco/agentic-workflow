@@ -216,7 +216,7 @@ machine-ledger-commit@1
 # exempt-from-dirty-tree: every row whose zone is not out-of-scope
 class | paths | merge | zone | commit-point | subject
 telemetry | docs/workflow/TIER_COST.md | agentic-shared-telemetry | auto | pi teardown · session-close close · reconstruct write · gate prelude | chore(telemetry)
-session-log | docs/LOGS.md | agentic-shared-logs | auto | aggregator write · gate prelude | docs(log)
+session-log | docs/LOGS.md | agentic-shared-logs | auto | session-close close · gate prelude (the aggregator's write is a step's, not machinery's) | docs(log)
 journal-corpus | .agentic-workflow/journal | none | auto | session-close close · gate prelude | docs(log)
 roadmap | docs/ROADMAP.md | agentic-shared-roadmap | writer-step | the step that writes the row | docs(roadmap)
 budgets | docs/workflow/SKILL_CONTEXT_BUDGETS.json | agentic-shared-budgets | writer-step | the step that re-pins a ceiling | docs(budgets)
@@ -234,10 +234,14 @@ session-store | .pi/.telemetry/sessions.jsonl | agentic-shared-telemetry | out-o
   is what every consumer runs before judging, so no second list exists: box 5
   (`TURN_CONTRACT.md`) for reviews, `audit-pr-gate`'s `tree-clean` and
   `fullauto-merge`'s clean-tree precondition for merges and publishes,
-  `unit-cycle`'s loop guard for the lane, and the conductor's closeout and
-  settled-turn notice in the pi extension. A pending machine row never blocks
-  any of them (never "fix" or revert one), and a human-uncommitted file still
-  fails; `ahead-of-remote` is untouched.
+  `unit-cycle`'s loop guard for the lane, the settled-turn notice in the pi
+  extension, and the read-only surfaces a model reasons from — the
+  `workflow-status` sensor's `dirty`/`dirtyFiles`, `runner clean-check`,
+  the ceremony tier's dirty list and `auto-log-session`'s session scope — which
+  run the same filter (`isMachineLedgerExempt`) rather than a porcelain test of
+  their own. A pending machine row never blocks any of them (never "fix" or
+  revert one), and a human-uncommitted file still fails; `ahead-of-remote` is
+  untouched.
 - **The pre-push pairing is the gate's.** Its `machine-ledger-commit` prelude
   commits the pending `auto` rows before any step; no teardown pushes, because
   that would bypass the gate or launch it at every close.

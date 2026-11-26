@@ -1157,3 +1157,15 @@ test("the prelude is planned by --dry-run and commits nothing there", () => {
   assert.match(run.stdout, /plan: machine-ledger-commit —/u);
   assert.equal(gitIn(["rev-list", "--count", "HEAD"]), before, "a dry run writes nothing");
 });
+
+test("the pool's progress counter numbers its own dispatch, so the prelude never shifts it", () => {
+  const { dir, gitIn } = ledgerSandbox();
+  fs.appendFileSync(path.join(dir, "docs", "workflow", "TIER_COST.md"), "| 2 | 20 |\n");
+
+  const run = gate(["--only", "machine-ledger-commit,log-immutability", "--jobs", "1", "--skip-network", "--repo", dir]);
+
+  assert.match(run.stdout, /\[prelude\] machine-ledger-commit/u);
+  assert.match(run.stdout, /\[1\/1\] log-immutability/u, "one pooled step is 1/1, not 0/1");
+  assert.doesNotMatch(run.stdout, /\[0\//u, "no pooled step is ever numbered zero");
+  assert.equal(gitIn(["log", "-1", "--format=%s"]), "chore(telemetry): machine ledger rows");
+});
