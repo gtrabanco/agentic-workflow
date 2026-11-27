@@ -3,13 +3,49 @@
 # init-workspace installs this ONE script as the three freshness hooks —
 # .git/hooks/post-merge, post-checkout, post-rewrite — and only after an
 # explicit yes. Best-effort by contract: it never fails a git operation,
-# never writes to stdout, and is a silent no-op when the entry point is not
-# installed (the grep fallback holds — AC21).
+# never writes to stdout, and is a silent no-op when no entry point resolves
+# (the grep fallback holds — AC21).
+#
+# Resolution (issue #718), in order:
+#   1. AGENTIC_WORKFLOW_BIN — the caller's explicit override;
+#   2. the machine-local pin in .agentic-workflow/hooks/runner.local, which
+#      init-workspace writes from the crate's own answer
+#      (`runner resolve --json doc --sync --quiet`), one argv token per line.
+#      This is what makes the hook run where the crate is not on PATH (a
+#      `bunx` host), without the template carrying a second runner version
+#      literal. A pin whose launcher no longer resolves counts as no pin.
+#   3. `command -v agentic-workflow`;
+#   4. no entry point — silent exit 0.
 #
 # usage (as any of the three hooks): index-sync.sh <hook-name...>
 # always exits 0.
 
 set -u
+
+# Run the pinned argv verbatim (it already carries `doc --sync --quiet`).
+# Returns 1 when there is no pin, when the pin names no launcher this host can
+# execute (a stale pin after an uninstall or a moved checkout), so the caller
+# falls through to `command -v` rather than ending in a no-op that skips it.
+run_pinned_argv() {
+  root=$(git rev-parse --show-toplevel 2>/dev/null || pwd -P)
+  pin="${root}/.agentic-workflow/hooks/runner.local"
+  [ -f "${pin}" ] || return 1
+  argv=()
+  while IFS= read -r token || [ -n "${token}" ]; do
+    [ -n "${token}" ] && argv[("${#argv[@]}")]="${token}"
+  done < "${pin}"
+  [ "${#argv[@]}" -gt 0 ] || return 1
+  case "${argv[0]}" in
+    */*) [ -x "${argv[0]}" ] || return 1 ;;
+    *) command -v "${argv[0]}" >/dev/null 2>&1 || return 1 ;;
+  esac
+  "${argv[@]}" >/dev/null 2>&1 || true
+  return 0
+}
+
+if [ -z "${AGENTIC_WORKFLOW_BIN:-}" ] && run_pinned_argv; then
+  exit 0
+fi
 
 bin="${AGENTIC_WORKFLOW_BIN:-$(command -v agentic-workflow 2>/dev/null || true)}"
 

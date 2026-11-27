@@ -18,7 +18,7 @@ import { decodeVector } from "./embeddings.mjs";
 import { openDatabase } from "./sqlite.mjs";
 import { storePath, storePresent } from "./store.mjs";
 import { ensureFresh } from "./sync.mjs";
-import { storedEmbeddingModel, resolveEmbedConfig, makeOpenAIProvider, embeddingStats } from "./embeddings.mjs";
+import { storedEmbeddingModel, resolveEmbedConfig, embeddingStats, resolvePacing, storeStatsOn, pacedProvider } from "./embeddings.mjs";
 import { buildEnvelope, buildResultRow } from "./envelope.mjs";
 import { loadConfig } from "./config.mjs";
 
@@ -67,26 +67,39 @@ function logEntryMatches(entry, filters) {
   return true;
 }
 
-async function storeValue(root) {
+/**
+ * The store's `record` for the envelope: path, presence, files, chunks —
+ * tolerant of an absent store and of one whose `chunks` table has not been
+ * created yet (AC11). Exported for the sync pass' fenced path, which reads it
+ * without scanning (issue #718, the pre-scan fence). `withPending` adds the
+ * embedding counts the same connection already answers, so a status read opens
+ * the store once instead of twice (review-change fix/718 cycle 1).
+ */
+export async function storeValue(root, { withPending = false } = {}) {
   if (!storePresent(root)) {
     return { path: storePath(root), present: false, files: 0, chunks: 0 };
   }
   const { db } = await openDatabase(storePath(root));
-  // Check if the chunks table exists (AC11: schema-less store is not an error —
-  // it just means sync hasn't run yet, so the table is missing).
-  const tableExists = db
-    .prepare(
-      "select count(*) as n from sqlite_master where type='table' and name='chunks'",
-    )
-    .get().n;
-  if (tableExists === 0) {
+  try {
+    // Check if the chunks table exists (AC11: schema-less store is not an error —
+    // it just means sync hasn't run yet, so the table is missing).
+    const tableExists = db
+      .prepare(
+        "select count(*) as n from sqlite_master where type='table' and name='chunks'",
+      )
+      .get().n;
+    if (tableExists === 0) {
+      return { path: storePath(root), present: true, files: 0, chunks: 0 };
+    }
+    const files = db.prepare("select count(distinct path) as n from chunks").get().n;
+    const chunks = db.prepare("select count(*) as n from chunks").get().n;
+    const record = { path: storePath(root), present: true, files, chunks };
+    if (!withPending) return record;
+    const stats = storeStatsOn(db);
+    return { ...record, pending: stats.pending, model: stats.model };
+  } finally {
     db.close();
-    return { path: storePath(root), present: true, files: 0, chunks: 0 };
   }
-  const files = db.prepare("select count(distinct path) as n from chunks").get().n;
-  const chunks = db.prepare("select count(*) as n from chunks").get().n;
-  db.close();
-  return { path: storePath(root), present: true, files, chunks };
 }
 
 /**
@@ -284,7 +297,12 @@ function toResults(rows, hasLogFilters, filters) {
 
 /** Status reporting — informational, never syncs. */
 export async function statusIndex(root) {
-  const store = await storeValue(root);
+  // Issue #718 S4: the pending count is the input `/aw-index` sizes its spawn cap
+  // from, and it is answered by the crate's own write-path stat — never by a
+  // second SQLite reader in another package. Additive inside the open `store`
+  // record, and only where a store exists, so the absent-store shape stays put;
+  // both read from one open of the store (review-change fix/718 cycle 1).
+  const store = await storeValue(root, { withPending: storePresent(root) });
   return buildEnvelope({ command: "status", results: [], store });
 }
 
@@ -353,6 +371,9 @@ function fuseRrf(keywordRows, vectorRows) {
 }
 
 function realProviderOrNull(root) {
-  const cfg = resolveEmbedConfig({ config: loadConfig(root), env: process.env });
-  return cfg.configured ? makeOpenAIProvider(cfg) : null;
+  const config = loadConfig(root);
+  const cfg = resolveEmbedConfig({ config, env: process.env });
+  // Issue #718 S3: a query's provider round-trip is bounded by the same pacing
+  // knob a sync reads — a stalled socket must never hold a query open either.
+  return pacedProvider(cfg, resolvePacing({ config, env: process.env }));
 }
