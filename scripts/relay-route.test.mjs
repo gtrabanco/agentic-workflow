@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// test-obligation: protects=packages/agentic-workflow/src/relay,packages/agentic-workflow/src/runner/catalog.json,skills/unit-lane/references/RELAY.md,docs/workflow/CONFIG.md,docs/workflow/SKILLS.md,README.md obligations=contract,failure-path
+// test-obligation: protects=packages/agentic-workflow/src/relay,packages/agentic-workflow/src/runner/catalog.json,skills/unit-lane/references/RELAY.md,docs/workflow/CONFIG.md,docs/workflow/SKILLS.md,skills/unit-lane/SKILL.md,README.md obligations=contract,failure-path
 
 /**
  * relay-route.test.mjs — the lane's relay seam: the router's hint, its
@@ -331,6 +331,14 @@ test("the 719-class path is unreachable: no skill surface permits a silent inlin
   assert.doesNotMatch(relief, /The lane runs inline/);
   assert.doesNotMatch(relief, /conductor route/i);
   assert.doesNotMatch(relief, /silently degrade/i);
+});
+
+test("the obligation tag names every prose surface this suite pins (issue #722 F3)", () => {
+  const header = repoFile("scripts/relay-route.test.mjs").split("\n")[1];
+  assert.match(header, /^\/\/ test-obligation: protects=/u, "the suite declares its obligation tag");
+  for (const rel of ["skills/unit-lane/references/RELAY.md", "skills/unit-lane/SKILL.md", "docs/workflow/CONFIG.md", "docs/workflow/SKILLS.md", "README.md"]) {
+    assert.ok(header.includes(rel), `${rel} is a pinned surface, so protects= names it`);
+  }
 });
 
 test("CONFIG.md documents relay.seam: absent means ask, and never a bypass", () => {
