@@ -374,9 +374,115 @@ Frozen at cut in `planning-obligations.md` (M/L shape) — never embedded here.
   Authority: S3 + `PE-007` + AGENTS.md §Repository indexes (emitters, never hand
   edits).
 
+- **D6** — 2026-11-27, the package changelog's single writer is the release cut
+  (`scripts/release.mjs apply`), beside the root companion row it already writes;
+  a hand-written package changelog would be a second writer for one fact.
+  Authority: S3 + `PE-007` + AGENTS.md §Repository indexes (emitters, never hand
+  edits).
+- **E1** — 2026-11-27, the suite baseline, measured before any edit:
+  `cd packages/pi-agentic-workflow && bun run test` · exit 1 · `6 tests failed`,
+  every one of them the embed-profile default-on case this session's
+  `AGENTIC_WORKFLOW_DOC_EMBEDDINGS_*` variables invert (the pre-existing issue
+  recorded above).
+- **E2** — 2026-11-27, the same command with those four variables unset (the
+  repository's own gate logs' form) · exit 0 · `1159 pass, 0 fail`.
+- **E3** — 2026-11-27, the frozen-failure reproducer of S2, at the red commit
+  `05dc25e0d`: `bun test test/picker-filter.test.mjs` · exit 1 ·
+  `Export named 'narrowReferences' not found in module …dist/settings/picker.js`
+  — the rewritten corpus fails on the contract the swap introduces, never on a
+  description of the old one.
+- **E4** — 2026-11-27, the same corpus at the implementation commit `2c2eafa30` ·
+  exit 0 · `9 pass`, and the whole package suite `1162 pass, 0 fail` (the seven
+  retired cases became nine: the provider-constraint, the case-insensitive and
+  the offered-order cases are new).
+- **E5** — 2026-11-27, the S3 frozen-failure reproducer, at the red commit
+  `8b09ae249`: `bun test packages/pi-agentic-workflow/test/changelog-path.test.mjs`
+  · exit 1 · `6 fail` (both packages declare no `pi.changelogPath` and ship no
+  changelog), and `bun test scripts/release.test.mjs` · exit 1 · `3 fail` (the
+  cut writes no package section, and does not refuse an escaping path).
+- **E6** — 2026-11-27, after the implementation commit `943e7bc02` · both exit 0 ·
+  `changelog-path 7 pass`, `release 83 pass`.
+- **E7** — 2026-11-27, the S4 frozen-failure reproducer, at the red commit
+  `89b8427b5`: `bun test test/shipped-adapter.test.mjs` · exit 1 · `1 fail` (the
+  overlay passes `overlay: true` and no `blocked`).
+- **E8** — 2026-11-27, after the implementation commit `65774c59b` · exit 0 ·
+  `shipped-adapter 30 pass`, the whole package suite `1170 pass, 0 fail`.
+- **E9** — 2026-11-27, the differential check on `scripts/release.mjs`, run
+  against a `git archive` copy of the base commit `0623612ed` (`mktemp -d`, both
+  sides installed from the workspace lock, then removed): on a fixture whose
+  packages declare no `pi.changelogPath`, `plan` and `apply` are byte-identical
+  on stdout, stderr, exit code and every resulting file; on the same fixture
+  with the key declared, `apply` differs only by the intended bytes — one extra
+  report line and the new `CHANGELOG.md` — and nothing else moved.
+- **E10** — 2026-11-27, `rg -n 'filterReferences|isSubsequence|matchesToken'
+  packages/pi-agentic-workflow/src` · exit 1 · no match (the three names are
+  gone from the shipped source, no shim behind them).
+- **E11** — 2026-11-27, `rg -c 'models\.schema\.json|supportsMessageThreads|requiresToolsWithToolHistory|promptCacheKeyMode|requiresNonNullAssistantContent'
+  packages/pi-nan-agentic-workflow/README.md` · exit 0 · `7` (the `$schema` URL
+  and each of the four `compat.*` keys are named).
+- **E12** — 2026-11-27, `rg -n 'pi-coding-agent@1\.5\.2|37-event' docs/workflow/CONFIG.md`
+  · exit 1 · no match (the stale citation is replaced, not duplicated), and the
+  browser's own count `rg -o 'on\(event: "[a-z_]+"' <installed>/dist/core/extensions/types.d.ts | wc -l`
+  · `41` — the number the corrected citation states.
+- **E13** — 2026-11-27, the pinned type-check legs the issue's item 5 asks for,
+  each in its own `mktemp -d` copy of `src/` installed from the registry:
+  `tsc --noEmit` against `pi-coding-agent@1.6.0` + `pi-tui@1.6.0` · exit 0, and
+  against `1.6.1` + `1.6.1` · exit 0.
+- **E14** — 2026-11-27, the S6 instrument, `bun scripts/local-gate.mjs --only
+  pi-compat-guard --jobs 1` · exit 0 · `pi leg 1.1.0: tsc --noEmit clean`,
+  `pi leg latest: tsc --noEmit clean` (the registry's `latest` is 1.7.0 today —
+  the moving tripwire, recorded rather than assumed).
+- **E15** — 2026-11-27, the state-flow backend's dispatch, checked against the
+  installed host (S7's last bullet): `pi.sendUserMessage(…, { expandPromptTemplates: true })`
+  dispatches an extension command instead of starting a turn, and its two call
+  sites are not inside a streaming run — `stateFlow.start` runs from a command
+  handler (`src/routing/dispatch.ts:394`) and `stateFlow.settle` from the
+  `agent_settled` handler, where the host documents "`ctx.isIdle()` is true"
+  (`docs/extensions.md` § `agent_settled`, and its own `pi.sendUserMessage`
+  command-dispatch example). **Outcome: no change needed, nothing swallowed** —
+  the 1.2.0 busy-on-run-start window is entered by a run, and neither call site
+  opens one.
+- **E16** — 2026-11-27, `bun packages/agentic-workflow/bin/agentic-workflow.mjs
+  unit-doc 694-pi-delta-migration validate` · exit 0 · `{"ok": true,
+  "violations": []}`; the real changelogs round-trip through the shared
+  `splitSections` reader byte-identically (1 section each, head `[4.10.1]`).
+- **G1** — 2026-11-27, `node scripts/run-root-suite.mjs` · **exit 1** twice, and
+  both reds are this unit's own, recorded rather than excused: the first named
+  `packages/pi-agentic-workflow/README.md: lines 1421 > 1415` (the new prose
+  overran the declared document budget), the second named
+  `scripts/structural-sibling-pins.test.mjs` pin A (the changelog writer carried
+  a fence-blind `^## ` heading search). Both were repaired in the change it
+  judges — the README tightened and its budget re-pinned with a source note, the
+  writer moved onto the shared `splitSections` reader — never by relaxing a
+  check.
+- **G2** — 2026-11-27, `bun scripts/local-gate.mjs --skip-network --jobs auto` ·
+  exit 0 · `local-gate: PASS — 16 step(s) in 819s` (root suite, both crate
+  suites under both runtimes, schema build, the pi and pi-node compat steps,
+  docs-generated projection, secret scan, context budgets, version parity).
+- **P1** — 2026-11-27 21:5x, the unit doc, both planning ledgers and the
+  decision record frozen before the first line of code · `00f04cc73`.
+- **P2** — 2026-11-27 22:0x, the picker corpus rewritten for the new contract
+  and observed red · `05dc25e0d`.
+- **P3** — 2026-11-27 22:1x, the narrowing swapped onto the host filter and the
+  three in-package helpers deleted · `2c2eafa30`.
+- **P4** — 2026-11-27 22:2x, the changelog surface: red corpus `8b09ae249`, then
+  both packages' `CHANGELOG.md` behind `pi.changelogPath` and the cut as their
+  single writer · `943e7bc02`.
+- **P5** — 2026-11-27 22:3x, the overlay's blocked status: red `89b8427b5`, then
+  the option through one declared cast · `65774c59b`.
+- **P6** — 2026-11-27 22:4x, the baseline re-pin, the search-contract prose, the
+  NaN `models.json` channel and the matrix citation · `9570b8260`.
+- **P7** — 2026-11-27 22:5x, the roadmap row through the emitter plus the
+  release intent · `22a106fcf`; the verification recorded above (E13, E14, G2)
+  and this closing record land together.
+
 ## Next
 
-P2: rewrite the picker filter corpus for the new contract and observe it red.
+Operator review of the diff — the external-verifier step. Nothing is claimed
+"done" until that verdict: the change is applied against the frozen ledgers, the
+obligations ledger is `verified` row by row, and the two gates above are the
+receipts. A blocker the review reports earns one correction batch; a new finding
+does not earn another cycle.
 
 ## References
 
