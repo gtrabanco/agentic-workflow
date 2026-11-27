@@ -68,6 +68,9 @@ const FROZEN = [
   "Journal signals",
   "Retention debt",
   "Decision promotion",
+  // issue #717: the distributable-surface sweep is the newest dimension, so it is
+  // last — the order this pin asserts.
+  "Distributable-surface scope",
 ];
 
 const table = (ids) => `# Dimensions\n\n| Dimension | What it sweeps |\n|---|---|\n${ids.map((id) => `| **${id}** | sweep |`).join("\n")}\n`;
