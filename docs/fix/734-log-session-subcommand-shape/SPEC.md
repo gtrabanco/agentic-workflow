@@ -294,7 +294,7 @@ ceremony tier classify --paths <the unit's paths>`, verbatim:
   projection, the session entry as a narrative journal fragment (validator: `bun scripts/docs-generate.mjs --check` exits 0)
   (Implements: S1)
   - Relevant files: docs/ROADMAP.md, docs/generated/, .agentic-workflow/journal/
-- P6 — verification: the package suite under both runtimes, the side-effect
+- [x] P6 — verification: the package suite under both runtimes, the side-effect
   sweep and the root gate; every obligation row closed (validator: `bun run --cwd packages/pi-agentic-workflow test` exits 0)
   (Implements: S7, S9, S11)
   - Relevant files: docs/fix/734-log-session-subcommand-shape/SPEC.md
