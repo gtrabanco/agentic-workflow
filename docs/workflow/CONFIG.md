@@ -228,7 +228,7 @@ Three worked examples:
 ## Guard plugins
 
 A project's restrictions are its own, so the extension accepts guards as **data**:
-`guardPlugins` in `pi-agentic-workflow.json` declares them, and the same
+`guardPlugins` in the `pi-agentic-workflow` config declares them, and the same
 declaration is enforced by whichever carrier is installed. The section is the one
 authoring surface — `runner provision permissions` projects it into the
 operator-level permission layer's own policy file, so a rule is written once.
@@ -562,12 +562,12 @@ project's guide before adding a section.
 ## Migration from the pre-unified files
 
 - Feature keys (`memory`, `telemetry`, `advance`, `pathProtection`,
-  `autoLogSession`) moved out of `pi-agentic-workflow.json` into the base
-  `agentic-workflow.json`.
+  `autoLogSession`) moved out of the `pi-agentic-workflow` file into the base
+  `agentic-workflow` file.
 - `autoLogSession: { "mode": "mechanical" }` became `logSession: true`;
   `autoLogSession: { "mode": "off" }` became `logSession: false` (or absent).
   A publisher moves to `logSession.publisher`.
-- Routing and profile keys stay in `pi-agentic-workflow.json` unchanged; they
+- Routing and profile keys stay in the `pi-agentic-workflow` file unchanged; they
   are now the `pi` section.
 - Run `config validate --scope both` after moving values; it names every key
   that is now in the wrong file.
