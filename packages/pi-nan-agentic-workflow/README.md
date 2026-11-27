@@ -626,6 +626,52 @@ rung, re-check the current leaderboard: this landscape moves monthly, and the
 community-voted cluster changes quarterly (`qwen3.6` unlimited is "for now",
 the same as ever).
 
+## models.json — the compatibility channel
+
+This preset routes only through `models.json`, so the file is the first place to
+look when a NaN model behaves differently from the same model on another
+gateway. Two parts of that file are worth knowing before you reach for a code
+change:
+
+- **`$schema` — editor validation.** Add
+  `"$schema": "https://pi.dev/schemas/models.schema.json"` at the top of the
+  file: the published schema validates and completes every key below, so a typo
+  shows up as you type instead of as a 400 at request time.
+- **`compat.*` — the sanctioned per-model overrides.** Set them under the
+  provider (all its models) or under one model; they exist because gateways
+  differ in what they accept, not because the model is broken:
+
+| Key | Type | Set it when |
+|---|---|---|
+| `supportsMessageThreads` | boolean | A gateway forwards Anthropic message threads, or rejects the `thread` field — on by default only for a base URL on `api.anthropic.com`. |
+| `requiresToolsWithToolHistory` | boolean | The endpoint demands `"tools": []` once the conversation has tool calls, even when every tool is disabled (older proxies in front of Anthropic). |
+| `promptCacheKeyMode` | `"auto"` \| `"enabled"` \| `"disabled"` | The endpoint needs `prompt_cache_key` sent (compatible proxy) or rejects it. |
+| `requiresNonNullAssistantContent` | boolean | The endpoint wants `""` instead of `null` for a replayed assistant message that carried only tool calls. |
+
+```json
+{
+  "$schema": "https://pi.dev/schemas/models.schema.json",
+  "providers": {
+    "nan": {
+      "compat": { "requiresToolsWithToolHistory": true }
+    }
+  }
+}
+```
+
+These keys are Pi's, not this preset's: the full meaning of each one (defaults,
+which APIs they touch) is in Pi's own
+[models configuration reference](https://pi.dev/docs/latest/models-configuration),
+which ships with the installed host as `docs/models-configuration.md`.
+
+**When a compatibility key is not enough.** A request the gateway rejects at the
+protocol level is not a config problem, and the recorded
+`max_completion_tokens` workaround — no `token` parameter on the request, the
+limit left to the gateway — belongs there: it is a finding against the NaN
+provider package (pi-nan-provider issue #34), tracked with that package, and
+this preset never emits it. Report it where it lives rather than working around
+it in `models.json`.
+
 ## Verify your catalog first
 
 Run `GET /v1/models` with your own key and route only to models it actually
