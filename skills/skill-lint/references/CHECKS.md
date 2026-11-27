@@ -1,6 +1,6 @@
 ## Skill content checks — smells and the supply chain
 
-`scripts/skill-lint.mjs` runs the seven checks below. This file owns what
+`scripts/skill-lint.mjs` runs the eight checks below. This file owns what
 each check *means*, the shapes each one admits, and the smells this repository
 deliberately does not adopt; the patterns live in the crate's engine
 (`packages/agentic-workflow/src/skills/screen.mjs`) — the same code the
@@ -18,7 +18,7 @@ hidden instruction in a reference is the same attack as one in the `SKILL.md`.
 A changed skill is scanned alone (`--skill <name>`); the default scan is the
 whole tree.
 
-### The seven checks
+### The eight checks
 
 | id | flags | admitted |
 |---|---|---|
@@ -29,6 +29,7 @@ whole tree.
 | `SL-05` credential-or-exfiltration | an instruction that sends data to an external sink, or that reaches for a credential | prose about provenance, a path, a local command; the check wants a transfer verb **and** a sink on one line, or an access verb **and** a credential |
 | `SL-06` backslash-path | a drive-qualified path, or a relative path whose segments are joined with a backslash instead of `/` — agents navigate a skill directory as a POSIX path | a POSIX path; a regex escape (`\d`) and a table escape (`\|`) are not paths |
 | `SL-07` time-sensitive-claim | a dated currency claim (`as of <date>`, `the latest … <date>`) or an expiry (`expires`, `valid until`, `deadline`, …) | a provenance date written next to what it proves (`verified <date>`, `decision <date>`): a record that cannot rot |
+| `SL-08` frontmatter-flow-scalar | an `argument-hint:` value that opens unquoted with `[` or `{` — a broken flow collection (pi rejects the whole file and the skill loses its `skill:*` command) or a silently wrong type (it parses as an array where the host expects a string) | a quoted value (`argument-hint: "[--x]"`), a placeholder-led value (`[<slug> …]`), or a plain scalar; `allowed-tools`' array is a legitimate field and is never screened |
 
 Each finding prints `FINDING <id> <name> <path>:<line> — <detail>`; the verdict is
 `PASS` only with zero findings and the exit code follows it (`0`/`1`). The lint

@@ -2,7 +2,7 @@
 type: fix
 scope: medium
 roadmap_summary: Issue [#726](https://github.com/gtrabanco/agentic-workflow/issues/726) (M): two pi-package packaging defects close on the shipped surface — every skill's `argument-hint` is a quoted YAML string (the bundler refuses to stage an unsafe shape) so no skill loses its `skill:*` command, and the durable-subagents extension loads through a package-owned resolver entry that survives npm/bun hoisting, with one session-level diagnostic when it cannot resolve.
-ac-hash: efce729c703be654d25752ff9e73b65817dbda2dba94bb80b36c4c9ebac83a61
+ac-hash: d0fcad3a9aff6fe63453c8e23985abbafa1f9b8ed0dcf87fdd46924a58e5374c
 ---
 
 # fix/726-pi-package-defects
@@ -75,11 +75,23 @@ its four acceptance criteria).
 **S7 — the reported defect is not the stale-daemon class.**
 > For contrast, the owner-visible "all slash commands gone" report that led to the verification turned out to be the known stale-daemon module-graph class (in-place package swap under a live `pi-web sessiond`; restart healed it, `/reload` did not) — **not** this issue. The two defects below are real and survive fresh runtimes.
 
+**S8 — the issue's addendum: the wrong-type variant and the SL-08 regression guard.**
+> **Additions for this unit's scope** (2026-11-26, from re-running the frontmatter audit with pi's own YAML reader)
+>
+> 1. **Defect 1 extends to `fold-findings` — and to the silent wrong-type variant.** The audit of the whole shipped set (`argument-hint:` in every `skills/*/SKILL.md`, 14 hint-carrying skills) found a third affected file: `skills/fold-findings/SKILL.md` carries `argument-hint: [finding-id …]` unquoted. It does **not** error — `[finding-id …]` closes as a flow sequence — but parses to a YAML **array**, not the string a host renders. So the fix and its acceptance check must assert the string type, not just the absence of parse errors; a "no `Unexpected flow-seq-start`" pass would leave fold-findings silently wrong.
+>
+> 2. **Quoting convention to reuse.** `batch-scheduler`, `workflow-status` and `audit-docs` already quote the same shape — `argument-hint: "[…]"` — and that is the only change needed (hint text byte-identical, per AC2).
+>
+> 3. **Requested regression guard (new skill-lint check `SL-08 frontmatter-flow-scalar`).** Add one check to `packages/agentic-workflow/src/skills/screen.mjs` + `scripts/skill-lint.mjs`: a frontmatter scalar value (at minimum `argument-hint:`) that opens unquoted with `[` or `{` is a finding — it is either a broken flow collection (the doctor pair) or a silently wrong type (fold-findings). A quoted value or a placeholder-led value (`[<slug> …`) is admitted. Red-first: land the suite additions in `packages/agentic-workflow/test/skills.screen.test.mjs` and `scripts/skill-lint.test.mjs` (the "7 check(s)" header pin and the closed `SL-01…SL-07` id-set pin move to eight) before the engine change, and `skills/skill-lint/references/CHECKS.md` gains the eighth row ("the seven checks" → eight) plus the mention in `skills/skill-lint/SKILL.md`, one PR with the engine change. Note for `IR3`/path-protection: touching the two test files needs the `path-protection-records@1` justification rows in the unit doc before the first edit — recording that here so the lane doesn't stall on the refusal.
+>
+> 4. **Owner-note on installed copies:** the `5.0.0-canary.20261126.1` install on the verification host still carries the unquoted lines; it was patched in place (three `argument-hint` lines quoted) to keep both doctor skills registered until this unit lands. An update overwrites the patch — the repo-side fix is the durable one.
+
 ## Acceptance criteria
 
 Frozen at the cut; `ac-hash:` in the frontmatter is this section's SHA-256
 (heading and the next `## ` excluded). One criterion per requirement, each
-naming the check that proves it.
+naming the check that proves it. The `S8` criterion was appended by the issue's
+2026-11-27 addendum and the hash re-pinned over the amended section.
 
 1. **S1 — the work is applied inline against the frozen ledgers.** `git log --oneline main..HEAD` carries only this unit's conventional commits, and no review pack, audit-pr or fold cycle was run by the repository on this change.
 2. **S2 — every shipped skill frontmatter parses, and an unsafe shape cannot be staged.** `bun test test/argument-hint-frontmatter.test.mjs` in `packages/pi-agentic-workflow` exits 0: every source and bundled `SKILL.md` parses under `yaml@2.9.0` with `argument-hint` a string, and a fixture whose source carries a raw `[--unsafe]` hint is staged as a quoted string.
@@ -88,6 +100,7 @@ naming the check that proves it.
 5. **S5 — the manifest and README declare the shipped provisioning surface.** The same manifest test exits 0: `pi.extensions` is exactly `./dist/extension/index.js` + `./dist/extension/subagents-entry.js`, the shim exists after `tsc`, the old `./node_modules/...` entry is gone, and the README's Subagent-layer disable instruction names the new entry.
 6. **S6 — the declared acceptance is reproduced.** AC1–AC4 are the checks named in criteria 2–5; AC2's parity half is `bun test test/skill-parity.test.mjs test/alias-coverage.test.mjs` exits 0.
 7. **S7 — the stale-daemon class is out of scope.** No change touches pi's module graph, `pi-web sessiond`, or a host restart path; `git diff --name-only main..HEAD` names no `sessiond`/daemon file.
+8. **S8 — the addendum is applied: items 1–2 are already delivered, item 3 ships the `SL-08` guard red-first, item 4 needs no repository change.** `bun test scripts/skill-lint.test.mjs packages/agentic-workflow/test/skills.screen.test.mjs` exits 0 with the check set at eight (`SL-01`…`SL-08`), the CLI header reading `8 check(s)`, and the three shapes proven (unquoted `[` and `{` are findings; quoted and placeholder-led values are admitted; `allowed-tools` is not screened); the shipped tree still prints `verdict: PASS`; `skills/skill-lint/references/CHECKS.md` and `SKILL.md` name the eighth check.
 
 ## Impact
 
@@ -113,9 +126,20 @@ Two packaging mechanics, and the surfaces that stop failing:
 - **`packages/pi-agentic-workflow/README.md` § Subagent layer** — states why the
   entry is a shim, that it resolves under hoisting, and how to disable the layer
   (remove the shim line).
+- **`packages/agentic-workflow/src/skills/screen.mjs`** — the shared screen gains
+  `SL-08 frontmatter-flow-scalar` (S8 item 3): an `argument-hint` value that opens
+  unquoted with `[` or `{` is a finding unless it is placeholder-led (`[<slug> …`);
+  the published check set becomes eight.
+- **`packages/agentic-workflow/test/skills.screen.test.mjs` + `scripts/skill-lint.test.mjs`** —
+  the closed id-set pin moves to eight and the CLI header says `8 check(s)`; new
+  cases prove the finding, the quoted/placeholder-led admissions and the
+  `allowed-tools` non-finding.
+- **`skills/skill-lint/references/CHECKS.md` + `skills/skill-lint/SKILL.md`** —
+  the eighth check's row and the count language the operator reads.
 - **Consumers that stop being true**: the old disable instruction names a line
   that no longer exists; the `serena-activation-check` manifest pin asserted the
-  old two-entry array; `docs/ROADMAP.md`'s fix row still reads `pending`.
+  old two-entry array; `docs/ROADMAP.md`'s fix row still reads `pending`; the
+  “seven checks”/`SL-01…SL-07` pins in the screen and the CLI no longer match.
 
 ## Surfaces
 
@@ -144,13 +168,20 @@ Two packaging mechanics, and the surfaces that stop failing:
 - Not a general YAML linter for skill prose; the transform is scoped to the one
   frontmatter field the defect names, and the test is its guard.
 - Not a redesign of the skill bundle's projection manifest.
+- Not a repair of the verification host's patched install (S8 item 4): that
+  patch lives outside the repository and an update replaces it; the repo fix is
+  the durable one.
+- `SL-08` screens `argument-hint` only, not every flow scalar in every
+  frontmatter: `skills/execute-phase/SKILL.md`'s `allowed-tools: [Bash, Read, …]`
+  is a legitimate array-typed field, and flagging it would be a false positive.
 
 ## Risk tier
 
-`runner ceremony tier classify` over the change's paths (`--paths` naming the
-eleven touched/added files) prints `contract: risk-tier-verdict@1`, `tier:
-standard`, `reason_kind: executable-content`, `task_size: {understood: true,
-contained_risk: contained, resumable_from_diff: true}`, `signals: []`.
+`runner ceremony tier classify` over the change's paths prints
+`contract: risk-tier-verdict@1`, `tier: standard`, `reason_kind:
+executable-content`, `task_size: {understood: true, contained_risk: contained,
+resumable_from_diff: true}`, `signals: []`. The S8 addendum adds executable
+paths (the screen and its two suites) and keeps the same verdict.
 
 - **Tier** — `standard` · **Task Size** — `understood + contained + resumable`
 - **Named high-risk item** — `none — not a high-tier unit`
@@ -220,6 +251,15 @@ none
 - P6 — verify: every validator re-run in the foreground, the differential and the projection checked (validator: `bun test` in `packages/pi-agentic-workflow` exits 0, and `bun scripts/docs-generate.mjs --check` exits 0)
   (Implements: S1, S2, S3, S4, S5, S6, S7)
   - Relevant files: docs/fix/726-pi-package-defects/SPEC.md, docs/fix/726-pi-package-defects/planning-obligations.md, docs/LOGS.md
+- P7 — land the S8 addendum's red corpus before the engine: the id-set pin moves to eight and the SL-08 cases assert a finding the engine does not emit yet (validator: `bun test scripts/skill-lint.test.mjs packages/agentic-workflow/test/skills.screen.test.mjs` exits 1, naming the missing `SL-08` and the eight-check set)
+  (Implements: S8)
+  - Relevant files: docs/fix/726-pi-package-defects/decisions.md, scripts/skill-lint.test.mjs, packages/agentic-workflow/test/skills.screen.test.mjs
+- P8 — the SL-08 engine check and its owner docs (validator: `bun test scripts/skill-lint.test.mjs packages/agentic-workflow/test/skills.screen.test.mjs` exits 0, and `bun scripts/skill-lint.mjs` exits 0 with `8 check(s)`)
+  (Implements: S8)
+  - Relevant files: packages/agentic-workflow/src/skills/screen.mjs, scripts/skill-lint.mjs, skills/skill-lint/references/CHECKS.md, skills/skill-lint/SKILL.md
+- P9 — verify the addendum: re-run the SL-08 suites, the shipped-tree lint, the unit `verify`, the root suite and the projection check (validator: `bun test scripts/skill-lint.test.mjs packages/agentic-workflow/test/skills.screen.test.mjs` exits 0 AND `bun packages/agentic-workflow/bin/agentic-workflow.mjs verify docs/fix/726-pi-package-defects/SPEC.md` exits 0 AND `bun scripts/docs-generate.mjs --check` exits 0)
+  (Implements: S8)
+  - Relevant files: docs/fix/726-pi-package-defects/SPEC.md, docs/fix/726-pi-package-defects/planning-obligations.md, docs/fix/726-pi-package-defects/planning-evidence.md
 
 The link grammar (`task-spec-link@1`) is owned by the unit-doc template.
 
@@ -253,11 +293,13 @@ lane's plan step, and no triage route is re-derived here.
 
 ## Next
 
-PR [#736](https://github.com/gtrabanco/agentic-workflow/pull/736) is open against
-`main`; await the external verifier's verdict and the merge. Every obligation row
-is closed against a foreground run; the one red gate line (`doc.structure` suite
-timeout) is an environment/load finding with its standalone green evidence
-recorded in `## Known pre-existing issues`, not a pending unit task.
+The addendum (S8) is applied in this correction batch; PR
+[#736](https://github.com/gtrabanco/agentic-workflow/pull/736) carries it against
+`main`, and the external verifier's verdict / merge is the next step. Every
+obligation row is closed against a foreground run; the one red gate line
+(`doc.structure` suite timeout) is an environment/load finding with its
+standalone green evidence recorded in `## Known pre-existing issues`, not a
+pending unit task.
 
 ## References
 
@@ -301,3 +343,14 @@ none
 - **E13** — 2026-11-27, `bun packages/agentic-workflow/bin/agentic-workflow.mjs verify docs/fix/726-pi-package-defects/SPEC.md` · exit 0 · `{"ok": true, "violations": []}` (obligations closed, ledgers and log shapes accepted).
 - **P1** — 2026-11-27, the unit's PR opened: [#736](https://github.com/gtrabanco/agentic-workflow/pull/736) from `feat/726-argument-hint-npm-hoisting`; the roadmap fix row is `done · #736` (owner-written status).
 - **E14** — 2026-11-27, `bun packages/agentic-workflow/bin/agentic-workflow.mjs journal write --kind narrative …` · exit 0 · `.agentic-workflow/journal/20261127T011651Z-feat-726-argument-hint-npm-hoisting-narrative-fix-726.md` (976 bytes, kind `narrative`, session `fix-726`), then `journal write --supersedes 20261127T011651Z-…` after the commits existed · exit 0 · `.agentic-workflow/journal/20261127T011859Z-feat-726-argument-hint-npm-hoisting-narrative-fix-726.md` (1,337 bytes) — the correction names the three shas, and `journal aggregate --check` · exit 0 · `{"ok":true,"checked":1,"refusals":[]}`.
+- **L3** — 2026-11-27, the issue's addendum (comment 2026-11-27T10:10:33Z), quoted
+  verbatim as S8: the whole-set audit found `fold-findings`' array-shaped hint,
+  the quoting convention is confirmed, and the owner requests `SL-08
+  frontmatter-flow-scalar` red-first (both suite pins to eight, `CHECKS.md` and
+  `SKILL.md` updated in the same PR), with the `path-protection-records@1` rows
+  recorded before the first test edit. Item 4 (the patched install on the
+  verification host) has no repository action.
+- **E15** — 2026-11-27, the S8 red corpus before the engine: `bun test scripts/skill-lint.test.mjs` · exit 1 · 20 pass / 2 fail (the `8 check(s)` header pin and the `SL-08` finding case); `bun test packages/agentic-workflow/test/skills.screen.test.mjs` · exit 1 · 9 pass / 2 fail (the eight-id-set pin and the `SL-08` finding case). Both failures are the missing `SL-08`, not a weakened assertion.
+- **E16** — 2026-11-27, the S8 engine: `bun test packages/agentic-workflow/test/skills.screen.test.mjs scripts/skill-lint.test.mjs` · exit 0 · 33 pass / 0 fail; `bun scripts/skill-lint.mjs` · exit 0 · `skill-lint — 118 file(s) · 8 check(s) · root .` and `0 finding(s)`, `verdict: PASS` (the shipped tree, including `execute-phase`'s `allowed-tools` array, is not a false positive).
+- **E17** — 2026-11-27, the surrounding skill suites: `bun test packages/agentic-workflow/test/skills.screen.test.mjs packages/agentic-workflow/test/skills.discovery.test.mjs packages/agentic-workflow/test/skills.register.test.mjs scripts/skill-lint.test.mjs` · exit 0 · 58 pass / 0 fail.
+- **P2** — 2026-11-27, the S8 addendum committed on the PR branch (`test(726)` red suites first, then the `feat(skill-lint)` engine/docs commit) and pushed to PR [#736](https://github.com/gtrabanco/agentic-workflow/pull/736).

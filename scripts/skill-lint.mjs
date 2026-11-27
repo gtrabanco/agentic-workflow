@@ -2,11 +2,11 @@
 /**
  * skill-lint.mjs — the mechanical half of `skills/skill-lint` (fix #357).
  *
- * The seven checks it runs — a hidden HTML comment, an XML/HTML tag in the
+ * The eight checks it runs — a hidden HTML comment, an XML/HTML tag in the
  * frontmatter description, an invisible codepoint, an unpinned external URL, a
  * credential-access or exfiltration-shaped instruction, a Windows-style
- * backslash path, a dated currency claim — are owned by
- * `skills/skill-lint/references/CHECKS.md`, together with the declared
+ * backslash path, a dated currency claim, a frontmatter flow scalar — are owned
+ * by `skills/skill-lint/references/CHECKS.md`, together with the declared
  * allowances and the smells this repository deliberately does not adopt.
  *
  * Since issue #591 the checks themselves live in the crate
