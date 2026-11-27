@@ -1,4 +1,5 @@
 ---
+"@gtrabanco/agentic-workflow": patch
 "@gtrabanco/pi-agentic-workflow": patch
 ---
 
@@ -15,5 +16,9 @@ The directive now renders the service and the operation separately —
 `runner-mapping@1` block states the rule, so a packaged session reads the same
 contract the emitter follows. A case renders the invocation and runs it against
 the crate in a fixture, so the seam cannot drift silently again.
+
+The crate's own cross-package pin (`journal.write.test.mjs`) asserted the spaced
+phrase the emitter no longer writes; it is re-bound to the shape the door
+actually executes, so the crate is declared here for that test-only change.
 
 - Resolves: #734

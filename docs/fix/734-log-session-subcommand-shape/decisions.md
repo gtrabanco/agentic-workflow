@@ -37,7 +37,7 @@ was never given (`companion-row-missing`), and `release.mjs apply` owns both the
 version stamps and the companion rows at cut time. A valid `.changeset/*.md` is
 the sanctioned per-PR release intent (`docs/workflow/PACKAGES.md` §Version
 bumps), so the changeset is scoped to the touched package and both hand edits
-are removed. The crate is unchanged, so it declares nothing.
+are removed. The crate's behaviour is unchanged; its one edit is the cross-package test pin (D8), and a change under `packages/agentic-workflow/` counts as shipped content for the parity gate, so the changeset declares the crate too.
 
 ## D4 — the contract rule is worded inside the block's ceiling
 

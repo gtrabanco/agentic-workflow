@@ -1,7 +1,7 @@
 ---
 type: fix
 scope: small
-ac-hash: c7be4474acb67eef3a3be32316355255e11179e05afc56692d84bf007f9da3f2
+ac-hash: a6f6fccb3f4f15b116eab9eadfd8f48e78a75bcbf9ebe7f200196a316afcaf72
 roadmap_summary: Issue [#734](https://github.com/gtrabanco/agentic-workflow/issues/734) (S): the `/log-session` hand-off rendered `"subcommand"` as the service **and** its operation in one spaced string (`"journal write"`), and the runner door forwards that field as one argv token, so the crate resolved a service with a space and refused — the directive now renders the service alone with the operation in `args`, the two-field shape is pinned in `runner-mapping@1`, and an executable case runs the rendered call against the crate in a fixture.
 ---
 
@@ -133,10 +133,10 @@ it. Frozen at the cut; `ac-hash:` in the frontmatter is this section's SHA-256.
   `bun test packages/pi-agentic-workflow/test/runner-mapping-injection.test.mjs`
   exits 0 with the shape case green.
 - **AC-S9** — one release carries both sides: the emitter and the door live in
-  `@gtrabanco/pi-agentic-workflow`, the changeset declares it, the crate is
-  untouched, and the train stays aligned. Check:
-  `bun scripts/version-parity-gate.mjs --content` exits 0 and every
-  `packages/*/package.json` reads `4.10.1`.
+  `@gtrabanco/pi-agentic-workflow`, and the crate's only edit is its
+  cross-package test pin, so the changeset declares both packages and the train
+  stays aligned. Check: `bun scripts/version-parity-gate.mjs --content` exits 0
+  and every `packages/*/package.json` reads `4.10.1`.
 - **AC-S10** — the pin exists and is executable: the rendered invocation is run
   against the crate in a fixture, so the seam cannot drift silently. Check: the
   executable case is green now and red on `f1b04a3a9`'s bytes (`## Log` E3).
@@ -186,9 +186,10 @@ counted, not promised: `rg -c '"journal write"' packages/pi-agentic-workflow/src
 ## Non-goals
 
 - No split of a spaced `subcommand` in the door (S6, IR11).
-- No crate change: the editor's service/op grammar (`journal write`,
+- No crate behaviour change: the editor's service/op grammar (`journal write`,
   `session-close close`) is the CLI's argv contract and is untouched; only the
-  tool-call body that must speak it changes (S9).
+  tool-call body that must speak it changes (S9). The crate's one edit is its
+  cross-package test pin, declared by the changeset.
 - No migration for an installed canary still emitting the old shape (S9): the
   next pi release ships both sides from one package.
 - No new gate, no new config key.
@@ -315,7 +316,7 @@ cut time and `verified` only against a foreground validator run.
 | O4 | S7 · PE-005 · AC-S7 | The attribution seam's behaviour is unchanged: the token the seam now hears is neither unit- nor phase-attributing, and no consumer reads a spaced `subcommand` | P6 | P6 | direct application (this session) | `bun test packages/pi-agentic-workflow/test/telemetry-attribution.test.mjs` exits 0 | `E` line with the suite verdict and the `rg '"journal write"'` count (`0`) | planned |
 | O5 | S8 · PE-004, PE-006 · AC-S8 | The shape is pinned once where a session reads it and swept in one change: no render surface composes a spaced `subcommand`, the `runner-mapping@1` block states the rule, and the package README repeats it as the package's own door | P4 | P4 | direct application (this session) | `rg -n '"subcommand": "(?:journal write\|session-close close)' packages/*/src skills template` matches nothing; `bun test packages/pi-agentic-workflow/test/runner-mapping-injection.test.mjs` exits 0 | `E` line with the sweep and the suite verdict; the writers the issue names (emitter, README, RUNNER.md, log-session skill, log-session-command test) are the sweep's checklist | planned |
 | O6 | S10 · PE-007, PE-008 · AC-S10 | The seam cannot drift silently: the executable case exists beside the emitter and is red on the base bytes (`Unknown service: journal write`) | P3 | P3 | direct application (this session) | `bun test packages/pi-agentic-workflow/test/log-session-invocation.test.mjs` exits 1 in the `f1b04a3a9` scratch copy and exits 0 here | `E` lines with both runs | planned |
-| O7 | S9 · PE-009 · AC-S9 | One release carries both sides and the train stays aligned: the crate is untouched, the changeset declares the touched package, and every package reads one version | P2 | P2 | direct application (this session) | `bun scripts/version-parity-gate.mjs --content` exits 0; `rg -n '"version"' packages/*/package.json` matches four `4.10.1` | `E` line with both answers | planned |
+| O7 | S9 · PE-009 · AC-S9 | One release carries both sides and the train stays aligned: the changeset declares the emitter's package and the crate whose cross-package pin it repairs, and every package reads one version | P2 | P2 | direct application (this session) | `bun scripts/version-parity-gate.mjs --content` exits 0; `rg -n '"version"' packages/*/package.json` matches four `4.10.1` | `E` line with both answers | planned |
 | O8 | S1, S11 · AC-S1, AC-S11 | The unit ships as one inline application with a frozen ledger, and the owner's route decision is recorded: (a) implemented, (b) named and rejected | P1 | P1 | direct application (this session) | `bun packages/agentic-workflow/bin/agentic-workflow.mjs verify docs/fix/734-log-session-subcommand-shape/SPEC.md --no-git` exits 0 | `E` line with the verify verdict; `decisions.md` D1 | planned |
 | O9 | S1, S2, S3, S4, S5, S7, S8, S9, S10 · AC-S1 | The whole gate passes with the change in place, under the package suite and the root suite | P6 | P6 | direct application (this session) | `bun run --cwd packages/pi-agentic-workflow test` exits 0 and `bun scripts/local-gate.mjs` exits 0 | `G` lines with both verdicts and the counts | planned |
 
