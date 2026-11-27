@@ -198,11 +198,33 @@ export function makeOpenAIProvider({ baseUrl, apiKey, model, fetchImpl, fetchTim
   };
 }
 
+/**
+ * The paced provider the write and read paths share (issue #718 S3): one place
+ * builds it, so the query's single call and the pass' requests are bounded by the
+ * same resolved knob and cannot drift apart.
+ */
+export function pacedProvider(embedCfg, pacing) {
+  return embedCfg?.configured ? makeOpenAIProvider({ ...embedCfg, fetchTimeoutMs: pacing.fetchTimeoutMs }) : null;
+}
+
 /** The longest provider body excerpt an error message carries — a diagnosis, not a payload. */
 const BODY_EXCERPT_LIMIT = 400;
 
 /** The lease row's name: one embed pass owns a store's pending set (issue #718 S5). */
 const LEASE_NAME = "embed";
+
+/**
+ * A pass that no longer owns the store's `doc_lease` row (issue #718 S5, review F1):
+ * the row was taken over or released under it, so it must stop writing and
+ * spending. Thrown where the loss is observed and answered with the pass'
+ * declared cause, never left as a silent no-op that keeps paying the provider.
+ */
+export class LeaseLostError extends Error {
+  constructor() {
+    super("the embed lease is no longer held by this pass");
+    this.name = "LeaseLostError";
+  }
+}
 
 /**
  * How long a lease survives without a heartbeat: one request's worst case —
@@ -242,9 +264,35 @@ function acquireLease(db, owner, ttlMs, at) {
  * heartbeat from a *second* connection inside another connection's open
  * transaction is a same-process lock against the caller's own stack and dies
  * at the busy timeout.
+ *
+ * Answers whether this pass still owns the row (issue #718 S5, review F1): the
+ * statement is owner-scoped, so a row taken over by another pass matches zero
+ * rows — and a caller that ignored that used to keep embedding beside the new
+ * owner, paying the provider twice for the same chunks. The prepared statement
+ * is cached per connection, so a per-file or per-request heartbeat allocates
+ * nothing.
  */
 export function heartbeatLease(db, owner, at) {
-  db.prepare("update doc_lease set heartbeat = ? where name = ? and owner = ?").run(at, LEASE_NAME, owner);
+  let statement = heartbeatStatements.get(db);
+  if (statement === undefined) {
+    statement = db.prepare("update doc_lease set heartbeat = ? where name = ? and owner = ?");
+    heartbeatStatements.set(db, statement);
+  }
+  return statement.run(at, LEASE_NAME, owner).changes === 1;
+}
+
+/** The heartbeat statement, prepared once per store connection. */
+const heartbeatStatements = new WeakMap();
+
+/** The store's granted write patience, shared by every connection that waits on it. */
+const STORE_BUSY_TIMEOUT_MS = 5000;
+
+/**
+ * Let a second writer wait for the store's lock instead of failing with
+ * `SQLITE_BUSY` — the patience the lease connections take, stated once.
+ */
+function patientStore(db) {
+  db.exec(`pragma busy_timeout = ${STORE_BUSY_TIMEOUT_MS}`);
 }
 
 /** Give the store back: the owner's row only, never a row someone took over. */
@@ -268,9 +316,7 @@ function releaseLease(db, owner) {
 export async function openEmbedLease(root, pacing) {
   const { db } = await openDatabase(storePath(root));
   try {
-    // A second writer waits for the store's lock instead of failing the pass
-    // with SQLITE_BUSY — the same patience embedPendingChunks' own open has.
-    db.exec("pragma busy_timeout = 5000");
+    patientStore(db);
     ensureLeaseTable(db);
     const owner = `${process.pid}-${randomUUID()}`;
     if (!acquireLease(db, owner, leaseTtlMs(pacing), Date.now())) {
@@ -312,27 +358,36 @@ async function responseBodyExcerpt(response) {
 export async function embeddingStats(root, model = null) {
   const { db } = await openDatabase(storePath(root));
   try {
-    const tables = new Set(
-      db.prepare("select name from sqlite_master where type = 'table'").all().map((row) => row.name),
-    );
-    if (!tables.has("chunks")) return { embedded: 0, pending: 0, foreign: 0, model: null };
-    const columns = db.prepare("pragma table_info(chunks)").all().map((row) => row.name);
-    if (!columns.includes("embedding")) return { embedded: 0, pending: 0, foreign: 0, model: null };
-    const embedded = db.prepare("select count(*) as n from chunks where embedding is not null").get().n;
-    const pending = db.prepare("select count(*) as n from chunks where embedding is null").get().n;
-    const foreign =
-      model === null
-        ? 0
-        : db
-            .prepare(
-              "select count(*) as n from chunks where embedding is not null and (emb_model is null or emb_model is not ?)",
-            )
-            .get(model).n;
-    const pinned = tables.has("meta") ? db.prepare("select value from meta where key = 'emb_model'").get() : null;
-    return { embedded, pending, foreign, model: pinned ? pinned.value : null };
+    return storeStatsOn(db, model);
   } finally {
     db.close();
   }
+}
+
+/**
+ * The same counts over a connection the caller already holds, so a caller that
+ * needs the store's record and its embedding counts answers both from one open
+ * instead of two (review-change fix/718 cycle 1).
+ */
+export function storeStatsOn(db, model = null) {
+  const tables = new Set(
+    db.prepare("select name from sqlite_master where type = 'table'").all().map((row) => row.name),
+  );
+  if (!tables.has("chunks")) return { embedded: 0, pending: 0, foreign: 0, model: null };
+  const columns = db.prepare("pragma table_info(chunks)").all().map((row) => row.name);
+  if (!columns.includes("embedding")) return { embedded: 0, pending: 0, foreign: 0, model: null };
+  const embedded = db.prepare("select count(*) as n from chunks where embedding is not null").get().n;
+  const pending = db.prepare("select count(*) as n from chunks where embedding is null").get().n;
+  const foreign =
+    model === null
+      ? 0
+      : db
+          .prepare(
+            "select count(*) as n from chunks where embedding is not null and (emb_model is null or emb_model is not ?)",
+          )
+          .get(model).n;
+  const pinned = tables.has("meta") ? db.prepare("select value from meta where key = 'emb_model'").get() : null;
+  return { embedded, pending, foreign, model: pinned ? pinned.value : null };
 }
 
 /**
@@ -365,7 +420,10 @@ export async function embeddingStats(root, model = null) {
  * from `--sync`'s pre-scan acquisition — heartbeated per request, and released
  * when the pass ends. A pass that finds a live lease embeds nothing, returns
  * `{leaseHeld: true}` and leaves the chunks pending — concurrent runs are
- * idempotent on the rows but not on the provider bill.
+ * idempotent on the rows but not on the provider bill. A pass that loses the row
+ * mid-flight (another pass took it over, review F1) stops spending and answers
+ * the same declared shape with what it had already landed, so the two passes
+ * never keep paying for the same chunks.
  */
 export async function embedPendingChunks(root, provider, opts = {}) {
   const config = loadConfig(root);
@@ -381,6 +439,10 @@ export async function embedPendingChunks(root, provider, opts = {}) {
   const { db } = await openDatabase(storePath(root));
   let leaseOwner = null;
   let selfHeld = false;
+  // Counted outside the `try` so a lost lease still answers what it landed.
+  let calls = 0;
+  let embedded = 0;
+  const rejected = [];
   try {
     ensureEmbeddingColumns(db);
     const pinned = db.prepare("select value from meta where key = 'emb_model'").get();
@@ -388,9 +450,7 @@ export async function embedPendingChunks(root, provider, opts = {}) {
       return { skipped: true, reason: "embeddings-model-mismatch", model: provider.model, stored: pinned.value };
     }
 
-    // A second writer waits for the store's lock instead of failing the pass
-    // with SQLITE_BUSY (the lease already keeps two passes from embedding).
-    db.exec("pragma busy_timeout = 5000");
+    patientStore(db);
     if (opts.leaseOwner != null) {
       // The pass-level lease already owns the store (issue #718 — the pre-scan
       // fence): heartbeat the caller's row per request; acquire and release
@@ -420,10 +480,7 @@ export async function embedPendingChunks(root, provider, opts = {}) {
     }
 
     const totalPending = pending.length;
-    let calls = 0;
-    let embedded = 0;
     let lastStart = null;
-    const rejected = [];
 
     // Pacing: two request starts are never closer than the configured interval.
     const pace = async () => {
@@ -440,7 +497,10 @@ export async function embedPendingChunks(root, provider, opts = {}) {
     const request = async (texts) => {
       for (let attempt = 1; ; attempt += 1) {
         await pace();
-        heartbeatLease(db, leaseOwner, now());
+        // Still ours? A row taken over mid-pass answers no rows (review F1): stop
+        // before the request rather than pay for chunks the new owner is also
+        // sending.
+        if (!heartbeatLease(db, leaseOwner, now())) throw new LeaseLostError();
         calls += 1;
         try {
           return await provider.embed(texts);
@@ -515,6 +575,13 @@ export async function embedPendingChunks(root, provider, opts = {}) {
     pin();
     if (onProgress) onProgress(embedded, totalPending);
     return { embedded, calls, model: provider.model, rejected };
+  } catch (error) {
+    if (error instanceof LeaseLostError) {
+      // Another pass owns the store now (review F1): report the declared cause
+      // with what landed, so the caller never reads a healthy partial pass.
+      return { embedded, calls, model: provider.model, rejected, leaseHeld: true };
+    }
+    throw error;
   } finally {
     if (selfHeld) releaseLease(db, leaseOwner);
     db.close();

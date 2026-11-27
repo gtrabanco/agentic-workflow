@@ -317,7 +317,7 @@ describe("the embed lease (issue #718 S5)", () => {
       strictEqual(result.leaseHeld, true, "the loser learns it no longer owns the store");
       strictEqual(loser.state.calls, 1, "no further request is spent after the lease is lost");
 
-      const left = await openDatabase(storePath(dir));
+      const { db: left } = await openDatabase(storePath(dir));
       const pending = left.prepare("select count(*) as n from chunks where embedding is null").get().n;
       left.close();
       ok(pending > 0, "the chunks it never sent stay pending instead of silently matching the owner's work");

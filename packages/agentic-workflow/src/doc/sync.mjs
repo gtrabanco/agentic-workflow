@@ -37,7 +37,7 @@ import { storePath, storePresent, manifestExportPath } from "./store.mjs";
 import { loadConfig } from "./config.mjs";
 import { collectManifest, canonicalJson } from "./manifest.mjs";
 import { scanChunks } from "./chunks.mjs";
-import { heartbeatLease } from "./embeddings.mjs";
+import { heartbeatLease, LeaseLostError } from "./embeddings.mjs";
 
 const SCHEMA = `
 CREATE TABLE IF NOT EXISTS chunks (
@@ -127,7 +127,10 @@ export async function storeStats(root) {
  * lease the caller holds across this scan. Each per-file report heartbeats that
  * row **on this connection** — the one whose transaction is open — so a long
  * cold scan never expires its own pass' lease; a caller that passes none pays
- * nothing.
+ * nothing. The heartbeat also answers ownership (review F1): a row that another
+ * pass took over stops this scan instead of letting it write chunk rows beside
+ * the new owner, and the loss surfaces as `LeaseLostError` for the caller to
+ * answer with its declared cause.
  */
 export async function syncIndex(root, opts = {}) {
   const exclusions = opts.exclusions;
@@ -137,6 +140,15 @@ export async function syncIndex(root, opts = {}) {
   const manifest = collectManifest(root, { exclusions });
   const { db } = await openDatabase(storePath(root));
   db.exec(SCHEMA);
+
+  // Published freshness, taken where no transaction is open: a passive read from
+  // another process sees these (a write inside the scan's own transaction does
+  // not reach it before COMMIT), so a scan whose manifest pass is long — or
+  // which changes nothing at all — still shows a live owner.
+  const beat = () => {
+    if (leaseOwner !== null && !heartbeatLease(db, leaseOwner, Date.now())) throw new LeaseLostError();
+  };
+  beat();
 
   const stored = storedManifest(db);
   const previousLimit = storedChunkLimit(db);
@@ -169,7 +181,7 @@ export async function syncIndex(root, opts = {}) {
   const report = (path) => {
     if (onProgress !== null || leaseOwner !== null) {
       processed += 1;
-      if (leaseOwner !== null) heartbeatLease(db, leaseOwner, Date.now());
+      beat();
       if (onProgress !== null) onProgress(processed, total, path);
     }
   };
@@ -202,6 +214,9 @@ export async function syncIndex(root, opts = {}) {
       report(path);
     }
     db.exec("COMMIT");
+    // The scan's own writes just became visible, so this heartbeat publishes a
+    // live owner to anyone reading the row from another process.
+    beat();
 
     // Persist + export the canonical manifest (AC12's compared artifact), and stamp
     // the scanner that produced these rows so a future scanner change re-scans.
@@ -225,6 +240,9 @@ export async function syncIndex(root, opts = {}) {
     } catch {
       // the transaction may already be rolled back by the driver
     }
+    // A lost lease must not leave the store connection behind: the caller answers
+    // the declared cause and a later pass re-opens its own.
+    db.close();
     throw e;
   }
 }

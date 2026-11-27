@@ -45,14 +45,21 @@ const EMBED_MS_PER_CHUNK = 1_000;
 const EMBED_SLACK_MS = 120_000;
 
 /**
+ * The most the probe's answer may buy: six hours. A real backfill of a large
+ * corpus stays well inside it, and a store whose count is corrupt or invented
+ * cannot turn the derived cap into an unbounded wait.
+ */
+export const MAX_DERIVED_TIMEOUT_MS = 6 * 60 * 60 * 1_000;
+
+/**
  * The cap a pending count buys (issue #718 S4): the paced work plus the scan,
- * never below the shipped floor. The probe's answer sizes the window, so a medium
- * corpus is not killed mid-pass and the operator does not have to re-run until
- * `pending: 0`.
+ * never below the shipped floor and never above a ceiling — a corrupt or hostile
+ * store reporting an absurd count would otherwise buy an effectively unbounded
+ * window and remove the very bound the floor sets (review-change fix/718 cycle 1).
  */
 export function derivedTimeoutMs(pending: number | null | undefined): number {
   if (typeof pending !== "number" || !Number.isFinite(pending) || pending <= 0) return RUN_TIMEOUT_MS;
-  return Math.max(RUN_TIMEOUT_MS, pending * EMBED_MS_PER_CHUNK + EMBED_SLACK_MS);
+  return Math.min(MAX_DERIVED_TIMEOUT_MS, Math.max(RUN_TIMEOUT_MS, pending * EMBED_MS_PER_CHUNK + EMBED_SLACK_MS));
 }
 
 /** The status envelope's one field the cap reads. */

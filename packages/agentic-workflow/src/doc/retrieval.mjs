@@ -36,7 +36,7 @@ import { storePath } from "./store.mjs";
 import { syncIndex, rebuildIndex } from "./sync.mjs";
 import { queryIndex, statusIndex, storeValue } from "./query.mjs";
 import { loadConfig, effectiveChunkLimit } from "./config.mjs";
-import { resolveEmbedConfig, makeOpenAIProvider, embedPendingChunks, embeddingStats, resolvePacing, openEmbedLease } from "./embeddings.mjs";
+import { resolveEmbedConfig, embedPendingChunks, embeddingStats, resolvePacing, openEmbedLease, pacedProvider, LeaseLostError } from "./embeddings.mjs";
 import { NO_FEEDBACK } from "../feedback/index.mjs";
 
 /** How many failure shapes and chunk locators the envelope repeats before summarising. */
@@ -86,12 +86,7 @@ function rejectionRecord(rejected) {
  * re-acquires or releases it.
  */
 async function embedPass(root, { embedCfg, embedder, declareKeywordOnly, onProgress, pacing, leaseOwner }) {
-  const provider =
-    embedder !== undefined
-      ? embedder
-      : embedCfg.configured
-        ? makeOpenAIProvider({ ...embedCfg, fetchTimeoutMs: pacing.fetchTimeoutMs })
-        : null;
+  const provider = embedder !== undefined ? embedder : pacedProvider(embedCfg, pacing);
   if (provider === null) {
     // AC17's root: keyword-only is a declared state, never a silent one. A
     // `--rebuild` is the documented escape hatch (a model or limit change), and a
@@ -156,52 +151,65 @@ export async function runDocOp(grammar, ctx = {}) {
     // them — and it declares the lease instead. Rebuild stays embed-stage-only:
     // its discard deletes the store file, so no lease row could span it (D9).
     let lease = null;
+    // The fenced answer, shared by the pre-scan acquisition and the mid-scan loss
+    // (review F1): one shape, so a pass that took no part in the store never reads
+    // as a healthy one.
+    const fencedEnvelope = async (detail) => {
+      feedback.start();
+      // One open answers the record, the pending count and the pin; an absent
+      // store keeps the shape the caller always read (review-change fix/718 cycle 1).
+      const storeRecord = await storeValue(root, { withPending: true });
+      feedback.detail(detail);
+      return buildEnvelope({
+        command: "sync",
+        results: [],
+        degradations: ["unavailable-embeddings-lease-held"],
+        store: {
+          ...storeRecord,
+          pending: storeRecord.pending ?? 0,
+          model: storeRecord.model ?? null,
+          lastSync: { files_scanned: 0, files_changed: 0, files_deleted: 0, embedded: 0 },
+        },
+      });
+    };
     if (grammar.op === "sync") {
       lease = await openEmbedLease(root, pacing);
-      if (lease === null) {
-        feedback.start();
-        const storeRecord = await storeValue(root);
-        const stats = await embeddingStats(root);
-        feedback.detail("embed: lease held by another pass — no scan, no spend");
-        return buildEnvelope({
-          command: "sync",
-          results: [],
-          degradations: ["unavailable-embeddings-lease-held"],
-          store: {
-            ...storeRecord,
-            pending: stats.pending,
-            model: stats.model,
-            lastSync: { files_scanned: 0, files_changed: 0, files_deleted: 0, embedded: 0 },
-          },
-        });
-      }
+      if (lease === null) return fencedEnvelope("embed: lease held by another pass — no scan, no spend");
     }
     try {
       // The three stages a reader waits on, timed by the channel: the chunk pass,
       // the provider round-trips, and the store's own count.
-      const r = await feedback.stage("scan", () =>
-        grammar.op === "rebuild"
-          ? rebuildIndex(root, {
-              maxChunkChars,
-              exclusions,
-              onProgress: (done, total, path) => feedback.progress({ done, total, unit: "files", detail: path }),
-            })
-          : syncIndex(root, {
-              maxChunkChars,
-              exclusions,
-              // The scan heartbeats the pass' lease on its own connection,
-              // once per reaped or re-chunked file (PE-019): a long cold scan
-              // never expires the lease it holds.
-              leaseOwner: lease?.owner,
-              onProgress: (done, total, path) => feedback.progress({ done, total, unit: "files", detail: path }),
-            }),
-      );
+      let r;
+      try {
+        r = await feedback.stage("scan", () =>
+          grammar.op === "rebuild"
+            ? rebuildIndex(root, {
+                maxChunkChars,
+                exclusions,
+                onProgress: (done, total, path) => feedback.progress({ done, total, unit: "files", detail: path }),
+              })
+            : syncIndex(root, {
+                maxChunkChars,
+                exclusions,
+                // The scan heartbeats the pass' lease on its own connection,
+                // once per reaped or re-chunked file (PE-019), and stops the scan
+                // the moment another pass owns the row (review F1).
+                leaseOwner: lease?.owner,
+                onProgress: (done, total, path) => feedback.progress({ done, total, unit: "files", detail: path }),
+              }),
+        );
+      } catch (error) {
+        if (!(error instanceof LeaseLostError)) throw error;
+        return fencedEnvelope("embed: lease lost mid-scan — the scan rolled back, no spend");
+      }
 
       // The progress seam is forwarded for **both** chunking ops: a rebuild
       // embeds the same pending set, so a silent one is the same frozen screen.
-      // The pending count is read *before* the pass (issue #718 S6): a sync that had
-      // work to embed and no key used to leave a keyword-only corpus unstated.
-      const pendingBefore = (await embeddingStats(root)).pending;
+      // The pending count is read *before* the pass (issue #718 S6) — a sync that had
+      // work to embed and no key used to leave a keyword-only corpus unstated —
+      // and only where no provider can embed: a configured pass never reads it
+      // (review-change fix/718 cycle 1).
+      const pendingBefore = providerConfigured ? 0 : (await embeddingStats(root)).pending;
       const pass = await feedback.stage("embed", () =>
         embedPass(root, {
           embedCfg,

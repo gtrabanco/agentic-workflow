@@ -1,7 +1,7 @@
 ---
 type: fix
 scope: medium
-ac-hash: 160e97cafc446b4e1a6bdcb282c179b6344849716f085dd9ef5f97fc38b34600
+ac-hash: 2ee6f361c4a53f5cf1075a92d427c5b84dcf8a3ccda53f6e727b74f8aee17dbd
 roadmap_summary: Issue [#718](https://github.com/gtrabanco/agentic-workflow/issues/718): five embedding-pass defects — the embed stage reports progress, a stalled provider request aborts on a configurable timeout and rides the retry ladder, `/aw-index` derives its spawn cap from the store's pending count, one SQLite lease fences concurrent embed passes (`unavailable-embeddings-lease-held`), and the freshness hook runs the crate resolver's install-time answer while a keyword-only `--sync` declares `unavailable-embeddings-not-configured` instead of staying silent.
 ---
 
@@ -81,9 +81,9 @@ grammars: {"findings-table":1,"log-kind":1,"obligations":1,"unit-doc":1}
   rides the family the file documents as open by design).
 - `packages/pi-agentic-workflow/src/extension/aw-index-command.ts` — the command
   probes `doc status --json-only` for `store.pending`, derives
-  `pending × 1 s + 120 s` (floored at the shipped 600 s) and keeps
-  `deps.timeoutMs` as the test/injection override. The report still renders from
-  the sync envelope alone.
+  `pending × 1 s + 120 s` (floored at the shipped 600 s, capped at six hours) and
+  keeps `deps.timeoutMs` as the test/injection override. The report still renders
+  from the sync envelope alone.
 - `template/.agentic-workflow/hooks/index-sync.sh` — resolution gains the
   machine-local pin the crate's own resolver answered at install time; the
   `AGENTIC_WORKFLOW_BIN` override, `command -v` and the silent exit-0 no-op keep
@@ -288,10 +288,11 @@ is in `## Log` (D1) and in the handoff.
 - **AC-S4** — `/aw-index` derives its spawn cap from the store's pending count
   instead of a fixed 600 s: it probes `doc status --json-only`, reads
   `store.pending`, and spawns the sync with `max(600000, pending × 1000 + 120000)`
-  ms, falling back to the shipped floor when the probe answers nothing;
-  `doc status` reports `pending` so one implementation answers the question.
+  ms bounded at six hours, falling back to the shipped floor when the probe
+  answers nothing; `doc status` reports `pending` so one implementation answers
+  the question.
   Check: `cd packages/pi-agentic-workflow && bun test test/aw-index-command.test.mjs`
-  exits 0 (the derived-cap, the floor and the probe-failure cases) and
+  exits 0 (the derived-cap, the cap, the floor and the probe-failure cases) and
   `cd packages/agentic-workflow && env -u … bun test test/doc.query.test.mjs`
   exits 0 (the `store.pending` case).
 - **AC-S5** — Two concurrent embed passes over one store make one pass' worth of
@@ -415,7 +416,6 @@ surgery. The `## Tasks` list above is the ordered step list this unit executes.
 
 | id | S# / file:line | axis | severity | impact | class | route |
 |---|---|---|---|---|---|---|
-| F1 | packages/agentic-workflow/src/doc/embeddings.mjs:246,443 · packages/agentic-workflow/src/doc/sync.mjs:169-177 | correctness | WARNING | blocking | source | fold |
 
 ## Log
 
@@ -590,9 +590,56 @@ surgery. The `## Tasks` list above is the ordered step list this unit executes.
 - **G11** — 2026-11-27, `bun scripts/run-root-suite.mjs` · exit 0 · `147`
   suites PASS · `bun scripts/local-gate.mjs --skip-network --jobs 1` (ambient
   provider cleared) · exit 0 · `local-gate: PASS — 16 step(s) in 418s`.
-- **P12** — 2026-11-27, the correction batch: pre-scan fence + its red corpus,
-  the hooks README retirement, the receipt fixes and the A7/A8 dispositions ·
-  `d3ee92ee6…8066a7d9c` (ledger freeze, red corpus, fix, doc surfaces).
+- **D12** — 2026-11-27, the owner's request, verbatim:
+  ```
+  Sí, utiliza fold-findings y añade las mejoras
+  ```
+  Decision: F1 folds, and the report-only notes of review cycle 1 fold with it
+  under this instruction (an owner-ordered batch, not a reclassification — no
+  severity, class or route of a persisted row moved). Swept in this batch: the
+  takeover-blind heartbeat at both cited sites, the derived cap's missing
+  ceiling, the warm-sync extra store opens, `doc status`' second open, the
+  duplicated busy-timeout and paced-provider construction, the per-call
+  heartbeat statement, and the stale pin that skipped resolution step 3. No
+  `swept:` declaration: no published vocabulary token, claim kind or reader
+  pattern changed — the four live surfaces stating the cap's formula (this doc's
+  Impact and AC-S4, the changeset, the pi README) were updated in place, and the
+  frozen planning ledger keeps its historical quote. Not swept and recorded
+  instead: `fetchTimeoutMs`' missing upper bound (a ceiling on a published
+  config knob is a decision, not a fold; the documented contract is the
+  positive-integer rule), and `embedPendingChunks`' full pending-row load
+  (pre-existing at the base commit — the baseline-advisory rule: report, never a
+  correction round).
+- **F1** — 2026-11-27, folded: the lease now answers ownership at every heartbeat
+  and both cited sites stop on the loss — `heartbeatLease` returns the
+  statement's `changes`, `embedPendingChunks` throws `LeaseLostError` from the
+  request loop and answers `{leaseHeld: true}` with what had landed, `syncIndex`
+  throws it from the per-file seam (rolling the scan back) and publishes
+  freshness where no transaction is open, and `runDocOp` answers the one fenced
+  envelope from a shared helper for both the pre-scan refusal and a mid-scan
+  loss. Regression: the two corpus cases below.
+- **E19** — 2026-11-27, `cd packages/agentic-workflow && env -u … bun test
+  test/doc.embed-lease.test.mjs` · exit 1 · `8 pass · 2 fail` at `d70368193` —
+  the red corpus: a pass whose row is taken over mid-flight embedded the whole
+  pending set, and a scan whose owner token is not the row's owner wrote its
+  rows anyway.
+- **E20** — 2026-11-27, same command · exit 0 · `10 pass · 0 fail` at the fix —
+  the loser stops after one request and answers `leaseHeld`, the scan aborts with
+  `LeaseLostError` and leaves `0` chunk rows.
+- **E21** — 2026-11-27, `bash template/.agentic-workflow/hooks/tests/test-index-sync.sh`
+  · exit 1 · `INDEX-SYNC-HOOK-TESTS fail (1)` before the pin change (a gone
+  launcher ended the hook without trying `command -v`), then exit 0 ·
+  `INDEX-SYNC-HOOK-TESTS ok` after.
+- **E22** — 2026-11-27, `cd packages/agentic-workflow && env -u … bun test
+  test/doc.embed-lease.test.mjs test/doc.hybrid.test.mjs
+  test/doc.embeddings.test.mjs test/doc.query.test.mjs test/doc.store.test.mjs`
+  · exit 0 · `128 pass · 0 fail · 5 files` after the improvement batch.
+- **E23** — 2026-11-27, `cd packages/pi-agentic-workflow && bun run build &&
+  bun test test/aw-index-command.test.mjs` · exit 0 · `16 pass · 0 fail` — the
+  four S4 cases (derived cap, cap, floor, probe failure) plus the ceiling case
+  this batch adds; `bun scripts/check-skill-context.mjs --documents` · PASS ·
+  `packages/pi-agentic-workflow/README.md` re-measured at its 1,399-line ceiling,
+  so the bullet states the cap without spending a line.
 - **G12** — 2026-11-27, gate-receipt run (gate: scripts/local-gate.mjs
   --skip-network --jobs 1; ambient provider cleared) · exit 1 · receipt
   `.agentic-workflow/gate/gate-receipt.json` · manifest

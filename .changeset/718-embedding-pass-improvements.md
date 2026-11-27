@@ -35,8 +35,9 @@ unstated; a warm one stays silent.
 
 `/aw-index` stops killing a legitimate backfill at a fixed 600 s: it reads the
 store's pending count (`doc --status --json-only`, now answering `pending`) and
-spawns the sync with `max(600 s, pending × 1 s + 120 s)`, keeping the floor when
-the probe cannot answer.
+spawns the sync with `max(600 s, pending × 1 s + 120 s)`, capped at six hours so
+a corrupt count cannot buy an unbounded window, keeping the floor when the probe
+cannot answer.
 
 The freshness hook runs on a host where the crate is not on `PATH`:
 `init-workspace` records the answer the crate's own resolver gave

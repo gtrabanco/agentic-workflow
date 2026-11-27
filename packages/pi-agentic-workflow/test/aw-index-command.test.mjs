@@ -16,7 +16,7 @@ import { join, resolve } from "node:path";
 import { createExtension } from "../dist/extension/factory.js";
 import { readCatalogue } from "../dist/routing/catalogue.js";
 import { AW_INDEX_COMMAND, ADVANCE_COMMAND, SETTINGS_COMMAND, SETTINGS_COMMAND_ALIAS } from "../dist/routing/types.js";
-import { renderIndexReport } from "../dist/extension/aw-index-command.js";
+import { renderIndexReport, derivedTimeoutMs, MAX_DERIVED_TIMEOUT_MS } from "../dist/extension/aw-index-command.js";
 import { configFor, modelRef } from "./helpers/session.mjs";
 
 const PKG_DIR = resolve(import.meta.dirname, "..");
@@ -376,4 +376,14 @@ test("S4: an explicit timeoutMs is the caller's answer — no probe is spent", a
   } finally {
     rmSync(tree.root, { recursive: true, force: true });
   }
+});
+
+// Review-change's report-only note (fix/718 cycle 1): the derived cap accepted any
+// finite pending count, so a corrupt or hostile store bought an unbounded window
+// and removed the very ceiling the floor exists to set.
+test("S4: the derived cap is bounded, so a corrupt pending count buys no unbounded window", () => {
+  assert.equal(derivedTimeoutMs(Number.MAX_SAFE_INTEGER), MAX_DERIVED_TIMEOUT_MS);
+  assert.equal(derivedTimeoutMs(1e12), MAX_DERIVED_TIMEOUT_MS);
+  assert.equal(derivedTimeoutMs(1_000), 1_120_000, "an ordinary store keeps its own arithmetic");
+  assert.ok(derivedTimeoutMs(1_000) < MAX_DERIVED_TIMEOUT_MS);
 });

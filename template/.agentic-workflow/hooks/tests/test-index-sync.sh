@@ -136,6 +136,29 @@ fi
 rm -rf "$pin_root"
 rm -f "$pin_record" "$pin_bin" "$override_record" "$override_bin"
 
+# 4c. A pin whose launcher is gone never disables the hook: the ordered resolution
+#     falls through to `command -v` instead of ending in a silent no-op that skips
+#     step 3 (review-change fix/718 cycle 1, report note 5).
+fallback_root=$(mktemp -d)
+mkdir -p "$fallback_root/.agentic-workflow/hooks" "$fallback_root/bin"
+fallback_record=$(mktemp)
+cat > "$fallback_root/bin/agentic-workflow" <<EOF
+#!/usr/bin/env bash
+printf '%s\n' "\$*" >> "$fallback_record"
+exit 0
+EOF
+chmod +x "$fallback_root/bin/agentic-workflow"
+printf '%s\n' "/nonexistent/runner-gone" doc --sync --quiet > "$fallback_root/.agentic-workflow/hooks/runner.local"
+if ( cd "$fallback_root" && env -u AGENTIC_WORKFLOW_BIN PATH="$fallback_root/bin:/usr/bin:/bin" "$hook" post-merge ) >/dev/null 2>&1; then
+  : # expected: a gone launcher is not a failure the git operation may see
+else
+  printf 'FAIL stale-pin-not-ok\n' >&2
+  failures=$((failures + 1))
+fi
+expect_recorded "the PATH entry ran when the pin's launcher is gone" "doc --sync --quiet" "$fallback_record"
+rm -rf "$fallback_root"
+rm -f "$fallback_record"
+
 if [ "$failures" -gt 0 ]; then
   printf 'INDEX-SYNC-HOOK-TESTS fail (%d)\n' "$failures"
   exit 1

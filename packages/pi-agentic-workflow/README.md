@@ -119,11 +119,11 @@ next: <n> chunk(s) remain unembedded — …   (only while pending > 0)
   `provider.chunk_limit` and embeds in the same pass.
 - **The cap fits the work** (issue #718). Before spawning, the command reads the
   store's pending count (`doc --status --json-only`, the crate's own stat) and
-  spawns the sync with `max(600 s, pending × 1 s + 120 s)` — one second per chunk
-  is the pace a real backfill measured, and the slack covers the scan pass. A
-  probe that cannot answer (absent store, refused spawn, output that is not the
-  envelope) keeps the 600 s floor instead of failing the run, and a caller that
-  passes its own timeout keeps it with no probe at all.
+  spawns the sync with `max(600 s, pending × 1 s + 120 s)`, capped at six hours:
+  one second per chunk is the measured pace and the slack covers the scan, while
+  the cap keeps a corrupt count from buying an unbounded window. A probe that
+  cannot answer (absent store, refused spawn, unparseable envelope) keeps the
+  600 s floor, and a caller that passes its own timeout keeps it with no probe.
 
 Since the write path is paced and retried, this command is also the honest way
 to backfill a store that a rate limit interrupted — it makes progress on every

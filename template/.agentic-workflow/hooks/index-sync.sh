@@ -13,7 +13,7 @@
 #      (`runner resolve --json doc --sync --quiet`), one argv token per line.
 #      This is what makes the hook run where the crate is not on PATH (a
 #      `bunx` host), without the template carrying a second runner version
-#      literal;
+#      literal. A pin whose launcher no longer resolves counts as no pin.
 #   3. `command -v agentic-workflow`;
 #   4. no entry point — silent exit 0.
 #
@@ -23,7 +23,9 @@
 set -u
 
 # Run the pinned argv verbatim (it already carries `doc --sync --quiet`).
-# Returns 1 when there is no pin, so the caller falls through to the old order.
+# Returns 1 when there is no pin, when the pin names no launcher this host can
+# execute (a stale pin after an uninstall or a moved checkout), so the caller
+# falls through to `command -v` rather than ending in a no-op that skips it.
 run_pinned_argv() {
   root=$(git rev-parse --show-toplevel 2>/dev/null || pwd -P)
   pin="${root}/.agentic-workflow/hooks/runner.local"
@@ -33,6 +35,10 @@ run_pinned_argv() {
     [ -n "${token}" ] && argv[("${#argv[@]}")]="${token}"
   done < "${pin}"
   [ "${#argv[@]}" -gt 0 ] || return 1
+  case "${argv[0]}" in
+    */*) [ -x "${argv[0]}" ] || return 1 ;;
+    *) command -v "${argv[0]}" >/dev/null 2>&1 || return 1 ;;
+  esac
   "${argv[@]}" >/dev/null 2>&1 || true
   return 0
 }
