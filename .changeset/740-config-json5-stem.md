@@ -2,6 +2,7 @@
 "@gtrabanco/agentic-workflow-schema": minor
 "@gtrabanco/agentic-workflow": minor
 "@gtrabanco/pi-agentic-workflow": minor
+"@gtrabanco/pi-nan-agentic-workflow": patch
 ---
 
 feat(config): read JSON5, resolve configs by stem, create `.json5` (issue #740)
@@ -31,4 +32,5 @@ validate` and the doctor's divergence report are the on-demand trail, and
 `config validate --sanitize` now drops invalid values as well as unknown keys.
 
 This repository's own config moves from `.json` to `.jsonc` to exercise the
-middle extension.
+middle extension. The `pi-nan-agentic-workflow` companion's README and its
+phase-batching command comment narrate the same stem identity (docs only).

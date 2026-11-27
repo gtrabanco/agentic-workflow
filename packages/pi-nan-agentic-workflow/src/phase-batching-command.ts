@@ -10,7 +10,7 @@
 //
 // The session's model is the default subject (Pi knows it, the operator should
 // not have to retype it); `--model` overrides it. The config switch is read from
-// the merged `pi-agentic-workflow.json` section the main package resolves — this
+// the merged `pi-agentic-workflow` section the main package resolves — this
 // module takes the resolved value, never the files.
 
 import { RISK_TIER_KINDS, SIZE_TIER_KINDS } from "@gtrabanco/agentic-workflow-schema";

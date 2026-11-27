@@ -226,7 +226,7 @@ cached read billed at the input rate saves nothing), or a single remaining
 phase. **Every one of those is a fail-closed answer**: no fact, no batching.
 
 ```jsonc
-// pi-agentic-workflow.json — the switch, OFF until you say otherwise
+// the `pi-agentic-workflow` config — the switch, OFF until you say otherwise
 { "phaseBatching": { "enabled": true } }
 ```
 
@@ -355,7 +355,7 @@ catalog:
 The preset ships no separate EU profiles — the flexible way to get them is the
 mechanism that already exists: **a user-defined profile shadowing a preset
 chain name wins over the preset entirely**. Paste the blocks below into your
-`pi-agentic-workflow.json` and every posture stays EU-only, whatever
+`pi-agentic-workflow` config and every posture stays EU-only, whatever
 `presetProfile` selects. Keep `tierRouting` exactly as you had it; it keeps routing the rest of the
 chain (the `default` profile and anything not shadowed).
 
@@ -575,7 +575,7 @@ the mechanical, one-way passes:
   carries the tariff facts; when the provider changes allowances or prices,
   edit it and re-cut the ladders beside it.
 
-Example `tierRouting` in `agentic-workflow.json`:
+Example `tierRouting` in the `agentic-workflow` config:
 
 ```json
 { "tierRouting": { "enabled": true, "skills": { "audit-docs": false } } }
