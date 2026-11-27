@@ -137,3 +137,60 @@ test("a raw flow-sequence hint is staged as a quoted string", (t) => {
   assert.equal(frontmatter["argument-hint"], '[--unsafe "<x>"]', "the staged hint keeps its text");
   assert.match(staged, /^argument-hint: "\[--unsafe \\"<x>\\"\]"$/mu, "the staged hint is a double-quoted YAML string");
 });
+
+/** Stage one fixture skill whose frontmatter carries `lines`; returns its bytes. */
+function stageFixture(t, slug, lines) {
+  const root = mkdtempSync(join(tmpdir(), "pi-aw-hint-shape-"));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const sourceDir = join(root, "skills");
+  const targetDir = join(root, "bundle");
+  mkdirSync(join(sourceDir, slug), { recursive: true });
+  const source = `---\nname: ${slug}\nuser-invocable: true\n${lines.join("\n")}\n---\n\nBody.\n`;
+  writeFileSync(join(sourceDir, slug, "SKILL.md"), source);
+  bundleSkills({ sourceDir, targetDir });
+  return { source, staged: readFileSync(join(targetDir, slug, "SKILL.md"), "utf8") };
+}
+
+// The 2026-11-27 EXTERNAL VERIFY correction corpus (D5, PE-018): shapes the
+// transform must NOT rewrite — yaml@2.9.0 already reads them as strings — and
+// shapes it must rewrite — yaml@2.9.0 reads them as a comment or a non-string
+// type, which is what leaves a hint the host cannot render.
+
+test("a block-scalar hint is staged byte-identical and still parses as a string", (t) => {
+  const shapes = [
+    ["block-folded", ["argument-hint: >-", '  [--foo <bar>] [--search "<words>"]'], '[--foo <bar>] [--search "<words>"]'],
+    ["block-literal", ["argument-hint: |", "  [--foo]"], "[--foo]\n"],
+    ["block-comment-header", ["argument-hint: > # keep", "  [--foo]"], "[--foo]"],
+    ["block-single", ["argument-hint: >"], ""],
+  ];
+  for (const [slug, lines, expected] of shapes) {
+    const { source, staged } = stageFixture(t, slug, lines);
+    assert.equal(staged, source, `${slug}: a block-scalar header must ship byte-identical — quoting it breaks the frontmatter`);
+    assert.equal(parseYaml(frontmatterOf(staged))["argument-hint"], expected, `${slug}: the block content stays a string`);
+  }
+});
+
+test("a comment-led or YAML-typed hint is staged as a string with its text", (t) => {
+  const shapes = [
+    ["comment-hint", "argument-hint: #726 reference", "#726 reference"],
+    ["null-hint", "argument-hint: null", "null"],
+    ["bool-hint", "argument-hint: true", "true"],
+    ["number-hint", "argument-hint: 1.5e3", "1.5e3"],
+  ];
+  for (const [slug, line, expected] of shapes) {
+    const { staged } = stageFixture(t, slug, [line]);
+    const hint = parseYaml(frontmatterOf(staged))["argument-hint"];
+    assert.equal(typeof hint, "string", `${slug}: staged as ${Array.isArray(hint) ? "an array" : typeof hint}, not a string`);
+    assert.equal(hint, expected, `${slug}: the hint text is the author's raw text`);
+    assert.match(staged, /^argument-hint: "/mu, `${slug}: the staged value is a quoted YAML string`);
+  }
+});
+
+test("a quoted scalar with an invalid escape ships byte-identical (the source's own defect)", (t) => {
+  // Re-quoting an already-quoted value would corrupt its valid escapes, so the
+  // transform never touches one; an invalid escape is unparseable at base and
+  // at head alike — an authoring defect, never a staging regression.
+  const { source, staged } = stageFixture(t, "bad-escape", ['argument-hint: "[foo\\q]"']);
+  assert.equal(staged, source, "a quoted scalar is never re-quoted");
+  assert.throws(() => parseYaml(frontmatterOf(staged)), "the invalid escape stays the source's own defect");
+});
