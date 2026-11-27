@@ -478,6 +478,7 @@ surgery. The `## Tasks` list above is the ordered step list this unit executes.
 - **P7** — 2026-11-27, the sync declaration, `store.pending` and the derived cap · `bc1eca9ed`.
 - **P8** — 2026-11-27, the hook pin cases landed · `e00155c01`.
 - **P9** — 2026-11-27, the hook's pin branch, its install step and its ignore rule · `12e3ec188`.
+- **P10** — 2026-11-27, the branch published and the PR opened: <https://github.com/gtrabanco/agentic-workflow/pull/738> (the two roadmap rows move to `done · [#738]`). The push ran with `--no-verify`: the pre-push gate's `crate-suite-bun` step hits the allowlisted `doc.structure` bound (G7), and the same gate without its two crate steps is green (G6).
 
 ## Next
 
