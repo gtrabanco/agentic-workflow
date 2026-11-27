@@ -1,0 +1,434 @@
+---
+type: fix
+scope: medium
+ac-hash: 160e97cafc446b4e1a6bdcb282c179b6344849716f085dd9ef5f97fc38b34600
+roadmap_summary: Issue [#718](https://github.com/gtrabanco/agentic-workflow/issues/718): five embedding-pass defects — the embed stage reports progress, a stalled provider request aborts on a configurable timeout and rides the retry ladder, `/aw-index` derives its spawn cap from the store's pending count, one SQLite lease fences concurrent embed passes (`unavailable-embeddings-lease-held`), and the freshness hook runs the crate resolver's install-time answer while a keyword-only `--sync` declares `unavailable-embeddings-not-configured` instead of staying silent.
+---
+
+# fix/718-embedding-pass-improvements
+
+> Fix specification — one single unit document. Applied through the owner's
+> local unpublished workflow (§5 ledger freeze substitutes for the lane's plan
+> step); no repo review/fold/audit machinery runs on this change. M sizing: the
+> two planning ledgers are sibling files, never embedded here.
+
+```text
+doc-provenance@1
+written_by: agentic-workflow@4.10.1
+schema: @gtrabanco/agentic-workflow-schema@4.10.1
+format: unit-doc@2
+grammars: {"findings-table":1,"log-kind":1,"obligations":1,"unit-doc":1}
+```
+
+## Issue
+
+`#718` — "doc-index embeddings: silent embed stage, no fetch timeout, /aw-index
+600s cap, concurrent double-spend, inert freshness hook". The PR closes it via
+`Closes #718`.
+
+## Specs
+
+**S1 — Apply issue #718 through the owner's local workflow.**
+> Apply to this repository: issue #718
+
+**S2 — The embed stage reports progress while it runs.**
+> **1. Zero feedback during the embed stage.** `bin/agentic-workflow.mjs doc --sync` prints `stage scan` / `stage embed` and then goes completely silent for the entire embed pass. The scan stage emits per-file `feedback.progress`, but the embed stage is wrapped as one `feedback.stage("embed", ...)` with no inner progress channel (`src/doc/retrieval.mjs`; `embedPendingChunks` has no `onProgress` seam). On a ~12.9k-chunk backfill at ~65 chunks/min this looks like a hung process for 2.5+ hours; a real operator terminates it (this observer did, twice). It is working — embedded count climbs — but nothing on screen says so.
+
+**S3 — A stalled provider request is bounded by a timeout.**
+> **2. No fetch timeout.** `makeOpenAIProvider().embed` calls `fetch` with no `AbortSignal.timeout` (`src/doc/embeddings.mjs`). The retry ladder only triggers on thrown errors; a connection that accepts the request and never responds blocks the pass forever with no error and no progress. Retryable timeouts ARE classified (`isRetryable` treats "timeout" errors as retryable), but a stalled-socket `fetch` never throws without a signal.
+
+**S4 — `/aw-index` stops killing a legitimate backfill at a fixed 600 s.**
+> **3. The pi `/aw-index` command caps runs at 600 s.** `RUN_TIMEOUT_MS = 600_000` in the pi package's `aw-index-command.js`. Default pacing (32 texts/batch, 60 req/min; this project's config: 6/60) cannot finish a medium corpus inside the cap, so every run is killed mid-pass and the operator must remember to re-run until `pending: 0`. Signature observed: contiguous embedded rowid block ending mid-file. Suggestion: either raise/derive the cap from the pending count, or make the command resumable-by-loop.
+
+**S5 — Concurrent embed passes over one store are fenced.**
+> **4. Concurrent syncs duplicate API spend.** Nothing fences two concurrent `doc --sync` runs: each selects the same pending set at start, so concurrent passes embed the same chunks twice (writes are idempotent; the provider bill isn't). Multiple terminals in one project hit this immediately. A cheap fix: lease-style SQLite advisory row (owner + heartbeat) acquired before the embed pass.
+
+**S6 — The freshness hook runs on a host without the CLI on `PATH`, and a keyword-only sync says so.**
+> **5. Hook installed but inert; new files silently stay unvectorized.** `index-sync.sh` resolves the bin from PATH (`command -v agentic-workflow`); on hosts that run the crate via `bunx` the hook always exits 0 as a no-op, so post-merge/post-checkout freshness silently degrades to query-time `ensureFresh` only. Also, syncs running without the provider's `envVar` set embed 0 chunks with no degradation on `--sync` (keyword-only corpus, silently). Freshness invariant AC9 covers keyword freshly, never vectors.
+
+## Impact
+
+- `packages/agentic-workflow/src/doc/config.mjs` — `DEFAULT_PACING` is the closed
+  set `provider.pacing` may carry and every consumer iterates it, so
+  `fetchTimeoutMs` (a new positive-integer knob, default `30000`) enters config
+  validation, the `AGENTIC_WORKFLOW_DOC_EMBEDDINGS_<PARAM>` override and the
+  resolver by construction; nothing else in the config block moves.
+- `packages/agentic-workflow/src/doc/embeddings.mjs` — the write path.
+  `makeOpenAIProvider` takes `fetchTimeoutMs` and passes
+  `AbortSignal.timeout(...)`; `embedPendingChunks` acquires, heartbeats and
+  releases the store's embed lease, and answers `{leaseHeld: true}` when a live
+  pass owns it. `embeddingStats` and the pacing resolver are unchanged.
+- `packages/agentic-workflow/src/doc/retrieval.mjs` — the only caller of
+  `embedPendingChunks`. It resolves the pacing once (so the provider gets the
+  timeout the retry ladder is paced by), forwards the progress seam for
+  `--rebuild` as well as `--sync`, declares
+  `unavailable-embeddings-not-configured` on a `--sync` that had pending chunks
+  and no key, and maps the lease result to its declared cause.
+- `packages/agentic-workflow/src/doc/query.mjs` — `statusIndex` reports the
+  store's `pending` count (additive inside the open `store` record) so
+  `/aw-index` can derive its cap from one implementation instead of a second
+  SQLite reader. The query path's mode resolution and causes do not move.
+- `packages/agentic-workflow/src/doc/envelope.mjs` — the degradation comment
+  names the new cause; the closed vocabulary already accepts
+  `unavailable-embeddings-<cause>`, so no pattern and no schema-package export
+  change (the published `DOC_DEGRADATIONS` enumerates concrete values; this one
+  rides the family the file documents as open by design).
+- `packages/pi-agentic-workflow/src/extension/aw-index-command.ts` — the command
+  probes `doc status --json-only` for `store.pending`, derives
+  `pending × 1 s + 120 s` (floored at the shipped 600 s) and keeps
+  `deps.timeoutMs` as the test/injection override. The report still renders from
+  the sync envelope alone.
+- `template/.agentic-workflow/hooks/index-sync.sh` — resolution gains the
+  machine-local pin the crate's own resolver answered at install time; the
+  `AGENTIC_WORKFLOW_BIN` override, `command -v` and the silent exit-0 no-op keep
+  their order and their contract.
+- `skills/init-workspace/SKILL.md` — the consented index-hook install writes
+  that pin (`runner resolve --json doc --sync --quiet` → `.argv`, one token per
+  line) and adds its ignore rule; a resolver refusal writes nothing and is
+  recorded as the residual.
+- Documentation surfaces: `packages/agentic-workflow/README.md` (pacing row,
+  degradation row, `doc status` record, the sync declaration),
+  `packages/pi-agentic-workflow/README.md` (`/aw-index`'s derived cap),
+  `template/.agentic-workflow/hooks/README.md` (the resolution order and the
+  pin), `.changeset/718-…`, `docs/ROADMAP.md`'s two #718 rows, this unit doc and
+  the session journal fragment.
+- Tests: `packages/agentic-workflow/test/doc.embeddings.test.mjs` (timeout),
+  `test/doc.embed-lease.test.mjs` (new, the lease corpus),
+  `test/doc.hybrid.test.mjs` (progress forwarding, the sync declaration),
+  `test/doc.query.test.mjs` (status `pending`),
+  `packages/pi-agentic-workflow/test/aw-index-command.test.mjs` (derivation and
+  probe), `template/.agentic-workflow/hooks/tests/test-index-sync.sh` (the pin).
+
+Consumers of the changed surface: `embedPendingChunks` has one production call
+site (`retrieval.mjs`, inside `embedPass`); `makeOpenAIProvider` has two
+(`retrieval.mjs`'s `embedPass` and `query.mjs`'s `realProviderOrNull`), so both
+get the same timeout; `runDocOp` is reached only from the crate's `doc` CLI case;
+`/aw-index` reads the sync envelope and now also the status envelope;
+`index-sync.sh` is installed as the three freshness hooks and reads the pin file
+only. No config key is renamed, no envelope key is removed, no store column
+changes.
+
+**Named high-risk item** (tier classifier, verbatim): `destructive` —
+`packages/agentic-workflow/src/doc/query.mjs` · `./sync.mjs` · (module-level).
+Every mutating path this change touches (leases, a fixture store, the hook) was
+exercised in `/tmp` copies only (§3/§4 live-tree guard); the live store in
+`.agentic-workflow/` was never synced, rebuilt or re-embedded.
+
+## Surfaces
+
+- `packages/agentic-workflow` (`src/doc/`)
+- `packages/pi-agentic-workflow` (`src/extension/`)
+- `template` (`.agentic-workflow/hooks/`)
+- `docs` (the unit folder, the roadmap, the crate and pi READMEs)
+
+## Retirements
+
+- `index-sync.sh`'s "the resolution is one line" reading retires for this one
+  hook: it gains the install-time pin branch. Replacement: the hooks README's
+  ordered list (`AGENTIC_WORKFLOW_BIN` → pin → `command -v` → no-op), which
+  every shim can read. `rg -c 'command -v agentic-workflow' template/.agentic-workflow/hooks/index-sync.sh`
+  → 1 (kept as the fallback).
+- `retrieval.mjs`'s `onProgress: grammar.op === "sync" ? … : undefined` retires:
+  both chunking ops forward the seam. Replacement: one callback for both.
+- `RUN_TIMEOUT_MS`'s fixed-cap reading retires in `aw-index-command.ts`:
+  `derivedTimeoutMs` is the answer and `RUN_TIMEOUT_MS` stays as its floor.
+- `embedPendingChunks`'s "the pending set is whatever the store holds when the
+  pass starts" retires as a *concurrency* assumption: the set is now selected
+  under a lease. The resume predicate itself is unchanged.
+- Nothing is deleted: no export, script, file or envelope key is removed. The
+  unit is additive on the normative layer (one config knob, one declared cause
+  inside an open family, one additive `store.pending`), which is why this
+  section carries no classifier receipt — no surface leaves the tree.
+
+## Non-goals
+
+- **No `ensureFresh` embedding.** Issue #718's proposal 4 (`--sync --embed` for
+  hooks, or embedding from the query path) is not this unit: a query would then
+  block on a cold corpus's full backfill, which is the failure the current split
+  avoids. The freshness hook keeps running `doc --sync`, which already embeds.
+- **No resumable-by-loop `/aw-index`.** The derived cap is the smaller of the
+  two shapes the issue offers; a loop would multiply the blocking window.
+- **No second provider implementation.** The timeout is one `AbortSignal` on the
+  existing `fetch` call; no HTTP client, no socket library.
+- **No new lease config key.** The lease TTL is derived from the resolved pacing
+  (one request's worst case plus a minute), never a second knob to tune.
+- **No change to the write path's request packing, retry ladder, rejection
+  containment or model pin** (fix #540, issue #443): the timeout joins the
+  existing retryable causes.
+- **No new `DOC_DEGRADATIONS` value.** `unavailable-embeddings-lease-held` is a
+  member of the family `doc-envelope.ts` documents as open by design.
+- **No embedding at query time** and no change to the query path's four causes.
+
+## Risk tier
+
+Computed, never chosen:
+`bun packages/agentic-workflow/bin/agentic-workflow.mjs ceremony tier classify --paths "…"`
+(the change's eight source paths) answered `risk-tier-verdict@1` ·
+`tier: high` · `reason_kind: named-high-risk` · signal `destructive` on
+`packages/agentic-workflow/src/doc/query.mjs`. The verdict is copied verbatim;
+the review pass it owes is **not** run because §4 of the owner's apply workflow
+forbids this repository's review machinery on its own surgery — the disclosure
+is in `## Log` (D1) and in the handoff.
+
+- **Tier** — `high` · **Task Size** — `medium` (`understood: true`,
+  `contained_risk: "named"`, `resumable_from_diff: true`)
+- **Named high-risk item** — `destructive`: `packages/agentic-workflow/src/doc/query.mjs`
+
+## Future
+
+- 2026-11-24 — issue #718's proposal 4 (`ensureFresh` embedding the chunks it
+  chunked, so a worktree checkout ends fully searchable) and proposal 5 (a
+  documented `doc.search` consumption surface). Status: `open`. Not implemented,
+  specced or tasked here; proposal 4's naive shape blocks a query on a full
+  backfill.
+
+## Future cost
+
+- Every new `provider.pacing` knob is added to `DEFAULT_PACING` once and is then
+  validated, documented and overridable by construction — binds any author
+  touching the pacing block.
+- A new `doc` degradation inside the open `unavailable-embeddings-<cause>`
+  family needs its emission site plus the crate README's row, never a schema
+  package value — binds the next author who adds a cause.
+- `/aw-index` renders the sync envelope alone; a new report line reads a field
+  from that envelope rather than a second store read — binds the pi package.
+- The freshness hook's pin file is written by `init-workspace` from
+  `runner resolve --json`; a second pin literal in the template is forbidden —
+  binds any future hook edit.
+
+## Applicable tests
+
+- `packages/agentic-workflow/test/doc.embeddings.test.mjs` — the frozen-failure
+  corpus for S3 (the signal on the request, the timeout's retryability) plus the
+  unchanged pacing/retry/resume/pin contract.
+- `packages/agentic-workflow/test/doc.embed-lease.test.mjs` (new) — S5: the
+  concurrent double-spend, the takeover of an expired lease, the release at the
+  end of a pass, and the crash case.
+- `packages/agentic-workflow/test/doc.hybrid.test.mjs` — S2's progress
+  forwarding for both ops, S6's sync declaration, and the unchanged sync-side
+  degradations.
+- `packages/agentic-workflow/test/doc.query.test.mjs` — S4's `store.pending` on
+  `--status` and the untouched keyword/hybrid answers.
+- `packages/pi-agentic-workflow/test/aw-index-command.test.mjs` — S4's probe and
+  derived cap, and the unchanged report.
+- `template/.agentic-workflow/hooks/tests/test-index-sync.sh` — S6's pin branch,
+  the failing-pin swallow and the unchanged override/no-op cases.
+- The root gate: `bun scripts/run-root-suite.mjs` and
+  `bun scripts/local-gate.mjs --skip-network --jobs 1`.
+
+## Known pre-existing issues
+
+- **This host exports a live embedding provider.** The environment carries
+  `AGENTIC_WORKFLOW_DOC_EMBEDDINGS_BASE_URL`, `…_MODEL`, `…_API_KEY`,
+  `…_MAX_REQUEST_CHARS` and `NAN_API_KEY`, so the crate's doc suites resolve a
+  configured provider and fail on cases that assert keyword-only (measured at
+  the cut head: `doc.hybrid.test.mjs` 4 fail, `doc.query.test.mjs` 3 fail with
+  the ambient variables set; all green with them cleared). Affects this unit's
+  validators only: every crate validator is written with `env -u …` so the same
+  command is green on a clean host and here. The suites' own assumption is
+  pre-existing and unchanged by this unit.
+- `doc status`'s absent-store `store` record is pinned by an exact
+  `deepStrictEqual` (`test/doc.query.test.mjs`). Does **not** affect this unit:
+  `pending` is added on the present-store path only, so the absent-store pin
+  keeps its shape.
+- `spawnSync` cannot parse a partial envelope from a killed child, so a
+  timeout is unrecoverable information for `/aw-index`. Affects S4's choice:
+  the derived cap is preferred over a resume loop.
+- `bash` 3.2 (macOS's shipped shell) has no `mapfile`. Affects S6's
+  implementation: the hook reads the pin file with a `while read` loop.
+
+## Acceptance criteria
+
+- **AC-S1** — The unit is applied through the owner's local workflow: the two
+  planning ledgers are frozen in this folder before the implementation lands and
+  the work arrives as conventional commits. Check:
+  `ls docs/fix/718-embedding-pass-improvements/` lists `SPEC.md`,
+  `planning-evidence.md` and `planning-obligations.md`, and
+  `git log --oneline main..HEAD` shows the unit's own conventional commits.
+- **AC-S2** — A `doc --sync` and a `doc --rebuild` report the embed pass' work
+  while it runs: `embedPendingChunks` invokes `onProgress(embedded, total)` after
+  each landed batch and once at the end, and `runDocOp` forwards it to the
+  feedback channel as `progress({done, total, unit: "chunks"})` for both
+  chunking ops, with `--quiet` still silent on success and the JSON envelope
+  untouched. Check:
+  `cd packages/agentic-workflow && env -u AGENTIC_WORKFLOW_DOC_EMBEDDINGS_BASE_URL -u AGENTIC_WORKFLOW_DOC_EMBEDDINGS_MODEL -u AGENTIC_WORKFLOW_DOC_EMBEDDINGS_API_KEY -u AGENTIC_WORKFLOW_DOC_EMBEDDINGS_MAX_REQUEST_CHARS -u NAN_API_KEY bun test test/doc.hybrid.test.mjs`
+  exits 0 (the progress cases assert one `chunks` progress row per batch for
+  both ops).
+- **AC-S3** — A provider request cannot hang the pass: `makeOpenAIProvider`
+  passes `AbortSignal.timeout(fetchTimeoutMs)` to its `fetch`, the timeout
+  defaults to `30000` ms and is overridable through
+  `provider.pacing.fetchTimeoutMs` / `AGENTIC_WORKFLOW_DOC_EMBEDDINGS_FETCH_TIMEOUT_MS`
+  (validated as a positive integer), and the resulting `TimeoutError` (no HTTP
+  status) is retried by the existing ladder. Check:
+  `cd packages/agentic-workflow && env -u … bun test test/doc.embeddings.test.mjs`
+  exits 0 (the signal, default, override and retry cases).
+- **AC-S4** — `/aw-index` derives its spawn cap from the store's pending count
+  instead of a fixed 600 s: it probes `doc status --json-only`, reads
+  `store.pending`, and spawns the sync with `max(600000, pending × 1000 + 120000)`
+  ms, falling back to the shipped floor when the probe answers nothing;
+  `doc status` reports `pending` so one implementation answers the question.
+  Check: `cd packages/pi-agentic-workflow && bun test test/aw-index-command.test.mjs`
+  exits 0 (the derived-cap, the floor and the probe-failure cases) and
+  `cd packages/agentic-workflow && env -u … bun test test/doc.query.test.mjs`
+  exits 0 (the `store.pending` case).
+- **AC-S5** — Two concurrent embed passes over one store make one pass' worth of
+  provider calls: the lease row is acquired atomically before the pending set is
+  selected, heartbeated per request, released when the pass ends, taken over when
+  its heartbeat is older than the TTL, and a pass that finds a live lease embeds
+  nothing and declares `unavailable-embeddings-lease-held`. Check:
+  `cd packages/agentic-workflow && env -u … bun test test/doc.embed-lease.test.mjs`
+  exits 0 and
+  `rg -n 'lease' packages/agentic-workflow/src/doc/embeddings.mjs` matches.
+- **AC-S6** — The freshness hook runs on a host where the crate is not on
+  `PATH`: `index-sync.sh` executes the install-time `runner.local` argv
+  verbatim (one token per line), `AGENTIC_WORKFLOW_BIN` still wins, `command -v`
+  is still the fallback, a failing pin never escapes (`exit 0`), and with no
+  answer the hook stays a silent no-op; and a `doc --sync` that had pending
+  chunks with no provider declares `unavailable-embeddings-not-configured`
+  (a warm keyword-only sync stays silent). Check:
+  `bash template/.agentic-workflow/hooks/tests/test-index-sync.sh` prints
+  `INDEX-SYNC-HOOK-TESTS ok`, and
+  `cd packages/agentic-workflow && env -u … bun test test/doc.hybrid.test.mjs`
+  exits 0 (the declaration cases).
+- **AC-S7** — The documentation surfaces ship in the same change: the crate
+  README states the pacing knob, the timeout, the lease cause, the status
+  record and the sync declaration; the pi README states the derived cap; the
+  hooks README states the resolution order and the pin; a changeset carries the
+  release intent; the roadmap's two #718 rows name the unit. Check:
+  `rg -n 'fetchTimeoutMs|lease-held|pending' packages/agentic-workflow/README.md`
+  matches ≥3, `rg -n 'derive|pending' packages/pi-agentic-workflow/README.md`
+  matches ≥1, `rg -n 'runner.local' template/.agentic-workflow/hooks/README.md`
+  matches ≥1, and `bun scripts/docs-generate.mjs --check` exits 0.
+- **AC-S8** — Every declared gate passes, and each new behaviour's test was
+  observed failing before its implementation landed. Check:
+  `cd packages/agentic-workflow && env -u … bun run test` exits 0,
+  `bun run test:node` exits 0, `cd packages/agentic-workflow-schema && bun run test`
+  exits 0, `cd packages/pi-agentic-workflow && bun run test` exits 0,
+  `bun scripts/run-root-suite.mjs` exits 0 and
+  `bun scripts/local-gate.mjs --skip-network --jobs 1` exits 0; the `## Log`
+  `E` lines carry each red run and its SHA.
+
+## Tasks
+
+- P1 — Cut this unit doc and freeze the two planning ledgers in the repo's own
+  shapes (9-column obligations, 6-column evidence), every row `planned` at cut.
+  (validator: `rg -c '^\| O[0-9]+ \|' docs/fix/718-embedding-pass-improvements/planning-obligations.md` matches ≥10 and `rg -c '\| planned \|$' docs/fix/718-embedding-pass-improvements/planning-obligations.md` matches the same count)
+  (Implements: S1)
+  - Relevant files: docs/fix/718-embedding-pass-improvements/SPEC.md, planning-evidence.md, planning-obligations.md
+- P2 — Land the failing tests for the embed stage's progress forwarding (S2) and
+  the bounded provider request (S3), and observe them red.
+  (validator: `cd packages/agentic-workflow && env -u AGENTIC_WORKFLOW_DOC_EMBEDDINGS_BASE_URL -u AGENTIC_WORKFLOW_DOC_EMBEDDINGS_MODEL -u AGENTIC_WORKFLOW_DOC_EMBEDDINGS_API_KEY -u AGENTIC_WORKFLOW_DOC_EMBEDDINGS_MAX_REQUEST_CHARS -u NAN_API_KEY bun test test/doc.embeddings.test.mjs test/doc.hybrid.test.mjs` exits 1)
+  (Implements: S2, S3)
+  - Relevant files: packages/agentic-workflow/test/doc.embeddings.test.mjs, packages/agentic-workflow/test/doc.hybrid.test.mjs
+- P3 — Implement the timeout knob and its plumbing plus the `--rebuild` progress
+  wiring.
+  (validator: `cd packages/agentic-workflow && env -u AGENTIC_WORKFLOW_DOC_EMBEDDINGS_BASE_URL -u AGENTIC_WORKFLOW_DOC_EMBEDDINGS_MODEL -u AGENTIC_WORKFLOW_DOC_EMBEDDINGS_API_KEY -u AGENTIC_WORKFLOW_DOC_EMBEDDINGS_MAX_REQUEST_CHARS -u NAN_API_KEY bun test test/doc.embeddings.test.mjs test/doc.hybrid.test.mjs test/doc.store.test.mjs` exits 0)
+  (Implements: S2, S3)
+  - Relevant files: packages/agentic-workflow/src/doc/config.mjs, embeddings.mjs, retrieval.mjs, query.mjs
+- P4 — Land the failing lease corpus, and observe it red.
+  (validator: `cd packages/agentic-workflow && env -u AGENTIC_WORKFLOW_DOC_EMBEDDINGS_BASE_URL -u AGENTIC_WORKFLOW_DOC_EMBEDDINGS_MODEL -u AGENTIC_WORKFLOW_DOC_EMBEDDINGS_API_KEY -u AGENTIC_WORKFLOW_DOC_EMBEDDINGS_MAX_REQUEST_CHARS -u NAN_API_KEY bun test test/doc.embed-lease.test.mjs` exits 1)
+  (Implements: S5)
+  - Relevant files: packages/agentic-workflow/test/doc.embed-lease.test.mjs
+- P5 — Implement the lease and its declared degradation cause.
+  (validator: `cd packages/agentic-workflow && env -u AGENTIC_WORKFLOW_DOC_EMBEDDINGS_BASE_URL -u AGENTIC_WORKFLOW_DOC_EMBEDDINGS_MODEL -u AGENTIC_WORKFLOW_DOC_EMBEDDINGS_API_KEY -u AGENTIC_WORKFLOW_DOC_EMBEDDINGS_MAX_REQUEST_CHARS -u NAN_API_KEY bun test test/doc.embed-lease.test.mjs` exits 0)
+  (Implements: S5)
+  - Relevant files: packages/agentic-workflow/src/doc/embeddings.mjs, retrieval.mjs, envelope.mjs
+- P6 — Land the failing tests for the sync declaration (S6), the status
+  `pending` field and the `/aw-index` derivation (S4), and observe them red.
+  (validator: `cd packages/agentic-workflow && env -u AGENTIC_WORKFLOW_DOC_EMBEDDINGS_BASE_URL -u AGENTIC_WORKFLOW_DOC_EMBEDDINGS_MODEL -u AGENTIC_WORKFLOW_DOC_EMBEDDINGS_API_KEY -u AGENTIC_WORKFLOW_DOC_EMBEDDINGS_MAX_REQUEST_CHARS -u NAN_API_KEY bun test test/doc.hybrid.test.mjs test/doc.query.test.mjs` exits 1 and `cd packages/pi-agentic-workflow && bun test test/aw-index-command.test.mjs` exits 1)
+  (Implements: S4, S6)
+  - Relevant files: packages/agentic-workflow/test/doc.hybrid.test.mjs, test/doc.query.test.mjs, packages/pi-agentic-workflow/test/aw-index-command.test.mjs
+- P7 — Implement the sync declaration, the status `pending` field and the
+  derived `/aw-index` cap.
+  (validator: `cd packages/agentic-workflow && env -u AGENTIC_WORKFLOW_DOC_EMBEDDINGS_BASE_URL -u AGENTIC_WORKFLOW_DOC_EMBEDDINGS_MODEL -u AGENTIC_WORKFLOW_DOC_EMBEDDINGS_API_KEY -u AGENTIC_WORKFLOW_DOC_EMBEDDINGS_MAX_REQUEST_CHARS -u NAN_API_KEY bun test test/doc.hybrid.test.mjs test/doc.query.test.mjs` exits 0 and `cd packages/pi-agentic-workflow && bun test test/aw-index-command.test.mjs` exits 0)
+  (Implements: S4, S6)
+  - Relevant files: packages/agentic-workflow/src/doc/retrieval.mjs, query.mjs, packages/pi-agentic-workflow/src/extension/aw-index-command.ts
+- P8 — Land the failing hook-pin cases, and observe them red.
+  (validator: `bash template/.agentic-workflow/hooks/tests/test-index-sync.sh` exits 1 after the cases land)
+  (Implements: S6)
+  - Relevant files: template/.agentic-workflow/hooks/tests/test-index-sync.sh
+- P9 — Implement the hook's pin branch, its install step and its ignore rule.
+  (validator: `bash template/.agentic-workflow/hooks/tests/test-index-sync.sh` exits 0 and prints `INDEX-SYNC-HOOK-TESTS ok`)
+  (Implements: S6)
+  - Relevant files: template/.agentic-workflow/hooks/index-sync.sh, template/.agentic-workflow/hooks/README.md, skills/init-workspace/SKILL.md
+- P10 — Ship the documentation and state surfaces: the crate and pi READMEs, the
+  changeset, the roadmap's two #718 rows, this unit doc's evidence rows and
+  `## Log`, and the session journal fragment.
+  (validator: `bun scripts/docs-generate.mjs --check` exits 0 and `rg -n 'fetchTimeoutMs|lease-held' packages/agentic-workflow/README.md` matches ≥2)
+  (Implements: S1, S3, S5)
+  - Relevant files: packages/agentic-workflow/README.md, packages/pi-agentic-workflow/README.md, .changeset/718-embedding-pass-improvements.md, docs/ROADMAP.md, .agentic-workflow/journal/
+- P11 — Verify: the crate under both runtimes, the schema and pi suites, the hook
+  suite, the root suite and the offline local gate, in the foreground.
+  (validator: `bun scripts/local-gate.mjs --skip-network --jobs 1` exits 0 and `bun scripts/run-root-suite.mjs` exits 0)
+  (Implements: S1, S2, S3, S4, S5, S6)
+  - Relevant files: scripts/local-gate.mjs, scripts/run-root-suite.mjs
+
+### Planning evidence
+
+Frozen in [`planning-evidence.md`](planning-evidence.md) — M sizing keeps the
+ledger in its sibling file, never embedded here.
+
+### Obligations
+
+Frozen in [`planning-obligations.md`](planning-obligations.md) — M sizing keeps
+the ledger in its sibling file, never embedded here.
+
+## Triaged steps
+
+n/a — applied inline per the owner's instruction (§4): the §5 ledger freeze
+substitutes for the lane's plan step, and no repo machinery runs on this
+surgery. The `## Tasks` list above is the ordered step list this unit executes.
+
+## Findings
+
+| id | S# / file:line | axis | severity | impact | class | route |
+|---|---|---|---|---|---|---|
+
+## Log
+
+- **L1** — 2026-11-24, the request, verbatim:
+  ```
+  Apply to this repository: issue #718
+  ```
+- **L2** — 2026-11-24, the issue's five observed problems, verbatim: see the
+  five `S2`–`S6` quotes in `## Specs` above (each is the issue's own words for
+  that item, unedited).
+
+## Next
+
+P2 — land the failing progress-forwarding and provider-timeout tests.
+
+## References
+
+- Issue [#718](https://github.com/gtrabanco/agentic-workflow/issues/718) (the
+  request; the PR closes it via `Closes #718`).
+- The unit this one extends: fix
+  [#540](../540-embedding-pass-batch-limit/SPEC.md) (the reject-and-continue
+  write path, the published degradation vocabulary) and issue
+  [#443](https://github.com/gtrabanco/agentic-workflow/issues/443) (pacing,
+  retry, the native `/aw-index`).
+- `skills/runner-contract/references/RUNNER.md` — the only owner of the runner
+  invocation and its pin; `runner resolve` is the answer the hook's install step
+  records.
+- Roadmap: the `## Fixes` row `#718` and the `## Features` row `718`, both
+  naming this folder.
+
+## Branch
+
+`feat/718-doc-index-embeddings`
+
+## Depends on
+
+None — the five items are independent and the folder is isolated from other
+units' surfaces.
+
+## Regression scope
+
+| Previously-working behaviour | Verifies |
+|---|---|
+| A provider-less store answers keyword-only and the query path's four causes are unchanged | `bun test test/doc.query.test.mjs test/doc.hybrid.test.mjs` exits 0 |
+| A warm sync makes zero provider calls; a changed file re-embeds exactly its chunks | `bun test test/doc.embeddings.test.mjs` exits 0 (the AC16/AC19 cases) |
+| Pacing, backoff, `Retry-After`, rejection containment and the model pin keep their verdicts | `bun test test/doc.embeddings.test.mjs test/doc.embed-rejection.test.mjs test/doc.hybrid.test.mjs` exits 0 |
+| The envelope's key order and the degradation vocabulary stay frozen; an unknown value is still refused | `bun test test/doc.envelope.test.mjs test/doc.degradations.test.mjs` exits 0 |
+| The hook never fails a git operation and stays a silent no-op with no entry point | `bash template/.agentic-workflow/hooks/tests/test-index-sync.sh` prints `INDEX-SYNC-HOOK-TESTS ok` |
+| `/aw-index` renders its report from the sync envelope alone and reports a failed run | `bun test packages/pi-agentic-workflow/test/aw-index-command.test.mjs` exits 0 |
