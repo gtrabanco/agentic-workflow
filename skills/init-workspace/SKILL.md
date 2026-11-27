@@ -245,8 +245,8 @@ surfaces at emission; run it before the unit doc's first commit.
   project's absolute path, `{ "consented": true, "consentedAt": <ISO date> }`
   — and create nothing else. `<agentDir>` is pi's global agent directory:
   `getAgentDir()` in the extension, `~/.pi/agent` on a default install (the
-  directory holding the unified config files — `agentic-workflow.json` and
-  `pi-agentic-workflow.json`; `~/.claude` is not it). Never write or edit `.pi/hooks.json` (the
+  directory holding the unified config files — the `agentic-workflow` and
+  `pi-agentic-workflow` stems (`.json`/`.jsonc`/`.json5`); `~/.claude` is not it). Never write or edit `.pi/hooks.json` (the
   developer's declarations, not this skill's), never add the consent entry
   without the project's absolute path, and a no writes nothing. The
   dispatcher's own contract — config form, seam vocabulary, refusal grammar —
