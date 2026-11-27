@@ -154,8 +154,8 @@ route) and writes nothing unless asked:
                        override lands as a human-owner D row in decisions.md
   --retriage           re-plan an already-planned unit (the only path back to
                        planning; without it a planned unit implements directly)
-  --record             write the composed session mode into the unit doc's
-                       ## Log as one D line, before execution starts
+  --record             write the composed session mode into the unit's
+                       decisions.md as one row, before execution starts
   --json               print the same decision as one JSON document
 
 Exit codes: 0 a decision was printed (a halt included); 1 an unknown unit or a
@@ -290,11 +290,16 @@ export function renderFlow(record) {
 // ---------------------------------------------------------------------------
 
 /**
- * The `--yes` human-owner row, appended to a `decisions.md` table. Pure so the
- * shape is testable without a tree: the caller hands the file's bytes (or
- * `null` for a unit that has no ledger yet) and gets the next bytes.
+ * One `decisions.md` row appended to a `decisions` table. Pure so the shape is
+ * testable without a tree: the caller hands the file's bytes (or `null` for a
+ * unit that has no ledger yet) and gets the next bytes.
+ *
+ * Both of the driver's writes go through here, because `decisions.md` is the
+ * unit's one ledger a process may write (the ownership map forbids any script
+ * from writing `SPEC.md`): the `--yes` override as a human-owner row, and the
+ * composed session mode as the driver's own row.
  */
-export function withYesRow(text, { tier, date }) {
+export function withDecisionRow(text, { decision, scope, ground }) {
   const table = [
     "| id | decision | scope | ground |",
     "|---|---|---|---|",
@@ -309,7 +314,7 @@ export function withYesRow(text, { tier, date }) {
   const current = text === null ? header : text;
   const rows = current.split("\n").filter((line) => /^\|\s*D\d+\s*\|/u.test(line));
   const next = rows.reduce((highest, line) => Math.max(highest, Number(/^\|\s*D(\d+)\s*\|/u.exec(line)[1])), 0) + 1;
-  const row = `| D${next} | **\`--yes\` override** — the operator typed \`--yes\`, so no post-plan stop fires for this unit (the \`tier-high\` rule is overridden; tier \`${tier ?? "unset"}\`). | unit-only | S5; the owner typed \`--yes\` on ${date} (human-owner) |`;
+  const row = `| D${next} | ${decision} | ${scope} | ${ground} |`;
   const lines = current.split("\n");
   let last = -1;
   for (let index = 0; index < lines.length; index += 1) if (/^\|/u.test(lines[index])) last = index;
@@ -318,20 +323,29 @@ export function withYesRow(text, { tier, date }) {
   return lines.join("\n");
 }
 
-/** Append the composition as one `D` log line — `log-kind@1`'s decision kind. */
-function recordComposition(dir, session, verdict) {
-  const specPath = path.join(projectRoot(), dir, "SPEC.md");
-  const text = fs.readFileSync(specPath, "utf8");
-  if (sectionText(text, "Log") === null) fail(2, `cannot record the session mode: ${dir}/SPEC.md has no ## Log section`);
-  const line = `session composition: ${session} — derived from tier ${verdict.tier ?? "unset"} · size ${verdict.scope} (flow-session-modes@1; authority: flow driver)`;
-  fs.writeFileSync(specPath, appendLogLine(text, "D", line, today()));
+/** The `--yes` row: the owner's override, with its authority and its date. */
+export function yesDecisionRow({ tier, date }) {
+  return {
+    decision: `**\`--yes\` override** — the operator typed \`--yes\`, so no post-plan stop fires for this unit (the \`tier-high\` rule is overridden; tier \`${tier ?? "unset"}\`).`,
+    scope: "unit-only",
+    ground: `S5; the owner typed \`--yes\` on ${date} (human-owner)`,
+  };
 }
 
-function writeYesRow(dir, slug, tier) {
+/** The composition row: what the recorded verdict composed, and from what. */
+export function sessionDecisionRow({ session, tier, scope, date }) {
+  return {
+    decision: `**Session composition** — \`${session}\` for this unit's execution, so the mode is the unit's record rather than one session's memory.`,
+    scope: "unit-only",
+    ground: `S6, \`flow-session-modes@1\`; derived from tier \`${tier ?? "unset"}\` · size \`${scope}\` on ${date} (authority: flow driver)`,
+  };
+}
+
+function writeDecisionRow(dir, row) {
   const ledger = path.join(projectRoot(), dir, "decisions.md");
   const text = fs.existsSync(ledger) ? fs.readFileSync(ledger, "utf8") : null;
-  fs.writeFileSync(ledger, withYesRow(text, { tier, date: today() }));
-  process.stderr.write(`FLOW — --yes recorded in ${dir}/decisions.md for ${slug}\n`);
+  fs.writeFileSync(ledger, withDecisionRow(text, row));
+  return ledger;
 }
 
 // ---------------------------------------------------------------------------
@@ -442,8 +456,14 @@ export function run(args) {
     readSet: record.readSet,
   });
 
-  if (flags.yes) writeYesRow(unit.dir, unit.slug, facts.tier);
-  if (flags.record) recordComposition(unit.dir, decision.session, { tier: facts.tier, scope });
+  if (flags.yes) {
+    const writtenLedger = writeDecisionRow(unit.dir, yesDecisionRow({ tier: facts.tier, date: today() }));
+    process.stderr.write(`FLOW — --yes recorded in ${path.relative(projectRoot(), writtenLedger)} for ${unit.slug}\n`);
+  }
+  if (flags.record) {
+    const writtenLedger = writeDecisionRow(unit.dir, sessionDecisionRow({ session: decision.session, tier: facts.tier, scope, date: today() }));
+    process.stderr.write(`FLOW — session composition recorded in ${path.relative(projectRoot(), writtenLedger)} for ${unit.slug}\n`);
+  }
 
   if (flags.json) {
     process.stdout.write(`${JSON.stringify({

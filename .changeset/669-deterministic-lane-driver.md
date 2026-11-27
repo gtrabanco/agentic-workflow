@@ -1,4 +1,5 @@
 ---
+"@gtrabanco/agentic-workflow-schema": minor
 "@gtrabanco/agentic-workflow": minor
 "@gtrabanco/pi-agentic-workflow": minor
 ---
@@ -38,3 +39,7 @@ the stop rules, the approval block and the session modes — are declared in
 `unit-route.mjs` exports the two answers the driver consumes (`runTriage`,
 `computeRoute`, `projectRoot`) instead of the driver keeping a second router; its
 printed blocks are unchanged.
+
+The published telemetry vocabulary widens by the two new commands: `flow` and
+`draft` join `PHASE_LABELS`, so a turn that dispatches either one is measurable
+instead of being an unlabelled phase.

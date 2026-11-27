@@ -7,7 +7,7 @@ with one state: `/flow` drives a unit step by step from machine state to done,
 `/unit-lane` remains the portable conductor the program hands its steps to.
 
 The program's deterministic half is the runner's `flow` subcommand
-(`agentic-workflow flow <unit>`): it senses, decides and hands over — it never
+(`runner flow <unit>`): it senses, decides and hands over — it never
 runs a step itself. The two pi commands are thin doors over it, so a host that
 carries only the crate still has the driver, and the two can never disagree about
 what comes next.
@@ -127,9 +127,12 @@ orchestrate | the unit's recorded size is `large` or `xlarge`
 single-session | the unit's recorded size is `trivial`, `xs` or `small`
 ```
 
-`--record` writes the composed mode into the unit doc's `## Log` as one `D` line
+`--record` writes the composed mode into the unit's `decisions.md` as one row
 before execution starts, so the mode is part of the unit's record rather than a
-detail of one session's memory.
+detail of one session's memory. It lands there and not in `SPEC.md` because the
+ledger-ownership map forbids any script from writing the unit doc: the decision
+ledger is the one place a process may record its own decision, and the row names
+its authority (`flow driver`) so it never reads as an owner's verdict.
 
 ## The two lifecycles
 
@@ -187,7 +190,7 @@ Where a unit is in its ladder is never a judgement call:
 ## Where the pieces live
 
 - The driver: `packages/agentic-workflow/src/runner/flow.mjs`, dispatched as
-  `agentic-workflow flow` (`packages/agentic-workflow/src/runner/cli.mjs`).
+  `runner flow` (`packages/agentic-workflow/src/runner/cli.mjs`).
 - The router it consumes: `packages/agentic-workflow/src/runner/unit-route.mjs`
   (its `--triage` and its route are the driver's only inputs).
 - The closed catalog: `packages/agentic-workflow/src/runner/catalog.json`.

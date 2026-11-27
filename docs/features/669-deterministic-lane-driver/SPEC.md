@@ -107,8 +107,10 @@ decided.
    `bun test packages/agentic-workflow/test/flow.test.mjs` (seam + D-row cases).
 5. **S6 — session composition is derived, declared and recorded.** The block
    carries `session:` from the declared table over the recorded tier/size (or the
-   Relay packet's state), and `--record` writes that composition into the unit
-   doc before execution. Check: `bun test
+   Relay packet's state), and `--record` writes that composition into the unit's
+   own `decisions.md` before execution (the ledger-ownership map forbids any
+   script from writing `SPEC.md`, so the unit's decision ledger is where a
+   process records its own decision — D11). Check: `bun test
    packages/agentic-workflow/test/flow.test.mjs` (composition + record cases).
 6. **S9 — the approval block and the driver's tables are declared surfaces.** The
    four blocks live in `docs/workflow/LIFECYCLE.md` and each has a row in
@@ -222,7 +224,8 @@ suites the change re-runs unchanged.
 - P3 — GREEN: `flow.mjs` implements the sense → decide → hand-off loop and the
   crate's dispatch/help/usage/README surfaces name it
   (validator: `bun test packages/agentic-workflow/test/flow.test.mjs` exits 0 and
-  `bun test packages/agentic-workflow/test/runner.dispatch.test.mjs` exits 0)
+  `bun test packages/agentic-workflow/test/runner.dispatch.test.mjs` exits 0 and
+  `bun test scripts/ledger-ownership.test.mjs` exits 0)
   (Implements: S1, S2, S3, S4, S5, S6, S7, S8, S9)
   - Relevant files: packages/agentic-workflow/src/runner/flow.mjs, packages/agentic-workflow/src/runner/cli.mjs, packages/agentic-workflow/src/runner/unit-route.mjs, packages/agentic-workflow/src/runner/help.mjs, packages/agentic-workflow/bin/agentic-workflow.mjs, packages/agentic-workflow/README.md
 - P4 — RED then GREEN: the pi package registers `/flow` and `/draft` and hands
@@ -289,10 +292,35 @@ Budget: strong
   applied inline (no `review-change`, no `audit-pr`, no fold cycle, no
   self-granted gate exception), and the operator is the external verifier.
 - **D1** — 2026-12-23, applied inline; the operator is the external verifier (see `decisions.md` D1).
+- **P1** — 2026-12-23, the planning ledgers are frozen before the first line of code (this document, `planning-evidence.md`, `planning-obligations.md`, `decisions.md`) · 363db1f6f.
+- **P2** — 2026-12-23, the driver's suite lands alone and is observed failing on the missing `flow` subcommand · 62a82bb2b.
+- **E1** — 2026-12-23, `bun test packages/agentic-workflow/test/flow.test.mjs` · exit 1 · `0 pass / 14 fail` (observed red: `flow` is not in the dispatch table).
+- **P3** — 2026-12-23, `flow.mjs` implements the sense → decide → hand-off loop and the crate's dispatch, help, usage and README surfaces name it · cdcfe653b.
+- **E2** — 2026-12-23, `bun test packages/agentic-workflow/test/flow.test.mjs` · exit 0 · `14 pass / 0 fail`.
+- **E3** — 2026-12-23, `bun test packages/agentic-workflow/test/runner.dispatch.test.mjs packages/agentic-workflow/test/cli.surface.test.mjs packages/agentic-workflow/test/cli.help.test.mjs` · exit 0 · `37 pass / 0 fail`.
+- **E4** — 2026-12-23, `bun test scripts/unit-route.test.mjs` · exit 0 · `64 pass / 0 fail` (the router's refactor is behaviour-preserving).
+- **E5** — 2026-12-23, `bun test scripts/catalog.test.mjs` · exit 0 · `16 pass / 0 fail`.
+- **E6** — 2026-12-23, `bun test scripts/normative-drift.test.mjs` · exit 0 · `24 pass / 0 fail` (the four new rows resolve).
+- **P4** — 2026-12-23, `/flow` and `/draft` registered as code doors over the driver, the two command names published from `routing/types.ts` · c40fe65ca.
+- **E7** — 2026-12-23, `bun test packages/pi-agentic-workflow/test/flow-command.test.mjs` · exit 0 · `8 pass / 0 fail`.
+- **E8** — 2026-12-23, `bun test --timeout=10000 test/*.test.mjs` in `packages/pi-agentic-workflow` · exit 1 · `1161 pass / 6 fail`; the same six fail on a `git archive main` copy with an identical build (the embedding-provider suites, no `NAN_API_KEY` in this environment) — pre-existing, recorded in `## Known pre-existing issues`.
+- **P5** — 2026-12-23, the lifecycle page, its four declared grammars, the budgets re-pin, the cross-links, the changeset and the roadmap status · fad3e87da.
+- **E9** — 2026-12-23, `bun scripts/check-skill-context.mjs --documents` · exit 0 · `PASS context documents: 8 budgeted documents`; `bun scripts/check-skill-context.mjs` · exit 0 · `PASS context budgets: 33 skills`.
+- **E10** — 2026-12-23, `bun scripts/docs-generate.mjs --check` · exit 0 · `Files: 3 checked · 0 missing · 0 stale · 0 orphaned` · `verdict: PASS`.
+- **E11** — 2026-12-23, `rg -l 'LIFECYCLE\.md' docs/workflow/README.md docs/workflow/LANE_FLOW.md docs/workflow/SKILLS.md AGENTS.md` · exit 0 · four files (the pages index, the lane cheat-sheet, the skills reference and the guide's deep-references index).
+- **E12** — 2026-12-23, `bun test scripts/ledger-ownership.test.mjs` · exit 0 · `15 pass / 0 fail` (the driver's one sanctioned write is the unit's decision ledger; `SPEC.md` stays closed to scripts).
+- **E13** — 2026-12-23, `bun test scripts/guide-split.test.mjs scripts/reading-coverage.test.mjs scripts/runner-launcher-drift.test.mjs scripts/telemetry-coverage.test.mjs scripts/workflow-docs-index.test.mjs scripts/prose-gate-inventory.test.mjs` · exit 0 · `66 pass / 0 fail`.
+- **E14** — 2026-12-23, `bun scripts/version-parity-gate.mjs --content` · exit 0 · `VERDICT: PASS` (the changeset declares all three touched packages).
+- **E15** — 2026-12-23, `bun test scripts/structural-sibling-pins.test.mjs scripts/test-obligation-tags.test.mjs scripts/cli-coverage.test.mjs` · exit 0 · `38 pass / 0 fail`.
+- **E16** — 2026-12-23, the differential check against a `git archive main` copy: `unit-route <unit>`, `unit-route --triage <unit>`, `help unit-route` and `unit-route --help` are byte-identical on the same fixture tree, stdout, stderr and exit code; `help` differs only by the new `flow` row, which is the change itself.
+- **D2** — 2026-12-23, `--record` writes the composition into the unit's `decisions.md` instead of the unit doc's `## Log`: the ledger-ownership map forbids any script from writing `SPEC.md`, and the decision ledger is the one place a process records its own decision (`decisions.md` D11). The pair list moved from one script per ledger to a set so two scripts can be sanctioned for one ledger without losing either pin.
+- **E17** — 2026-12-23, `bun test scripts/telemetry-coverage.test.mjs` and `bun run --cwd packages/agentic-workflow-schema build && bun test test/telemetry.test.mjs` · exit 0 · the two new commands join `PHASE_LABELS` and the mirror suite agrees.
+- **G1** — 2026-12-23, HEAD `fad3e87da`, `bun scripts/local-gate.mjs --jobs auto --no-bail` · exit 1 · every step `PASS` except `crate-suite-bun`, whose only red suites are `doc.query` and `doc.hybrid` — measured failing identically on a `git archive main` copy (the embedding provider is absent in this environment). The four steps depending on it were skipped, not failed.
+- **E18** — 2026-12-23, `bun packages/agentic-workflow/bin/agentic-workflow.mjs verify docs/features/669-deterministic-lane-driver/SPEC.md` · exit 0 · `verify@1` receipt, obligations ledger closed.
 
 ## Next
 
-P2 — the driver's suite lands red against the missing `flow` subcommand.
+The operator's external verification of this handoff; then one PR against `main` (this unit is local and unpublished until then).
 
 ## References
 

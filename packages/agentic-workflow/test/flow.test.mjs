@@ -365,17 +365,18 @@ test("session composition is derived from the recorded tier and size", () => {
   }
 });
 
-test("--record writes the composition into the unit doc", () => {
+test("--record writes the composition into the unit's decision ledger", () => {
   const root = fixture({ planned: true, tier: "high" });
   try {
-    const spec = path.join(root, "docs", "features", "901-flow-fixture", "SPEC.md");
-    const before = fs.readFileSync(spec, "utf8");
+    const unitDir = path.join(root, "docs", "features", "901-flow-fixture");
+    const specBefore = fs.readFileSync(path.join(unitDir, "SPEC.md"), "utf8");
     const result = run(["901-flow-fixture", "--record"], root);
     assert.equal(result.status, 0, result.stderr);
-    const after = fs.readFileSync(spec, "utf8");
-    assert.notEqual(after, before, "--record writes");
-    assert.match(after, /^- \*\*D\d+\*\* — \d{4}-\d\d-\d\d, session composition: phase-per-turn — /mu, "one D line names the mode and its authority");
-    assert.ok(after.startsWith(before.split("## Log")[0]), "every byte before ## Log is untouched");
+    assert.equal(fs.readFileSync(path.join(unitDir, "SPEC.md"), "utf8"), specBefore, "the unit doc is never written by a script");
+    const ledger = fs.readFileSync(path.join(unitDir, "decisions.md"), "utf8");
+    assert.match(ledger, /^\| D1 \| \*\*Session composition\*\* — `phase-per-turn`/mu, "one row names the mode");
+    assert.match(ledger, /tier `high` · size `medium`/u, "the row names what the mode was derived from");
+    assert.match(ledger, /authority: flow driver/u, "the row names its authority, so it never reads as an owner decision");
   } finally {
     cleanup(root);
   }

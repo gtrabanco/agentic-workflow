@@ -67,7 +67,6 @@ new doc takes ownership of a task:
 | A new capability or integration surface | [`docs/CAPABILITIES.md`](docs/CAPABILITIES.md) |
 | Resuming a session, or what happened last | [`docs/LOGS.md`](docs/LOGS.md), [`docs/workflow/REPOSITORY_STATE.md`](docs/workflow/REPOSITORY_STATE.md) — the domain-separation safeguard's detail is [`docs/workflow/DOMAIN_SEPARATION.md`](docs/workflow/DOMAIN_SEPARATION.md) |
 | The tutorial as a whole | [`docs/workflow/README.md`](docs/workflow/README.md) — it owns the pages index |
-| Which command to run for a unit, and what it does next | [`docs/workflow/LIFECYCLE.md`](docs/workflow/LIFECYCLE.md) — the `/draft`, `/flow` and `/unit-lane` lifecycles, the review ladder, the command decision tree and the driver's four declared grammars |
 
 ## Deep references
 
@@ -85,6 +84,7 @@ while doing one kind of work is one hop away and read on demand:
 | [`docs/workflow/GATE_INVENTORY.md`](docs/workflow/GATE_INVENTORY.md) | asking whether a gate survives a compaction, and where its carrier lives |
 | [`docs/workflow/LOADING.md`](docs/workflow/LOADING.md) | asking which tier a document belongs to, what a session loads always, or where the volatile machine regions must sit inside a file |
 | [`docs/workflow/SKILLS.md`](docs/workflow/SKILLS.md) | looking up what a skill does, or where it runs in the flow |
+| [`docs/workflow/LIFECYCLE.md`](docs/workflow/LIFECYCLE.md) | choosing an entry (`/draft`, `/flow`, `/unit-lane`), or asking what the driver does next: the lifecycles, the review ladder to `MERGE-READY`, the command decision tree and the driver's four declared grammars |
 | [`docs/workflow/REPLICATE.md`](docs/workflow/REPLICATE.md) | replicating the workflow into another project |
 | [`docs/workflow/MIGRATION.md`](docs/workflow/MIGRATION.md) | landing a breaking surface, and needing the migration note beside it |
 | [`docs/workflow/SETUP.md`](docs/workflow/SETUP.md) | provisioning this repo's own authoring toolchain |
