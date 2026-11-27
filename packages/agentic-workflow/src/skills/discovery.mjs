@@ -6,7 +6,7 @@
  * with a browser or a registry's CLI) and the install is the owner's yes; what
  * must not be prose is the gate between them:
  *
- *   1. every candidate is screened with the seven `skill-lint` checks
+ *   1. every candidate is screened with the eight `skill-lint` checks
  *      (`./screen.mjs`, the same engine this repository's authoring lint runs)
  *      **before** any consent is asked — every skill file in the candidate's
  *      tree wherever it lives, and a tree that yields no skill file is

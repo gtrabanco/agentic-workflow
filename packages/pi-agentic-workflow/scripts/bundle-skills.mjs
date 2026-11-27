@@ -6,13 +6,18 @@
 //
 // Projection contract (issue #410 — deliberately rewritten from "nothing here
 // edits skill prose"): the staged copy is a *projection* of the canonical tree.
-// Two declared transforms write into it: the manifest's own rules
+// Three declared transforms write into it: the manifest's own rules
 // (`projection-manifest.json` at the package root), each of which removes or
 // pointerizes one declared prose section, resolved through the #407 section
 // locator and hash-bound to the exact bytes it removes
-// (`scripts/projection.mjs`); and the runner mapping (issue #696, below). A file
-// neither transform reaches is byte-identical to its source — always. The
-// standalone `skills/` tree is never edited: both read it and write only into the
+// (`scripts/projection.mjs`); the argument-hint normalisation (issue #726,
+// below), which makes every `argument-hint:` line `yaml@2.9.0` would not read as
+// a string a quoted YAML string pi's own frontmatter reader accepts — and
+// leaves block-scalar headers and multi-line raw values alone, since their
+// content already parses (or is the source's own defect); and the runner
+// mapping (issue #696, below). A file
+// none of them reaches is byte-identical to its source — always. The standalone
+// `skills/` tree is never edited: all transforms read it and write only into the
 // staged copy.
 //
 // Lifecycle (package.json): `prepare` stages it for local work, `test` stages it
@@ -119,9 +124,118 @@ function frontmatterEndOffset(text) {
   return match === null ? null : bom + match[0].length;
 }
 
+/** One frontmatter `argument-hint:` line: its prefix and its raw value. */
+const ARGUMENT_HINT_LINE = /^(argument-hint:[ \t]*)(.*)$/gmu;
+
+/**
+ * A YAML block-scalar header — `>`, `>-`, `|2`, `>-2`, `>2-`, `> #c` … yaml@2.9.0
+ * reads the indented content that follows as one string, and it accepts the
+ * chomping indicator and the indentation digits in either order, so both are
+ * admitted: quoting the header line orphans its content and breaks the whole
+ * frontmatter (decision D5, PE-018; cycle-1 finding F4).
+ */
+const BLOCK_HEADER = /^[|>](?:[+-][0-9]*|[0-9]+[+-]?)?(?:[ \t]+#.*)?$/u;
+
+/**
+ * YAML 1.2 core's non-string plain scalars — `null`/`~`, the booleans and the
+ * numeric forms — enumerated from measured `yaml@2.9.0` behaviour (PE-018). A
+ * hint YAML types as one of these is not the string the host renders, so it is
+ * quoted like any other shape the reader cannot read as a string.
+ */
+const CORE_NON_STRING =
+  /^(?:~|null|Null|NULL|true|True|TRUE|false|False|FALSE|[+-]?(?:0b[01_]+|0o[0-7_]+|0x[0-9a-fA-F_]+|[0-9][0-9_]*)(?:\.[0-9_]*)?(?:[eE][+-]?[0-9]+)?|[+-]?\.[0-9_]+(?:[eE][+-]?[0-9]+)?|[+-]?(?:\.inf|\.Inf|\.INF)|\.nan|\.NaN|\.NAN)$/u;
+
+/**
+ * Whether a value is already a complete single- or double-quoted YAML scalar.
+ * @param {string} value
+ * @returns {boolean}
+ */
+function isQuotedScalar(value) {
+  return /^"(?:[^"\\]|\\.)*"$/u.test(value) || /^'(?:[^']|'')*'$/u.test(value);
+}
+
+/**
+ * Whether a flow collection opened on this line is left open — a value such as
+ * `[--a,` whose continuation sits on the following indented lines. Quoting the
+ * first line would orphan that continuation, so the line is left alone (cycle-1
+ * finding F5). Brackets inside a quoted section do not count.
+ * @param {string} value
+ * @returns {boolean}
+ */
+function continuesBelow(value) {
+  let depth = 0;
+  let quote = null;
+  for (const character of value) {
+    if (quote !== null) {
+      if (character === "\\" && quote === '"') continue;
+      if (character === quote) quote = null;
+      continue;
+    }
+    if (character === '"' || character === "'") quote = character;
+    else if (character === "[" || character === "{") depth += 1;
+    else if (character === "]" || character === "}") depth -= 1;
+  }
+  return depth > 0;
+}
+
+/**
+ * Whether YAML reads a raw value as a plain string. A block-scalar header is
+ * one (its content follows); a comment-led value and YAML core's non-string
+ * scalars are not. Conservative by design: a shape this reader is not sure
+ * about is quoted, never left to the parser.
+ * @param {string} value
+ * @returns {boolean}
+ */
+function isPlainScalar(value) {
+  if (value === "") return false;
+  if (BLOCK_HEADER.test(value)) return true;
+  if (continuesBelow(value)) return true;
+  if (/^[\[{&*!|>'"%@`,#]/u.test(value)) return false;
+  if (/^[-?:](?:[ \t]|$)/u.test(value)) return false;
+  if (/: | #/u.test(value)) return false;
+  if (CORE_NON_STRING.test(value)) return false;
+  return !value.endsWith(":");
+}
+
+/**
+ * Quote a raw value as a YAML double-quoted scalar, escaping the two characters
+ * that have meaning inside one.
+ * @param {string} value
+ * @returns {string}
+ */
+function quoteScalar(value) {
+  return `"${value.replace(/\\/gu, "\\\\").replace(/"/gu, '\\"')}"`;
+}
+
+/**
+ * Make every `argument-hint:` line in a SKILL.md's frontmatter a YAML string
+ * without changing its text (issue #726, defect 1; cycle-1 findings F4-F6).
+ * pi reads frontmatter with a YAML parser, so a raw value starting with `[` is
+ * a flow sequence and rejects the whole file — the skill silently loses its
+ * `skill:*` command. An already-quoted value is left byte-identical; so is a
+ * block-scalar header, a value YAML reads as a plain string, and a value that
+ * continues on the following indented lines (a multi-line flow collection:
+ * quoting its first line would orphan the rest). Every `argument-hint:`
+ * occurrence is rewritten, not just the first: YAML's last key wins, so a
+ * duplicate left raw would be the value that ships.
+ * @param {string} text
+ * @returns {string}
+ */
+export function normalizeArgumentHint(text) {
+  const at = frontmatterEndOffset(text);
+  if (at === null) return text;
+  const head = text.slice(0, at).replace(ARGUMENT_HINT_LINE, (line, prefix, raw) => {
+    const value = raw.trim();
+    if (isQuotedScalar(value) || isPlainScalar(value)) return line;
+    return `${prefix}${quoteScalar(value)}`;
+  });
+  return head + text.slice(at);
+}
+
 /**
  * The declared projection of one staged skill file: the manifest rules that name
- * it, then — for a `SKILL.md` whose source cites the symbolic runner form — the
+ * it, the argument-hint normalisation a `SKILL.md` always receives (issue #726),
+ * then — for a `SKILL.md` whose source cites the symbolic runner form — the
  * mapping block spliced in after the frontmatter. Both the bundler and the parity
  * suite call this, so the expectation and the build cannot disagree.
  *
@@ -130,10 +244,11 @@ function frontmatterEndOffset(text) {
  */
 export function projectSkillFile({ source, rel, rules = [], mapping = null, context = "source" }) {
   const projected = rules.length > 0 ? applyProjection(source, rules, context) : source;
-  if (rel !== SKILL_FILE || mapping === null || !citesRunnerCitation(source)) return projected;
-  const at = frontmatterEndOffset(projected);
-  if (at === null) return `${mapping}\n\n${projected}`;
-  return `${projected.slice(0, at)}\n${mapping}\n${projected.slice(at)}`;
+  const hinted = rel === SKILL_FILE ? normalizeArgumentHint(projected) : projected;
+  if (rel !== SKILL_FILE || mapping === null || !citesRunnerCitation(source)) return hinted;
+  const at = frontmatterEndOffset(hinted);
+  if (at === null) return `${mapping}\n\n${hinted}`;
+  return `${hinted.slice(0, at)}\n${mapping}\n${hinted.slice(at)}`;
 }
 
 /**
@@ -241,7 +356,9 @@ function projectSkill(skill, stagedDir, rules, mapping) {
   for (const rel of listFiles(stagedDir)) {
     const fileRules = rulesFor(rules, `skills/${skill.slug}/${rel}`);
     const source = readFileSync(join(skill.dir, rel), "utf8");
-    const replaced = fileRules.length > 0 || (rel === SKILL_FILE && mapping !== null && citesRunnerCitation(source));
+    // Every SKILL.md is projected: the argument-hint normalisation is a
+    // per-file transform a manifest rule does not have to name.
+    const replaced = fileRules.length > 0 || rel === SKILL_FILE;
     if (!replaced) continue;
     const out = projectSkillFile({ source, rel, rules: fileRules, mapping, context: `skills/${skill.slug}/${rel}` });
     if (out === source) continue;
@@ -292,7 +409,7 @@ export function bundleSkills({ sourceDir, targetDir, manifestPath }) {
         return !rel.some((part) => part.startsWith(".") || part === "node_modules");
       },
     });
-    if (rules.length > 0 || mapping !== null) projected += projectSkill(skill, join(target, skill.slug), rules, mapping);
+    projected += projectSkill(skill, join(target, skill.slug), rules, mapping);
     included.push(skill.slug);
   }
 

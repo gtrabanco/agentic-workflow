@@ -79,7 +79,7 @@
         query terms — read-only, nothing fetched into the project;
      2. **screen before any consent is asked**:
         `runner skills discover --candidates <manifest> --root <dir>` prints the
-        `skill-discovery@1` envelope — the seven `skill-lint` checks plus
+        `skill-discovery@1` envelope — the eight `skill-lint` checks plus
         provenance (source, author, version, license). An excluded candidate is
         reported with the finding that excluded it, and is never offered;
      3. **ask per candidate** — what it reviews, the surface type it targets, its

@@ -144,7 +144,7 @@ destinations below are what each gap class resolves to, and no bespoke route is
 introduced here:
 
 - a recommended external skill covers the gap → `runner skills discover`
-  (#591's route: trusted registries → the seven `skill-lint` checks → per-candidate
+  (#591's route: trusted registries → the eight `skill-lint` checks → per-candidate
   owner consent), with the install and its registration as separate decisions
 - an own skill or gate is warranted → a proposal: `/unit-lane` builds it under its
   gates, never this audit

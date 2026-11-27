@@ -2,7 +2,7 @@
 name: aw-doctor
 user-invocable: true
 version: 4.10.1
-argument-hint: [--unit <slug>] [--search "<words>"] [--candidate <n>]
+argument-hint: "[--unit <slug>] [--search \"<words>\"] [--candidate <n>]"
 description: >
   Short name for /agentic-workflow-doctor: one user-initiated pass over this
   project's own ceremony-failure record, a fixed discard/report rubric, one

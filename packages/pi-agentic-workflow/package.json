@@ -22,7 +22,7 @@
   "pi": {
     "extensions": [
       "./dist/extension/index.js",
-      "./node_modules/pi-extensible-workflows/dist/subagents/index.js"
+      "./dist/extension/subagents-entry.js"
     ],
     "skills": [
       "./skills"
@@ -67,7 +67,8 @@
   },
   "devDependencies": {
     "@types/node": "26.6.6",
-    "typescript": "7"
+    "typescript": "7",
+    "yaml": "2.9.0"
   },
   "agenticWorkflow": {
     "config": "./agentic-workflow.config.json"

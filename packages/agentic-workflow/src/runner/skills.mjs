@@ -5,7 +5,7 @@
  * Three verbs, one contract each:
  *
  *   discover   read a candidates manifest, screen every candidate's tree with the
- *              seven `skill-lint` checks plus provenance, print the
+ *              eight `skill-lint` checks plus provenance, print the
  *              `skill-discovery@1` block with a row per candidate and its consent
  *              record. Read-only and offline: no fetch, no installer, no write.
  *   register   append one `review-extras@1` row to the guide's "Optional review
