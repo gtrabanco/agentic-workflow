@@ -435,6 +435,7 @@ release carries both sides (S9) and the fix row leaves `docs/ROADMAP.md`.
 - Issue [#678](https://github.com/gtrabanco/agentic-workflow/issues/678) — the same seam class one layer down (the tool's `execute` signature), whose suite shape this unit's pin follows.
 - Issue [#696](https://github.com/gtrabanco/agentic-workflow/issues/696) — the `runner-mapping@1` block's owner and injector, the surface this unit's rule extends.
 - Issue [#710](https://github.com/gtrabanco/agentic-workflow/issues/710) — the same directive's launcher defect; its suite is where the call's shape now lives.
+- PR [#737](https://github.com/gtrabanco/agentic-workflow/pull/737) — this unit's delivery; the `## Fixes` row settles to `done` on it.
 
 ## Branch
 
