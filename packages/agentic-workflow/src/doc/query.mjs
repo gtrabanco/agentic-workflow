@@ -67,7 +67,13 @@ function logEntryMatches(entry, filters) {
   return true;
 }
 
-async function storeValue(root) {
+/**
+ * The store's `record` for the envelope: path, presence, files, chunks —
+ * tolerant of an absent store and of one whose `chunks` table has not been
+ * created yet (AC11). Exported for the sync pass' fenced path, which reads it
+ * without scanning (issue #718, the pre-scan fence).
+ */
+export async function storeValue(root) {
   if (!storePresent(root)) {
     return { path: storePath(root), present: false, files: 0, chunks: 0 };
   }

@@ -37,6 +37,7 @@ import { storePath, storePresent, manifestExportPath } from "./store.mjs";
 import { loadConfig } from "./config.mjs";
 import { collectManifest, canonicalJson } from "./manifest.mjs";
 import { scanChunks } from "./chunks.mjs";
+import { heartbeatLease } from "./embeddings.mjs";
 
 const SCHEMA = `
 CREATE TABLE IF NOT EXISTS chunks (
@@ -121,9 +122,16 @@ export async function storeStats(root) {
  * Issue #424: `opts.onProgress(done, total, path)` is called once per file the
  * pass reaps or re-chunks, so a CLI can report where the scan is. It is a plain
  * callback with no channel knowledge: a caller that passes none pays nothing.
+ *
+ * Issue #718 (the pre-scan fence): `opts.leaseOwner` is the owner token of a
+ * lease the caller holds across this scan. Each per-file report heartbeats that
+ * row **on this connection** — the one whose transaction is open — so a long
+ * cold scan never expires its own pass' lease; a caller that passes none pays
+ * nothing.
  */
 export async function syncIndex(root, opts = {}) {
   const exclusions = opts.exclusions;
+  const leaseOwner = opts.leaseOwner ?? null;
   const onProgress = typeof opts.onProgress === "function" ? opts.onProgress : null;
   loadConfig(root); // config errors surface here too (usage/IO), even in sync
   const manifest = collectManifest(root, { exclusions });
@@ -159,9 +167,11 @@ export async function syncIndex(root, opts = {}) {
   const total = changed.length + deleted.length;
   let processed = 0;
   const report = (path) => {
-    if (onProgress === null) return;
-    processed += 1;
-    onProgress(processed, total, path);
+    if (onProgress !== null || leaseOwner !== null) {
+      processed += 1;
+      if (leaseOwner !== null) heartbeatLease(db, leaseOwner, Date.now());
+      if (onProgress !== null) onProgress(processed, total, path);
+    }
   };
   db.exec("BEGIN");
   try {

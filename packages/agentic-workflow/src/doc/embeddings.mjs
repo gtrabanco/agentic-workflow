@@ -235,14 +235,59 @@ function acquireLease(db, owner, ttlMs, at) {
   return changes === 1;
 }
 
-/** Keep the row fresh while the pass runs, so only a dead pass ever expires. */
-function heartbeatLease(db, owner, at) {
+/**
+ * Keep the row fresh while the pass runs, so only a dead pass ever expires.
+ * Runs on a connection that already holds the store's writes (the embed pass'
+ * own open, or the scan's — exported for `syncIndex`'s per-file seam): a
+ * heartbeat from a *second* connection inside another connection's open
+ * transaction is a same-process lock against the caller's own stack and dies
+ * at the busy timeout.
+ */
+export function heartbeatLease(db, owner, at) {
   db.prepare("update doc_lease set heartbeat = ? where name = ? and owner = ?").run(at, LEASE_NAME, owner);
 }
 
 /** Give the store back: the owner's row only, never a row someone took over. */
 function releaseLease(db, owner) {
   db.prepare("delete from doc_lease where name = ? and owner = ?").run(LEASE_NAME, owner);
+}
+
+/**
+ * The pass-level lease (issue #718 S5 — the pre-scan fence, external-verify
+ * 2026-11-27 A4/A5): one connection that takes the store's lease row before
+ * `--sync`'s scan writes a byte, so a fenced pass never contends for the scan
+ * lock and a late re-chunk cannot land beside an embedded store. Returns
+ * `{ owner, release }` when acquired and `null` when a live pass owns the
+ * store. Heartbeats come from the writers themselves — the scan's per-file
+ * seam on its own connection (PE-019) and every provider request — so this
+ * row's only other life is the release the caller performs in its `finally`;
+ * a crashed pass leaves the row to the TTL takeover. Rebuild cannot
+ * span a lease — its discard deletes the store file — so it keeps the
+ * embed-stage acquisition `embedPendingChunks` does for itself.
+ */
+export async function openEmbedLease(root, pacing) {
+  const { db } = await openDatabase(storePath(root));
+  try {
+    // A second writer waits for the store's lock instead of failing the pass
+    // with SQLITE_BUSY — the same patience embedPendingChunks' own open has.
+    db.exec("pragma busy_timeout = 5000");
+    ensureLeaseTable(db);
+    const owner = `${process.pid}-${randomUUID()}`;
+    if (!acquireLease(db, owner, leaseTtlMs(pacing), Date.now())) {
+      db.close();
+      return null;
+    }
+    return {
+      owner,
+      release: () => {
+        releaseLease(db, owner);
+        db.close();
+      },
+    };
+  } catch (error) {
+    db.close();
+    throw error;
+  }
 }
 
 /** A failed response's body, bounded and whitespace-collapsed; "" when it cannot be read. */
@@ -306,16 +351,21 @@ export async function embeddingStats(root, model = null) {
  * `pacing` (a partial merged over the resolved policy), `maxRequestChars` (the
  * request budget), `sleep`, `now` and `random`; production resolves the policy
  * and the budget from the config + environment and sleeps for real.
+ * `leaseOwner` (additive, issue #718) hands in the owner token of a lease the
+ * caller already holds through `openEmbedLease`: this call then heartbeats that
+ * row and never acquires or releases it — only a lease it took for itself is
+ * released in the `finally`.
  *
  * `onProgress(done, total)` — optional callback invoked after each batch
  * completes and at the end with the final totals, so callers can report
  * progress over the wall-clock duration of the embed pass.
  *
  * One pass owns the store's pending set (issue #718 S5): the advisory
- * `doc_lease` row is taken before the pending rows are read, heartbeated per
- * request, and released when the pass ends. A pass that finds a live lease
- * embeds nothing, returns `{leaseHeld: true}` and leaves the chunks pending —
- * concurrent runs are idempotent on the rows but not on the provider bill.
+ * `doc_lease` row is taken before the pending rows are read — or handed down
+ * from `--sync`'s pre-scan acquisition — heartbeated per request, and released
+ * when the pass ends. A pass that finds a live lease embeds nothing, returns
+ * `{leaseHeld: true}` and leaves the chunks pending — concurrent runs are
+ * idempotent on the rows but not on the provider bill.
  */
 export async function embedPendingChunks(root, provider, opts = {}) {
   const config = loadConfig(root);
@@ -330,6 +380,7 @@ export async function embedPendingChunks(root, provider, opts = {}) {
 
   const { db } = await openDatabase(storePath(root));
   let leaseOwner = null;
+  let selfHeld = false;
   try {
     ensureEmbeddingColumns(db);
     const pinned = db.prepare("select value from meta where key = 'emb_model'").get();
@@ -340,10 +391,18 @@ export async function embedPendingChunks(root, provider, opts = {}) {
     // A second writer waits for the store's lock instead of failing the pass
     // with SQLITE_BUSY (the lease already keeps two passes from embedding).
     db.exec("pragma busy_timeout = 5000");
-    ensureLeaseTable(db);
-    leaseOwner = `${process.pid}-${randomUUID()}`;
-    if (!acquireLease(db, leaseOwner, leaseTtlMs(pacing), now())) {
-      return { embedded: 0, calls: 0, model: provider.model, rejected: [], leaseHeld: true };
+    if (opts.leaseOwner != null) {
+      // The pass-level lease already owns the store (issue #718 — the pre-scan
+      // fence): heartbeat the caller's row per request; acquire and release
+      // stay the caller's.
+      leaseOwner = opts.leaseOwner;
+    } else {
+      ensureLeaseTable(db);
+      leaseOwner = `${process.pid}-${randomUUID()}`;
+      if (!acquireLease(db, leaseOwner, leaseTtlMs(pacing), now())) {
+        return { embedded: 0, calls: 0, model: provider.model, rejected: [], leaseHeld: true };
+      }
+      selfHeld = true;
     }
 
     const pin = () =>
@@ -457,7 +516,7 @@ export async function embedPendingChunks(root, provider, opts = {}) {
     if (onProgress) onProgress(embedded, totalPending);
     return { embedded, calls, model: provider.model, rejected };
   } finally {
-    if (leaseOwner !== null) releaseLease(db, leaseOwner);
+    if (selfHeld) releaseLease(db, leaseOwner);
     db.close();
   }
 }
