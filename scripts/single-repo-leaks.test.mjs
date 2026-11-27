@@ -43,7 +43,7 @@ import {
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const BIN = path.join(REPO, "packages", "agentic-workflow", "bin", "agentic-workflow.mjs");
-const CENSUS = path.join(REPO, "docs", "fix", "717-single-repo-leaks", "census.md");
+const CENSUS = path.join(REPO, "docs", "fix", "717-audit-single-repo-leaks", "census.md");
 /** The closed classification vocabulary (`D1`): the union of S4 and S11. */
 const CLASSIFICATIONS = Object.freeze([
   "declared-convention",

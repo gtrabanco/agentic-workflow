@@ -5,7 +5,7 @@ ac-hash: e34222fca4cce4d2067b033936b16563344a8798baae0080c9246fd200bf3757
 roadmap_summary: Issue [#717](https://github.com/gtrabanco/agentic-workflow/issues/717) (M): the single-repo-leak census — every CLI subcommand declares whether it resolves a project path or a product path, the read-only ones are run once against a foreign-tree fixture, and the three confirmed leaks are repaired by naming the product fact they were silently assuming.
 ---
 
-# fix/717-single-repo-leaks
+# fix/717-audit-single-repo-leaks
 
 > One-line: a shipped command may read a project-owned path from the project and
 > a product-owned path from the installed package — never a product path from the
@@ -102,11 +102,11 @@ Frozen at the cut; `ac-hash:` in the frontmatter is this section's SHA-256
 (heading and the next `## ` excluded). One criterion per requirement, each
 naming the check that proves it.
 
-1. **S1 — the order is applied inline against the frozen ledgers.** `git log --oneline main..HEAD` carries only this unit's conventional commits, and `rg -n 'review-change|audit-pr' docs/fix/717-single-repo-leaks/` matches only the workflow text quoted in `## Log` L2 and the decisions that record the exemption.
+1. **S1 — the order is applied inline against the frozen ledgers.** `git log --oneline main..HEAD` carries only this unit's conventional commits, and `rg -n 'review-change|audit-pr' docs/fix/717-audit-single-repo-leaks/` matches only the workflow text quoted in `## Log` L2 and the decisions that record the exemption.
 2. **S2 — the inventory is the whole shipped CLI, not a sample.** `bun test scripts/single-repo-leaks.test.mjs` exits 0 with the case `S2: every subcommand the CLI publishes declares its path-resolution class`, which reads `runner help --json` and the help registry and refuses a command with no declaration or a declaration outside the closed set.
 3. **S3 — the test is mechanized on a foreign tree.** `bun test scripts/single-repo-leaks.test.mjs` exits 0 with the case `S3: a read-only command on a foreign tree names no product-internal path`, which builds the fixture consumer tree (`src/**`, no `packages/`, no root `skills/`, no `template/`) and refuses any occurrence of a product-only path in a read-only command's stdout or stderr.
 4. **S4 — every candidate carries one classification from the closed set.** `bun test scripts/single-repo-leaks.test.mjs` exits 0 with the case `S4: the census classifies all six candidates with a reproducer`, which parses `census.md` and requires one row per candidate, each with a value from `declared-convention | construction-only (documented) | construction-only (undocumented) | defect | intentional` and a backticked reproducer command.
-5. **S5 — the phase-lint decision is recorded and the refusal names its cause.** `bun test scripts/phase-lint.test.mjs` exits 0 with the case `S5: an unmapped target fails closed by name, citing the grammar scope`, asserting `verdict BLOCKED: layer-unknown` plus the offending token for a foreign-tree target, while `verdict BLOCKED: unparseable` keeps its other causes; `docs/fix/717-single-repo-leaks/decisions.md` carries the `D` row that resolves S5's open question.
+5. **S5 — the phase-lint decision is recorded and the refusal names its cause.** `bun test scripts/phase-lint.test.mjs` exits 0 with the case `S5: an unmapped target fails closed by name, citing the grammar scope`, asserting `verdict BLOCKED: layer-unknown` plus the offending token for a foreign-tree target, while `verdict BLOCKED: unparseable` keeps its other causes; `docs/fix/717-audit-single-repo-leaks/decisions.md` carries the `D` row that resolves S5's open question.
 6. **S6 — test-obligation-tags answers on a consumer tree and never passes an empty estate.** `bun test scripts/test-obligation-tags.test.mjs` exits 0 with the cases `S6: the vocabulary resolves from the installed schema package, not the project root` and `S6: an estate with no suite refuses instead of passing`, the latter asserting `verdict: FAIL` with `estate-empty` on a root that carries no suite.
 7. **S7 — dimension-regression names an absent carrier.** `bun test scripts/dimension-regression.test.mjs` exits 0 with the case `S7: an absent carrier is named instead of compared`, asserting a `carrier | … absent` line and a `carrier-missing` refusal when the range touches a review surface and `DIMENSIONS_REL` does not resolve.
 8. **S8 — the citation grammar has one documented consumer-side rule.** `rg -c 'repo-relative to the installed' skills/orchestration-envelope/references/PORTABILITY.md` matches at least 1, and `bun scripts/skill-lint.mjs` exits 0 with the census citing that owner row.
@@ -257,9 +257,9 @@ command's own output, `## Log` E1).
 
 ## Tasks
 
-- P1 — Cut the unit doc, the two ledgers, the decision record, the known-issues record and the census's skeleton, and freeze the acceptance criteria (validator: `bun packages/agentic-workflow/bin/agentic-workflow.mjs verify docs/fix/717-single-repo-leaks/SPEC.md --no-git` exits 0)
+- P1 — Cut the unit doc, the two ledgers, the decision record, the known-issues record and the census's skeleton, and freeze the acceptance criteria (validator: `bun packages/agentic-workflow/bin/agentic-workflow.mjs verify docs/fix/717-audit-single-repo-leaks/SPEC.md --no-git` exits 0)
   (Implements: S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12)
-  - Relevant files: docs/fix/717-single-repo-leaks/SPEC.md, docs/fix/717-single-repo-leaks/planning-evidence.md, docs/fix/717-single-repo-leaks/planning-obligations.md, docs/fix/717-single-repo-leaks/decisions.md, docs/fix/717-single-repo-leaks/known-issues.md, docs/fix/717-single-repo-leaks/census.md
+  - Relevant files: docs/fix/717-audit-single-repo-leaks/SPEC.md, docs/fix/717-audit-single-repo-leaks/planning-evidence.md, docs/fix/717-audit-single-repo-leaks/planning-obligations.md, docs/fix/717-audit-single-repo-leaks/decisions.md, docs/fix/717-audit-single-repo-leaks/known-issues.md, docs/fix/717-audit-single-repo-leaks/census.md
 - P2 — RED: the conformance suite lands alone and is observed failing on the leaks it judges (validator: `bun test scripts/single-repo-leaks.test.mjs` exits 1 on the named cases, recorded as an `E` line)
   (Implements: S2, S3, S4, S10, S11)
   - Relevant files: scripts/single-repo-leaks.test.mjs
@@ -277,16 +277,16 @@ command's own output, `## Log` E1).
   - Relevant files: packages/agentic-workflow/src/dimension-regression/index.mjs, scripts/dimension-regression.test.mjs
 - P7 — The census: every candidate classified from the closed set with its reproducer, its litmus receipt and its route (validator: `bun test scripts/single-repo-leaks.test.mjs` exits 0 with the `S4` case green)
   (Implements: S3, S4, S5, S6, S7, S8, S9, S11)
-  - Relevant files: docs/fix/717-single-repo-leaks/census.md, skills/orchestration-envelope/references/PORTABILITY.md
+  - Relevant files: docs/fix/717-audit-single-repo-leaks/census.md, skills/orchestration-envelope/references/PORTABILITY.md
 - P8 — Docs currency: the dimension section, the gate row, the normative-surface row, the README rows (validator: `bun scripts/skill-lint.mjs` exits 0 and `bun scripts/prose-gate-inventory.mjs` exits 0)
   (Implements: S8, S10)
   - Relevant files: skills/product-audit/references/AUDIT_DIMENSIONS.md, docs/workflow/GATE_INVENTORY.md, AGENTS.md, packages/agentic-workflow/README.md, skills/orchestration-envelope/references/PORTABILITY.md
-- P9 — State: the roadmap row through the emitter, the changeset and the session journal fragment (validator: `bun scripts/docs-generate.mjs --check` exits 0 and `bun scripts/lint-changeset.mjs .changeset/717-single-repo-leaks.md` exits 0)
+- P9 — State: the roadmap row read (hand-owned), the changeset and the session journal fragment (validator: `bun scripts/docs-generate.mjs --check` exits 0 and `bun scripts/lint-changeset.mjs .changeset/717-audit-single-repo-leaks.md` exits 0)
   (Implements: S1, S12)
-  - Relevant files: docs/ROADMAP.md, .changeset/717-single-repo-leaks.md, .agentic-workflow/journal/
+  - Relevant files: docs/ROADMAP.md, .changeset/717-audit-single-repo-leaks.md, .agentic-workflow/journal/
 - P10 — Verification: the frozen corpus green, the differential against the base commit, the obligations ledger closed (validator: `bun scripts/local-gate.mjs` exits 0 and every obligations row reads `verified`)
   (Implements: S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12)
-  - Relevant files: docs/fix/717-single-repo-leaks/planning-obligations.md, docs/fix/717-single-repo-leaks/SPEC.md
+  - Relevant files: docs/fix/717-audit-single-repo-leaks/planning-obligations.md, docs/fix/717-audit-single-repo-leaks/SPEC.md
 
 ## Triaged steps
 
@@ -300,7 +300,7 @@ Skipped: research: trivial scope, design: trivial scope, release: not a feature
 Budget: strong
 relay: bootstrap-needed — no packet at .pi-web/relays/717-single-repo-leaks
 relay-seam: ask (relay.seam; absent = ask) — the question stays open
-relay-next: create .pi-web/relays/717-single-repo-leaks/ (charter → docs/fix/717-single-repo-leaks/SPEC.md) · ASK the owner: relay legs, or inline `/execute-phase 717-single-repo-leaks P1` · STOP for the answer · on "relay" set `State: Active` in .pi-web/relays/717-single-repo-leaks/status.md then dispatch_relay(packet: ".pi-web/relays/717-single-repo-leaks", leg: "1") as the final action · legs: 11 = 10 phases + 1 coherence review
+relay-next: create .pi-web/relays/717-single-repo-leaks/ (charter → docs/fix/717-audit-single-repo-leaks/SPEC.md) · ASK the owner: relay legs, or inline `/execute-phase 717-single-repo-leaks P1` · STOP for the answer · on "relay" set `State: Active` in .pi-web/relays/717-single-repo-leaks/status.md then dispatch_relay(packet: ".pi-web/relays/717-single-repo-leaks", leg: "1") as the final action · legs: 11 = 10 phases + 1 coherence review
 ```
 
 ## Findings
@@ -324,20 +324,22 @@ relay-next: create .pi-web/relays/717-single-repo-leaks/ (charter → docs/fix/7
 - **P5** — 2026-12-24, `test-obligation-tags` imports the published obligation set from the schema package, reports the tag-grammar owner doc `n/a — product-internal` on a tree that does not carry it, and refuses `estate-empty`.
 - **P6** — 2026-12-24, `dimension-regression` names an absent carrier and refuses `carrier-missing` instead of comparing zero dimensions.
 - **P4/P5/P6** — 2026-12-24, the three repairs and their suite cases. Commit `804a36ca6`.
-- **E3** — 2026-12-24, `bun test scripts/single-repo-leaks.test.mjs` · exit 0 · 11 pass / 0 fail.
+- **E3** — 2026-12-24, `bun test scripts/single-repo-leaks.test.mjs` · exit 0 · 11 pass / 0 fail — the cases: `S2: every subcommand the CLI publishes declares its path-resolution class`, `S2: a registry entry without a declaration or with an unknown one is refused by name`, `S3: a read-only command on a foreign tree names no product-internal path`, `S3: the leak rule measures resolution, not wording`, `S4: the census classifies all six candidates with a reproducer`, `S10: the producer prints the receipt with zero findings and refuses a missing root`, `S10: an undeclared command fails the producer`, `S11 (a): a consumer-tree unit doc lints in the unit-doc grammar`, `S11 (b): the foreign-tree estate run names its legs instead of reporting a silent zero`, `S7: a carrier absent from the measured tree is named, never compared as zero`, `S10: the census contract is published and the suite declares its own surface`.
 - **E4** — 2026-12-24, `bun scripts/single-repo-leaks.mjs` · exit 0 · `declared | 78 subcommand(s) · project 67 · product 7 · host 4`, `probe | 13 read-only project command(s) executed · 13 declared`, `verdict PASS`.
-- **E5** — 2026-12-24, `bun test scripts/phase-lint.test.mjs` · exit 0 · 164 pass / 0 fail (the corpus grew two cases: the named refusal and the regression that `unparseable` keeps its other causes; four pre-existing cases that asserted `unparseable` on an unmappable target now assert the named code — `D7`).
-- **E6** — 2026-12-24, `bun test scripts/test-obligation-tags.test.mjs` · exit 0 · 24 pass / 0 fail.
-- **E7** — 2026-12-24, `bun test scripts/dimension-regression.test.mjs` · exit 0 · 12 pass / 0 fail.
+- **E5** — 2026-12-24, `bun test scripts/phase-lint.test.mjs` · exit 0 · 164 pass / 0 fail — `S5: an unmapped target fails closed by name, citing the grammar scope` and `S5: the untokenizable class keeps unparseable, so the new reason is not a rename` are the two cases this unit adds (the corpus grew two cases: the named refusal and the regression that `unparseable` keeps its other causes; four pre-existing cases that asserted `unparseable` on an unmappable target now assert the named code — `D7`).
+- **E6** — 2026-12-24, `bun test scripts/test-obligation-tags.test.mjs` · exit 0 · 24 pass / 0 fail, both new cases among them: `S6: the vocabulary resolves from the installed schema package, not the project root` and `S6: an estate with no suite refuses instead of passing`.
+- **E7** — 2026-12-24, `bun test scripts/dimension-regression.test.mjs` · exit 0 · 12 pass / 0 fail, the new case `S7: an absent carrier is named instead of compared` among them.
 - **E8** — 2026-12-24, the litmus on the consumer fixture (`src/**`, no `packages/`, no root `skills/`): `phase-lint docs/features/49-ledger/PLAN.md` → exit 1, `P1 box-2: task 1 target \`src/pages/ledger.ts\` belongs to no layer …` + `verdict BLOCKED: layer-unknown`; `phase-lint docs/fix/49-ledger/SPEC.md` → exit 0, `PASS (6/6)` + `verdict PASS`; `test-obligation-tags --root <fixture>` → exit 1, `estate-empty … verdict: FAIL`; `dimension-regression --root <fixture> --base HEAD` → `carrier | skills/product-audit/references/AUDIT_DIMENSIONS.md absent`, `verdict | not-applicable`.
 - **E9** — 2026-12-24, the package and root suites this change touches: crate `cli.help` 18/0, `cli.surface` 12/0, `runner.dispatch` 7/0 (each +0 fail); root `prose-gate-inventory` 22/0, `check-skill-context` 1/0, `guide-split` 17/0, `residue-dimensions` 30/0, `structural-sibling-pins` 8/0, `cli-coverage` 8/0, `invocation-drift` 13/0, `restatement-sweep` 10/0, `gate-producer-drift` 10/0, `normative-drift` 24/0.
-- **E10** — 2026-12-24, the linters and emitters: `bun scripts/skill-lint.mjs` · exit 0 · `0 finding(s)`; `bun scripts/check-skill-context.mjs` · exit 0 · `PASS context budgets: 33 skills`; `--routes` · exit 0 · `PASS route budgets: 14 routes`; `--documents` · exit 0 · `PASS context documents: 7 budgeted documents`; `bun packages/agentic-workflow/bin/agentic-workflow.mjs prose-gate-inventory` · exit 0 · `verdict: PASS`; `bun scripts/docs-generate.mjs --check` · exit 0 · `verdict: PASS`; `bun scripts/lint-changeset.mjs .changeset/717-single-repo-leaks.md` · exit 0 · `ok`.
+- **E10** — 2026-12-24, the linters and emitters: `bun scripts/skill-lint.mjs` · exit 0 · `0 finding(s)`; `bun scripts/check-skill-context.mjs` · exit 0 · `PASS context budgets: 33 skills`; `--routes` · exit 0 · `PASS route budgets: 14 routes`; `--documents` · exit 0 · `PASS context documents: 7 budgeted documents`; `bun packages/agentic-workflow/bin/agentic-workflow.mjs prose-gate-inventory` · exit 0 · `verdict: PASS`; `bun scripts/docs-generate.mjs --check` · exit 0 · `verdict: PASS`; `bun scripts/lint-changeset.mjs .changeset/717-audit-single-repo-leaks.md` · exit 0 · `ok`.
 - **E11** — 2026-12-24, the differential against the base commit `67133da45` (two `git archive` copies under `mktemp -d`, both `bun install --frozen-lockfile`, same commands, same cwd shape): `restatement-sweep` and `unit-route 716` are byte-identical on stdout, stderr and exit; `prose-gate-inventory` differs on one line only — a resolved anchor moves `phase-lint.mjs:887` → `:897` because the module grew (the receipt prints a location, not a result); `test-obligation-tags` differs on one line only — `147 suite(s)` → `148`, the suite this unit adds. Both differences are the change itself, and nothing else moved.
 - **P7** — 2026-12-24, the census: six candidates classified from the closed set with their reproducers, the sweep result and the two litmus receipts. Commit `d61628e82`.
 - **P8** — 2026-12-24, docs currency: the audit dimension and its sweep section, the gate row, the normative-surface row, the three budget re-bases with their declared growth sources, the crate README rows and the citation rule. Commit `d61628e82`.
 - **P9** — 2026-12-24, state: the changeset, the journal fragment written through `journal write`, and the roadmap row read — it already exists with its hand-owned `pending` cell, which the emitter never rewrites (a fix row is removed after its merge, never re-derived), so no hand edit was made. Commit `d61628e82`.
 - **E12** — 2026-12-24, `bun scripts/local-gate.mjs --jobs auto` (first run) · exit 1 · bailed at `root-suite`: `scripts/dimension-regression.test.mjs` refused the live table because its `FROZEN` pin did not carry the new dimension. That pin is the maintenance the suite's own docstring prescribes ("adding a dimension means extending it here in the same change"), so it now names `Distributable-surface scope` last; no assertion was relaxed.
 - **E13** — 2026-12-24, `runner dimension-regression --base 67133da45` (the same run as `bun packages/agentic-workflow/bin/agentic-workflow.mjs dimension-regression --base 67133da45`) · before the record: `20 dimensions` at the base, `21` at the head, `refused` on `missing-reverification-evidence`; this line is the record, and the re-run after it reports the same 20 → 21 with `clean` (`E14`).
+- **E14** — 2026-12-24, `bun scripts/local-gate.mjs --only "workspace-install,schema-build,root-suite,version-parity-content,docs-generated-projection,skill-context-budgets,journal-carrier-check,log-immutability,secret-scan,temp-hygiene,tmp-gc,worktree-guard,rigidity-review,dimension-regression,schema-node-compat,pi-compat-guard,dependency-pin-gate,machine-ledger-commit,dependency-advisories" --jobs 2` · exit 0 · `local-gate: PASS — 17 step(s) in 349s` (`root-suite` 148 suites, `dependency-advisories` `found 0 vulnerabilities`, `pi-compat-guard` both legs `tsc --noEmit clean`). Three steps stay red for pre-existing, environment-dependent causes reproduced at the base commit `67133da45`: `crate-suite-bun`/`crate-suite-node` (3 + 6 doc/embedding cases, identical names at both commits — K6) and `pi-node-compat` (11 failing embedding-profile cases at the base, 6 at the head — K7). Two earlier gate runs were red on this unit's own drift and were repaired, not excused: the dimension suite's `FROZEN` pin (E12) and the unit folder's slug against the roadmap row (renamed to `docs/fix/717-audit-single-repo-leaks/`, the row's own topic).
+- **P10** — 2026-12-24, verification: the frozen corpus green (E3, E5–E7), the declaration and the probe green (E4), the linters and emitters green (E10), the differential explained line by line (E11), and the gate's 17 non-environment steps green with the three pre-existing reds named (E14, K6, K7). The obligation ledger is closed: 14 of 14 rows `verified`. Commit `<this commit>`.
 - **L2** — 2026-12-24, the operator's governing workflow for this application, verbatim (the part that binds the procedure):
   ```
   ## 0. Resolve the intent from state before acting
@@ -356,8 +358,8 @@ relay-next: create .pi-web/relays/717-single-repo-leaks/ (charter → docs/fix/7
 
 ## Next
 
-P2 — land the conformance suite alone and observe it failing on the leaks it
-judges.
+The owner's external verification: read the diff, the census and the obligations
+ledger, and give the verdict. Nothing else is pending on this branch.
 
 ## References
 
@@ -368,7 +370,7 @@ judges.
 - `docs/fix/597-scope-manifest/` (issue #553) — the precedent the S6 repair
   follows: the installed package is the dependency, the repo-relative path is
   not.
-- `docs/fix/717-single-repo-leaks/census.md` — the census itself.
+- `docs/fix/717-audit-single-repo-leaks/census.md` — the census itself.
 
 ## Branch
 

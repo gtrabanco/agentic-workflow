@@ -133,7 +133,7 @@ deliberately *not* the instrument: it cannot separate a resolved path from a
 prose citation (measured at 458 raw hits, 138 with comments stripped, dominated
 by citations), so it measures wording instead of resolution (issue #717,
 `D3`). The census that applied the sweep to the six candidates it was opened with
-is `docs/fix/717-single-repo-leaks/census.md`.
+is `docs/fix/717-audit-single-repo-leaks/census.md`.
 
 ### The receipt grammar (`single-repo-leaks@1`)
 

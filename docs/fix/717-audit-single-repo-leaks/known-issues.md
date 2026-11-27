@@ -78,3 +78,43 @@ occurrences are prose, and a lexical allowlist would measure wording (`D3`).
 finding that the rule is being restated rather than cited.
 
 **Affects.** S8's criterion is the rule's presence plus `skill-lint` green.
+
+## K6 — the crate suite's document/embedding legs are red at the base commit on this box
+
+**Measured.** At the head, `crate-suite-bun` fails 3 cases in
+`packages/agentic-workflow/test/doc.query.test.mjs` (`returns rows with path,
+section, lines, score, meta`, `answers offline with no key and no network`,
+`answers offline at the CLI level too`) and 6 in `doc.hybrid.test.mjs` (the
+`--rebuild`/sync/provider-down family). At the base commit `67133da45`, in a
+separate `git archive` checkout with its own `bun install --frozen-lockfile` and
+`bun run build`, the **same** suites fail the **same** 3 + 6 cases with identical
+names (only timings differ).
+
+**Decision.** Pre-existing and environment-dependent (no embedding provider /
+offline on this host), not this unit's change; the failing sets are compared by
+name, not by count. The gate cannot exit 0 on this box for that cause, so the
+verification block reports the 17 steps that pass and these three by name.
+
+**Re-trigger.** A host with the embedding provider configured, or the unit that
+owns the doc/embedding offline answers.
+
+**Affects.** Nothing in this unit: no obligation's validator is a document or
+embedding case.
+
+## K7 — `pi-node-compat` is red at the base commit too, and flaky in count
+
+**Measured.** `cd packages/pi-agentic-workflow && bun run test:node` fails 11
+tests at the base commit `67133da45` and 6 at this head, all in the
+embedding-profile family (`embed-profile-default-on`, `withhold`, `tuning`,
+`#719 AC6`). The failing set shifts between runs — each case resolves a provider
+from the environment.
+
+**Decision.** Pre-existing and environment-dependent; the count differs because
+the cases read the host's provider configuration, not because this change moved
+them.
+
+**Re-trigger.** A host with a pinned provider, or the unit that owns the
+embedding profile's environment resolution.
+
+**Affects.** Nothing here: this unit touches no file under
+`packages/pi-agentic-workflow/`.
