@@ -572,3 +572,117 @@ describe("sync rejection containment (S3/S4) and --rebuild embedding (S6)", () =
     }
   });
 });
+
+// ── The embed stage's progress (issue #718 S2) ────────────────────────────
+
+describe("embed pass progress (issue #718 S2)", () => {
+  /** The feedback channel's seam, recorded instead of written (issue #424). */
+  function progressFeedback() {
+    const events = { stages: [], progress: [], details: [] };
+    return {
+      events,
+      start: () => {},
+      stage: async (name, fn) => {
+        events.stages.push(name);
+        return fn();
+      },
+      progress: (row) => events.progress.push(row),
+      detail: (line) => events.details.push(line),
+    };
+  }
+
+  /** A throwaway repo with `count` one-chunk files and no provider configured. */
+  function progressFixture(count) {
+    const dir = mkdtempSync(join(tmpdir(), "doc-718-progress-"));
+    const gitArgs = ["-c", "user.name=t", "-c", "user.email=t@example.test", "-c", "commit.gpgsign=false"];
+    execFileSync("git", [...gitArgs, "init", "-q"], { cwd: dir });
+    for (let i = 0; i < count; i += 1) {
+      writeFileSync(join(dir, `p${String(i).padStart(2, "0")}.md`), `# Page ${i}\nbody ${i}\n`);
+    }
+    execFileSync("git", [...gitArgs, "add", "-A"], { cwd: dir });
+    execFileSync("git", [...gitArgs, "commit", "-qm", "fixture"], { cwd: dir });
+    return dir;
+  }
+
+  it("S2: --sync reports one chunks progress row per landed batch and a final total", async () => {
+    const dir = progressFixture(3);
+    try {
+      const feedback = progressFeedback();
+      const env = await runDocOp({ op: "sync" }, { rootDir: dir, embedder: semanticEmbedder("m1"), feedback });
+      deepStrictEqual(env.degradations, []);
+      const rows = feedback.events.progress.filter((row) => row.unit === "chunks");
+      ok(rows.length >= 4, `one row per batch plus the final total, got ${JSON.stringify(rows)}`);
+      const last = rows.at(-1);
+      strictEqual(last.done, last.total, "the pass ends with its own total");
+      ok(last.total > 0);
+      deepStrictEqual(feedback.events.stages, ["scan", "embed", "stats"]);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it("S2: --rebuild reports the same progress — it embeds the same pending set", async () => {
+    const dir = progressFixture(2);
+    try {
+      const feedback = progressFeedback();
+      const env = await runDocOp({ op: "rebuild" }, { rootDir: dir, embedder: semanticEmbedder("m1"), feedback });
+      deepStrictEqual(env.degradations, []);
+      const rows = feedback.events.progress.filter((row) => row.unit === "chunks");
+      ok(rows.length >= 2, `a rebuild waits on the same pass, got ${JSON.stringify(rows)}`);
+      strictEqual(rows.at(-1).done, rows.at(-1).total);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+});
+
+// ── The keyword-only sync declaration (issue #718 S6) ─────────────────────
+
+describe("keyword-only sync declaration (issue #718 S6)", () => {
+  function keywordFixture() {
+    const dir = mkdtempSync(join(tmpdir(), "doc-718-kw-"));
+    const gitArgs = ["-c", "user.name=t", "-c", "user.email=t@example.test", "-c", "commit.gpgsign=false"];
+    execFileSync("git", [...gitArgs, "init", "-q"], { cwd: dir });
+    writeFileSync(join(dir, "a.md"), "# Alpha\nalpha body\n");
+    writeFileSync(join(dir, "b.md"), "# Beta\nbeta body\n");
+    // A provider block whose key is absent and an explicit chunk limit: the
+    // limit is provider-independent, so a pass with and a pass without the
+    // injected embedder chunk identically and the second one has nothing pending.
+    mkdirSync(join(dir, ".agentic-workflow"), { recursive: true });
+    writeFileSync(
+      join(dir, ".agentic-workflow", "index.json"),
+      JSON.stringify({
+        version: 1,
+        provider: { baseUrl: "http://127.0.0.1:1", model: "m1", envVar: "AGENTIC_WORKFLOW_DOC_718_TEST_KEY", chunk_limit: 90000 },
+      }),
+    );
+    execFileSync("git", [...gitArgs, "add", "-A"], { cwd: dir });
+    execFileSync("git", [...gitArgs, "commit", "-qm", "fixture"], { cwd: dir });
+    return dir;
+  }
+
+  it("S6: a sync that had pending chunks with no provider declares unavailable-embeddings-not-configured", async () => {
+    const dir = keywordFixture();
+    try {
+      const env = await runDocOp({ op: "sync" }, { rootDir: dir });
+      deepStrictEqual(env.degradations, ["unavailable-embeddings-not-configured"]);
+      strictEqual(env.store.lastSync.embedded, 0);
+      ok(env.store.pending > 0, "the keyword-only corpus is stated, never silent");
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it("S6: a warm keyword-only sync (nothing pending) stays silent", async () => {
+    const dir = keywordFixture();
+    try {
+      const embedded = await runDocOp({ op: "sync" }, { rootDir: dir, embedder: semanticEmbedder("m1") });
+      strictEqual(embedded.store.pending, 0);
+      const warm = await runDocOp({ op: "sync" }, { rootDir: dir });
+      deepStrictEqual(warm.degradations, [], "nothing is pending, so there is nothing to declare");
+      strictEqual(warm.store.pending, 0);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+});

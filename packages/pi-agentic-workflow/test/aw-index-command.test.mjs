@@ -16,7 +16,7 @@ import { join, resolve } from "node:path";
 import { createExtension } from "../dist/extension/factory.js";
 import { readCatalogue } from "../dist/routing/catalogue.js";
 import { AW_INDEX_COMMAND, ADVANCE_COMMAND, SETTINGS_COMMAND, SETTINGS_COMMAND_ALIAS } from "../dist/routing/types.js";
-import { renderIndexReport } from "../dist/extension/aw-index-command.js";
+import { renderIndexReport, derivedTimeoutMs, MAX_DERIVED_TIMEOUT_MS } from "../dist/extension/aw-index-command.js";
 import { configFor, modelRef } from "./helpers/session.mjs";
 
 const PKG_DIR = resolve(import.meta.dirname, "..");
@@ -60,7 +60,7 @@ function syncEnvelope(overrides = {}) {
  * so the suite owns argv, cwd and exit status (the seams the shipped adapter
  * leaves to the runtime).
  */
-function extensionOver({ run, program = "bun", skillsDir } = {}) {
+function extensionOver({ run, program = "bun", skillsDir, timeoutMs } = {}) {
   const { registered, registrar } = recorder();
   const calls = { spawns: [], notify: [] };
   const noopContext = {
@@ -88,6 +88,7 @@ function extensionOver({ run, program = "bun", skillsDir } = {}) {
         calls.spawns.push(request);
         return run ? run(request) : { status: 0, stdout: JSON.stringify(syncEnvelope()), stderr: "" };
       },
+      ...(timeoutMs === undefined ? {} : { timeoutMs }),
     },
   });
   return { registered, calls, noopContext };
@@ -125,15 +126,16 @@ test("S5: the extension registers /aw-index itself — no skill, no catalogue en
   }
 });
 
-test("S5/S9: the handler runs the runner crate's sync in the project directory", async () => {
+test("S5/S9: the handler probes the store's pending count and then runs the crate's sync", async () => {
   const tree = oneSkillTree();
   try {
     const { registered, calls, noopContext } = extensionOver({ skillsDir: tree.skillsDir });
     await registered.get(AW_INDEX_COMMAND).handler("", noopContext);
-    assert.equal(calls.spawns.length, 1);
-    const spawn = calls.spawns[0];
+    assert.equal(calls.spawns.length, 2, "one read (status), one write (sync)");
+    assert.deepEqual(calls.spawns[0].argv.slice(-2), ["--status", "--json-only"], "the cap's input is a status read");
+    const spawn = calls.spawns[1];
     assert.equal(spawn.program, "bun");
-    assert.deepEqual(spawn.argv.slice(-2), ["--sync", "--json-only"], "the sync is the only operation the command runs");
+    assert.deepEqual(spawn.argv.slice(-2), ["--sync", "--json-only"], "the sync is the only mutating operation the command runs");
     assert.ok(spawn.argv.includes("doc"), "the runner crate's doc entry point");
     assert.equal(spawn.cwd, "/fixture/repo", "the project directory, never the extension's own");
     assert.equal(calls.notify.at(-1).kind, "info");
@@ -268,4 +270,120 @@ test("S4: a clean run says rejected: none and claims no next step", () => {
   const report = renderIndexReport(syncEnvelope());
   assert.match(report, /rejected: none/);
   assert.doesNotMatch(report, /remain unembedded/);
+});
+
+// ── The derived spawn cap (issue #718 S4) ─────────────────────────────────
+
+/** A status envelope as `agentic-workflow doc --status --json-only` prints it. */
+function statusEnvelope(pending) {
+  return {
+    ok: true,
+    command: "status",
+    results: [],
+    degradations: [],
+    store: { path: "/fixture/repo/.agentic-workflow/index/index.db", present: true, files: 630, chunks: 12_900, pending },
+  };
+}
+
+/** A run double that answers the status probe and the sync separately. */
+function probeThen({ pending, probeStatus = 0 }) {
+  const calls = { spawns: [] };
+  return {
+    calls,
+    run: (request) => {
+      calls.spawns.push(request);
+      if (request.argv.includes("--status")) {
+        return { status: probeStatus, stdout: probeStatus === 0 ? JSON.stringify(statusEnvelope(pending)) : "", stderr: probeStatus === 0 ? "" : "doc: status failed" };
+      }
+      return { status: 0, stdout: JSON.stringify(syncEnvelope({ store: { pending } })), stderr: "" };
+    },
+  };
+}
+
+test("S4: the cap is derived from the store's pending count instead of a fixed 600 s", async () => {
+  const tree = oneSkillTree();
+  try {
+    const double = probeThen({ pending: 12_900 });
+    const { registered, noopContext } = extensionOver({ skillsDir: tree.skillsDir, run: double.run });
+    await registered.get(AW_INDEX_COMMAND).handler("", noopContext);
+    assert.equal(double.calls.spawns.length, 2);
+    assert.ok(double.calls.spawns[0].argv.includes("--status"), "the probe reads the pending count");
+    assert.equal(double.calls.spawns[0].timeoutMs, 30_000, "the probe itself is bounded");
+    assert.equal(
+      double.calls.spawns[1].timeoutMs,
+      12_900 * 1_000 + 120_000,
+      "pending × 1 s (the observed ~65 chunks/min) plus the scan's slack",
+    );
+  } finally {
+    rmSync(tree.root, { recursive: true, force: true });
+  }
+});
+
+test("S4: a warm store and an answering probe keep the shipped 600 s floor", async () => {
+  const tree = oneSkillTree();
+  try {
+    const double = probeThen({ pending: 0 });
+    const { registered, noopContext } = extensionOver({ skillsDir: tree.skillsDir, run: double.run });
+    await registered.get(AW_INDEX_COMMAND).handler("", noopContext);
+    assert.equal(double.calls.spawns[1].timeoutMs, 600_000);
+  } finally {
+    rmSync(tree.root, { recursive: true, force: true });
+  }
+});
+
+test("S4: a probe that cannot answer never blocks the sync — the floor still applies", async () => {
+  const tree = oneSkillTree();
+  try {
+    const double = probeThen({ pending: 5_000, probeStatus: 1 });
+    const { registered, calls, noopContext } = extensionOver({ skillsDir: tree.skillsDir, run: double.run });
+    await registered.get(AW_INDEX_COMMAND).handler("", noopContext);
+    assert.equal(double.calls.spawns[1].timeoutMs, 600_000, "an unreadable store is not a refusal to index");
+    assert.equal(calls.notify.at(-1).kind, "info");
+    assert.match(calls.notify.at(-1).message, /pending: 5000/);
+  } finally {
+    rmSync(tree.root, { recursive: true, force: true });
+  }
+});
+
+test("S4: a probe that throws is swallowed, never reported as a failed index run", async () => {
+  const tree = oneSkillTree();
+  try {
+    const spawns = [];
+    const { registered, calls, noopContext } = extensionOver({
+      skillsDir: tree.skillsDir,
+      run: (request) => {
+        spawns.push(request);
+        if (request.argv.includes("--status")) throw new Error("probe exploded");
+        return { status: 0, stdout: JSON.stringify(syncEnvelope()), stderr: "" };
+      },
+    });
+    await registered.get(AW_INDEX_COMMAND).handler("", noopContext);
+    assert.equal(spawns.length, 2);
+    assert.equal(spawns[1].timeoutMs, 600_000);
+    assert.equal(calls.notify.at(-1).kind, "info");
+  } finally {
+    rmSync(tree.root, { recursive: true, force: true });
+  }
+});
+
+test("S4: an explicit timeoutMs is the caller's answer — no probe is spent", async () => {
+  const tree = oneSkillTree();
+  try {
+    const { registered, calls, noopContext } = extensionOver({ skillsDir: tree.skillsDir, timeoutMs: 42 });
+    await registered.get(AW_INDEX_COMMAND).handler("", noopContext);
+    assert.equal(calls.spawns.length, 1, "an injected cap needs no derivation");
+    assert.equal(calls.spawns[0].timeoutMs, 42);
+  } finally {
+    rmSync(tree.root, { recursive: true, force: true });
+  }
+});
+
+// Review-change's report-only note (fix/718 cycle 1): the derived cap accepted any
+// finite pending count, so a corrupt or hostile store bought an unbounded window
+// and removed the very ceiling the floor exists to set.
+test("S4: the derived cap is bounded, so a corrupt pending count buys no unbounded window", () => {
+  assert.equal(derivedTimeoutMs(Number.MAX_SAFE_INTEGER), MAX_DERIVED_TIMEOUT_MS);
+  assert.equal(derivedTimeoutMs(1e12), MAX_DERIVED_TIMEOUT_MS);
+  assert.equal(derivedTimeoutMs(1_000), 1_120_000, "an ordinary store keeps its own arithmetic");
+  assert.ok(derivedTimeoutMs(1_000) < MAX_DERIVED_TIMEOUT_MS);
 });

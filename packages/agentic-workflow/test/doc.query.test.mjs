@@ -273,3 +273,34 @@ describe("doc CLI — query/status/rebuild end-to-end", () => {
     }
   });
 });
+
+// ── The store's pending count on --status (issue #718 S4) ─────────────────
+
+describe("doc status reports the pending chunk count (issue #718 S4)", () => {
+  it("--status --json-only answers the pending count the /aw-index cap derives from", () => {
+    const r = spawnSync(process.execPath, [BIN, "doc", "--status", "--json-only"], { cwd: root, encoding: "utf8" });
+    strictEqual(r.status, 0, `stderr: ${r.stderr}`);
+    const env = JSON.parse(r.stdout);
+    strictEqual(typeof env.store.pending, "number", "pending is a number, never absent or invented");
+    // The fixture synced without a provider: every chunk is unembedded.
+    strictEqual(env.store.pending, env.store.chunks);
+    ok(env.store.pending > 0);
+  });
+
+  it("a fresh repo without a store keeps its absent-store record unpolluted", () => {
+    const bare = mkdtempSync(join(tmpdir(), "doc-718-bare-"));
+    try {
+      const r = spawnSync(process.execPath, [BIN, "doc", "--status", "--json-only"], { cwd: bare, encoding: "utf8" });
+      strictEqual(r.status, 0, `stderr: ${r.stderr}`);
+      const env = JSON.parse(r.stdout);
+      deepStrictEqual(env.store, {
+        path: join(bare, ".agentic-workflow", "index", "index.db"),
+        present: false,
+        files: 0,
+        chunks: 0,
+      });
+    } finally {
+      rmSync(bare, { recursive: true, force: true });
+    }
+  });
+});

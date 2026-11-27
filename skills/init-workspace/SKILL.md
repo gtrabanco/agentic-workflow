@@ -335,6 +335,15 @@ surfaces at emission; run it before the unit doc's first commit.
   are only a freshness fast path), and never write `.git/hooks/` or the config
   on a later visit without a fresh yes. The hooks are best-effort by contract
   (`doc --sync --quiet`, always exit 0 — a fast path never breaks git).
+  **Record the runner the install resolved** (issue #718): with the same yes,
+  run `runner resolve --json doc --sync --quiet` and write the answer's `argv`
+  to `.agentic-workflow/hooks/runner.local`, one token per line, adding that
+  path to the project's `.gitignore` — it names this machine's absolute paths,
+  so it is local by construction. The hook executes that argv verbatim before
+  falling back to `command -v`, which is what makes it work on a host where the
+  crate is not on `PATH` (a `bunx` install). A resolver refusal writes nothing
+  and is reported as a residual: the hook stays its documented silent no-op
+  (resolution order and degradation: `.agentic-workflow/hooks/README.md`).
   **Never hand-write the config's `provider` block** (issue #541): when an
   installed provider preset ships a doc-index embedding profile, the block is
   materialized by `/agentic-workflow-settings` → `Doc index embedding profile`,

@@ -34,9 +34,9 @@
 import { buildEnvelope } from "./envelope.mjs";
 import { storePath } from "./store.mjs";
 import { syncIndex, rebuildIndex } from "./sync.mjs";
-import { queryIndex, statusIndex } from "./query.mjs";
+import { queryIndex, statusIndex, storeValue } from "./query.mjs";
 import { loadConfig, effectiveChunkLimit } from "./config.mjs";
-import { resolveEmbedConfig, makeOpenAIProvider, embedPendingChunks, embeddingStats } from "./embeddings.mjs";
+import { resolveEmbedConfig, embedPendingChunks, embeddingStats, resolvePacing, openEmbedLease, pacedProvider, LeaseLostError } from "./embeddings.mjs";
 import { NO_FEEDBACK } from "../feedback/index.mjs";
 
 /** How many failure shapes and chunk locators the envelope repeats before summarising. */
@@ -78,19 +78,30 @@ function rejectionRecord(rejected) {
  * `unavailable-embeddings-provider-down` and keeps the run `ok: true` (AC17);
  * a rejected request answers `embeddings-request-rejected` and keeps the count of
  * what did land. `onProgress(done, total)` is an optional callback the caller
- * uses to report progress over the wall-clock duration of the embed pass.
+ * uses to report progress over the wall-clock duration of the embed pass,
+ * `pacing` is the resolved policy the provider's request timeout comes from
+ * (issue #718 S3) — resolved once here so the pass and its provider agree — and
+ * `leaseOwner` hands down the owner token of a lease the caller took before the
+ * scan (issue #718, the pre-scan fence), so this call heartbeats it and never
+ * re-acquires or releases it.
  */
-async function embedPass(root, { embedCfg, embedder, declareKeywordOnly, onProgress }) {
-  const provider = embedder !== undefined ? embedder : embedCfg.configured ? makeOpenAIProvider(embedCfg) : null;
+async function embedPass(root, { embedCfg, embedder, declareKeywordOnly, onProgress, pacing, leaseOwner }) {
+  const provider = embedder !== undefined ? embedder : pacedProvider(embedCfg, pacing);
   if (provider === null) {
     // AC17's root: keyword-only is a declared state, never a silent one. A
-    // `--rebuild` is the documented escape hatch (a model or limit change), so
-    // it states what it left behind; a `--sync` stays silent there, because the
-    // query path declares the cause whenever the store is actually asked.
+    // `--rebuild` is the documented escape hatch (a model or limit change), and a
+    // `--sync` that had pending chunks now states the corpus it leaves behind
+    // (issue #718 S6) — a warm one stays silent, because there is nothing to say.
     return { embedded: 0, degradations: declareKeywordOnly ? ["unavailable-embeddings-not-configured"] : [], rejected: null };
   }
   try {
-    const result = await embedPendingChunks(root, provider, { onProgress });
+    const result = await embedPendingChunks(root, provider, { onProgress, pacing, leaseOwner });
+    if (result.leaseHeld === true) {
+      // Another pass owns the store's pending set (issue #718 S5): this run spent
+      // nothing, the chunks stay pending, and the cause is declared instead of
+      // reporting a healthy pass that embedded 0.
+      return { embedded: 0, degradations: ["unavailable-embeddings-lease-held"], rejected: null };
+    }
     if (result.skipped === true) {
       // Model mismatch: keep the frozen key and declare the cause (AC18, D3).
       return { embedded: 0, degradations: ["embeddings-model-mismatch"], rejected: null };
@@ -128,66 +139,124 @@ export async function runDocOp(grammar, ctx = {}) {
     const providerConfigured = ctx.embedder !== undefined || embedCfg.configured;
     const maxChunkChars = effectiveChunkLimit({ config: cfg, providerConfigured, env: process.env });
     const exclusions = cfg.index?.excludes;
-    // The three stages a reader waits on, timed by the channel: the chunk pass,
-    // the provider round-trips, and the store's own count.
-    const r = await feedback.stage("scan", () =>
-      grammar.op === "rebuild"
-        ? rebuildIndex(root, {
-            maxChunkChars,
-            exclusions,
-            onProgress: (done, total, path) => feedback.progress({ done, total, unit: "files", detail: path }),
-          })
-        : syncIndex(root, {
-            maxChunkChars,
-            exclusions,
-            onProgress: (done, total, path) => feedback.progress({ done, total, unit: "files", detail: path }),
-          }),
-    );
+    // The provider's request timeout is one of the pacing knobs, so the policy is
+    // resolved once for the pass and handed to the provider it paces (issue #718
+    // S3) — resolved before the scan because the lease's TTL derives from it.
+    const pacing = resolvePacing({ config: cfg, env: process.env });
+    // Issue #718 S5 — the pre-scan fence (external-verify 2026-11-27, A4/A5): a
+    // `--sync` pass owns the store from before the scan writes a byte. A pass
+    // that finds a live lease performs no scan write — it cannot die contending
+    // for the scan lock (`database is locked`), and a late re-chunk of its own
+    // cannot land beside the owner's embedded rows with nobody left to repair
+    // them — and it declares the lease instead. Rebuild stays embed-stage-only:
+    // its discard deletes the store file, so no lease row could span it (D9).
+    let lease = null;
+    // The fenced answer, shared by the pre-scan acquisition and the mid-scan loss
+    // (review F1): one shape, so a pass that took no part in the store never reads
+    // as a healthy one.
+    const fencedEnvelope = async (detail) => {
+      feedback.start();
+      // One open answers the record, the pending count and the pin; an absent
+      // store keeps the shape the caller always read (review-change fix/718 cycle 1).
+      const storeRecord = await storeValue(root, { withPending: true });
+      feedback.detail(detail);
+      return buildEnvelope({
+        command: "sync",
+        results: [],
+        degradations: ["unavailable-embeddings-lease-held"],
+        store: {
+          ...storeRecord,
+          pending: storeRecord.pending ?? 0,
+          model: storeRecord.model ?? null,
+          lastSync: { files_scanned: 0, files_changed: 0, files_deleted: 0, embedded: 0 },
+        },
+      });
+    };
+    if (grammar.op === "sync") {
+      lease = await openEmbedLease(root, pacing);
+      if (lease === null) return fencedEnvelope("embed: lease held by another pass — no scan, no spend");
+    }
+    try {
+      // The three stages a reader waits on, timed by the channel: the chunk pass,
+      // the provider round-trips, and the store's own count.
+      let r;
+      try {
+        r = await feedback.stage("scan", () =>
+          grammar.op === "rebuild"
+            ? rebuildIndex(root, {
+                maxChunkChars,
+                exclusions,
+                onProgress: (done, total, path) => feedback.progress({ done, total, unit: "files", detail: path }),
+              })
+            : syncIndex(root, {
+                maxChunkChars,
+                exclusions,
+                // The scan heartbeats the pass' lease on its own connection,
+                // once per reaped or re-chunked file (PE-019), and stops the scan
+                // the moment another pass owns the row (review F1).
+                leaseOwner: lease?.owner,
+                onProgress: (done, total, path) => feedback.progress({ done, total, unit: "files", detail: path }),
+              }),
+        );
+      } catch (error) {
+        if (!(error instanceof LeaseLostError)) throw error;
+        return fencedEnvelope("embed: lease lost mid-scan — the scan rolled back, no spend");
+      }
 
-    const pass = await feedback.stage("embed", () =>
-      embedPass(root, {
-        embedCfg,
-        embedder: ctx.embedder,
-        declareKeywordOnly: grammar.op === "rebuild",
-        onProgress: grammar.op === "sync"
-          ? (done, total) => feedback.progress({ done, total, unit: "chunks" })
-          : undefined,
-      }),
-    );
-    feedback.detail(
-      `embed: provider=${providerConfigured ? "configured" : "none"} embedded=${pass.embedded} degradations=[${pass.degradations.join(",")}]`,
-    );
-    const degradations = [];
-    if (r.truncated > 0) degradations.push("chunk-too-large");
-    for (const value of pass.degradations) if (!degradations.includes(value)) degradations.push(value);
+      // The progress seam is forwarded for **both** chunking ops: a rebuild
+      // embeds the same pending set, so a silent one is the same frozen screen.
+      // The pending count is read *before* the pass (issue #718 S6) — a sync that had
+      // work to embed and no key used to leave a keyword-only corpus unstated —
+      // and only where no provider can embed: a configured pass never reads it
+      // (review-change fix/718 cycle 1).
+      const pendingBefore = providerConfigured ? 0 : (await embeddingStats(root)).pending;
+      const pass = await feedback.stage("embed", () =>
+        embedPass(root, {
+          embedCfg,
+          embedder: ctx.embedder,
+          declareKeywordOnly: grammar.op === "rebuild" || pendingBefore > 0,
+          pacing,
+          leaseOwner: lease?.owner,
+          onProgress: (done, total) => feedback.progress({ done, total, unit: "chunks" }),
+        }),
+      );
+      feedback.detail(
+        `embed: provider=${providerConfigured ? "configured" : "none"} embedded=${pass.embedded} degradations=[${pass.degradations.join(",")}]`,
+      );
+      const degradations = [];
+      if (r.truncated > 0) degradations.push("chunk-too-large");
+      for (const value of pass.degradations) if (!degradations.includes(value)) degradations.push(value);
 
-    // D3: the pending count and the pinned model are additive inside the
-    // envelope's open `store` record — the native /aw-index report renders
-    // from these fields alone, and no top-level key or degradation value is
-    // added to the frozen contract.
-    const stats = await feedback.stage("stats", () => embeddingStats(root));
-    const record = { path: storePath(root), present: true, files: r.filesScanned, chunks: r.chunks, pending: stats.pending, model: stats.model };
-    const withRejection = (value) => (pass.rejected === null ? value : { ...value, rejected: pass.rejected });
-    const store =
-      grammar.op === "sync"
-        ? withRejection({
-            ...record,
-            lastSync: {
-              files_scanned: r.filesScanned,
-              files_changed: r.filesChanged,
-              files_deleted: r.filesDeleted,
-              embedded: pass.embedded,
-            },
-          })
-        : // A rebuild now embeds in the same pass, so it states what it left
-          // behind: the pinned model, what it embedded, and what stays pending (S6).
-          withRejection({ ...record, embedded: pass.embedded });
-    return buildEnvelope({
-      command: grammar.op,
-      results: [],
-      degradations,
-      store,
-    });
+      // D3: the pending count and the pinned model are additive inside the
+      // envelope's open `store` record — the native /aw-index report renders
+      // from these fields alone, and no top-level key or degradation value is
+      // added to the frozen contract.
+      const stats = await feedback.stage("stats", () => embeddingStats(root));
+      const record = { path: storePath(root), present: true, files: r.filesScanned, chunks: r.chunks, pending: stats.pending, model: stats.model };
+      const withRejection = (value) => (pass.rejected === null ? value : { ...value, rejected: pass.rejected });
+      const store =
+        grammar.op === "sync"
+          ? withRejection({
+              ...record,
+              lastSync: {
+                files_scanned: r.filesScanned,
+                files_changed: r.filesChanged,
+                files_deleted: r.filesDeleted,
+                embedded: pass.embedded,
+              },
+            })
+          : // A rebuild now embeds in the same pass, so it states what it left
+            // behind: the pinned model, what it embedded, and what stays pending (S6).
+            withRejection({ ...record, embedded: pass.embedded });
+      return buildEnvelope({
+        command: grammar.op,
+        results: [],
+        degradations,
+        store,
+      });
+    } finally {
+      lease?.release();
+    }
   }
 
   if (grammar.op === "query") {
