@@ -1,4 +1,4 @@
-# 2026-11-27T13:24:58Z — feat/719-nan-embedding-default-index-tool — narrative
+## 2026-11-27T13:24:58Z — feat/719-nan-embedding-default-index-tool — narrative
 
 ## Summary
 
