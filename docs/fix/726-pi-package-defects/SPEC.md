@@ -290,6 +290,9 @@ lane's plan step, and no triage route is re-derived here.
 
 | id | S# / file:line | axis | severity | impact | class | route |
 |---|---|---|---|---|---|---|
+| F4 | S2 · packages/pi-agentic-workflow/scripts/bundle-skills.mjs:135-142 | code | CRITICAL | blocking | source | fold |
+| F5 | S2 · packages/pi-agentic-workflow/scripts/bundle-skills.mjs:127-171 | code | CRITICAL | blocking | source | fold |
+| F6 | S2 · packages/pi-agentic-workflow/scripts/bundle-skills.mjs:127 | code | WARNING | blocking | source | fold |
 
 ## Log
 
@@ -307,6 +310,61 @@ lane's plan step, and no triage route is re-derived here.
 - **E2** — 2026-11-27, `rg -n '^argument-hint:' skills/*/SKILL.md` · exit 0 ·
   three values begin with `[`: `aw-doctor`, `agentic-workflow-doctor`,
   `fold-findings`; every other hint is a plain scalar or already quoted.
+
+- **V1** — packages/pi-agentic-workflow/scripts/bundle-skills.mjs:135-142 ·
+  reviewer review-change · HEAD e7828e096 · recheck reproducible command
+  output: `normalizeArgumentHint("---\nargument-hint: >-2\n  [--foo]\n---\nBody")`
+  over the unchanged head tree (`bun -e` import + `yaml@2.9.0` `parse`) — the
+  source bytes at base parse `[--foo]` as a string; the staged bytes at head
+  throw `All mapping items must start at the same column at line 2`, the
+  block-scalar PARSE-ERROR class this unit's D5 exists to prevent. The sign
+  order yaml accepts (`>-2`, `|+2`) is misread as a non-plain scalar, the
+  header line is quoted and its content line orphaned. confirmed. No shipped
+  skill carries the shape today (differential E8/E22), so the regression is in
+  the transform's contract, not the bundle.
+- **V2** — packages/pi-agentic-workflow/scripts/bundle-skills.mjs:127-171 ·
+  reviewer review-change · HEAD e7828e096 · recheck reproducible command
+  output: `normalizeArgumentHint("---\nargument-hint: [--a,\n  b]\n---\nBody")`
+  over the unchanged head tree — the multi-line raw value is rewritten on its
+  opening line only and its continuation line orphaned; base parses the array
+  (`["--a","b"]`, the wrong-type class the unit fixes, still loadable), head
+  staged frontmatter throws `All mapping items must start at the same column
+  at line 2`. confirmed. No shipped skill carries the shape today (E8/E22).
+- **V3** — packages/pi-agentic-workflow/scripts/bundle-skills.mjs:127 ·
+  reviewer review-change · HEAD e7828e096 · recheck direct read + the
+  security pass's own probe: the single-line regex rewrites only the first
+  `argument-hint:` occurrence, so a duplicate key ships its second line raw
+  and yaml's last-key-wins makes the unrewritten unsafe value authoritative —
+  the unit's invariant ("the bundler can never ship an unsafe hint") silently
+  conditional on an authoring defect. confirmed as a code read; no shipped
+  source has the shape (every shipped frontmatter carries exactly one
+  `argument-hint:` line), so it is conditional. confirmed.
+- **R1** — 2026-11-27, review at HEAD e7828e096 · verdict REVIEW-FAIL ·
+  cycle 1 · gate exit outstanding — axes run: review-code, review-security,
+  review-verify (validators re-run green at the head: frontmatter 8/8,
+  subagents-provision 12/12, parity+alias 24/24, serena 3/3, screen+lint 33/33,
+  skill-lint `8 check(s)` verdict PASS, docs-generate PASS, unit verify PASS,
+  obligation tags 147 suites), review-perf; skipped: review-design,
+  review-a11y, review-seo, review-brand (no UI/web/brand surface); fix-now
+  rows F4, F5, F6 persisted (the code pass returned them; the classifier set
+  the routes); report-only notes: the resolver's unused `root` field
+  (subagents.ts:87) and the clean-clone validator wording (the
+  subagents-provision suite imports the prebuilt `dist/` module the package
+  `test` script stages first), both never persisted.
+- **G1** — 2026-11-27, GATE-RAN | HEAD e7828e096 · `runner gate-receipt run --
+  --jobs 4` and, re-run after the worker-load red, `-- --jobs 2` | exit 1 both |
+  manifest `001ced15fabc646747d95553ffa06e1786ffe42ef64635b8d3117b6e26d60ee4`
+  — the review's own produced run through the producer at the persist state
+  (rows, marks and the corpus re-freeze on disk; this mark line post-dates the
+  recorded digest, so the receipt it cites answers `stale` at the head that
+  carries the mark — a red mark records a run, it never claims currency): 14
+  passed / 1 failed / 5 skipped, the one red `scripts/workflow-status-sensor.test.mjs (120.x s) —
+  SUITE TIMEOUT`, zero assertion failures inside it; the same suite standalone
+  at this tree with the gate's 30s per-test budget is 81/81 in 122.8 s — the
+  documented load-sensitive shared bound (`## Known pre-existing issues`,
+  receipted by E18 and the batch's G1), not raised and not repaired here. A red
+  mark is the run record; the review's verdict is REVIEW-FAIL on F4-F6 and
+  cites no green gate.
 
 ## Next
 
