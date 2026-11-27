@@ -3,7 +3,7 @@
     "path": "scripts/workflow-status-sensor.test.mjs",
     "timeoutMs": 30000,
     "reason": "two tests drive the sensor's real forge-timeout path — a forge that never answers must actually time out (A:21) and a slow-but-alive forge must cost one shared bound (F19); the ~10.6s per test is the behavior under test, not waste. Splitting or mocking would untest the timeout itself.",
-    "measured": "10572ms (P2 forge-never-answers) and 10568ms (F19 slow-but-alive) under the bun leg, 2026-11-10, full run at 55ea4140..f349d7b5 lineage. the suite's own wall-clock rides the rest of its ~78 cases (each spawns the sensor CLI): 83s and 69s standalone, and above the shared 120s suite bound under a 4-worker gate on a loaded box (2026-11-27, fix/734 push gate), all assertions passing before the kill — the suiteTimeoutMs widens the bound like red-first's",
+    "measured": "10572ms (P2 forge-never-answers) and 10568ms (F19 slow-but-alive) under the bun leg, 2026-11-10, full run at 55ea4140..f349d7b5 lineage; the suite's own wall-clock rides the rest of its ~78 cases (each spawns the sensor CLI): 83s and 69s standalone; on 2026-11-27 both a 4-worker gate on a loaded box (fix/734 push gate) and a load-8-11 run (130s standalone, 97-107s in the root pool) crossed the shared 120s suite bound with every assertion passing before the kill — the suiteTimeoutMs widens the bound like red-first's",
     "suiteTimeoutMs": 240000
   },
   {

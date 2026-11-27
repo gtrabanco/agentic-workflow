@@ -4417,12 +4417,15 @@ export {
   CONFIG_EXTENSIONS_DIR,
   GUARD_MODES,
   GUARD_NAMES,
+  RELAY_SEAMS,
+  RELAY_SEAM_DEFAULT,
   composeConfigSchema,
   effectiveSections,
   fillDefaults,
   mergeContentGuardOverrides,
   normalizeGuard,
   normalizeLogSession,
+  normalizeRelaySeam,
   resolveConfigDocuments,
   sanitizeJsonSchema,
   sanitizeSectionValue,
@@ -4442,6 +4445,7 @@ export type {
   ResolveConfigInput,
   ResolvedConfig,
   ResolvedGuardConfig,
+  RelaySeam,
 } from "./config.js";
 export { parseJsonc, stringifyJsoncValue } from "./config-jsonc.js";
 export type { JsoncError, JsoncResult } from "./config-jsonc.js";
