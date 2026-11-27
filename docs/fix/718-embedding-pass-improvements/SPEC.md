@@ -236,6 +236,15 @@ is in `## Log` (D1) and in the handoff.
   the derived cap is preferred over a resume loop.
 - `bash` 3.2 (macOS's shipped shell) has no `mapfile`. Affects S6's
   implementation: the hook reads the pin file with a `while read` loop.
+- **`test/doc.structure.test.mjs` exceeds its own allowlisted suite bound on
+  this host under the gate's child pool.** Standalone it measures 142 s against
+  its `suiteTimeoutMs: 240000` (E12) and passes 19/19; the local gate's
+  `crate-suite-bun` step, which spawns the same suite beside its siblings, hits
+  `240.2s — SUITE TIMEOUT` while every case inside passes (G7). The allowlist
+  entry already records this exact shape at the previous 120 s bound. Does
+  **not** affect this unit's behaviour: the same 86 suites are green under both
+  runtimes when the suite pool is serial (G1, G2), and the bound is that
+  suite's own unit's to re-pin (D8). Disclosed, never silently excused.
 
 ## Acceptance criteria
 
@@ -386,17 +395,96 @@ surgery. The `## Tasks` list above is the ordered step list this unit executes.
 
 ## Log
 
-- **L1** — 2026-11-24, the request, verbatim:
+- **L1** — 2026-11-27, the request, verbatim:
   ```
   Apply to this repository: issue #718
   ```
-- **L2** — 2026-11-24, the issue's five observed problems, verbatim: see the
-  five `S2`–`S6` quotes in `## Specs` above (each is the issue's own words for
-  that item, unedited).
+- **L2** — 2026-11-27, the issue's five observed problems, verbatim: the five
+  `S2`–`S6` quotes in `## Specs` above are each the issue's own words for that
+  item, unedited.
+- **D1** — 2026-11-27, decision: the `high` tier's review pass is **not** run.
+  §4 of the owner's apply workflow forbids `review-change`/`audit-pr` on this
+  repository's own surgery; the deterministic gates run anyway and the owner is
+  the external verifier.
+- **D2** — 2026-11-27, decision: S2's remaining half is the `--rebuild` wiring,
+  not a new seam. `embedPendingChunks` already carried `onProgress` and
+  `--sync` already forwarded it (commit `cb55a0ea0`); `embedPass` gated the
+  forwarding on `grammar.op === "sync"`. Since fix #540 a rebuild embeds the
+  same pending set, so a silent rebuild is the same frozen screen — one
+  callback serves both, and the `--sync` case is pinned as unchanged behaviour.
+- **D3** — 2026-11-27, decision: the timeout is a **pacing** knob
+  (`provider.pacing.fetchTimeoutMs`, default 30000, plus
+  `AGENTIC_WORKFLOW_DOC_EMBEDDINGS_FETCH_TIMEOUT_MS`) because the issue asked
+  for a `provider.pacing`-style override and `DEFAULT_PACING` is the one closed
+  set the resolver, the config validation and the documentation all iterate. The
+  abort's status-less error is exactly what `isRetryable` already owns, so no
+  branch was added; the query path's single provider call is bounded by the
+  same knob (PE-003).
+- **D4** — 2026-11-27, decision: the lease is a single-statement upsert
+  (`insert … on conflict(name) do update … where heartbeat <= ?`, `changes` says
+  taken/held — measured on both runtimes, PE-005), with the TTL derived from the
+  resolved pacing (`fetchTimeoutMs × maxAttempts + 60 s`) instead of a second
+  knob. A fenced pass **skips** rather than waits (a wait would multiply
+  `/aw-index`'s blocking window) and declares `unavailable-embeddings-lease-held`,
+  a member of the open `unavailable-embeddings-<cause>` family the schema package
+  documents as open by design — no `DOC_DEGRADATIONS` value and no schema bump.
+- **D5** — 2026-11-27, decision: S4 takes the issue's **derive** option, not the
+  resume loop. `spawnSync` cannot parse a partial envelope from a killed child
+  (PE-006), so a loop would be blind; the pending count comes from `doc status`
+  — the crate's own `embeddingStats`, never a second SQLite reader in the pi
+  package — and a probe that cannot answer keeps the shipped 600 s floor.
+- **D6** — 2026-11-27, decision: the hook's bunx support is an **install-time
+  pin**. The template may not carry a second runner version literal
+  (`RUNNER.md` owns the only one, stamped at release), so `init-workspace` runs
+  the crate's own resolver (`runner resolve --json doc --sync --quiet`) and
+  writes its `argv` to a machine-local, gitignored
+  `.agentic-workflow/hooks/runner.local`; the hook executes it verbatim, the
+  explicit override still wins, and no answer keeps the documented silent no-op.
+- **D7** — 2026-11-27, decision: every crate validator in this unit runs with
+  the host's ambient provider variables cleared (`env -u …`). This box exports a
+  live `AGENTIC_WORKFLOW_DOC_EMBEDDINGS_*` + `NAN_API_KEY` set, which makes the
+  suites resolve a configured provider and fail their keyword-only cases
+  (PE-012); the same commands are green on a clean host.
+- **D8** — 2026-11-27, decision: `test/doc.structure.test.mjs`'s allowlisted
+  suite bound is **not** re-pinned here. The suite exceeds its 240 s bound under
+  the gate's child pool on this host (G7) while passing serially in 142 s (E12);
+  the bound belongs to that suite's own unit, and raising it inside this change
+  would be a gate edit nobody asked for.
+- **E1** — 2026-11-27, `cd packages/agentic-workflow && env -u AGENTIC_WORKFLOW_DOC_EMBEDDINGS_BASE_URL -u AGENTIC_WORKFLOW_DOC_EMBEDDINGS_MODEL -u AGENTIC_WORKFLOW_DOC_EMBEDDINGS_API_KEY -u AGENTIC_WORKFLOW_DOC_EMBEDDINGS_MAX_REQUEST_CHARS -u NAN_API_KEY bun test test/doc.embeddings.test.mjs test/doc.hybrid.test.mjs` · exit 1 · `54 pass · 3 fail` at `10778af3f` — the pacing knob is absent, no request carries a signal, and the rebuild reports no progress.
+- **E2** — 2026-11-27, same command plus `test/doc.store.test.mjs` · exit 0 · `94 pass · 0 fail · 3 files` at `5e551050b`.
+- **E3** — 2026-11-27, `… bun test test/doc.embed-lease.test.mjs` · exit 1 · `2 pass · 3 fail` at `4e4385d0e` — the interleaved passes double-spend, a stale lease is neither taken over nor released, and a live one declares nothing.
+- **E4** — 2026-11-27, `… bun test test/doc.embed-lease.test.mjs test/doc.embeddings.test.mjs test/doc.hybrid.test.mjs test/doc.embed-rejection.test.mjs` · exit 0 · `72 pass · 0 fail · 4 files` at `983f1d960`.
+- **E5** — 2026-11-27, `… bun test test/doc.hybrid.test.mjs test/doc.query.test.mjs` · exit 1 · `50 pass · 3 fail` at `fb1d50135` — no sync declaration, no `store.pending` on `--status`.
+- **E6** — 2026-11-27, `cd packages/pi-agentic-workflow && bun test test/aw-index-command.test.mjs` · exit 1 · `10 pass · 5 fail` at `fb1d50135` — no probe, no derived cap.
+- **E7** — 2026-11-27, `… bun test test/doc.hybrid.test.mjs test/doc.query.test.mjs` · exit 0 · `53 pass · 0 fail` at `bc1eca9ed`.
+- **E8** — 2026-11-27, `cd packages/pi-agentic-workflow && bun test test/aw-index-command.test.mjs` · exit 0 · `15 pass · 0 fail` at `bc1eca9ed`.
+- **E9** — 2026-11-27, `bash template/.agentic-workflow/hooks/tests/test-index-sync.sh` · exit 1 · `INDEX-SYNC-HOOK-TESTS fail (1)` at `e00155c01` — the pin's argv never runs.
+- **E10** — 2026-11-27, `bash template/.agentic-workflow/hooks/tests/test-index-sync.sh` · exit 0 · `INDEX-SYNC-HOOK-TESTS ok` at `12e3ec188`, and `bun test packages/agentic-workflow/test/hook-shims.test.mjs` · exit 0 · `19 pass`.
+- **E11** — 2026-11-27, the gate's root-suite step found a real regression from this change: `scripts/check-skill-context.test.mjs` · exit 1 · `packages/pi-agentic-workflow/README.md: lines 1399 > 1392`. The bullet was kept and the ceiling re-pinned to the exact measurement in `docs/workflow/SKILL_CONTEXT_BUDGETS.json` with its reason (the manifest's own convention); `bun scripts/check-skill-context.mjs --documents` · exit 0 · `PASS context documents: 7 budgeted documents`.
+- **E12** — 2026-11-27, `cd packages/agentic-workflow && env -u … bun test test/doc.structure.test.mjs` · exit 0 · `19 pass · 0 fail · 142.15s` — the allowlisted suite alone, inside its 240 s bound (G7's timeout is the gate's child pool, not this change).
+- **G1** — 2026-11-27, `cd packages/agentic-workflow && env -u … bun ../../scripts/run-root-suite.mjs --dir packages/agentic-workflow/test --cwd packages/agentic-workflow --test-timeout 30 --jobs 1` · exit 0 · `86` suites PASS.
+- **G2** — 2026-11-27, the same invocation under `node` · exit 0 · `86` suites PASS.
+- **G3** — 2026-11-27, `cd packages/agentic-workflow-schema && bun run test` · exit 0 · `954 pass · 0 fail · 56 files`.
+- **G4** — 2026-11-27, `cd packages/pi-agentic-workflow && env -u … bun run test` · exit 0 · `1130 pass · 0 fail · 95 files` (with the ambient provider variables set: `6 fail`, all of them the peer suite's keyword-only cases — PE-012).
+- **G5** — 2026-11-27, `bun scripts/run-root-suite.mjs` · exit 0 · `147` suites PASS.
+- **G6** — 2026-11-27, `bun scripts/local-gate.mjs --skip-network --jobs 2 --no-bail --only <every step but the two crate suites>` · exit 0 · `local-gate: PASS — 14 step(s) in 359s`.
+- **G7** — 2026-11-27, the same gate **including** its two crate steps · exit 1 · `FAIL packages/agentic-workflow/test/doc.structure.test.mjs (240.2s) — SUITE TIMEOUT` inside `crate-suite-bun`, `crate-suite-node` skipped as its dependent. The suite's own allowlist entry records this shape (SUITE TIMEOUT while every case passes inside); today this host measures 142 s for it alone (E12) and more than 240 s under the gate's child pool. Disclosed, not re-pinned (D8).
+- **P1** — 2026-11-27, unit doc and both ledgers frozen (`11` obligations, every row `planned`; `phase-lint` PASS) · `b7b7a7efe`.
+- **P2** — 2026-11-27, the failing progress/timeout tests landed · `10778af3f`.
+- **P3** — 2026-11-27, `fetchTimeoutMs`, the provider's signal, the query plumbing and the rebuild's progress · `5e551050b`.
+- **P4** — 2026-11-27, the lease corpus landed · `4e4385d0e`.
+- **P5** — 2026-11-27, the store lease, its heartbeat and its declared cause · `983f1d960`.
+- **P6** — 2026-11-27, the declaration/status/derivation tests landed · `fb1d50135`.
+- **P7** — 2026-11-27, the sync declaration, `store.pending` and the derived cap · `bc1eca9ed`.
+- **P8** — 2026-11-27, the hook pin cases landed · `e00155c01`.
+- **P9** — 2026-11-27, the hook's pin branch, its install step and its ignore rule · `12e3ec188`.
 
 ## Next
 
-P2 — land the failing progress-forwarding and provider-timeout tests.
+Hand the diff to the owner as the external verifier: the five items are
+implemented, the obligations ledger is closed (11 × `verified`), and the one
+open item is the allowlisted `doc.structure` bound under the gate's child pool
+(G7), which is named for its own unit rather than re-pinned inside this change.
 
 ## References
 
