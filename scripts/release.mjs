@@ -79,6 +79,7 @@ import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 import { reboundContentHashes } from "../packages/pi-agentic-workflow/scripts/projection.mjs";
+import { splitSections } from "../packages/agentic-workflow/src/runner/unit-doc-phases.mjs";
 import { parseChangeset } from "./lint-changeset.mjs";
 
 const DEFAULT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -1012,6 +1013,19 @@ function packageChangelogTarget(pkg) {
 }
 
 /**
+ * The version a package-changelog section heading names (`## [1.2.3] - <date>`).
+ * Read off the heading text `splitSections` already extracted, never off the raw
+ * document: the shared reader owns the heading grammar, so this file keeps no
+ * section reader of its own.
+ */
+const SECTION_SEMVER = /\[(\d+)\.(\d+)\.(\d+)\]/u;
+
+function sectionVersion(heading) {
+  const match = SECTION_SEMVER.exec(heading);
+  return match === null ? null : `${match[1]}.${match[2]}.${match[3]}`;
+}
+
+/**
  * Write one versioned section into a package's own changelog (newest first).
  * A re-run for the version already at the head REPLACES that section instead of
  * stacking a second one — one section per version, and a failed step resumed by
@@ -1024,22 +1038,16 @@ function writePackageChangelog(target, { version, date, summary }) {
     return "created";
   }
   const text = fs.readFileSync(target, "utf8");
-  const head = /^##\s+\[?(\d+)\.(\d+)\.(\d+)\]?[^\n]*$/m.exec(text);
-  if (head === null) {
-    // A file carrying no version section yet: keep its prose and append.
-    fs.writeFileSync(target, `${text.endsWith("\n") ? text : `${text}\n`}\n${section}`);
-    return "appended";
-  }
-  const headVersion = `${head[1]}.${head[2]}.${head[3]}`;
-  const afterHead = text.slice(head.index + head[0].length);
-  const nextAt = afterHead.search(/^## /m);
+  const { preamble, sections } = splitSections(text);
+  const headVersion = sections.length === 0 ? null : sectionVersion(sections[0].heading);
   if (headVersion === version) {
-    const tail = nextAt === -1 ? "" : afterHead.slice(nextAt);
-    fs.writeFileSync(target, `${text.slice(0, head.index)}${section}\n${tail}`);
+    const rest = sections.slice(1).map((entry) => entry.raw).join("");
+    fs.writeFileSync(target, `${preamble}${section}${rest === "" ? "" : `\n${rest}`}`);
     return "replaced";
   }
-  fs.writeFileSync(target, `${text.slice(0, head.index)}${section}\n${text.slice(head.index)}`);
-  return "prepended";
+  const body = sections.map((entry) => entry.raw).join("");
+  fs.writeFileSync(target, `${preamble}${section}\n${body}`);
+  return sections.length === 0 ? "appended" : "prepended";
 }
 
 /**

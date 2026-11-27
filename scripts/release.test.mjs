@@ -219,7 +219,7 @@ test("apply prepends the package section and replaces a repeated version instead
   const root = fixture({ changesets: { "a.md": ["pi:patch"] } });
   declarePiChangelog(root, PACKAGES[0]);
   const target = path.join(root, "packages", "pi-agentic-workflow", "CHANGELOG.md");
-  fs.writeFileSync(target, ["# Changelog", "", "## [1.0.1] - 2026-10-20", "", "an older note for the same version", "", "## [1.0.0] - 2026-10-01", "", "the first version", ""].join("\n"));
+  fs.writeFileSync(target, ["# Changelog", "", "Release notes for this package, newest first.", "See [`CHANGELOG.md`](../../CHANGELOG.md).", "", "## [1.0.1] - 2026-10-20", "", "an older note for the same version", "", "## [1.0.0] - 2026-10-01", "", "the first version", ""].join("\n"));
   const result = run(["apply", "--root", root, "--base", "1.0.0", "--channel", "stable", "--date", "2026-10-28"]);
   assert.equal(result.status, 0, result.stderr || result.stdout);
   const written = fs.readFileSync(target, "utf8");
@@ -230,6 +230,11 @@ test("apply prepends the package section and replaces a repeated version instead
   assert.ok(
     written.indexOf("## [1.0.1]") < written.indexOf("## [1.0.0]"),
     "newest first — Pi's reader assumes the file's order",
+  );
+  assert.match(written, /See \[`CHANGELOG\.md`\]\(..\/..\/CHANGELOG\.md\)\./, "the file's preamble survives a cut");
+  assert.ok(
+    written.indexOf("Release notes for this package") < written.indexOf("## [1.0.1]"),
+    "the preamble stays above the sections it introduces",
   );
 });
 
