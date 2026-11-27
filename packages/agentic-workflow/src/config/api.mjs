@@ -12,6 +12,7 @@ import {
   effectiveSections,
   resolveConfigDocuments,
   sanitizeSectionValue,
+  validateJsonSchema,
   validateSectionValue,
 } from "@gtrabanco/agentic-workflow-schema";
 
@@ -28,6 +29,38 @@ export class ConfigError extends Error {
 }
 
 const SCOPES = new Set(["global", "project"]);
+
+/**
+ * The whole-document finite refusal (#740 S5, D6): `stringifyJsoncValue`
+ * renders a non-finite number as `null`, so any value in the document a write
+ * is about to serialize — the written section, another section, or an unknown
+ * key alike — must refuse before the bytes move (EXTERNAL VERIFY B1). The
+ * issues come from the schema package's own `validateJsonSchema`, so the
+ * refusal message has one owner.
+ */
+function nonFiniteIssues(document) {
+  const issues = [];
+  const walk = (value, path) => {
+    if (typeof value === "number" && !Number.isFinite(value)) {
+      issues.push(...validateJsonSchema({}, value, path));
+      return;
+    }
+    if (Array.isArray(value)) {
+      value.forEach((item, index) => walk(item, `${path}[${index}]`));
+      return;
+    }
+    if (isRecord(value)) {
+      for (const [key, entry] of Object.entries(value)) walk(entry, path ? `${path}.${key}` : key);
+    }
+  };
+  walk(document, "");
+  return issues;
+}
+
+/** The read issues that belong to the file a write targets (D6): a broken file of the other stem never blocks this write. */
+function fileReadIssues(read, path) {
+  return read.issues.filter((issue) => issue.path === path);
+}
 
 function isRecord(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -175,6 +208,12 @@ export function createConfigApi({ projectDir = process.cwd(), globalDir, env = p
       if (!SCOPES.has(scope)) throw new ConfigError("SCOPE", `unknown scope "${scope}" (allowed: global, project)`);
       const { section, rest } = locate(path);
       const read = readScope(scope);
+      const target = read.paths[section.file];
+      // Present-but-broken stays evidence (#740 S6): the write refuses like the
+      // read half (`get`) instead of replacing an unparseable file with the one
+      // key it wrote (EXTERNAL VERIFY A1).
+      const readIssues = fileReadIssues(read, target);
+      if (readIssues.length > 0) throw new ConfigError("INVALID", "the config file is not valid", readIssues);
       const document = clone(read.documents[section.file]) ?? {};
       const current = rawSectionValue({ [section.file]: document }, section);
       const next = rest.length === 0 ? value : deepSet(isRecord(current) ? current : {}, rest, value);
@@ -183,7 +222,9 @@ export function createConfigApi({ projectDir = process.cwd(), globalDir, env = p
       const updated = section.path.length === 0
         ? (rest.length === 0 ? next : deepSet(document, rest, value))
         : deepSet(document, section.path, next);
-      writeConfigDocument(read.paths[section.file], updated);
+      const nonFinite = nonFiniteIssues(updated);
+      if (nonFinite.length > 0) throw new ConfigError("INVALID", `"${path.join(".")}" was not written`, nonFinite);
+      writeConfigDocument(target, updated);
       return { scope, path, section: section.key, value: next, file: read.paths[section.file] };
     },
     list({ scope = "resolved", category } = {}) {
@@ -209,6 +250,7 @@ export function createConfigApi({ projectDir = process.cwd(), globalDir, env = p
         const read = readScope(current);
         const issues = [...read.issues];
         let changed = false;
+        const changedFiles = new Set();
         for (const section of sections) {
           const value = deepGet(read.documents[section.file], section.path);
           if (value === undefined) continue;
@@ -220,13 +262,23 @@ export function createConfigApi({ projectDir = process.cwd(), globalDir, env = p
               const updated = section.path.length === 0
                 ? sanitized.value
                 : deepSet(document, section.path, sanitized.value);
-              writeConfigDocument(read.paths[section.file], updated);
+              // Salvage in memory first: every section of the file is cleaned
+              // before one write serializes it, so no intermediate write can
+              // render another section's value as null (#740 S5, D6).
               read.documents[section.file] = updated;
+              changedFiles.add(section.file);
               changed = true;
               sectionIssues = validateSectionValue(section, sanitized.value);
             }
           }
           issues.push(...sectionIssues);
+        }
+        if (changedFiles.size > 0) {
+          const remaining = [...changedFiles].flatMap((file) => nonFiniteIssues(read.documents[file]));
+          if (remaining.length > 0) {
+            throw new ConfigError("INVALID", "nothing was written — the file still carries a non-finite value", remaining);
+          }
+          for (const file of changedFiles) writeConfigDocument(read.paths[file], read.documents[file]);
         }
         const filtered = noWarnUnknown ? issues.filter((issue) => !issue.message.startsWith("unknown key")) : issues;
         results.push({ scope: current, ok: filtered.length === 0, issues: filtered, sanitized: changed });
@@ -237,6 +289,9 @@ export function createConfigApi({ projectDir = process.cwd(), globalDir, env = p
       if (!SCOPES.has(scope)) throw new ConfigError("SCOPE", `unknown scope "${scope}" (allowed: global, project)`);
       const { section, rest } = locate(path);
       const read = readScope(scope);
+      const target = read.paths[section.file];
+      const readIssues = fileReadIssues(read, target);
+      if (readIssues.length > 0) throw new ConfigError("INVALID", "the config file is not valid", readIssues);
       const document = clone(read.documents[section.file]) ?? {};
       let updated;
       if (rest.length === 0) {
@@ -244,7 +299,9 @@ export function createConfigApi({ projectDir = process.cwd(), globalDir, env = p
       } else {
         updated = deepDelete(document, [...section.path, ...rest]);
       }
-      writeConfigDocument(read.paths[section.file], updated);
+      const nonFinite = nonFiniteIssues(updated);
+      if (nonFinite.length > 0) throw new ConfigError("INVALID", `"${path}" was not written`, nonFinite);
+      writeConfigDocument(target, updated);
       return { scope, path, section: section.key, file: read.paths[section.file] };
     },
     init(scope) {

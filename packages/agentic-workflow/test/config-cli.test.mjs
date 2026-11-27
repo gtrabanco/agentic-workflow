@@ -439,3 +439,86 @@ test("a drop-in extension descriptor is read by stem from any of the three exten
     rmSync(root, { recursive: true, force: true });
   }
 });
+
+// ── the write-path refusals (issue #740 S5/S6; EXTERNAL VERIFY B1/A1, correction P9) ──
+
+test("set and reset refuse a non-finite value elsewhere in the file and keep its bytes (#740 S5)", () => {
+  const { root, global, project } = fixture();
+  try {
+    mkdirSync(join(project, ".pi"), { recursive: true });
+    const file = join(project, ".pi", "agentic-workflow.json5");
+    const nan = '{ "memory": { "engram": NaN }, "telemetry": { "enabled": false } }';
+    writeFileSync(file, nan);
+    const set = run(["set", "telemetry.enabled", "true", "--project", project, "--global-dir", global]);
+    assert.equal(set.status, 2, set.stdout);
+    assert.match(set.stderr, /CONFIG REFUSAL/u);
+    assert.match(set.stderr, /finite/u);
+    assert.equal(readFileSync(file, "utf8"), nan, "the file keeps its bytes — NaN is never written as null");
+    const reset = run(["reset", "telemetry", "--project", project, "--global-dir", global]);
+    assert.equal(reset.status, 2, reset.stdout);
+    assert.match(reset.stderr, /CONFIG REFUSAL/u);
+    assert.match(reset.stderr, /finite/u);
+    assert.equal(readFileSync(file, "utf8"), nan, "reset refuses instead of writing null");
+
+    const infinite = '{ "advance": { "iterationsCap": Infinity } }';
+    writeFileSync(file, infinite);
+    const other = run(["set", "memory.engram", "true", "--project", project, "--global-dir", global]);
+    assert.equal(other.status, 2, other.stdout);
+    assert.match(other.stderr, /finite/u);
+    assert.equal(readFileSync(file, "utf8"), infinite, "Infinity keeps its bytes too");
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("set and reset refuse a file that does not parse — present-but-broken stays evidence (#740 S6)", () => {
+  const { root, global, project } = fixture();
+  try {
+    mkdirSync(join(project, ".pi"), { recursive: true });
+    const file = join(project, ".pi", "agentic-workflow.json");
+    const broken = '{ "memory": ';
+    writeFileSync(file, broken);
+    const set = run(["set", "telemetry.enabled", "true", "--project", project, "--global-dir", global]);
+    assert.equal(set.status, 2, set.stdout);
+    assert.match(set.stderr, /CONFIG REFUSAL/u);
+    assert.match(set.stderr, /line 1:/u, "the refusal carries the parse location, like get");
+    assert.equal(readFileSync(file, "utf8"), broken, "the broken bytes are evidence, not scratch");
+    const reset = run(["reset", "memory", "--project", project, "--global-dir", global]);
+    assert.equal(reset.status, 2, reset.stdout);
+    assert.match(reset.stderr, /CONFIG REFUSAL/u);
+    assert.equal(readFileSync(file, "utf8"), broken, "reset keeps the evidence too");
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("--sanitize refuses instead of writing a remaining non-finite value as null (#740 S5)", () => {
+  const { root, global, project } = fixture();
+  try {
+    mkdirSync(join(project, ".pi"), { recursive: true });
+    const file = join(project, ".pi", "agentic-workflow.json5");
+    // A non-finite value under an unknown key survives the section sanitizer,
+    // so the whole-document write must refuse rather than render it as null.
+    const mixed = '{ "unknownSection": { "x": NaN }, "advance": { "iterationsCap": "twelve" } }';
+    writeFileSync(file, mixed);
+    const refused = run(["validate", "--scope", "project", "--sanitize", "--project", project, "--global-dir", global]);
+    assert.equal(refused.status, 2, refused.stdout);
+    assert.match(refused.stderr, /CONFIG REFUSAL/u);
+    assert.match(refused.stderr, /finite/u);
+    assert.equal(readFileSync(file, "utf8"), mixed, "no byte moves while a non-finite value remains");
+
+    // S7's own promise is unchanged: declared-invalid values still sanitize.
+    const s7 = '{ "memory": { "engram": true }, "advance": { "iterationsCap": "twelve", "sensitivePaths": [] } }';
+    writeFileSync(file, s7);
+    const cleaned = run(["validate", "--scope", "project", "--sanitize", "--project", project, "--global-dir", global]);
+    assert.equal(cleaned.status, 0, cleaned.stdout + cleaned.stderr);
+    const after = readFileSync(file, "utf8");
+    assert.equal(after.includes("twelve"), false, "the invalid declared value is dropped");
+    assert.equal(after.includes("null"), false, "no null written");
+    assert.match(after, /"engram": true/u, "the valid sibling survives");
+    const second = run(["validate", "--scope", "project", "--project", project, "--global-dir", global]);
+    assert.equal(second.status, 0, second.stdout + second.stderr);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
