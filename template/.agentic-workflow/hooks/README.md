@@ -27,8 +27,9 @@ a skill or a CI job spawns.
 | `adapters/normalize-hook-payload.sh` | `guard-command --payload --format json` | the payload normalized to `[command, path]` for an adapter that formats its own answer |
 | `secret-scan.sh` | `bun`, else `node` | the push-range secret scan (its own runner; see below) |
 
-The resolution is one line in every shim and it is ordered: `AGENTIC_WORKFLOW_BIN`
-when the caller set it, else `command -v agentic-workflow`. A project that installs
+The resolution is ordered: `AGENTIC_WORKFLOW_BIN` when the caller set it, else
+`command -v agentic-workflow` — one line in every shim except `index-sync.sh`,
+which adds the machine-local pin between those two steps (see below). A project that installs
 the scaffold gets the CLI from `npx`/`bunx` or a global install; a source checkout
 points the variable at `packages/agentic-workflow/bin/agentic-workflow.mjs`, which
 is what the hook suites do. `jq` is no longer required by any hook: the payload rule
