@@ -373,6 +373,9 @@ export function composeDirective(record: InvocationRecord): string {
     lines.push(
       `Entry target — the fragment carrier is opted in: hand the entry to its writer through the tool below, which computes the name and bytes, and never touch ${record.journal}:`,
     );
+    // Issue #734: the body speaks the door's own contract — `subcommand` is one
+    // argv token (the service), so the operation and its flags travel in `args`.
+    // `"journal write"` as one token is a service the crate does not have.
     lines.push(
       `agentic_workflow_run { "subcommand": "journal", "args": ["write", "--kind", "narrative", "--session", "${record.session}", "--summary", "<your Summary>", "--decisions", "<…>", "--next", "<…>"] }`,
     );

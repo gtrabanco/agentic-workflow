@@ -127,9 +127,9 @@ that carries it. The next canary cut makes the branch tree coherent again.
 ```text
 runner-mapping@1
 field | value
-in-pi | in a pi session `runner <subcommand>` is the `agentic_workflow_run` tool (or its typed twin), never a shell command — no `runner` executable exists to call
-discovery | the tools are deferred: surface them with `tool_search` over the `agentic-workflow` namespace, or call one by name from a codemode script
-outside-pi | outside a pi session the launcher and pin come from the standalone `runner-contract/references/RUNNER.md`
+in-pi | in a pi session `runner <subcommand>` is the `agentic_workflow_run` tool (or its typed twin), never a shell command — no `runner` executable; `subcommand` is the service alone, every later token an `args` entry
+discovery | the tools are deferred: surface them with `tool_search` over the `agentic-workflow` namespace, or call one by name in codemode
+outside-pi | outside pi, the launcher and pin come from `runner-contract/references/RUNNER.md`
 ```
 
 This block is the mapping's one owner (issue #696). A pi session that never opens
@@ -138,6 +138,12 @@ injects it after the frontmatter of every staged `SKILL.md` that cites the
 symbolic form, and the pi extension's bash seam answers a literal `runner …`
 shell call with the same bytes. Nothing else owns the wording — an edit here
 reaches the bundle at the next build, and a hand-edited copy fails its suite.
+
+The shape row is why a call body composes the way it does (issue #734): the
+tool's `subcommand` is one argv token, so it carries the service and nothing
+else — `runner journal write --kind narrative` becomes `subcommand: "journal"`
+with `args: ["write", "--kind", "narrative"]`. A spaced `"journal write"` is a
+service the crate does not have, which is the refusal the row prevents.
 
 Pi resolves the runner for you, so nothing here asks a session to pick one. The
 crate ships as this package's own dependency and the extension spawns its bin
