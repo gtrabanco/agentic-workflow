@@ -19,12 +19,15 @@ abort is a status-less error, so the existing ladder retries it, and a query's
 single provider call is bounded by the same knob.
 
 One embed pass owns the store's pending set: an advisory `doc_lease` row (owner
-token + heartbeat, TTL derived from the pacing) is taken atomically **before**
-the pending rows are read, heartbeated per request and released when the pass
-ends. Concurrent `doc --sync` runs were idempotent on the rows but not on the
-provider bill; the fenced run now embeds nothing and declares
-`unavailable-embeddings-lease-held` while still reporting the remainder, and a
-lease left by a killed pass expires and is taken over.
+++token + heartbeat, TTL derived from the pacing) is taken atomically **before**
+the pending rows are read — and, for `--sync`, **before the scan writes a
+byte**: a fenced launch performs no scan (it can neither die contending for the
+scan lock nor leave a late re-chunk beside the owner's embedded rows) and
+declares `unavailable-embeddings-lease-held` instead. Heartbeats ride the
+scan's per-file seam on the scanning connection and every provider request.
+Concurrent `doc --sync` runs were idempotent on the rows but not on the
+provider bill; the fenced run now embeds nothing and still reports the
+remainder, and a lease left by a killed pass expires and is taken over.
 
 A `--sync` that had pending chunks and no provider key declares
 `unavailable-embeddings-not-configured` instead of leaving a keyword-only corpus
