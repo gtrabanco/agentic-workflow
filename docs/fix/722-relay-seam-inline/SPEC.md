@@ -391,6 +391,7 @@ Append-only; kinds are the closed set in `log-kind@1` (the template's).
 - **D4** — the full gate cannot pass in this environment: `worktree-guard` fails on `.worktrees/feat-726-argument-hint-npm-hoisting`, a *merged but dirty* worktree of another unit that the guard itself refuses to remove. It is not this unit's worktree and is not touched; the gate receipt is the 19-step selection above, and the open obligation O15 names the blocker for the owner.
 - **G1** — 2026-11-27, `HEAD 72845fa18d2b190bca0b7d5d1855836459f83f80`, `bun scripts/local-gate.mjs --jobs 2 --no-bail` (this session's ambient `AGENTIC_WORKFLOW_DOC_EMBEDDINGS_*` variables unset) · exit 0 · `local-gate: PASS — 20 step(s) in 432s`, every step green including `root-suite` (161s) and both crate runtimes.
 - **D5** — the foreign worktree D4 named was removed by its owner before the final run; `worktree-guard` passes in G1, so no owner action remains on that finding. The plain full gate is the receipt now, not a selection.
+- **L2a** — the `L2` quote is the owner's instruction's opening paragraph and its closing sentence, verbatim; the numbered steps that follow it in the original message (§0–§9 of the local inline workflow) are elided here with this marker — every one of them is executed by this unit's `## Tasks` and its receipts.
 ## Next
 
 Hand the diff and G1's plain-gate PASS to the owner as the external verifier.
