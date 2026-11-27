@@ -199,9 +199,10 @@ none
   crate runtimes pass with those four variables unset (E14); the leak is
   reported here, never silenced in the tests.
 - `.worktrees/feat-726-argument-hint-npm-hoisting` is a merged-but-dirty
-  worktree of another unit; `worktree-guard` reports `STALE … dirty` and refuses
+  worktree of another unit; `worktree-guard` reported `STALE … dirty` and refused
   to remove it. **affects** the full gate's verdict only (D4); this unit never
-  touches another unit's working tree.
+  touched another unit's working tree, and its owner removed it before G1, which
+  passes.
 
 ## Tasks
 
@@ -272,7 +273,7 @@ whose receipt lands where `required-evidence` says.
 | O12 | S3 · PE-006 | `docs/workflow/CONFIG.md` names the key in the base list, the Sections table and its own seam note, and states `absent = ask` and the no-bypass rule | P4 | P4 | direct application (this session) | `bun test scripts/relay-route.test.mjs` exits 0 with the contract case reading `CONFIG.md` for `relay`, `seam`, `ask`, `inline` and `absent` | `E` line naming the case | verified — E3 |
 | O13 | S1 · S2 · S3 · S4 · PE-008 · PE-009 · PE-010 | The state and docs surfaces ship with the change: the fix row registered, the unit doc's evidence current, the journal entry a fragment, and the projection re-emitted | P5 | P5 | direct application (this session) | `bun packages/agentic-workflow/bin/agentic-workflow.mjs roadmap check docs/fix/722-relay-seam-inline/SPEC.md` exits 0 AND `bun scripts/docs-generate.mjs --check` exits 0 AND `bun packages/agentic-workflow/bin/agentic-workflow.mjs journal aggregate --check` exits 0 | `E` lines with the three outcomes | verified — E8, E9, E13 |
 | O14 | S1 · S3 · S4 | Red-first and regression: the test commit precedes the implementation commit, the observed-red run is recorded, and every existing relay-route case keeps its assertion | P1 | P1 | direct application (this session) | `git log --oneline --reverse origin/main..HEAD` lists the RED commit before the implementation commits AND `bun test scripts/relay-route.test.mjs` exits 0 with the original thirteen cases named | `E` lines with the reversed list and the green run | verified — E1/E2 red · E3 green · E11 |
-| O15 | S1 · S2 · S3 · S4 | The whole gate is green in the foreground, and no command's stdout/stderr/exit changed for a reason this unit did not ask for | P5 | P5 | direct application (this session) | `bun scripts/local-gate.mjs` exits 0 AND `bun scripts/run-root-suite.mjs` exits 0 | `G` lines with both verdicts | in-progress — E14, G2 green; G1 is the 19-step selection; the full gate is blocked by a foreign dirty worktree (D4) |
+| O15 | S1 · S2 · S3 · S4 | The whole gate is green in the foreground, and no command's stdout/stderr/exit changed for a reason this unit did not ask for | P5 | P5 | direct application (this session) | `bun scripts/local-gate.mjs` exits 0 AND `bun scripts/run-root-suite.mjs` exits 0 | `G` lines with both verdicts | verified — G1 |
 
 ## Triaged steps
 
@@ -388,13 +389,13 @@ Append-only; kinds are the closed set in `log-kind@1` (the template's).
 - **D2** — `scripts/test-timeout-allowlist.json`'s `workflow-status-sensor.test.mjs` row gains `suiteTimeoutMs: 240000` (ms). The 81-test suite measured 130s standalone and 97–107s in the root pool at box load 8–11 with zero assertion failures, crossing the shared 120s suite bound that no row granted it; the manifest's own rule says a suite that measures above the shared bound is named with its cost there. No per-test budget or assertion moved.
 - **D3** — the unit ships `.changeset/722-relay-seam-inline.md` declaring the three triggered packages plus `unit-lane` at minor: the config key is additive and the seam's behavior changes, so the train carries it; `lint-changeset` and `version-parity-gate --content` both pass with the intent in place.
 - **D4** — the full gate cannot pass in this environment: `worktree-guard` fails on `.worktrees/feat-726-argument-hint-npm-hoisting`, a *merged but dirty* worktree of another unit that the guard itself refuses to remove. It is not this unit's worktree and is not touched; the gate receipt is the 19-step selection above, and the open obligation O15 names the blocker for the owner.
+- **G1** — 2026-11-27, `HEAD 72845fa18d2b190bca0b7d5d1855836459f83f80`, `bun scripts/local-gate.mjs --jobs 2 --no-bail` (this session's ambient `AGENTIC_WORKFLOW_DOC_EMBEDDINGS_*` variables unset) · exit 0 · `local-gate: PASS — 20 step(s) in 432s`, every step green including `root-suite` (161s) and both crate runtimes.
+- **D5** — the foreign worktree D4 named was removed by its owner before the final run; `worktree-guard` passes in G1, so no owner action remains on that finding. The plain full gate is the receipt now, not a selection.
 ## Next
 
-Hand the diff to the owner as the external verifier: the full gate's only red is
-`worktree-guard` on the foreign dirty worktree `feat-726` (D4), so the receipt is
-G1's 19-step selection plus G2. One owner decision remains: settle or remove that
-worktree (or authorize the full gate to run with it present), then the plain
-`bun scripts/local-gate.mjs` closes O15.
+Hand the diff and G1's plain-gate PASS to the owner as the external verifier.
+Every obligation row is closed; nothing is deferred out of the unit and no
+tracked task is pending.
 
 ## References
 
