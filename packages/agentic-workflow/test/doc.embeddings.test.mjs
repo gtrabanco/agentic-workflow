@@ -500,3 +500,81 @@ describe("S3/S9 sync resilience (D5)", () => {
     }
   });
 });
+
+// ── Bounded provider requests (issue #718 S3) ─────────────────────────────
+
+describe("S3 bounded provider requests (issue #718)", () => {
+  it("S3: the fetch timeout is a pacing knob, defaulting to 30000 ms", () => {
+    strictEqual(DEFAULT_PACING.fetchTimeoutMs, 30000);
+    strictEqual(resolvePacing({}).fetchTimeoutMs, 30000);
+    strictEqual(
+      resolvePacing({ config: { provider: { pacing: { fetchTimeoutMs: 2500 } } } }).fetchTimeoutMs,
+      2500,
+    );
+    strictEqual(
+      resolvePacing({ env: { AGENTIC_WORKFLOW_DOC_EMBEDDINGS_FETCH_TIMEOUT_MS: "7000" } }).fetchTimeoutMs,
+      7000,
+    );
+    throws(
+      () => resolvePacing({ env: { AGENTIC_WORKFLOW_DOC_EMBEDDINGS_FETCH_TIMEOUT_MS: "0" } }),
+      /fetchTimeoutMs/,
+    );
+  });
+
+  it("S3: the provider's POST carries an AbortSignal that fires at the configured timeout", async () => {
+    let seen = null;
+    const provider = makeOpenAIProvider({
+      baseUrl: "http://provider.test/v1",
+      apiKey: "k",
+      model: "m",
+      fetchTimeoutMs: 25,
+      fetchImpl: (url, init) => {
+        seen = init;
+        return new Promise((_, reject) => {
+          init.signal.addEventListener("abort", () => reject(init.signal.reason));
+        });
+      },
+    });
+    await rejects(
+      () => provider.embed(["x"]),
+      (error) => error.name === "TimeoutError" && error.status === undefined,
+      "a stalled socket aborts instead of hanging the pass",
+    );
+    ok(seen.signal instanceof AbortSignal);
+  });
+
+  it("S3: a timed-out request rides the retry ladder and the pass completes", async () => {
+    const dir = resilienceFixture({ "a.md": "# A\nbody a\n", "b.md": "# B\nbody b\n" });
+    try {
+      await syncIndex(dir);
+      const clock = virtualClock();
+      let calls = 0;
+      const provider = makeOpenAIProvider({
+        baseUrl: "http://provider.test/v1",
+        apiKey: "k",
+        model: "mock-timeout",
+        fetchTimeoutMs: 10,
+        fetchImpl: (url, init) => {
+          calls += 1;
+          if (calls === 1) {
+            return new Promise((_, reject) => {
+              init.signal.addEventListener("abort", () => reject(init.signal.reason));
+            });
+          }
+          return Promise.resolve({ ok: true, json: async () => ({ data: [{ embedding: [1, 0, 0] }] }) });
+        },
+      });
+      const result = await embedPendingChunks(dir, provider, {
+        sleep: clock.sleep,
+        now: clock.now,
+        random: () => 0,
+        pacing: { maxAttempts: 2, requestsPerMinute: 60000 },
+      });
+      strictEqual(calls, 3, "the stalled request is retried once, then the next file is one more request");
+      strictEqual(result.embedded, 2, "every chunk landed");
+      ok(clock.sleeps.some((ms) => ms >= 1000), "the ladder backed off before re-sending");
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+});
