@@ -87,3 +87,13 @@ door actually executes: `"subcommand": "journal"` *and* `"args": ["write"`, two
 independent literals where one stood before. The intent — the code door names
 the same writer — is unchanged, and a regression to a spaced service now fails
 two assertions instead of one.
+
+## D9 — the ledger's own shape row is not validated by `verify`
+
+2026-11-27. O8's validator was `verify … --no-git`, and `verify` includes the
+obligations-closure check — so the row that vouches for the ledger's existence
+could only pass after every row closed, a circularity no unit can satisfy while
+an unrelated row is open. Its validator is now the two facts the row actually
+asserts (the `## Specs` section exists once; `decisions.md` names route (a)).
+This is not a relaxation: the closure check still runs over the whole ledger,
+and `verify` still refuses until O9 closes.

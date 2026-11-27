@@ -252,29 +252,45 @@ ceremony tier classify --paths <the unit's paths>`, verbatim:
 - **`docs/LOGS.md` is written by the merge-time aggregator, never locally** —
   `does-not-affect`: this unit writes a journal fragment, which is the sanctioned
   local writer.
+- **Three stale worktrees predate this unit** —
+  `.worktrees/feat-718-doc-index-embeddings`, `.worktrees/feat-722-relay-seam-inline`
+  and `.worktrees/feat-726-argument-hint-npm-hoisting`. `worktree-guard` reports
+  them on every run of this checkout, so `bun scripts/local-gate.mjs` fails on a
+  finding no commit of this unit created or touched (IR8's namespace is clean:
+  the three live under `.worktrees/`, never under `.git/worktrees/`). Removal is
+  the owner's call — another session may hold them — so this unit leaves them
+  and records the red (`## Log` G2).
+- **`doc.structure.test.mjs` exceeds its declared 240s suite bound under
+  concurrent sessions** — `does-not-affect` the change: the suite touches no
+  file this unit edits, passes 19/19 standalone in 180s, and the crate suite is
+  85/85 at `--jobs 1` (`## Log` E18, G5). The red is the box, not the bytes.
+- **The document-query suites read this session's embedding environment** —
+  `does-not-affect` the change: their "no provider configured" cases fail while
+  `AGENTIC_WORKFLOW_DOC_EMBEDDINGS_*`/`NAN_API_KEY` are exported, and pass with
+  them unset, which is how CI runs (`## Log` E17).
 
 ## Tasks
 
-- P1 — cut this unit doc, its embedded ledgers and the decisions record
+- [x] P1 — cut this unit doc, its embedded ledgers and the decisions record
   (validator: `bun packages/agentic-workflow/bin/agentic-workflow.mjs verify docs/fix/734-log-session-subcommand-shape/SPEC.md --no-git` exits 0)
   (Implements: S1, S11)
   - Relevant files: docs/fix/734-log-session-subcommand-shape/SPEC.md, docs/fix/734-log-session-subcommand-shape/decisions.md
-- P2 — repair the state the prior commit broke: the two hand version bumps and
+- [x] P2 — repair the state the prior commit broke: the two hand version bumps and
   the hand `CHANGELOG.md` row leave, the changeset is the one release intent
   (validator: `bun scripts/version-parity-gate.mjs --content` exits 0 and `git diff f1b04a3a9 -- packages/*/package.json CHANGELOG.md` is empty)
   (Implements: S9)
   - Relevant files: packages/agentic-workflow/package.json, packages/pi-agentic-workflow/package.json, CHANGELOG.md, .changeset/734-log-session-subcommand-shape.md
-- P3 — RED: the executable pin (parse the rendered call, execute it against the
+- [x] P3 — RED: the executable pin (parse the rendered call, execute it against the
   crate in a fixture) and the contract-shape case land and are observed failing
   against the cut base (validator: `bun test packages/pi-agentic-workflow/test/log-session-invocation.test.mjs` exits non-zero in the `f1b04a3a9` scratch copy, naming the rendered call)
   (Implements: S4, S10)
   - Relevant files: packages/pi-agentic-workflow/test/log-session-invocation.test.mjs, packages/pi-agentic-workflow/test/runner-mapping-injection.test.mjs
-- P4 — GREEN: the emitter's two call bodies speak the door's contract, the
+- [x] P4 — GREEN: the emitter's two call bodies speak the door's contract, the
   `runner-mapping@1` block pins the shape, and the package README states it
   (validator: `bun test packages/pi-agentic-workflow/test/log-session-invocation.test.mjs` exits 0 and `bun test packages/pi-agentic-workflow/test/runner-mapping-injection.test.mjs` exits 0)
   (Implements: S2, S3, S5, S8)
   - Relevant files: packages/pi-agentic-workflow/src/log-session-invocation.ts, skills/runner-contract/references/RUNNER.md, packages/pi-agentic-workflow/README.md
-- P5 — state: the `## Fixes` row through the crate's writer, the regenerated
+- [x] P5 — state: the `## Fixes` row through the crate's writer, the regenerated
   projection, the session entry as a narrative journal fragment (validator: `bun scripts/docs-generate.mjs --check` exits 0)
   (Implements: S1)
   - Relevant files: docs/ROADMAP.md, docs/generated/, .agentic-workflow/journal/
@@ -310,15 +326,15 @@ cut time and `verified` only against a foreground validator run.
 
 | obligation-id | authority-source | affected-use-case-or-invariant | phase | task | implementation-owner | validator | required-evidence | status |
 |---|---|---|---|---|---|---|---|---|
-| O1 | S2, S3, S5 · PE-001, PE-002, PE-003, PE-004 · AC-S2, AC-S4 | The write call the directive renders is executable by the tool it names: parsing the call and running `[subcommand, ...args]` against the crate in a fragment-carrier fixture exits 0 and lands exactly one fragment | P4 | P4 | direct application (this session) | `bun test packages/pi-agentic-workflow/test/log-session-invocation.test.mjs` exits 0 (case `the rendered journal call is the one the crate accepts`) | `E` line naming the case, and the base-commit red run | planned |
-| O2 | S3, S5 · PE-001, PE-002, PE-004 · AC-S2 | The close call is the same two-field shape — `subcommand` `session-close`, `args` `["close"]` — and reaches the crate's own writer instead of an Unknown-service refusal | P4 | P4 | direct application (this session) | `bun test packages/pi-agentic-workflow/test/log-session-invocation.test.mjs` exits 0 (case `the rendered close call is the service alone, and the crate answers it`) | `E` line naming the case and the writer's own answer | planned |
-| O3 | S6, S11 · PE-001 · AC-S6 | No second call shape exists: the door still forwards `subcommand` as one token and no code splits it on a space, so the vocabulary keeps one owner | P2 | P2 | direct application (this session) | `git diff f1b04a3a9 -- packages/pi-agentic-workflow/src/extension/workflow-tools.ts` is empty and `rg -n 'subcommand[^\n]*\.split\(' packages/pi-agentic-workflow/src` matches nothing | `E` line with both commands and their answers | planned |
-| O4 | S7 · PE-005 · AC-S7 | The attribution seam's behaviour is unchanged: the token the seam now hears is neither unit- nor phase-attributing, and no consumer reads a spaced `subcommand` | P6 | P6 | direct application (this session) | `bun test packages/pi-agentic-workflow/test/telemetry-attribution.test.mjs` exits 0 | `E` line with the suite verdict and the `rg '"journal write"'` count (`0`) | planned |
-| O5 | S8 · PE-004, PE-006 · AC-S8 | The shape is pinned once where a session reads it and swept in one change: no render surface composes a spaced `subcommand`, the `runner-mapping@1` block states the rule, and the package README repeats it as the package's own door | P4 | P4 | direct application (this session) | `rg -n '"subcommand": "(?:journal write\|session-close close)' packages/*/src skills template` matches nothing; `bun test packages/pi-agentic-workflow/test/runner-mapping-injection.test.mjs` exits 0 | `E` line with the sweep and the suite verdict; the writers the issue names (emitter, README, RUNNER.md, log-session skill, log-session-command test) are the sweep's checklist | planned |
-| O6 | S10 · PE-007, PE-008 · AC-S10 | The seam cannot drift silently: the executable case exists beside the emitter and is red on the base bytes (`Unknown service: journal write`) | P3 | P3 | direct application (this session) | `bun test packages/pi-agentic-workflow/test/log-session-invocation.test.mjs` exits 1 in the `f1b04a3a9` scratch copy and exits 0 here | `E` lines with both runs | planned |
-| O7 | S9 · PE-009 · AC-S9 | One release carries both sides and the train stays aligned: the changeset declares the emitter's package and the crate whose cross-package pin it repairs, and every package reads one version | P2 | P2 | direct application (this session) | `bun scripts/version-parity-gate.mjs --content` exits 0; `rg -n '"version"' packages/*/package.json` matches four `4.10.1` | `E` line with both answers | planned |
-| O8 | S1, S11 · AC-S1, AC-S11 | The unit ships as one inline application with a frozen ledger, and the owner's route decision is recorded: (a) implemented, (b) named and rejected | P1 | P1 | direct application (this session) | `bun packages/agentic-workflow/bin/agentic-workflow.mjs verify docs/fix/734-log-session-subcommand-shape/SPEC.md --no-git` exits 0 | `E` line with the verify verdict; `decisions.md` D1 | planned |
-| O9 | S1, S2, S3, S4, S5, S7, S8, S9, S10 · AC-S1 | The whole gate passes with the change in place, under the package suite and the root suite | P6 | P6 | direct application (this session) | `bun run --cwd packages/pi-agentic-workflow test` exits 0 and `bun scripts/local-gate.mjs` exits 0 | `G` lines with both verdicts and the counts | planned |
+| O1 | S2, S3, S5 · PE-001, PE-002, PE-003, PE-004 · AC-S2, AC-S4 | The write call the directive renders is executable by the tool it names: parsing the call and running `[subcommand, ...args]` against the crate in a fragment-carrier fixture exits 0 and lands exactly one fragment | P4 | P4 | direct application (this session) | `bun test packages/pi-agentic-workflow/test/log-session-invocation.test.mjs` exits 0 (case `the rendered journal call is the one the crate accepts`) | `E` line naming the case, and the base-commit red run | verified — E7 (26 pass / 0 fail at the change) and E6 (the same case red on the base bytes: `expected "journal", actual "journal write"`) |
+| O2 | S3, S5 · PE-001, PE-002, PE-004 · AC-S2 | The close call is the same two-field shape — `subcommand` `session-close`, `args` `["close"]` — and reaches the crate's own writer instead of an Unknown-service refusal | P4 | P4 | direct application (this session) | `bun test packages/pi-agentic-workflow/test/log-session-invocation.test.mjs` exits 0 (case `the rendered close call is the service alone, and the crate answers it`) | `E` line naming the case and the writer's own answer | verified — E7 (the close case green; the crate's own `write the entry first` validation answered, exit 1, never exit 2) |
+| O3 | S6, S11 · PE-001 · AC-S6 | No second call shape exists: the door still forwards `subcommand` as one token and no code splits it on a space, so the vocabulary keeps one owner | P2 | P2 | direct application (this session) | `git diff f1b04a3a9 -- packages/pi-agentic-workflow/src/extension/workflow-tools.ts` is empty and `rg -n 'subcommand[^\n]*\.split\(' packages/pi-agentic-workflow/src` matches nothing | `E` line with both commands and their answers | verified — E14 (the door's diff is empty and no split matches; decisions.md D1 rejects route (b)) |
+| O4 | S7 · PE-005 · AC-S7 | The attribution seam's behaviour is unchanged: the token the seam now hears is neither unit- nor phase-attributing, and no consumer reads a spaced `subcommand` | P6 | P6 | direct application (this session) | `bun test packages/pi-agentic-workflow/test/telemetry-attribution.test.mjs` exits 0 | `E` line with the suite verdict and the `rg '"journal write"'` count (`0`) | verified — E11 (6 pass / 0 fail; `rg '"journal write"' packages/pi-agentic-workflow/src` exits 1) |
+| O5 | S8 · PE-004, PE-006 · AC-S8 | The shape is pinned once where a session reads it and swept in one change: no render surface composes a spaced `subcommand`, the `runner-mapping@1` block states the rule, and the package README repeats it as the package's own door | P4 | P4 | direct application (this session) | `rg -n '"subcommand": "(?:journal write\|session-close close)' packages/*/src skills template` matches nothing; `bun test packages/pi-agentic-workflow/test/runner-mapping-injection.test.mjs` exits 0 | `E` line with the sweep and the suite verdict; the writers the issue names (emitter, README, RUNNER.md, log-session skill, log-session-command test) are the sweep's checklist | verified — E14 (render-surface sweep: no match; the skill and its command test cite the symbolic CLI form, unchanged) and E7 (`M7` green); D8 records the crate pin re-bound |
+| O6 | S10 · PE-007, PE-008 · AC-S10 | The seam cannot drift silently: the executable case exists beside the emitter and is red on the base bytes (`Unknown service: journal write`) | P3 | P3 | direct application (this session) | `bun test packages/pi-agentic-workflow/test/log-session-invocation.test.mjs` exits 1 in the `f1b04a3a9` scratch copy and exits 0 here | `E` lines with both runs | verified — E6 (base: 22 pass / 4 fail, the executable case among them) and E7 (change: 26 pass / 0 fail) |
+| O7 | S9 · PE-009 · AC-S9 | One release carries both sides and the train stays aligned: the changeset declares the emitter's package and the crate whose cross-package pin it repairs, and every package reads one version | P2 | P2 | direct application (this session) | `bun scripts/version-parity-gate.mjs --content` exits 0; `rg -n '"version"' packages/*/package.json` matches four `4.10.1` | `E` line with both answers | verified — E12 (parity PASS, both packages `changeset-intent`; the four package versions read `4.10.1`) |
+| O8 | S1, S11 · AC-S1, AC-S11 | The unit ships as one inline application with a frozen ledger, and the owner's route decision is recorded: (a) implemented, (b) named and rejected | P1 | P1 | direct application (this session) | `rg -c '^## Specs$' docs/fix/734-log-session-subcommand-shape/SPEC.md` matches `1`, and `rg -n '^## Route' docs/fix/734-log-session-subcommand-shape/decisions.md` names route (a) | `E` line with both matches; `decisions.md` D1 | verified — E19 (the doc carries `## Specs` once and `decisions.md` D1 names route (a); D9 records why this row is not validated by `verify`) |
+| O9 | S1, S2, S3, S4, S5, S7, S8, S9, S10 · AC-S1 | The whole gate passes with the change in place, under the package suite and the root suite | P6 | P6 | direct application (this session) | `bun run --cwd packages/pi-agentic-workflow test` exits 0 and `bun scripts/local-gate.mjs` exits 0 | `G` lines with both verdicts and the counts | in-progress (G1 green; G2 green on 18 of 20 steps, the two reds environmental — see `## Log` and `## Known pre-existing issues`) |
 
 ## Path protection
 
@@ -381,6 +397,16 @@ authoritative step list.
 - **E14** — 2026-11-27, the side-effect sweep · `rg -n '"subcommand": "(?:journal write|session-close close)' packages/*/src skills template` · exit 1 (no render surface composes a spaced subcommand); `rg -n 'subcommand[^\n]*\.split\(' packages/pi-agentic-workflow/src` · exit 1; `git diff f1b04a3a9 -- packages/pi-agentic-workflow/src/extension/workflow-tools.ts` · empty (the door never learns the shorthand).
 - **E15** — 2026-11-27, `bun test packages/agentic-workflow/test/journal.write.test.mjs` · exit 1 · `the extension's invocation record names the same writer` — the crate's cross-package pin still asserted the literal spaced phrase the fix removes.
 - **D8** — 2026-11-27, that pin is re-bound, never relaxed: it now requires `"subcommand": "journal"` **and** `"args": ["write"` in the emitter's source, so a regression to a spaced service fails two assertions instead of one (IR3's repair direction: the code is judged, the intent is kept).
+- **E16** — 2026-11-27, `rg -c '^## Specs$' docs/fix/734-log-session-subcommand-shape/SPEC.md` · `1`; `rg -n 'route \(a\)' docs/fix/734-log-session-subcommand-shape/decisions.md` · the decision names route (a) (D1).
+- **E17** — 2026-11-27, `bun test packages/agentic-workflow/test/doc.query.test.mjs packages/agentic-workflow/test/doc.hybrid.test.mjs` · **7 fail** with this session's ambient embedding variables (`AGENTIC_WORKFLOW_DOC_EMBEDDINGS_*`, `NAN_API_KEY`) — the "no provider configured" cases see a provider — and **47 pass / 0 fail** with those five variables unset (`env -u …`), which is the environment CI runs.
+- **E18** — 2026-11-27, `bun test packages/agentic-workflow/test/doc.structure.test.mjs` standalone at load 8.65 · **19 pass / 0 fail in 180s**, inside its declared 240s suite bound (`scripts/test-timeout-allowlist.json`).
+- **E19** — 2026-11-27, `bun packages/agentic-workflow/bin/agentic-workflow.mjs verify docs/fix/734-log-session-subcommand-shape/SPEC.md --no-git` · exit 2 · `VERIFY REFUSAL — 1 violation(s): obligations row O9 is not closed` — the artifact's own state, never a silent pass.
+- **E20** — 2026-11-27, `bun scripts/check-skill-context.mjs --documents` · `PASS context documents: 7 budgeted documents` after the package README's ceiling re-pin; `bun scripts/docs-generate.mjs --check` · `PASS` (3 checked, 0 stale).
+- **G1** — 2026-11-27, HEAD `e966bf418`, `bun run --cwd packages/pi-agentic-workflow test` · exit 0 · **1,127 pass / 0 fail** across 95 files.
+- **G2** — 2026-11-27, HEAD `e966bf418`, `bun scripts/local-gate.mjs --jobs 4 --no-bail` (embedding variables unset) · 18 of 20 steps exit 0 — `root-suite` 242s (every root suite PASS), `version-parity-content`, `skill-context-budgets`, `docs-generated-projection`, `journal-carrier-check`, `log-immutability`, `dependency-pin-gate`, `dependency-advisories`, `schema-build`, `workspace-install` and the rest. Two red: `worktree-guard` (`3 finding(s)` — stale worktrees this unit never created) and `crate-suite-bun` (`doc.structure.test.mjs` SUITE TIMEOUT at its declared 240s bound, every case inside green). Four dependent steps were skipped by the gate's graph.
+- **G3** — 2026-11-27, HEAD `e966bf418`, `bun scripts/local-gate.mjs --only crate-suite-bun --jobs 1` (embedding variables unset) · the same step red again at load 7.75: the crate's own runner pool is six wide regardless of the gate's `--jobs`, and `doc.structure` spends 180-240s of shell spawns.
+- **G4** — 2026-11-27, HEAD `e966bf418`, the four steps G2 skipped — `bun scripts/local-gate.mjs --only crate-suite-node,schema-node-compat,pi-node-compat,pi-compat-guard --jobs 1` (embedding variables unset) · exit 0 · **`local-gate: PASS — 4 step(s) in 396s`** (`crate-suite-node` 252s, `schema-node-compat` 17s, `pi-node-compat` 57s, `pi-compat-guard` 70s).
+- **G5** — 2026-11-27, HEAD `e966bf418`, the crate suite at `--jobs 1` with the embedding variables unset — `bun scripts/run-root-suite.mjs --dir packages/agentic-workflow/test --cwd packages/agentic-workflow --test-timeout 30 --jobs 1` · **85/85 PASS, zero FAIL/TIMEOUT** — the same suites the red `crate-suite-bun` step runs, green when they are not competing for the box.
 - **P1** — 2026-11-27, unit doc, embedded ledgers, decisions record cut.
 - **P2** — 2026-11-27, state repaired (versions reverted, malformed CHANGELOG row removed, changeset re-scoped to the touched package) · `6260ae9db`.
 - **P3** — 2026-11-27, the executable pin and the contract-shape case appended; the base copy observed red · `a83beb307`.
@@ -396,9 +422,14 @@ authoritative step list.
 
 ## Next
 
-Owner verdict on the delivered diff: the obligations ledger is closed and the
-gates are green; the merge is the owner's step. After merge, the next pi release
-carries both sides (S9), and the fix row leaves `docs/ROADMAP.md`.
+The owner's decision on O9 — the only open obligation. Eight of nine rows are
+`verified`; the gate observes 18 of 20 steps green (`## Log` G1-G5), and the two
+reds are environmental and named in `## Known pre-existing issues`: three stale
+worktrees this unit never created, and `doc.structure.test.mjs` exceeding its
+declared 240s suite bound under concurrent sessions (the same 85 suites are
+green at `--jobs 1`, and the node leg is green). If the owner accepts those
+reds, O9 closes and the merge is the next step; after merge the next pi release
+carries both sides (S9) and the fix row leaves `docs/ROADMAP.md`.
 
 ## References
 
