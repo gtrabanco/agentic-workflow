@@ -225,7 +225,15 @@ none
 - `packages/agentic-workflow/test/doc.structure.test.mjs` (240s suite bound) —
   **does-not-affect** this unit; it times out only under the gate pool's load and
   passes standalone (`node --test`, 19/19, 2m40s). Already on
-  `scripts/test-timeout-allowlist.json`; the bound was not raised to pass.
+  `scripts/test-timeout-allowlist.json`; the bound was not raised to pass. It
+  recurred on the addendum's gate runs (`crate-suite-bun` and `crate-suite-node`),
+  the only red line both times.
+- `scripts/workflow-status-sensor.test.mjs` (shared 120s suite bound) —
+  **does-not-affect** this addendum; it passes standalone with the gate's 30s
+  per-test budget (`bun test --timeout 30000`, 81/81 in 135s) but exceeds the
+  shared suite bound under the root pool's load. Already on
+  `scripts/test-timeout-allowlist.json` for its per-test budget; the suite bound
+  was not raised to pass.
 - Six `embed-profile*` cases in the package suite fail while this session exports
   `NAN_API_KEY`/`AGENTIC_WORKFLOW_DOC_EMBEDDINGS_*`/`PI_PROVIDER` —
   **does-not-affect** this unit; the suite is green with those variables unset
@@ -354,3 +362,4 @@ none
 - **E16** — 2026-11-27, the S8 engine: `bun test packages/agentic-workflow/test/skills.screen.test.mjs scripts/skill-lint.test.mjs` · exit 0 · 33 pass / 0 fail; `bun scripts/skill-lint.mjs` · exit 0 · `skill-lint — 118 file(s) · 8 check(s) · root .` and `0 finding(s)`, `verdict: PASS` (the shipped tree, including `execute-phase`'s `allowed-tools` array, is not a false positive).
 - **E17** — 2026-11-27, the surrounding skill suites: `bun test packages/agentic-workflow/test/skills.screen.test.mjs packages/agentic-workflow/test/skills.discovery.test.mjs packages/agentic-workflow/test/skills.register.test.mjs scripts/skill-lint.test.mjs` · exit 0 · 58 pass / 0 fail.
 - **P2** — 2026-11-27, the S8 addendum committed on the PR branch (`test(726)` red suites first, then the `feat(skill-lint)` engine/docs commit) and pushed to PR [#736](https://github.com/gtrabanco/agentic-workflow/pull/736).
+- **E18** — 2026-11-27, the addendum's gates: `bun scripts/run-root-suite.mjs` · exit 1 · every suite green except `scripts/workflow-status-sensor.test.mjs (120.0s) — SUITE TIMEOUT` (0 assertion failures inside; standalone with the gate's `--timeout 30000` → 81/81 in 2m15s); `local-gate --only crate-suite-bun --jobs 1` · exit 1 · every suite green except `packages/agentic-workflow/test/doc.structure.test.mjs (240.3s) — SUITE TIMEOUT` (0 assertion failures inside; standalone node 19/19 earlier); `bun scripts/check-skill-context.mjs` · exit 0 · `PASS context budgets: 33 skills`; `bun scripts/check-skill-context.mjs --documents` · exit 0 · `PASS context documents: 7 budgeted documents`; `bun scripts/docs-generate.mjs --check` · exit 0 · `verdict: PASS`; `bun scripts/lint-changeset.mjs` · exit 0; `bun scripts/test-obligation-tags.mjs` · exit 0 · `147 suite(s) · 0 finding(s)`.
