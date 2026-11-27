@@ -1,7 +1,7 @@
 {
   "contract": "config-extension@1",
   "key": "pi",
-  "file": "pi-agentic-workflow.json",
+  "file": "pi-agentic-workflow",
   "description": "pi-agentic-workflow package config: model routing, profiles, passes, subagent limits, State Flow, shell-tool choice, phase batching, guard plugins.",
   "schema": {
     "type": "object",

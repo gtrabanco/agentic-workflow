@@ -46,16 +46,24 @@ test("ACFG-03 the project base file wins over the global base file, field by fie
   });
 });
 
-test("ACFG-04 the vocabulary is closed: the old mode string is refused", () => {
-  const refused = load({ [paths.globalBase]: JSON.stringify({ logSession: "mechanical" }) });
-  assert.equal(refused.ok, false);
-  assert.match(refused.problems[0].message, /does not match any allowed shape/);
+// Issue #740 S6 supersedes the fail-closed half of this suite: a file whose
+// parse succeeds but whose value no longer validates is degraded — the bad key
+// is dropped and the shipped default fills in — while a file that does not parse
+// still refuses (pinned by `config-jsonc.test.mjs` J6).
+
+test("ACFG-04 the vocabulary is closed: the old mode string is dropped and the default fills in (#740 S6)", () => {
+  const degraded = load({ [paths.globalBase]: JSON.stringify({ logSession: "mechanical" }) });
+  assert.equal(degraded.ok, true, JSON.stringify(degraded.problems));
+  assert.deepEqual(degraded.problems, []);
+  assert.deepEqual(degraded.config.logSession, { enabled: false, publisher: null });
 });
 
-test("ACFG-05 the block is strict: unknown keys and bad values are refused", () => {
+test("ACFG-05 the block is strict: unknown keys and bad values are dropped, never coerced (#740 S6)", () => {
   for (const value of [{ publisher: { nope: 1 } }, { enabled: "yes" }, []]) {
     const result = load({ [paths.globalBase]: JSON.stringify({ logSession: value }) });
-    assert.equal(result.ok, false, `${JSON.stringify(value)} must be refused`);
+    assert.equal(result.ok, true, `${JSON.stringify(value)} is dropped, not a refusal`);
+    assert.deepEqual(result.problems, []);
+    assert.deepEqual(result.config.logSession, { enabled: false, publisher: null }, `${JSON.stringify(value)} never reaches the effective config`);
   }
   const empty = load({ [paths.globalBase]: JSON.stringify({ logSession: {} }) });
   assert.equal(empty.ok, true, JSON.stringify(empty.problems));
@@ -80,7 +88,9 @@ test("ACFG-06 the declared publisher's argv and timeout are validated", () => {
   ];
   for (const publisher of bad) {
     const result = load({ [paths.globalBase]: JSON.stringify({ logSession: { publisher } }) });
-    assert.equal(result.ok, false, `${JSON.stringify(publisher)} must be refused`);
+    assert.equal(result.ok, true, `${JSON.stringify(publisher)} is dropped, not a refusal (#740 S6)`);
+    assert.deepEqual(result.problems, []);
+    assert.notDeepEqual(result.config.logSession.publisher, publisher, "the invalid publisher never reaches the effective config");
   }
 });
 

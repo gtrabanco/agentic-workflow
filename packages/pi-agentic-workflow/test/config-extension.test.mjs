@@ -18,7 +18,7 @@ test("the committed descriptor is byte-equal to the module's published section",
 test("the section is package-specific and names its own file", () => {
   assert.equal(PI_CONFIG_EXTENSION.contract, "config-extension@1");
   assert.equal(PI_CONFIG_EXTENSION.key, "pi");
-  assert.equal(PI_CONFIG_EXTENSION.file, "pi-agentic-workflow.json");
+  assert.equal(PI_CONFIG_EXTENSION.file, "pi-agentic-workflow", "the canonical identity is the stem (#740 S4)");
   assert.equal(PI_CONFIG_EXTENSION.schema.additionalProperties, false);
   assert.equal(PI_CONFIG_EXTENSION.defaults.default.model, "inherit");
 });

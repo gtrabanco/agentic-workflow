@@ -514,6 +514,68 @@ function checkRoute(value: unknown, path: string, issues: ConfigIssue[]): RouteF
 
 export type ParseResult = { ok: true; config: ConfigFile } | { ok: false; issues: ConfigIssue[] };
 
+/** The segments of an issue path (`$.commands.some-name`, `$.default.model`). */
+function issuePathSegments(path: string): string[] {
+  if (!path.startsWith("$")) return [];
+  const segments: string[] = [];
+  let index = 1;
+  while (index < path.length) {
+    if (path[index] === ".") {
+      index += 1;
+      continue;
+    }
+    if (path[index] === '"') {
+      const start = index;
+      index += 1;
+      while (index < path.length && path[index] !== '"') {
+        if (path[index] === "\\") index += 1;
+        index += 1;
+      }
+      segments.push(JSON.parse(path.slice(start, index + 1)) as string);
+      index += 1;
+      continue;
+    }
+    const start = index;
+    while (index < path.length && path[index] !== ".") index += 1;
+    segments.push(path.slice(start, index));
+  }
+  return segments;
+}
+
+function deleteMember(value: unknown, path: string[]): boolean {
+  let cursor: unknown = value;
+  for (const key of path.slice(0, -1)) {
+    if (!isRecord(cursor)) return false;
+    cursor = cursor[key];
+  }
+  if (path.length === 0 || !isRecord(cursor)) return false;
+  const last = path[path.length - 1];
+  if (!(last in cursor)) return false;
+  delete cursor[last];
+  return true;
+}
+
+/**
+ * Degrade an already-parsed config to what this file's schema still accepts
+ * (#740 S6): every member the validator reports is removed and the value is
+ * re-validated until it passes or nothing is left. Only a parse failure refuses,
+ * and that refusal belongs to the caller's parser — this function never sees
+ * unparsable text, so it never throws.
+ */
+export function degradeConfig(value: unknown): ConfigFile {
+  for (let round = 0; round < 64; round += 1) {
+    const result = validateConfig(value);
+    if (result.ok) return result.config;
+    let dropped = false;
+    for (const issue of result.issues) {
+      const path = issuePathSegments(issue.path);
+      if (path.length > 0 && deleteMember(value, path)) dropped = true;
+    }
+    if (!dropped) return {};
+  }
+  return {};
+}
+
 /** Validate an already-parsed JSON value. */
 function validateConfig(value: unknown): ParseResult {
   if (!isRecord(value)) {
