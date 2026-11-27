@@ -101,10 +101,12 @@ const uniq = (values) => [...new Set(values)];
 /* --------------------------------------------------------------- the sources */
 
 /**
- * The published obligation set, read from committed source. The reader is a text
- * scan rather than an import on purpose: the gate must run on a tree whose
- * `dist/` was never built (a fresh clone), and the const's declaration is the
- * authority either way. Its caller is the parity reader below and the suite.
+ * The published obligation set, parsed out of committed source. The sibling
+ * suite reads the declaration where it is written — the source is the
+ * authority it asserts, so a stale `dist/` cannot stand in for it — while the
+ * command's own gate imports the published set from the package instead
+ * (issue #717) and `--vocabulary` compares that imported value against the
+ * owner doc's block below.
  */
 export function publishedObligationKinds(text) {
   const at = String(text).indexOf(`export const ${VOCABULARY_EXPORT} = Object.freeze([`);

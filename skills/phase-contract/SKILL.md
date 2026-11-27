@@ -139,8 +139,8 @@ or, on the first failing box:
 Phase-lint: BLOCKED — box <n>: <one-line reason>
 ```
 
-A plan-grammar target no shipped prefix maps fails closed by name, before any
-box runs, because the cause is the document's tree rather than a rule:
+A plan-grammar target no shipped prefix maps fails closed by name, replacing
+box verdicts, because the cause is the document's tree, not a rule:
 
 ```text
 P<n> box-2: task <n> target `<token>` belongs to no layer the shipped prefix table knows — …
