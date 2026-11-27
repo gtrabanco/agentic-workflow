@@ -635,3 +635,54 @@ describe("embed pass progress (issue #718 S2)", () => {
     }
   });
 });
+
+// ── The keyword-only sync declaration (issue #718 S6) ─────────────────────
+
+describe("keyword-only sync declaration (issue #718 S6)", () => {
+  function keywordFixture() {
+    const dir = mkdtempSync(join(tmpdir(), "doc-718-kw-"));
+    const gitArgs = ["-c", "user.name=t", "-c", "user.email=t@example.test", "-c", "commit.gpgsign=false"];
+    execFileSync("git", [...gitArgs, "init", "-q"], { cwd: dir });
+    writeFileSync(join(dir, "a.md"), "# Alpha\nalpha body\n");
+    writeFileSync(join(dir, "b.md"), "# Beta\nbeta body\n");
+    // A provider block whose key is absent and an explicit chunk limit: the
+    // limit is provider-independent, so a pass with and a pass without the
+    // injected embedder chunk identically and the second one has nothing pending.
+    mkdirSync(join(dir, ".agentic-workflow"), { recursive: true });
+    writeFileSync(
+      join(dir, ".agentic-workflow", "index.json"),
+      JSON.stringify({
+        version: 1,
+        provider: { baseUrl: "http://127.0.0.1:1", model: "m1", envVar: "AGENTIC_WORKFLOW_DOC_718_TEST_KEY", chunk_limit: 90000 },
+      }),
+    );
+    execFileSync("git", [...gitArgs, "add", "-A"], { cwd: dir });
+    execFileSync("git", [...gitArgs, "commit", "-qm", "fixture"], { cwd: dir });
+    return dir;
+  }
+
+  it("S6: a sync that had pending chunks with no provider declares unavailable-embeddings-not-configured", async () => {
+    const dir = keywordFixture();
+    try {
+      const env = await runDocOp({ op: "sync" }, { rootDir: dir });
+      deepStrictEqual(env.degradations, ["unavailable-embeddings-not-configured"]);
+      strictEqual(env.store.lastSync.embedded, 0);
+      ok(env.store.pending > 0, "the keyword-only corpus is stated, never silent");
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it("S6: a warm keyword-only sync (nothing pending) stays silent", async () => {
+    const dir = keywordFixture();
+    try {
+      const embedded = await runDocOp({ op: "sync" }, { rootDir: dir, embedder: semanticEmbedder("m1") });
+      strictEqual(embedded.store.pending, 0);
+      const warm = await runDocOp({ op: "sync" }, { rootDir: dir });
+      deepStrictEqual(warm.degradations, [], "nothing is pending, so there is nothing to declare");
+      strictEqual(warm.store.pending, 0);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+});
