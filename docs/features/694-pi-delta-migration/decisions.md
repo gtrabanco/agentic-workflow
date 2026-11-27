@@ -1,0 +1,16 @@
+# 694 — pi-delta-migration · decisions
+
+Each row is an owner decision this unit's plan rests on (`decision-scope@1`).
+Every row is `unit-only`: nothing here is promoted, because each decision is
+either a reading of the issue's own plan or a correction of a fact the tree
+already owns. The corrections that outlive the unit are the *documents'* (the
+README baseline, the event matrix's citation), not rules.
+
+| id | decision | scope | ground |
+|---|---|---|---|
+| D1 | The trailing-`/` provider constraint **stays**, as a pre-filter predicate on the provider segment. The issue orders that reading first and offers the simpler contract only "if the owner prefers" it; no evidence states a preference, and dropping it would silently widen `nan/` to any reference whose letters appear in order — a capability loss the issue never asks for | unit-only | S2 (the Plan's first clause); `PE-012` |
+| D2 | `blocked` is passed as the host's verified **object** shape, `{ kind: "question", message: <the picker's title> }`, not the `blocked: true` the issue's shorthand writes. The installed typings declare the object (`dist/core/extensions/types.d.ts:148-161`); a boolean neither compiles nor carries the OSC 7501 message the option exists to report. `kind: "question"` is the host's own default for a selection dialog | unit-only | S4; `PE-004` |
+| D3 | The option crosses the call boundary as a **declared cast seam**: the peer floor stays `>=1.1.0` (Non-goals), whose typings predate the option, so the options object is typed by this package's own interface and cast once at the `base.custom(...)` call. The seam is load-bearing and documented in the source, not an `any` | unit-only | S4; `PE-004`, `PE-005`; `IR6` (no compatibility shim — a cast is not a second implementation) |
+| D4 | The verified baseline records **1.6.1 (2026-11-27)** — the host actually installed and type-checked — not the `1.6.0` literal the issue predicted. 1.6.1 (2026-11-25) contains the 1.6.0 delta, `verified-baseline.test.mjs` requires exactly one entry at or above the floor and names no version itself, and recording a version no run touched would falsify a claim three readers trust | unit-only | S6; `PE-003`, `PE-010` |
+| D5 | The event matrix's `source` citation names `@earendil-works/pi-coding-agent@1.6.1` and the machine-derived catalogue count (**41** `pi.on` overloads), replacing the stale `1.5.2`/`37`. The event *name set* is identical across 1.5.2 → 1.6.1, so no matrix row moves: the out-of-scope condition ("if the catalogue count is still 37") was already false for 1.5.2, and a citation nobody can reproduce is the defect this row repairs | unit-only | S6; `PE-008`, `PE-011` |
+| D6 | The package changelog's **single writer is the release cut**: `scripts/release.mjs apply` writes each package's newest `## [<version>] - <date>` section from the same summary it inserts into the root companion row. A hand-written package changelog would be a second writer for one fact, and the manifest version and the changelog head would be able to disagree | unit-only | S3; `PE-006`, `PE-007`; AGENTS.md §Repository indexes |
