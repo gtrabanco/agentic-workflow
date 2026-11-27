@@ -41,6 +41,10 @@ packages/*/.serena/
 # Issue #611: the local dogfooding vehicle, written by scripts/setup-env.mjs. The
 # value names this checkout's absolute path, so it is per-checkout by construction.
 .pi/vehicle.env
+# The install-time runner pin the freshness hook executes (issue #718): it names
+# this machine's absolute paths, so it is local by construction.
+.agentic-workflow/hooks/runner.local
+
 # The machine gate receipt and its full log (issue #409): a run record, local to
 # the checkout like the pre-execution gates below — never a committed artifact.
 .agentic-workflow/gate/
