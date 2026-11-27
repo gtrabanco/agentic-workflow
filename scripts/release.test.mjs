@@ -189,6 +189,63 @@ test("--summary overrides the changeset-derived summary", () => {
   assert.match(changelog, /\| 1\.0\.1 \| 2026-10-28 \| patch \| Operator summary \|/);
 });
 
+// Issue #694 S3 — the package's own changelog is a second reader surface: Pi
+// shows "What's New" from the file `pi.changelogPath` names, so the cut that
+// writes the root companion row writes that section too. Only a package that
+// declares the key gets a file: the declaration is the surface, not the writer.
+function declarePiChangelog(root, name, changelogPath = "./CHANGELOG.md") {
+  const manifestPath = path.join(root, "packages", name.replace("@gtrabanco/", ""), "package.json");
+  const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+  manifest.pi = { changelogPath };
+  fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + "\n");
+}
+
+test("apply writes the package changelog of every package that declares one (issue #694)", () => {
+  const root = fixture({ changesets: { "a.md": ["pi:patch"] } });
+  declarePiChangelog(root, PACKAGES[0]);
+  const result = run(["apply", "--root", root, "--base", "1.0.0", "--channel", "stable", "--date", "2026-10-28"]);
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  const written = fs.readFileSync(path.join(root, "packages", "pi-agentic-workflow", "CHANGELOG.md"), "utf8");
+  assert.match(written, /^## \[1\.0\.1\] - 2026-10-28$/m, "the new section heads the file");
+  assert.match(written, /Change number 1 body line\./, "the section carries the same summary the companion row carries");
+  assert.equal(
+    fs.existsSync(path.join(root, "packages", "agentic-workflow", "CHANGELOG.md")),
+    false,
+    "a package that declares no changelog gains no file",
+  );
+});
+
+test("apply prepends the package section and replaces a repeated version instead of duplicating it", () => {
+  const root = fixture({ changesets: { "a.md": ["pi:patch"] } });
+  declarePiChangelog(root, PACKAGES[0]);
+  const target = path.join(root, "packages", "pi-agentic-workflow", "CHANGELOG.md");
+  fs.writeFileSync(target, ["# Changelog", "", "## [1.0.1] - 2026-10-20", "", "an older note for the same version", "", "## [1.0.0] - 2026-10-01", "", "the first version", ""].join("\n"));
+  const result = run(["apply", "--root", root, "--base", "1.0.0", "--channel", "stable", "--date", "2026-10-28"]);
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  const written = fs.readFileSync(target, "utf8");
+  assert.equal(written.match(/^## \[1\.0\.1\]/gm)?.length, 1, "one section per version, never two");
+  assert.match(written, /Change number 1 body line\./, "the present section is the one just written");
+  assert.doesNotMatch(written, /an older note for the same version/, "a re-run replaces the head section");
+  assert.match(written, /## \[1\.0\.0\] - 2026-10-01/, "earlier sections survive");
+  assert.ok(
+    written.indexOf("## [1.0.1]") < written.indexOf("## [1.0.0]"),
+    "newest first — Pi's reader assumes the file's order",
+  );
+});
+
+test("apply refuses a declared changelog path outside the package before writing anything", () => {
+  const root = fixture({ changesets: { "a.md": ["pi:patch"] } });
+  declarePiChangelog(root, PACKAGES[0], "../escaped-CHANGELOG.md");
+  const rootChangelog = path.join(root, "CHANGELOG.md");
+  const before = fs.readFileSync(rootChangelog, "utf8");
+  const result = run(["apply", "--root", root, "--base", "1.0.0", "--channel", "stable", "--date", "2026-10-28"]);
+  assert.notEqual(result.status, 0, "an escaping changelog path is refused");
+  assert.match(result.stderr, /changelog/i);
+  assert.equal(fs.readFileSync(rootChangelog, "utf8"), before, "no companion row was written before the refusal");
+  assert.equal(fs.existsSync(path.join(root, "packages", "escaped-CHANGELOG.md")), false);
+  assert.equal(readPkgVersion(root, PACKAGES[0]), "1.0.0", "no package version moved");
+});
+
 test("plan lists every changeset with its semver annotation and body (the per-PR type, visible)", () => {
   const root = fixture({ changesets: { "a.md": ["pi:patch"], "b.md": ["schema:minor"] } });
   const result = run(["plan", "--root", root, "--base", "1.0.0", "--channel", "stable"]);
