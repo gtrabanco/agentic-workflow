@@ -27,7 +27,7 @@
   "memory": {
     // memory.engram — Opt in to the Engram MCP registration; false writes nothing.
     // type: boolean · shipped default: false
-    "engram": false
+    "engram": true
   },
   // telemetry — Per-unit cost measurement. On by default — the sample stays local and anonymized (no prompt text, no model output, no diff, no file content); false opts a project out.
   // type: object · shipped default: {"enabled":true,"jsonFile":".pi/.telemetry/sessions.jsonl"}

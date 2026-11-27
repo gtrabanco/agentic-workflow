@@ -477,6 +477,28 @@ export const BATCH_SCHEDULER_SCHEMA: JsonSchema = publish({
   },
 });
 
+/**
+ * The owner's default answer at the lane's Relay seam (issue #722).
+ *
+ * When pi-web is present and the unit's packet is `bootstrap-needed` or `draft`,
+ * the lane asks the owner one question — relay legs, or the inline per-phase
+ * hand-off — and stops for the answer. This vocabulary is only the **preselected**
+ * answer: neither value skips the question, and neither can bypass pi-web's own
+ * `dispatch_relay` consent gate, which is why no `auto` value exists.
+ */
+export const RELAY_SEAMS = Object.freeze(["ask", "inline"] as const);
+export type RelaySeam = (typeof RELAY_SEAMS)[number];
+/** Absent or refused means the question stays open. */
+export const RELAY_SEAM_DEFAULT: RelaySeam = "ask";
+
+/**
+ * A reader's normalization: only `inline` selects the inline preselection, so a
+ * missing, malformed or retired value can never quietly turn the question off.
+ */
+export function normalizeRelaySeam(value: unknown): RelaySeam {
+  return value === "inline" ? "inline" : RELAY_SEAM_DEFAULT;
+}
+
 /** The feature sections every agentic-workflow install shares, tool-agnostic. */
 export const BASE_CONFIG_SECTIONS: readonly ConfigSectionSpec[] = [
   {
@@ -611,6 +633,25 @@ export const BASE_CONFIG_SECTIONS: readonly ConfigSectionSpec[] = [
     description: "The batch scheduler's lane vocabulary: this project's own tree roots, so a tree that is not this repository's layout plans in parallel lanes instead of degrading to surface-unknown (issue #716).",
     schema: BATCH_SCHEDULER_SCHEMA,
     defaults: { surfaces: [] },
+  },
+  {
+    key: "relay",
+    category: "feature",
+    file: BASE_CONFIG_FILE,
+    path: ["relay"],
+    description: "The owner's default answer at the lane's Relay seam: ask (the question stays open) or inline (preselect the inline per-phase hand-off). Absent means ask; neither value skips the question or bypasses pi-web's own dispatch consent gate (issue #722).",
+    schema: {
+      type: "object",
+      additionalProperties: false,
+      properties: {
+        seam: {
+          type: "string",
+          enum: [...RELAY_SEAMS],
+          description: "The answer the lane's relay-or-inline question preselects: ask or inline; absent means ask, and inline never skips the question.",
+        },
+      },
+    },
+    defaults: { seam: RELAY_SEAM_DEFAULT },
   },
 ];
 
