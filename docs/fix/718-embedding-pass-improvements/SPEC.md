@@ -415,6 +415,7 @@ surgery. The `## Tasks` list above is the ordered step list this unit executes.
 
 | id | S# / file:line | axis | severity | impact | class | route |
 |---|---|---|---|---|---|---|
+| F1 | packages/agentic-workflow/src/doc/embeddings.mjs:246,443 · packages/agentic-workflow/src/doc/sync.mjs:169-177 | correctness | WARNING | blocking | source | fold |
 
 ## Log
 
@@ -592,6 +593,36 @@ surgery. The `## Tasks` list above is the ordered step list this unit executes.
 - **P12** — 2026-11-27, the correction batch: pre-scan fence + its red corpus,
   the hooks README retirement, the receipt fixes and the A7/A8 dispositions ·
   `d3ee92ee6…8066a7d9c` (ledger freeze, red corpus, fix, doc surfaces).
+- **G12** — 2026-11-27, gate-receipt run (gate: scripts/local-gate.mjs
+  --skip-network --jobs 1; ambient provider cleared) · exit 1 · receipt
+  `.agentic-workflow/gate/gate-receipt.json` · manifest
+  `133e05855a6ccb9095f3ebd8dd639da566935c83899a8c68fbdca78be6efb59c` — the
+  review's own producer run. Three runs, three different suites fell to the
+  root gate's 4-worker pool bounds on this host (ceremony-workspace transient,
+  workflow-status-sensor 120.0 s, doc.structure 240.6 s — the unit's own
+  allowlisted G7 class; every non-root step passed each run and the counters
+  this cycle appends are pinned in the same change), and the identical tree
+  answers green serially: `env -u … bun scripts/run-root-suite.mjs --bail
+  --jobs 1` · exit 0 · 147 suites PASS (the pool-bound slack is the
+  environment finding recorded in the report; never re-pinned inside this
+  change, D8's rule).
+- **R1** — 2026-11-27, review at HEAD 1079a0d551694f215942e6f26ef706472cfe456d ·
+  verdict REVIEW-FAIL · cycle 1 · gate exit 0 — one fix-now finding open (F1);
+  isolated passes: code, security, verify (green), per
+  skills/review-change/references/REVIEW_PROCESS.md.
+- **V1** — packages/agentic-workflow/src/doc/embeddings.mjs:246,443 ·
+  packages/agentic-workflow/src/doc/sync.mjs:169-177 · reviewer review-change ·
+  HEAD 1079a0d551694f215942e6f26ef706472cfe456d · recheck behavioral: takeover
+  race reproducer (scratch git fixture + syncIndex; a gated live
+  embedPendingChunks pass has its doc_lease row taken over mid-flight by a
+  fresh-takeover write; the pass embeds its whole pending set onward with no
+  signal — heartbeatLease's owner-scoped update matches 0 rows and no caller
+  observes `changes` — so two passes embed concurrently, contradicting S5's
+  one-pass-worth-of-calls promise; the scan phase compounds it by heartbeating
+  only per changed file, so a scan slower than the TTL sits in the same
+  un-fenced window) ·
+  confirmed — materializable as a `doc.embed-lease.test.mjs` case asserting a
+  loser pass aborts/degrades once its row is taken.
 
 ## Next
 
