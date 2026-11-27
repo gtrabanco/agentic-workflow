@@ -159,6 +159,7 @@ resolved by the recorded decisions (`decisions.md`, `D1`–`D6`).
 - `skills/product-audit`
 - `skills/phase-contract`
 - `skills/orchestration-envelope`
+- `skills/runner-contract`
 - `scripts`
 - `docs`
 - `AGENTS.md`
@@ -280,7 +281,7 @@ command's own output, `## Log` E1).
   - Relevant files: docs/fix/717-audit-single-repo-leaks/census.md, skills/orchestration-envelope/references/PORTABILITY.md
 - P8 — Docs currency: the dimension section, the gate row, the normative-surface row, the README rows (validator: `bun scripts/skill-lint.mjs` exits 0 and `bun scripts/prose-gate-inventory.mjs` exits 0)
   (Implements: S8, S10)
-  - Relevant files: skills/product-audit/references/AUDIT_DIMENSIONS.md, docs/workflow/GATE_INVENTORY.md, AGENTS.md, packages/agentic-workflow/README.md, skills/orchestration-envelope/references/PORTABILITY.md
+  - Relevant files: skills/product-audit/references/AUDIT_DIMENSIONS.md, docs/workflow/GATE_INVENTORY.md, AGENTS.md, packages/agentic-workflow/README.md, skills/orchestration-envelope/references/PORTABILITY.md, skills/runner-contract/references/RUNNER.md
 - P9 — State: the roadmap row read (hand-owned), the changeset and the session journal fragment (validator: `bun scripts/docs-generate.mjs --check` exits 0 and `bun scripts/lint-changeset.mjs .changeset/717-audit-single-repo-leaks.md` exits 0)
   (Implements: S1, S12)
   - Relevant files: docs/ROADMAP.md, .changeset/717-audit-single-repo-leaks.md, .agentic-workflow/journal/
@@ -356,6 +357,17 @@ relay-next: create .pi-web/relays/717-single-repo-leaks/ (charter → docs/fix/7
 
   No `review-change`, no `audit-pr`, no fold cycle, no self-granted gate exceptions on this change. Direct application: the §5 ledger freeze **is** the plan; implement against it, hand the diff to me. The one exception is the repo's deterministic gates (tests, lints) — run those always.
   ```
+- **L4** — 2026-11-27, the correction batch's request, verbatim:
+  ```
+  Apply to this repository: triage and fix those that deserve to fix but understand the context before fix and check you haven't broke another different thing, if you have done, start the loop again until you fixed full symbol/related stuff
+  ```
+- **P12** — 2026-11-27, the correction batch on the `EXTERNAL VERIFY` receipt (`external-verify.md`, 2 blockers + 9 advisories), triaged and applied: **B1** settled in `cb82d34b9` through `runner roadmap fixrow` with the revision CAS — the base-pre-existing blank line inside `### Active` came out first because it ended the writer's row scan before row 717 (never a hand row edit; the removal also closes the duplicate-row trap for rows 716…654), and `docs/generated/units.md` was re-rendered by the emitter; **B2** declared `skills/runner-contract/references/RUNNER.md` in `## Surfaces` and P8's relevant files — the row is gate-forced by `runner.resolve.test.mjs` and was simply undeclared. Advisory triage: A1 corrected by E16, A2's owed E-row added as E15, A3 and A4 fixed in `1cac437da` (A3's first wording grew the `execute-phase:unit-loop` route over its zero-headroom ceiling and was re-trimmed to no growth — routes re-checked green), A5–A8 no-change (frozen merged-unit history at base; base-proven environment), A9 no-change (the `2026-12-24` prose pattern pre-exists at base — the inherited row-717 notes carry it — and journal fragments are append-only carriers).
+- **E15** — 2026-11-27, `bun packages/agentic-workflow/bin/agentic-workflow.mjs residual-classify --inventory --base 67133da45` · exit 0 · `residual-classify-inventory@1`, 19 rows, every surface `used`/`live-consumer` — the `## Retirements` E-row this citation owed (receipt A2).
+- **E16** — 2026-11-27, the differential re-run after the batch (fresh `git archive` of `67133da45` under `mktemp`, own `bun install --frozen-lockfile`, the same four commands): `restatement-sweep` (exit 0 both) and `unit-route 716` (exit 1 both) byte-identical on stdout and stderr; `prose-gate-inventory` differs on exactly four lines — tally `92 row(s) · script 64` → `93 · 65`, the added `single-repo-leaks` row, anchors `scripts/dimension-regression.test.mjs:140` → `:143` and `…/phase-lint.mjs:887` → `:897`; `test-obligation-tags` differs only `147` → `148` suites. This corrects E11's "one line only" narration for `prose-gate-inventory` (receipt A1): four lines, every one this change's own — and the batch itself moved nothing beyond them.
+- **G1** — 2026-11-27, HEAD 0a6f3133ef6487134dab9545aac2e5cb995683e5 (the batch's working tree over that head), `bun scripts/run-root-suite.mjs` · exit 0 · `148` suites PASS (the receipt's state was 147 PASS with `roadmap-settle` red under B1).
+- **G2** — 2026-11-27, HEAD 0a6f3133ef6487134dab9545aac2e5cb995683e5 (the batch's working tree over that head), `bun scripts/local-gate.mjs --only "workspace-install,schema-build,root-suite,version-parity-content,docs-generated-projection,skill-context-budgets,journal-carrier-check,log-immutability,secret-scan,temp-hygiene,tmp-gc,worktree-guard,rigidity-review,dimension-regression,schema-node-compat,pi-compat-guard,dependency-pin-gate,machine-ledger-commit,dependency-advisories" --jobs 2` · exit 0 · `local-gate: PASS — 17 step(s) in 321s` — every step green, `schema-node-compat` and `pi-compat-guard` ran in-graph this time (B1's red is gone).
+- **F1** — 2026-11-27, folded receipt **B1** (`roadmap-settle pr-url-unsettled`) in `cb82d34b9`: row 717 now reads `done · [#742](https://github.com/gtrabanco/agentic-workflow/pull/742)`, written by `roadmap fixrow --expect <revision>`. Verified: `bun test scripts/roadmap-settle.test.mjs` → 10 pass / 0 fail; `bun scripts/docs-generate.mjs --check` → PASS after the emitter re-render.
+- **F2** — 2026-11-27, folded receipt **B2** (AC12's undeclared path) in this record commit: `## Surfaces` and P8 now declare `skills/runner-contract/references/RUNNER.md`. Verified: `git diff --name-only 67133da45...HEAD | rg runner-contract` resolves to a declared path, and `bun packages/agentic-workflow/bin/agentic-workflow.mjs verify docs/fix/717-audit-single-repo-leaks/SPEC.md --no-git` exits 0.
 
 ## Next
 
