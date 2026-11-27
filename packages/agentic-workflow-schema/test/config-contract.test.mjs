@@ -14,10 +14,12 @@ import {
   CONFIG_EXTENSION_CONTRACT,
   GUARD_MODES,
   GUARD_NAMES,
+  RELAY_SEAMS,
   composeConfigSchema,
   fillDefaults,
   normalizeGuard,
   normalizeLogSession,
+  normalizeRelaySeam,
   resolveConfigDocuments,
   sanitizeSectionValue,
   validateConfigExtension,
@@ -39,6 +41,7 @@ test("the base registry carries the feature sections the issue names", () => {
     "contentGuard",
     "docRetention",
     "batchScheduler",
+    "relay",
   ]);
   for (const entry of BASE_CONFIG_SECTIONS) {
     assert.equal(entry.category, "feature");
@@ -330,4 +333,32 @@ test("the batchScheduler section declares the project's lane trees, and refuses 
 
   const composed = composeConfigSchema(BASE_CONFIG_SECTIONS);
   assert.deepEqual(composed.properties.batchScheduler, entry.schema);
+});
+
+/**
+ * The lane's Relay seam (issue #722). One key records the owner's preselected
+ * answer, the shipped default keeps the question open, and the answer never
+ * bypasses pi-web's own dispatch consent — so no `auto` value exists.
+ */
+test("the relay section records the owner's seam default and refuses an unknown value or key", () => {
+  const entry = section("relay");
+  assert.ok(entry, "relay is a base section");
+  assert.deepEqual(RELAY_SEAMS, ["ask", "inline"], "the closed vocabulary is published once");
+  assert.deepEqual(entry.defaults, { seam: "ask" }, "absent means ask");
+  assert.match(entry.description, /consent gate/i, "the section states it never bypasses the host's consent");
+
+  assert.deepEqual(validateSectionValue(entry, entry.defaults), []);
+  assert.deepEqual(validateSectionValue(entry, { seam: "inline" }), []);
+
+  const unknownValue = validateSectionValue(entry, { seam: "auto" });
+  assert.equal(unknownValue.length, 1, "an auto value is not a member of the vocabulary");
+  assert.equal(unknownValue[0].path, "relay.seam");
+  assert.ok(validateSectionValue(entry, { seamm: "ask" }).length > 0, "an unknown key is refused by name");
+
+  assert.equal(normalizeRelaySeam("inline"), "inline");
+  assert.equal(normalizeRelaySeam("auto"), "ask", "a refused value never selects the inline answer");
+  assert.equal(normalizeRelaySeam(undefined), "ask", "an absent value never selects the inline answer");
+
+  const composed = composeConfigSchema(BASE_CONFIG_SECTIONS);
+  assert.deepEqual(composed.properties.relay, entry.schema);
 });
