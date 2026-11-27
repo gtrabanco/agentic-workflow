@@ -189,6 +189,11 @@ n/a — this unit is applied through the owner's local, unpublished workflow; th
 - **E12** — 2026-11-27, `bun packages/agentic-workflow/bin/agentic-workflow.mjs roadmap fixrow docs/ROADMAP.md <json> --expect 2ae272ee…` · pass · `Before: 2ae272ee · After: 3fe136f2`; `roadmap read docs/ROADMAP.md --nn 740 --json` answers the row.
 - **G1** — 2026-11-27, `node scripts/run-root-suite.mjs` · 147 suites · 1 fail (`check-skill-context`, repaired and re-run green; see E9).
 - **G2** — 2026-11-27, `bun run test` in `packages/agentic-workflow` · exit 1 · only `doc.query` and `doc.hybrid` fail, both reproduced on the base commit (an embeddings-store state in this environment, unrelated to config).
+- **G3** — 2026-11-27, `node scripts/run-root-suite.mjs` on the final tree · exit 0 · 147 suite(s), 147 PASS (the earlier run's one failure, `check-skill-context`, was repaired inside the pi README's ceiling and the suite re-ran green).
+- **G4** — 2026-11-27, `bun run test` / `bun run test:node` in `packages/agentic-workflow` · exit 1 · only `doc.query` (3) and `doc.hybrid` (6) fail under both runtimes, reproduced on the base commit — an embeddings-store state in this environment, unrelated to config.
+- **G5** — 2026-11-27, `bun run test` / `bun run test:node` in `packages/pi-agentic-workflow` · exit 1 · 1142/1141 pass, the same 7 pre-existing failures (six embed/model-fact cases and `argument-hint-frontmatter`), each reproduced on the base commit.
+- **G6** — 2026-11-27, `bun run check:config-schema` · `config.schema.json: current`; `bun scripts/version-parity-gate.mjs --content` and `--pins` · PASS; `bun scripts/secret-scan` (hook form) · PASS; `bun scripts/temp-hygiene.mjs` · PASS; `bun scripts/worktree-guard.mjs` · PASS; `bun scripts/rigidity-review.mjs` · ok; `bun scripts/dimension-regression.mjs` · not-applicable (no push range).
+- **P2** — 2026-11-27, docs and state: CONFIG.md, the three package READMEs, the identity guide pair, the init-workspace/lane references, the changeset, the roadmap row and the regenerated projection · commits `b83f609b1`, `4e241212e`.
 - **P1** — 2026-11-27, S1's grammar, S5's finite refusal and S7's sanitizer land in the one parser/validator, with the resolver beside them · this change's commits.
 
 ## Next
