@@ -98,6 +98,12 @@ async function embedPass(root, { embedCfg, embedder, declareKeywordOnly, onProgr
   }
   try {
     const result = await embedPendingChunks(root, provider, { onProgress, pacing });
+    if (result.leaseHeld === true) {
+      // Another pass owns the store's pending set (issue #718 S5): this run spent
+      // nothing, the chunks stay pending, and the cause is declared instead of
+      // reporting a healthy pass that embedded 0.
+      return { embedded: 0, degradations: ["unavailable-embeddings-lease-held"], rejected: null };
+    }
     if (result.skipped === true) {
       // Model mismatch: keep the frozen key and declare the cause (AC18, D3).
       return { embedded: 0, degradations: ["embeddings-model-mismatch"], rejected: null };

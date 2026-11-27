@@ -12,7 +12,8 @@
  * `degradations[]` is a CLOSED vocabulary frozen here and asserted by test:
  *   unavailable-sqlite-<runtime>        (runtime ∈ {node, bun})
  *   unavailable-embeddings-not-configured
- *   unavailable-embeddings-<cause>      (kebab-case cause)
+ *   unavailable-embeddings-<cause>      (kebab-case cause; `lease-held` when another pass
+ *                                        owns the store's pending set, issue #718 S5)
  *   embeddings-request-rejected         (the provider refused the request: 4xx, not a rate limit)
  *   embeddings-model-mismatch           (AC18 fails closed)
  *   chunk-too-large                     (D20: a chunk body was truncated to fit the limit)

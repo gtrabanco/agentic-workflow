@@ -34,6 +34,8 @@
 
 export const VECTOR_TAG = "awkvec-f32le1";
 
+import { randomUUID } from "node:crypto";
+
 import { openDatabase } from "./sqlite.mjs";
 import { storePath } from "./store.mjs";
 import { loadConfig, resolveMaxRequestChars, DEFAULT_PACING } from "./config.mjs";
@@ -199,6 +201,50 @@ export function makeOpenAIProvider({ baseUrl, apiKey, model, fetchImpl, fetchTim
 /** The longest provider body excerpt an error message carries — a diagnosis, not a payload. */
 const BODY_EXCERPT_LIMIT = 400;
 
+/** The lease row's name: one embed pass owns a store's pending set (issue #718 S5). */
+const LEASE_NAME = "embed";
+
+/**
+ * How long a lease survives without a heartbeat: one request's worst case —
+ * every attempt's fetch timeout — plus a minute of slack. Derived from the
+ * resolved pacing, never a second knob to tune: a pass that is genuinely slow is
+ * never stolen, and a killed one stops fencing the store.
+ */
+function leaseTtlMs(pacing) {
+  return pacing.fetchTimeoutMs * pacing.maxAttempts + 60_000;
+}
+
+/** The lease table, created on first use inside an existing store. */
+function ensureLeaseTable(db) {
+  db.exec("create table if not exists doc_lease (name text primary key, owner text not null, heartbeat integer not null)");
+}
+
+/**
+ * Take the lease in one statement, so two processes can never both read "free"
+ * and then both write: the `where` leaves a live row untouched and the
+ * statement's own `changes` says which happened (1 = taken, 0 = held).
+ */
+function acquireLease(db, owner, ttlMs, at) {
+  const { changes } = db
+    .prepare(
+      "insert into doc_lease (name, owner, heartbeat) values (?, ?, ?) " +
+        "on conflict(name) do update set owner = excluded.owner, heartbeat = excluded.heartbeat " +
+        "where doc_lease.heartbeat <= ?",
+    )
+    .run(LEASE_NAME, owner, at, at - ttlMs);
+  return changes === 1;
+}
+
+/** Keep the row fresh while the pass runs, so only a dead pass ever expires. */
+function heartbeatLease(db, owner, at) {
+  db.prepare("update doc_lease set heartbeat = ? where name = ? and owner = ?").run(at, LEASE_NAME, owner);
+}
+
+/** Give the store back: the owner's row only, never a row someone took over. */
+function releaseLease(db, owner) {
+  db.prepare("delete from doc_lease where name = ? and owner = ?").run(LEASE_NAME, owner);
+}
+
 /** A failed response's body, bounded and whitespace-collapsed; "" when it cannot be read. */
 async function responseBodyExcerpt(response) {
   if (typeof response.text !== "function") return "";
@@ -264,6 +310,12 @@ export async function embeddingStats(root, model = null) {
  * `onProgress(done, total)` — optional callback invoked after each batch
  * completes and at the end with the final totals, so callers can report
  * progress over the wall-clock duration of the embed pass.
+ *
+ * One pass owns the store's pending set (issue #718 S5): the advisory
+ * `doc_lease` row is taken before the pending rows are read, heartbeated per
+ * request, and released when the pass ends. A pass that finds a live lease
+ * embeds nothing, returns `{leaseHeld: true}` and leaves the chunks pending —
+ * concurrent runs are idempotent on the rows but not on the provider bill.
  */
 export async function embedPendingChunks(root, provider, opts = {}) {
   const config = loadConfig(root);
@@ -277,11 +329,21 @@ export async function embedPendingChunks(root, provider, opts = {}) {
   const onProgress = typeof opts.onProgress === "function" ? opts.onProgress : null;
 
   const { db } = await openDatabase(storePath(root));
+  let leaseOwner = null;
   try {
     ensureEmbeddingColumns(db);
     const pinned = db.prepare("select value from meta where key = 'emb_model'").get();
     if (pinned && pinned.value !== provider.model) {
       return { skipped: true, reason: "embeddings-model-mismatch", model: provider.model, stored: pinned.value };
+    }
+
+    // A second writer waits for the store's lock instead of failing the pass
+    // with SQLITE_BUSY (the lease already keeps two passes from embedding).
+    db.exec("pragma busy_timeout = 5000");
+    ensureLeaseTable(db);
+    leaseOwner = `${process.pid}-${randomUUID()}`;
+    if (!acquireLease(db, leaseOwner, leaseTtlMs(pacing), now())) {
+      return { embedded: 0, calls: 0, model: provider.model, rejected: [], leaseHeld: true };
     }
 
     const pin = () =>
@@ -319,6 +381,7 @@ export async function embedPendingChunks(root, provider, opts = {}) {
     const request = async (texts) => {
       for (let attempt = 1; ; attempt += 1) {
         await pace();
+        heartbeatLease(db, leaseOwner, now());
         calls += 1;
         try {
           return await provider.embed(texts);
@@ -394,6 +457,7 @@ export async function embedPendingChunks(root, provider, opts = {}) {
     if (onProgress) onProgress(embedded, totalPending);
     return { embedded, calls, model: provider.model, rejected };
   } finally {
+    if (leaseOwner !== null) releaseLease(db, leaseOwner);
     db.close();
   }
 }
