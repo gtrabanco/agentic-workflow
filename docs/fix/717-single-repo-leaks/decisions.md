@@ -97,3 +97,19 @@ is not done while its own findings are still open.
 **Authority.** `S11` §4 ("fix **or** file") and `S12`'s `fix-now (M)` verdict.
 
 **Scope.** `unit-only`.
+
+## D7 — `layer-unknown` is a new reason code, and four pinned cases move with it
+
+**Decision.** `unparseable` keeps its documented causes (an unreadable file, a
+missing or out-of-enum `Layer:` line) and an unmappable task target becomes
+`layer-unknown`, naming the token and the grammar's scope. Four pre-existing
+phase-lint cases that asserted `unparseable` on an unmappable target now assert
+the named code (F56, F57, F77 and the `src/index.ts` case), each keeping its own
+assertion (exit 1, fail-closed, never a guessed layer) and each gaining the
+token/scope line.
+
+**Authority.** `S5` asks for a *named* cause and `D4` decides which grammar is
+the consumer's; the intervention is requested, not a repair to make a suite pass,
+so the assertions are updated with the behaviour and not weakened (`IR3`).
+
+**Scope.** `unit-only`.

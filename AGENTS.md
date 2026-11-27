@@ -641,6 +641,7 @@ retention-debt-receipt | docs/workflow/RETENTION.md | block:retention-debt@1 | n
 decision-scope-vocabulary | packages/agentic-workflow-schema/src/vocabularies.ts | schema-export:DECISION_SCOPES | decision-scope | no
 decision-scope-grammar | skills/unit-lane/references/DESIGN.md | block:decision-scope@1 | n/a | no
 decision-promotion-grammar | skills/product-audit/references/AUDIT_DIMENSIONS.md | fenced:decision-promotion@1 | n/a | no
+single-repo-leak-receipt | skills/product-audit/references/AUDIT_DIMENSIONS.md | block:single-repo-leaks@1 | n/a | no
 repository-state | skills/resolve-repository-state/references/STATE_CONTRACT.md | block:repository-state@1 | n/a | no
 restatement-corpus | skills/audit-docs/references/RESTATEMENT.md | block:restatement-corpus@1 | n/a | no
 workflow-doctor-mine-grammar | packages/agentic-workflow/README.md | block:workflow-doctor-mine@1 | n/a | no

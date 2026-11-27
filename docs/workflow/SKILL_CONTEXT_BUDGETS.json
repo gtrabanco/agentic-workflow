@@ -53,7 +53,7 @@
         }
       },
       "AGENTS.md": {
-        "linesMax": 696,
+        "linesMax": 697,
         "proseLinesMax": 475,
         "estimateMax": 15798,
         "machineBlocks": [
@@ -61,7 +61,7 @@
           "normative-surfaces@1",
           "rendered-facts@1"
         ],
-        "machineLines": 235,
+        "machineLines": 236,
         "blockLines": {
           "inviolable-rules@1": 18
         },
@@ -143,6 +143,7 @@
           "issue #616 (journal carrier)": "normative-surfaces@1 gains one row, `journal-corpus-grammar`, binding the `block:journal-corpus@1` receipt grammar the product-audit reference publishes for the journal carrier. The machine region moves 168 -> 169 lines and the guide measures 729 lines / 169 machine / 560 prose / 13,188 est with `bun scripts/check-skill-context.mjs --documents`; `machineLines` is re-pinned 168 -> 169 and `linesMax` 731 -> 729 (the exact tree). `proseLinesMax` (571) and `estimateMax` (13,259) have headroom and are unchanged. No emitter exists for the `documents` section (the `budgets` CLI rebases `routes` only), so this row is a hand edit recorded here rather than a silent one.",
           "issue #644 (substrate-gap alarm)": "the inventory gains four rows — `needs-input-route-vocabulary` and `substrate-class-vocabulary` binding the two new schema consts, `substrate-coverage-block` binding the gate’s fixed block in the crate README, and `evidence-staleness-rule` binding the rule that owns the #643 class — so the machine region moves 180 -> 184 lines and the guide measures 749 lines / 184 machine / 565 prose / 13,711 est with `bun scripts/check-skill-context.mjs --documents`. `linesMax` (749) is exactly the measurement — spent, not re-based (the fix #571 precedent); `proseLinesMax` (571) and `estimateMax` (14,745) keep their headroom. The `documents` section has no emitter, so this row is a recorded hand edit, never a silent one.",
           "issue #650 (decision promotion, 2026-11-19)": "the promotion rule lands in the guide: one working-rule paragraph (prose, +10 lines) and three `normative-surfaces@1` rows (`decision-scope-vocabulary`, `decision-scope-grammar`, `decision-promotion-grammar`). Measured with `bun scripts/check-skill-context.mjs --documents`: 619 lines / 188 machine / 431 prose / 12,986 est, so `machineLines` is re-pinned 185 -> 188 (the exact boundary this unit measures, the fix #571 precedent) and `linesMax` / `proseLinesMax` / `estimateMax` are re-based to ceil(measured x 1.10) = 681 / 475 / 14,285. `blockLines` (`inviolable-rules@1`: 18) is unchanged: the law enters `## Working rules` because its mechanism is a script plus a procedure, not a gate row. A `rendered-facts@1` row binding the lane's block to `DECISION_SCOPES` was drafted and dropped — a pre-gate block may not own a `type` column, so `scripts/normative-drift.test.mjs` refuses it; the two-way pin lives in `scripts/decision-promotion.test.mjs` instead, which recomputes the block against the published const in both directions.",
+      "issue #717 (single-repo-leak census)": "the product-audit reference gains the `Distributable-surface scope` dimension row and the `Single-repo-leak sweep (pass-only-if)` section with its `single-repo-leaks@1` receipt grammar, the five pass conditions and the scope test. Measured at the change with `bun scripts/check-skill-context.mjs --skill product-audit`: AUDIT_DIMENSIONS.md 8972 est / 411 lines, so the reference ceilings are re-based to ceil(8972 x 1.10) = 9870 and ceil(411 x 1.10) = 453 — the same arithmetic every earlier row used. SKILL.md is untouched (3883 est / 284 lines, inside its unchanged 4264 / 317).",
           "merge of origin/main (unit 597) into feat/650-decision-promotion (2026-11-20)": "merge of origin/main (unit 597-test-justification) into feat/650-decision-promotion (2026-11-20): the integration unions both lineages' `normative-surfaces@1` rows — this unit's three decision-scope/promotion rows plus main's `test-justification-grammar` and `test-deletion-authority-grammar` — so the merged machine region is 190 lines (188 + 2) and the merged guide measures 627 lines / 190 machine / 437 prose / 13,155 est with `bun scripts/check-skill-context.mjs --documents`. `machineLines` is re-pinned 188 -> 190 (the exact boundary the merged tree measures, the fix #571 precedent); `linesMax` (681), `proseLinesMax` (475) and `estimateMax` (14,285) keep their headroom over the merged measurement and are unchanged. The `documents` section has no emitter, so this row is a recorded hand edit, never a silent one.",
           "issue #651 (doc retention, 2026-11-22)": "four `normative-surfaces@1` rows join the guide for the feature's versioned blocks — the settled carrier, the trim declaration, the archive contract and the retention-debt receipt, all bound to `docs/workflow/RETENTION.md` — plus one deep-references row pointing at the new page (the documentation map keeps its 7-9 row bound, which `scripts/guide-split.test.mjs` enforces), so the machine region moves 194 -> 198 lines and the guide measures 636 lines / 198 machine / 438 prose / 13,455 est with `bun scripts/check-skill-context.mjs --documents`. Only `machineLines` is re-pinned to the exact boundary the tree measures (the fix #571 precedent); `linesMax` (681), `proseLinesMax` (475) and `estimateMax` (14,285) keep their headroom over the measurement and are not re-based. The `documents` section has no emitter, so this row is a recorded hand edit, never a silent one.",
           "issue #646 (repository-state freshness, 2026-11-20)": "one `normative-surfaces@1` row joins the block — `repository-state`, binding `block:repository-state@1` in `skills/resolve-repository-state/references/STATE_CONTRACT.md` — so the machine region moves 194 -> 195 lines and the guide measures 632 lines / 195 machine / 437 prose / 13,356 est with `bun scripts/check-skill-context.mjs --documents`. `machineLines` is re-pinned to the exact boundary the row spends (the fix #571 precedent); `linesMax` (681), `proseLinesMax` (475) and `estimateMax` (14,285) keep their headroom over the measurement and are not re-based. The `documents` section has no emitter, so this row is a recorded hand edit, never a silent one.",
@@ -159,11 +160,11 @@
       },
       "docs/workflow/GATE_INVENTORY.md": {
         "linesMax": 207,
-        "estimateMax": 10001,
+        "estimateMax": 11083,
         "machineBlocks": [
           "prose-gate-inventory@1"
         ],
-        "machineLines": 99,
+        "machineLines": 100,
         "sources": {
           "issue #710 (the launcher-spelling pin, 2026-11-24)": "one `script` row joins the inventory — `runner-launcher-drift`, anchored to `scripts/runner-launcher-drift.test.mjs` and its `bare-launcher` code, with no `surfaces` claim because the rule it enforces is owned by the runner contract rather than by a grammar the drift gate parses — so the file measures 191 lines / 96 machine / 95 prose / 9,547 est with `bun scripts/check-skill-context.mjs --documents`. `machineLines` is re-pinned 95 -> 96, the exact boundary the row spends (the fix #571 precedent); `linesMax` (207) and `estimateMax` (10,001) keep their headroom over the measurement and are not re-based. The `documents` section has no emitter, so this row is a recorded hand edit, never a silent one.",
           "issue #680 (the relay close-out grammar, 2026-11-21)": "one `script` row joins the inventory — `relay-closeout-grammar`, anchored to the published `relay-closeout@1` block case in `scripts/relay-packet.test.mjs` and claiming the matching `relay-closeout-grammar` normative surface — so the file measures 189 lines / 94 machine / 95 prose / 9,241 est with `bun scripts/check-skill-context.mjs --documents`. `machineLines` is re-pinned 93 -> 94 (the exact boundary the row spends, the fix #571 precedent); `linesMax` (207) and `estimateMax` (10,001) keep their headroom over the measurement and are not re-based. The `documents` section has no emitter, so this row is a recorded hand edit, never a silent one.",
@@ -372,7 +373,7 @@
         "issue #702 (the carrier grammar is exclusive)": "LEDGERS.md states the two carrier grammars are exclusive and a fold keeps identity — a row is read by its table's own header, the other shape is a typed defect, and an `F` line is numbered with the id it closed. Measured at the change with `bun scripts/check-skill-context.mjs`: LEDGERS.md 4842 est / 287 lines, inside the unchanged 4979 estimate ceiling; the shared 280-line cap is the only ceiling it crosses, so this skill declares `referenceLinesMax: 316` = ceil(287 x 1.10) with that growth as its reason.",
         "fix 440 (product-audit re-scope)": "the measured-trigger cadence replaces the periodic one: the audit-trigger@1 grammar block + the insufficient-corpus verdict block + the finding-route@1 resolver-hand-off grammar (S4/S5 of the unit doc). Measured by `scripts/check-skill-context.mjs` at this re-basis: 3876 est / 288 lines; ceilings re-based to ceil(3876 x 1.10) = 4264 and ceil(288 x 1.10) = 317"
       },
-      "referenceEstimateMax": 8135,
+      "referenceEstimateMax": 9870,
       "referenceSources": {
         "issue #616 (journal carrier)": "the product-audit reference gains the `Journal signals` dimension row and the `Journal-signal sweep (pass-only-if)` section with its `journal-corpus@1` grammar block (S3/S4/S6). Measured at the change with `bun scripts/check-skill-context.mjs --skill product-audit`: AUDIT_DIMENSIONS.md 6,239 est / 265 lines; the estimate ceiling re-bases to ceil(6239 x 1.10) = 6863, which also covers AUDIT_PROCESS.md (2,277 est, its pre-pass step now naming this producer) inside the same per-skill reference ceiling. AUDIT_DIMENSIONS.md keeps the shared `referenceLinesMax` (280) — 265 lines — and grows no override; SKILL.md is untouched (3,883 est / 284 lines, inside its unchanged 4,264 / 317).",
         "fix 440 (product-audit re-scope)": "AUDIT_DIMENSIONS.md gains the deterministic-producer pre-pass section, the profile-aware scope section and the Producer (pre-pass) column (S2/S3). Measured at this re-basis: 2493 est; ceiling re-based to ceil(2493 x 1.10) = 2743",
@@ -381,7 +382,7 @@
         "issue #595 external verify (2026-11-17)": "the issue #595 entry measured AUDIT_DIMENSIONS.md 4923 est before the same commit's SL-04 citation fix (URL → bare #595, -60 B); the tree measures 19632 B = 4908 est, so referenceEstimateMax re-pins 5416 -> ceil(4908 x 1.10) = 5399 (AUDIT_PROCESS.md 2243 est, same per-skill ceiling; SKILL.md untouched at 3883 est / 284 lines, inside its unchanged 4264 / 317)",
         "issue #650 (decision promotion, 2026-11-19)": "the product-audit reference gains the `Decision promotion` dimension row and the `## Decision-promotion sweep` section with its `decision-promotion@1` receipt grammar, the pass-only-if list and the two routes. Measured at the change with `bun scripts/check-skill-context.mjs --skill product-audit`: AUDIT_DIMENSIONS.md 7395 est / 325 lines, so the reference ceilings are re-based to ceil(7395 x 1.10) = 8135 and ceil(325 x 1.10) = 358 — the same arithmetic the coverage-gap and journal-carrier rows used. SKILL.md is untouched (3883 est / 284 lines, inside its unchanged 4264 / 317)."
       },
-      "referenceLinesMax": 358
+      "referenceLinesMax": 453
     },
     "review-implementation": {
       "referenceEstimateMax": 4861,
@@ -578,9 +579,10 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 17201,
-      "routeLinesMax": 1263,
+      "routeEstimateMax": 17505,
+      "routeLinesMax": 1285,
       "sources": {
+        "issue #717 (single-repo-leak census)": "phase-contract states the two grammars' scope: the unit-doc grammar is the supported consumer shape, and the plan grammar's target\u2192layer prefix table is this repository's own legacy tree, so an unmappable target now fails closed as `layer-unknown` instead of a bare `unparseable` (issue #717). phase-contract is loaded by every execute-phase route, so each route is re-measured and its ceilings re-set to the checker's own arithmetic, ceil(measured x 1.10): the six-file routes answer 15263 est / 1123 lines, descope 15913 / 1168 and final-pr 15775 / 1147.",
         "issue #597 (test justification and deletion authority)": "the executor's fixed allowed/forbidden lists gain the plan-marked test deletion and the ground its evidence row cites, so EXECUTION_CONTRACT.md — loaded by every execute-phase route — grows seven lines and each route is re-measured: the six-file routes answer 14643 est / 1082 lines, descope 15293 / 1127 and final-pr 15155 / 1106. Ceilings are re-set to the checker's own arithmetic, ceil(14643 x 1.10) = 16108 / ceil(1082 x 1.10) = 1191 (descope ceil(15293 x 1.10) = 16823 / ceil(1127 x 1.10) = 1240; final-pr ceil(15155 x 1.10) = 16671 / ceil(1106 x 1.10) = 1217). Growth source: issue #597's plan-marked deletion authority.",
         "merge of main #269 with feat/436-ceremony-profile-1 (2026-11-11)": "main-into-branch integration (PR #506): both sides grew execute-phase/SKILL.md — main #269 context-targeting paragraphs and #436 the ceremony-profile receipt — so this route is re-measured on the merged tree and its ceilings re-set to the checker's ceil(measured × 1.10); both prior re-basis sources above stand",
         "issue #291 / unit 73 P4": "the executor's mirror of the per-phase hand-off contract (closing hand-off names one phase + the catalog tier, whole-unit mode demoted to explicit operator choice, lane resume after the last phase, Progress entry names the phase id) grew execute-phase/SKILL.md; route measured 843 lines at the first re-basis, 856 after the golden-fixture-driven two-block closing contract (the weak-model smoke caught a last-phase P<k+1> that names a nonexistent phase); ceiling = ceil(856 x 1.10) = 942",
@@ -633,9 +635,10 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 16486,
-      "routeLinesMax": 1214,
+      "routeEstimateMax": 16790,
+      "routeLinesMax": 1236,
       "sources": {
+        "issue #717 (single-repo-leak census)": "phase-contract states the two grammars' scope: the unit-doc grammar is the supported consumer shape, and the plan grammar's target\u2192layer prefix table is this repository's own legacy tree, so an unmappable target now fails closed as `layer-unknown` instead of a bare `unparseable` (issue #717). phase-contract is loaded by every execute-phase route, so each route is re-measured and its ceilings re-set to the checker's own arithmetic, ceil(measured x 1.10): the six-file routes answer 15263 est / 1123 lines, descope 15913 / 1168 and final-pr 15775 / 1147.",
         "issue #597 (test justification and deletion authority)": "the executor's fixed allowed/forbidden lists gain the plan-marked test deletion and the ground its evidence row cites, so EXECUTION_CONTRACT.md — loaded by every execute-phase route — grows seven lines and each route is re-measured: the six-file routes answer 14643 est / 1082 lines, descope 15293 / 1127 and final-pr 15155 / 1106. Ceilings are re-set to the checker's own arithmetic, ceil(14643 x 1.10) = 16108 / ceil(1082 x 1.10) = 1191 (descope ceil(15293 x 1.10) = 16823 / ceil(1127 x 1.10) = 1240; final-pr ceil(15155 x 1.10) = 16671 / ceil(1106 x 1.10) = 1217). Growth source: issue #597's plan-marked deletion authority.",
         "merge of main #269 with feat/436-ceremony-profile-1 (2026-11-11)": "main-into-branch integration (PR #506): both sides grew execute-phase/SKILL.md — main #269 context-targeting paragraphs and #436 the ceremony-profile receipt — so this route is re-measured on the merged tree and its ceilings re-set to the checker's ceil(measured × 1.10); both prior re-basis sources above stand",
         "issue #291 / unit 73 P4": "the executor's per-phase hand-off contract plus its golden-fixture-driven two-block closing contract grew execute-phase/SKILL.md; route measured 811 lines at this re-basis; ceiling = ceil(811 x 1.10) = 893",
@@ -687,9 +690,10 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 17049,
-      "routeLinesMax": 1240,
+      "routeEstimateMax": 17353,
+      "routeLinesMax": 1262,
       "sources": {
+        "issue #717 (single-repo-leak census)": "phase-contract states the two grammars' scope: the unit-doc grammar is the supported consumer shape, and the plan grammar's target\u2192layer prefix table is this repository's own legacy tree, so an unmappable target now fails closed as `layer-unknown` instead of a bare `unparseable` (issue #717). phase-contract is loaded by every execute-phase route, so each route is re-measured and its ceilings re-set to the checker's own arithmetic, ceil(measured x 1.10): the six-file routes answer 15263 est / 1123 lines, descope 15913 / 1168 and final-pr 15775 / 1147.",
         "issue #597 (test justification and deletion authority)": "the executor's fixed allowed/forbidden lists gain the plan-marked test deletion and the ground its evidence row cites, so EXECUTION_CONTRACT.md — loaded by every execute-phase route — grows seven lines and each route is re-measured: the six-file routes answer 14643 est / 1082 lines, descope 15293 / 1127 and final-pr 15155 / 1106. Ceilings are re-set to the checker's own arithmetic, ceil(14643 x 1.10) = 16108 / ceil(1082 x 1.10) = 1191 (descope ceil(15293 x 1.10) = 16823 / ceil(1127 x 1.10) = 1240; final-pr ceil(15155 x 1.10) = 16671 / ceil(1106 x 1.10) = 1217). Growth source: issue #597's plan-marked deletion authority.",
         "merge of main #269 with feat/436-ceremony-profile-1 (2026-11-11)": "main-into-branch integration (PR #506): both sides grew execute-phase/SKILL.md — main #269 context-targeting paragraphs and #436 the ceremony-profile receipt — so this route is re-measured on the merged tree and its ceilings re-set to the checker's ceil(measured × 1.10); both prior re-basis sources above stand",
         "issue #291 / unit 73 P4": "the executor's mirror of the per-phase hand-off contract (closing hand-off names one phase + the catalog tier, whole-unit mode demoted to explicit operator choice, lane resume after the last phase, Progress entry names the phase id) grew execute-phase/SKILL.md; route measured 822 lines at the first re-basis, 835 after the golden-fixture-driven two-block closing contract (the weak-model smoke caught a last-phase P<k+1> that names a nonexistent phase); ceiling = ceil(835 x 1.10) = 919",
@@ -741,9 +745,10 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 16486,
-      "routeLinesMax": 1214,
+      "routeEstimateMax": 16790,
+      "routeLinesMax": 1236,
       "sources": {
+        "issue #717 (single-repo-leak census)": "phase-contract states the two grammars' scope: the unit-doc grammar is the supported consumer shape, and the plan grammar's target\u2192layer prefix table is this repository's own legacy tree, so an unmappable target now fails closed as `layer-unknown` instead of a bare `unparseable` (issue #717). phase-contract is loaded by every execute-phase route, so each route is re-measured and its ceilings re-set to the checker's own arithmetic, ceil(measured x 1.10): the six-file routes answer 15263 est / 1123 lines, descope 15913 / 1168 and final-pr 15775 / 1147.",
         "issue #597 (test justification and deletion authority)": "the executor's fixed allowed/forbidden lists gain the plan-marked test deletion and the ground its evidence row cites, so EXECUTION_CONTRACT.md — loaded by every execute-phase route — grows seven lines and each route is re-measured: the six-file routes answer 14643 est / 1082 lines, descope 15293 / 1127 and final-pr 15155 / 1106. Ceilings are re-set to the checker's own arithmetic, ceil(14643 x 1.10) = 16108 / ceil(1082 x 1.10) = 1191 (descope ceil(15293 x 1.10) = 16823 / ceil(1127 x 1.10) = 1240; final-pr ceil(15155 x 1.10) = 16671 / ceil(1106 x 1.10) = 1217). Growth source: issue #597's plan-marked deletion authority.",
         "merge of main #269 with feat/436-ceremony-profile-1 (2026-11-11)": "main-into-branch integration (PR #506): both sides grew execute-phase/SKILL.md — main #269 context-targeting paragraphs and #436 the ceremony-profile receipt — so this route is re-measured on the merged tree and its ceilings re-set to the checker's ceil(measured × 1.10); both prior re-basis sources above stand",
         "workflow-gap audit 2026-09": "research-step cutoff rules (evidence-grounding 1.7.0) and tests-first red-run evidence (execute-phase 4.8.0) grew the shared references these routes load; ceiling re-based to ceil(measured x 1.10).",
@@ -793,9 +798,10 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 16486,
-      "routeLinesMax": 1214,
+      "routeEstimateMax": 16790,
+      "routeLinesMax": 1236,
       "sources": {
+        "issue #717 (single-repo-leak census)": "phase-contract states the two grammars' scope: the unit-doc grammar is the supported consumer shape, and the plan grammar's target\u2192layer prefix table is this repository's own legacy tree, so an unmappable target now fails closed as `layer-unknown` instead of a bare `unparseable` (issue #717). phase-contract is loaded by every execute-phase route, so each route is re-measured and its ceilings re-set to the checker's own arithmetic, ceil(measured x 1.10): the six-file routes answer 15263 est / 1123 lines, descope 15913 / 1168 and final-pr 15775 / 1147.",
         "issue #597 (test justification and deletion authority)": "the executor's fixed allowed/forbidden lists gain the plan-marked test deletion and the ground its evidence row cites, so EXECUTION_CONTRACT.md — loaded by every execute-phase route — grows seven lines and each route is re-measured: the six-file routes answer 14643 est / 1082 lines, descope 15293 / 1127 and final-pr 15155 / 1106. Ceilings are re-set to the checker's own arithmetic, ceil(14643 x 1.10) = 16108 / ceil(1082 x 1.10) = 1191 (descope ceil(15293 x 1.10) = 16823 / ceil(1127 x 1.10) = 1240; final-pr ceil(15155 x 1.10) = 16671 / ceil(1106 x 1.10) = 1217). Growth source: issue #597's plan-marked deletion authority.",
         "merge of main #269 with feat/436-ceremony-profile-1 (2026-11-11)": "main-into-branch integration (PR #506): both sides grew execute-phase/SKILL.md — main #269 context-targeting paragraphs and #436 the ceremony-profile receipt — so this route is re-measured on the merged tree and its ceilings re-set to the checker's ceil(measured × 1.10); both prior re-basis sources above stand",
         "issue #291 / unit 73 P4": "the executor's per-phase hand-off contract plus its golden-fixture-driven two-block closing contract grew execute-phase/SKILL.md; route measured 811 lines at this re-basis; ceiling = ceil(811 x 1.10) = 893",
@@ -845,9 +851,10 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 16486,
-      "routeLinesMax": 1214,
+      "routeEstimateMax": 16790,
+      "routeLinesMax": 1236,
       "sources": {
+        "issue #717 (single-repo-leak census)": "phase-contract states the two grammars' scope: the unit-doc grammar is the supported consumer shape, and the plan grammar's target\u2192layer prefix table is this repository's own legacy tree, so an unmappable target now fails closed as `layer-unknown` instead of a bare `unparseable` (issue #717). phase-contract is loaded by every execute-phase route, so each route is re-measured and its ceilings re-set to the checker's own arithmetic, ceil(measured x 1.10): the six-file routes answer 15263 est / 1123 lines, descope 15913 / 1168 and final-pr 15775 / 1147.",
         "issue #597 (test justification and deletion authority)": "the executor's fixed allowed/forbidden lists gain the plan-marked test deletion and the ground its evidence row cites, so EXECUTION_CONTRACT.md — loaded by every execute-phase route — grows seven lines and each route is re-measured: the six-file routes answer 14643 est / 1082 lines, descope 15293 / 1127 and final-pr 15155 / 1106. Ceilings are re-set to the checker's own arithmetic, ceil(14643 x 1.10) = 16108 / ceil(1082 x 1.10) = 1191 (descope ceil(15293 x 1.10) = 16823 / ceil(1127 x 1.10) = 1240; final-pr ceil(15155 x 1.10) = 16671 / ceil(1106 x 1.10) = 1217). Growth source: issue #597's plan-marked deletion authority.",
         "merge of main #269 with feat/436-ceremony-profile-1 (2026-11-11)": "main-into-branch integration (PR #506): both sides grew execute-phase/SKILL.md — main #269 context-targeting paragraphs and #436 the ceremony-profile receipt — so this route is re-measured on the merged tree and its ceilings re-set to the checker's ceil(measured × 1.10); both prior re-basis sources above stand",
         "issue #291 / unit 73 P4": "the executor's mirror of the per-phase hand-off contract (closing hand-off names one phase + the catalog tier, whole-unit mode demoted to explicit operator choice, lane resume after the last phase, Progress entry names the phase id) grew execute-phase/SKILL.md; route measured 798 lines at the first re-basis, 811 after the golden-fixture-driven two-block closing contract (the weak-model smoke caught a last-phase P<k+1> that names a nonexistent phase); ceiling = ceil(811 x 1.10) = 893",
@@ -897,9 +904,10 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 16486,
-      "routeLinesMax": 1214,
+      "routeEstimateMax": 16790,
+      "routeLinesMax": 1236,
       "sources": {
+        "issue #717 (single-repo-leak census)": "phase-contract states the two grammars' scope: the unit-doc grammar is the supported consumer shape, and the plan grammar's target\u2192layer prefix table is this repository's own legacy tree, so an unmappable target now fails closed as `layer-unknown` instead of a bare `unparseable` (issue #717). phase-contract is loaded by every execute-phase route, so each route is re-measured and its ceilings re-set to the checker's own arithmetic, ceil(measured x 1.10): the six-file routes answer 15263 est / 1123 lines, descope 15913 / 1168 and final-pr 15775 / 1147.",
         "issue #597 (test justification and deletion authority)": "the executor's fixed allowed/forbidden lists gain the plan-marked test deletion and the ground its evidence row cites, so EXECUTION_CONTRACT.md — loaded by every execute-phase route — grows seven lines and each route is re-measured: the six-file routes answer 14643 est / 1082 lines, descope 15293 / 1127 and final-pr 15155 / 1106. Ceilings are re-set to the checker's own arithmetic, ceil(14643 x 1.10) = 16108 / ceil(1082 x 1.10) = 1191 (descope ceil(15293 x 1.10) = 16823 / ceil(1127 x 1.10) = 1240; final-pr ceil(15155 x 1.10) = 16671 / ceil(1106 x 1.10) = 1217). Growth source: issue #597's plan-marked deletion authority.",
         "merge of main #269 with feat/436-ceremony-profile-1 (2026-11-11)": "main-into-branch integration (PR #506): both sides grew execute-phase/SKILL.md — main #269 context-targeting paragraphs and #436 the ceremony-profile receipt — so this route is re-measured on the merged tree and its ceilings re-set to the checker's ceil(measured × 1.10); both prior re-basis sources above stand",
         "issue #291 / unit 73 P4": "the executor's per-phase hand-off contract plus its golden-fixture-driven two-block closing contract grew execute-phase/SKILL.md; route measured 811 lines at this re-basis; ceiling = ceil(811 x 1.10) = 893",
@@ -950,9 +958,10 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 16486,
-      "routeLinesMax": 1214,
+      "routeEstimateMax": 16790,
+      "routeLinesMax": 1236,
       "sources": {
+        "issue #717 (single-repo-leak census)": "phase-contract states the two grammars' scope: the unit-doc grammar is the supported consumer shape, and the plan grammar's target\u2192layer prefix table is this repository's own legacy tree, so an unmappable target now fails closed as `layer-unknown` instead of a bare `unparseable` (issue #717). phase-contract is loaded by every execute-phase route, so each route is re-measured and its ceilings re-set to the checker's own arithmetic, ceil(measured x 1.10): the six-file routes answer 15263 est / 1123 lines, descope 15913 / 1168 and final-pr 15775 / 1147.",
         "issue #597 (test justification and deletion authority)": "the executor's fixed allowed/forbidden lists gain the plan-marked test deletion and the ground its evidence row cites, so EXECUTION_CONTRACT.md — loaded by every execute-phase route — grows seven lines and each route is re-measured: the six-file routes answer 14643 est / 1082 lines, descope 15293 / 1127 and final-pr 15155 / 1106. Ceilings are re-set to the checker's own arithmetic, ceil(14643 x 1.10) = 16108 / ceil(1082 x 1.10) = 1191 (descope ceil(15293 x 1.10) = 16823 / ceil(1127 x 1.10) = 1240; final-pr ceil(15155 x 1.10) = 16671 / ceil(1106 x 1.10) = 1217). Growth source: issue #597's plan-marked deletion authority.",
         "merge of main #269 with feat/436-ceremony-profile-1 (2026-11-11)": "main-into-branch integration (PR #506): both sides grew execute-phase/SKILL.md — main #269 context-targeting paragraphs and #436 the ceremony-profile receipt — so this route is re-measured on the merged tree and its ceilings re-set to the checker's ceil(measured × 1.10); both prior re-basis sources above stand",
         "workflow-gap audit 2026-09": "research-step cutoff rules (evidence-grounding 1.7.0) and tests-first red-run evidence (execute-phase 4.8.0) grew the shared references these routes load; ceiling re-based to ceil(measured x 1.10).",
@@ -1006,6 +1015,7 @@
       "routeEstimateMax": 28739,
       "routeLinesMax": 1951,
       "sources": {
+        "issue #717 (single-repo-leak census)": "phase-contract states the two grammars' scope: the unit-doc grammar is the supported consumer shape, and the plan grammar's target\u2192layer prefix table is this repository's own legacy tree, so an unmappable target now fails closed as `layer-unknown` instead of a bare `unparseable` (issue #717). phase-contract is loaded by every execute-phase route, so each route is re-measured and its ceilings re-set to the checker's own arithmetic, ceil(measured x 1.10): the six-file routes answer 15263 est / 1123 lines, descope 15913 / 1168 and final-pr 15775 / 1147.",
         "issue #667 (review-pack preamble extraction)": "issue #667: the finder contract now carries the review pack's whole shared preamble (the scope contract, the materiality bar, the checklist discipline with its tally protocol and the reason it stays inline, the review-debt transform variant and the pass identity) instead of only its scope and materiality halves, and review-debt gained its inline tally binding; every review-change route loads review-implementation's references, so all four measure it. Ceilings re-based to exact ceil(measured x 1.10) from the checker's own measured route at this cut. Growth source = issue #667's preamble extraction.",
         "#355 (fix 355)": "fix 355 (#355): the classifier's residue row routes a delivered feature's missing *planned* half to `replan-in-unit` with both branches stated in one row, and `skills/review-implementation/references/CLASSIFY.md` is loaded by every review-change route; ceilings re-based to exact ceil(measured x 1.10) from the checker's own measured route at this cut. Growth source = fix 355's classifier row.",
         "2026-09-21 main sync re-basis": "the author-email normalization (087b2064) lengthened every skill's frontmatter by 2 estimate units, so every route measured 2 units higher at once, and the twelve routes whose ceilings carried at most 2 units of slack went over; feature 32's fold F35-F39 (9aa33530) added a line to review-change and audit-docs on top. Ceiling re-set to ceil(measured x 1.10).",
@@ -1064,6 +1074,7 @@
       "routeEstimateMax": 25197,
       "routeLinesMax": 1725,
       "sources": {
+        "issue #717 (single-repo-leak census)": "phase-contract states the two grammars' scope: the unit-doc grammar is the supported consumer shape, and the plan grammar's target\u2192layer prefix table is this repository's own legacy tree, so an unmappable target now fails closed as `layer-unknown` instead of a bare `unparseable` (issue #717). phase-contract is loaded by every execute-phase route, so each route is re-measured and its ceilings re-set to the checker's own arithmetic, ceil(measured x 1.10): the six-file routes answer 15263 est / 1123 lines, descope 15913 / 1168 and final-pr 15775 / 1147.",
         "issue #667 (review-pack preamble extraction)": "issue #667: the finder contract now carries the review pack's whole shared preamble (the scope contract, the materiality bar, the checklist discipline with its tally protocol and the reason it stays inline, the review-debt transform variant and the pass identity) instead of only its scope and materiality halves, and review-debt gained its inline tally binding; every review-change route loads review-implementation's references, so all four measure it. Ceilings re-based to exact ceil(measured x 1.10) from the checker's own measured route at this cut. Growth source = issue #667's preamble extraction.",
         "#355 (fix 355)": "fix 355 (#355): the classifier's residue row routes a delivered feature's missing *planned* half to `replan-in-unit` with both branches stated in one row, and `skills/review-implementation/references/CLASSIFY.md` is loaded by every review-change route; ceilings re-based to exact ceil(measured x 1.10) from the checker's own measured route at this cut. Growth source = fix 355's classifier row.",
         "2026-09-21 main sync re-basis": "the author-email normalization (087b2064) lengthened every skill's frontmatter by 2 estimate units, so every route measured 2 units higher at once, and the twelve routes whose ceilings carried at most 2 units of slack went over; feature 32's fold F35-F39 (9aa33530) added a line to review-change and audit-docs on top. Ceiling re-set to ceil(measured x 1.10).",
@@ -1120,6 +1131,7 @@
       "routeEstimateMax": 25197,
       "routeLinesMax": 1725,
       "sources": {
+        "issue #717 (single-repo-leak census)": "phase-contract states the two grammars' scope: the unit-doc grammar is the supported consumer shape, and the plan grammar's target\u2192layer prefix table is this repository's own legacy tree, so an unmappable target now fails closed as `layer-unknown` instead of a bare `unparseable` (issue #717). phase-contract is loaded by every execute-phase route, so each route is re-measured and its ceilings re-set to the checker's own arithmetic, ceil(measured x 1.10): the six-file routes answer 15263 est / 1123 lines, descope 15913 / 1168 and final-pr 15775 / 1147.",
         "issue #667 (review-pack preamble extraction)": "issue #667: the finder contract now carries the review pack's whole shared preamble (the scope contract, the materiality bar, the checklist discipline with its tally protocol and the reason it stays inline, the review-debt transform variant and the pass identity) instead of only its scope and materiality halves, and review-debt gained its inline tally binding; every review-change route loads review-implementation's references, so all four measure it. Ceilings re-based to exact ceil(measured x 1.10) from the checker's own measured route at this cut. Growth source = issue #667's preamble extraction.",
         "#355 (fix 355)": "fix 355 (#355): the classifier's residue row routes a delivered feature's missing *planned* half to `replan-in-unit` with both branches stated in one row, and `skills/review-implementation/references/CLASSIFY.md` is loaded by every review-change route; ceilings re-based to exact ceil(measured x 1.10) from the checker's own measured route at this cut. Growth source = fix 355's classifier row.",
         "2026-09-21 main sync re-basis": "the author-email normalization (087b2064) lengthened every skill's frontmatter by 2 estimate units, so every route measured 2 units higher at once, and the twelve routes whose ceilings carried at most 2 units of slack went over; feature 32's fold F35-F39 (9aa33530) added a line to review-change and audit-docs on top. Ceiling re-set to ceil(measured x 1.10).",
@@ -1176,6 +1188,7 @@
       "routeEstimateMax": 25951,
       "routeLinesMax": 1764,
       "sources": {
+        "issue #717 (single-repo-leak census)": "phase-contract states the two grammars' scope: the unit-doc grammar is the supported consumer shape, and the plan grammar's target\u2192layer prefix table is this repository's own legacy tree, so an unmappable target now fails closed as `layer-unknown` instead of a bare `unparseable` (issue #717). phase-contract is loaded by every execute-phase route, so each route is re-measured and its ceilings re-set to the checker's own arithmetic, ceil(measured x 1.10): the six-file routes answer 15263 est / 1123 lines, descope 15913 / 1168 and final-pr 15775 / 1147.",
         "issue #667 (review-pack preamble extraction)": "issue #667: the finder contract now carries the review pack's whole shared preamble (the scope contract, the materiality bar, the checklist discipline with its tally protocol and the reason it stays inline, the review-debt transform variant and the pass identity) instead of only its scope and materiality halves, and review-debt gained its inline tally binding; every review-change route loads review-implementation's references, so all four measure it. Ceilings re-based to exact ceil(measured x 1.10) from the checker's own measured route at this cut. Growth source = issue #667's preamble extraction.",
         "#355 (fix 355)": "fix 355 (#355): the classifier's residue row routes a delivered feature's missing *planned* half to `replan-in-unit` with both branches stated in one row, and `skills/review-implementation/references/CLASSIFY.md` is loaded by every review-change route; ceilings re-based to exact ceil(measured x 1.10) from the checker's own measured route at this cut. Growth source = fix 355's classifier row.",
         "2026-09-21 main sync re-basis": "the author-email normalization (087b2064) lengthened every skill's frontmatter by 2 estimate units, so every route measured 2 units higher at once, and the twelve routes whose ceilings carried at most 2 units of slack went over; feature 32's fold F35-F39 (9aa33530) added a line to review-change and audit-docs on top. Ceiling re-set to ceil(measured x 1.10).",
