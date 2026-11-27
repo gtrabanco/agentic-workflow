@@ -393,11 +393,13 @@ Append-only; kinds are the closed set in `log-kind@1` (the template's).
 - **D5** — the foreign worktree D4 named was removed by its owner before the final run; `worktree-guard` passes in G1, so no owner action remains on that finding. The plain full gate is the receipt now, not a selection.
 - **L2a** — the `L2` quote is the owner's instruction's opening paragraph and its closing sentence, verbatim; the numbered steps that follow it in the original message (§0–§9 of the local inline workflow) are elided here with this marker — every one of them is executed by this unit's `## Tasks` and its receipts.
 - **D6** — the `O5` validator named a case that does not exist (`pi-web absent: degradation stays unavailable-only`); the real case is the pre-existing `pi-web absent: triage prints the degradation and no dispatch hint`, which this unit extended with the `relay-seam` absence assertion. `O4`'s validator is likewise pinned to its own case name. A validator that names no runnable case is a false receipt — this corrects the wording, not the evidence; the runs behind `E3` are unchanged.
+- **P6** — 2026-11-27, the branch was pushed (`git push -u origin feat/722-relay-seam-inline`; the pre-push gate PASS, 18 steps in 422s) and [PR #739](https://github.com/gtrabanco/agentic-workflow/pull/739) opened against `main`; the `## Fixes` row settled to `done · [#739]` through `roadmap fixrow` (before `cba3dc27` → after `c491edf6`).
 ## Next
 
-Hand the diff and G1's plain-gate PASS to the owner as the external verifier.
-Every obligation row is closed; nothing is deferred out of the unit and no
-tracked task is pending.
+`→ Next: /review-change 722-relay-seam-inline` — the review receipt's sole owner;
+`/audit-pr https://github.com/gtrabanco/agentic-workflow/pull/739` follows only
+once that receipt is current at the PR head. Every obligation row is closed;
+nothing is deferred out of the unit and no tracked task is pending.
 
 ## References
 
