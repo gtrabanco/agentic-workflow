@@ -246,9 +246,15 @@ closes, `execute-phase` resumes the lane and the remaining judgment steps
 (evidence, review, docs, release) run here.
 
 When a pi-web session is present the same hand-off is a Relay leg: the router
-prints `relay: bootstrap-needed` (with the packet path and the leg count) and
-[relay legs](references/RELAY.md) owns the rest — the packet, one phase per leg,
-the leg tier from `packages/agentic-workflow/src/runner/catalog.json` and the fresh-context coherence review.
+prints `relay: bootstrap-needed` or `relay: draft` (with the packet path, the
+recorded `relay.seam` default and the leg count) and
+[relay legs](references/RELAY.md) §Bootstrap owns the rest —
+**ask the owner (relay legs or inline) and stop for the answer**;
+`relay: bootstrap-needed` and
+`relay: draft` never hand off inline on their own, and the inline hand-off
+belongs to `relay: unavailable` alone (§Degradation). Then the packet, one phase
+per leg, the leg tier from
+`packages/agentic-workflow/src/runner/catalog.json` and the fresh-context coherence review.
 
 When the operator or the unit declares **orchestrate mode**, implementation
 phases dispatch instead of handing off: the lane becomes the non-executing

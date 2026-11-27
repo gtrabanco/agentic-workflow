@@ -116,13 +116,39 @@ carrier and gates. Then:
    bootstrap entry.
 2. Validate it: `runner relay check <unit>` exits 0 (and
    `budget <unit>` for the handover ceiling).
-3. **Human approval** is required before any dispatch. The baton moves to
-   `State: Active` and leg 1 is seeded; drafting a packet is allowed before
-   approval, dispatch is not.
+3. **ASK the owner, then STOP for the answer.** With pi-web present and the
+   packet `bootstrap-needed` or `draft`, the turn's next action is one question
+   with exactly two answers — **relay legs** (dispatch leg 1) or **inline**
+   (`/execute-phase <NN-slug> P<k>`) — and the turn ends there. The question
+   states the owner's recorded default (`relay.seam`, §The seam's default); the
+   default preselects the answer and never replaces it. This step is required: a
+   session that has read `relay: bootstrap-needed` or `relay: draft` and stops
+   without asking has skipped the contract, and one that hands off inline
+   without the answer has invented a state this file does not define.
+4. On the answer: **relay** moves the baton to `State: Active`, seeds leg 1 and
+   makes `dispatch_relay(packet: "<packet>", leg: "1")` the turn's final
+   operational action; **inline** is a recorded owner choice, after which the
+   per-phase hand-off is the turn.
 
 The router prints the same instruction at the hand-off (`relay: bootstrap-needed`
-plus a `relay-next:` line naming the packet path, the unit doc, leg `"1"` and the
-leg count).
+or `relay: draft`, plus a `relay-seam:` line carrying the recorded default and a
+`relay-next:` line naming the packet path, the unit doc, both answers, the stop
+and leg `"1"`).
+
+## The seam's default — `relay.seam`
+
+The owner may record which answer the seam's question preselects. One key, in the
+unified config (`runner config get relay.seam`):
+
+| Value | What it does | What it never does |
+|---|---|---|
+| `ask` (shipped default, and what an absent key means) | the question is printed with no preselection | — |
+| `inline` | the question is printed with the inline per-phase answer preselected | skip the question, dispatch anything, or bypass pi-web's own `dispatch_relay` human-consent gate |
+
+There is no `auto`: a value that dispatched or degraded on its own is the policy
+this seam exists to remove, and the host's dispatch consent is not the lane's to
+grant. The router is the key's reader (`relay-seam:` in its addendum); the lane
+reads that line, never the config file.
 
 ## A leg
 
@@ -251,13 +277,20 @@ review and the merge gate keep their close-out ordering and their receipt.
 
 ## Degradation
 
-Without pi-web the dispatch fails before dispatching (`Relay dispatch requires PI
-WEB's session dispatch bridge …`); no session is created and no work is lost.
-The lane then degrades to the existing per-phase hand-off:
+`relay: unavailable` is the **only** degradation this contract defines, and it
+means pi-web is genuinely absent. Without pi-web the dispatch fails before
+dispatching (`Relay dispatch requires PI WEB's session dispatch bridge …`); no
+session is created and no work is lost. The lane then degrades to the existing
+per-phase hand-off:
 
 ```
 → Next: /execute-phase <NN-slug> P<k> (tier: <tier>)
 ```
+
+A pi-web-present packet in `bootstrap-needed` or `draft` is **not a degradation**:
+that state is §Bootstrap step 3's question, and the answer is the owner's. The
+per-phase hand-off above is a response to `relay: unavailable` — never a fallback
+a conductor invents while the relay is present and unapproved.
 
 The router says why (`relay: unavailable — …`) and keeps the per-phase command
 printed. Relay is an enhancement of the seam, never a hard dependency: nothing in
@@ -296,6 +329,9 @@ so reading it costs nothing and decides nothing about consent.
 ## Forbidden
 
 - Never dispatch without the human's approval of the goal and boundaries.
+- Never hand off inline while pi-web is present and the packet is
+  `bootstrap-needed` or `draft` without the owner's answer: that state is
+  §Bootstrap step 3, and only `relay: unavailable` degrades.
 - Never restate the plan, a gate, an evidence row or an acceptance criterion in
   the packet — the unit doc is the only copy.
 - Never chain legs past the bounded review (no open-ended Relay).
