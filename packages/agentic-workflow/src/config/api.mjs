@@ -7,7 +7,7 @@
 
 import {
   BASE_CONFIG_SECTIONS,
-  BASE_CONFIG_FILE,
+  BASE_CONFIG_STEM,
   composeConfigSchema,
   effectiveSections,
   resolveConfigDocuments,
@@ -17,7 +17,7 @@ import {
 
 import { existsSync } from "node:fs";
 
-import { scopeDirectories, readScopeDocuments, writeConfigDocument, writeConfigText } from "./store.mjs";
+import { scopeDirectories, readScopeDocuments, writeConfigDocument, writeConfigText, configPathFor } from "./store.mjs";
 
 export class ConfigError extends Error {
   constructor(code, message, issues = []) {
@@ -249,7 +249,7 @@ export function createConfigApi({ projectDir = process.cwd(), globalDir, env = p
     },
     init(scope) {
       if (!SCOPES.has(scope)) throw new ConfigError("SCOPE", `unknown scope "${scope}" (allowed: global, project)`);
-      const path = `${directories[scope]}/${BASE_CONFIG_FILE}`;
+      const path = configPathFor(directories[scope], BASE_CONFIG_STEM);
       // A present-but-broken file is evidence, not scratch: never overwrite it.
       if (existsSync(path)) {
         throw new ConfigError("EXISTS", `refusing to overwrite ${path}; edit it or remove it first`);
@@ -266,8 +266,10 @@ export function renderInitTemplate() {
     "// =========================================================================",
     "// agentic-workflow config",
     "//",
-    "// Project config: .pi/agentic-workflow.json",
-    "// Global config:  ~/.pi/agent/agentic-workflow.json",
+    "// Project config: .pi/agentic-workflow.json5",
+    "// Global config:  ~/.pi/agent/agentic-workflow.json5",
+    "// A file named .json or .jsonc is read first when it exists; a new file is",
+    "// created as .json5 and every write stays in the file that already exists.",
     "// Resolution: project over global; shipped defaults fill only UNDEFINED keys.",
     "// Every value below is commented out, so this file starts at the defaults.",
     "// =========================================================================",

@@ -1,6 +1,7 @@
 // permissions.mjs — the guard-plugin policy projection (issue #654).
 //
-// A project declares its own guards once, in `pi-agentic-workflow.json`, and this
+// A project declares its own guards once, in the `pi-agentic-workflow` config
+// (any of `.json`/`.jsonc`/`.json5`), and this
 // module turns that declaration into the permission layer's own policy document:
 // the documented baseline first, the project's rules appended after it so the
 // layer's last-match-wins order grants exactly what the author meant.
@@ -95,7 +96,7 @@ function renderPolicyText({ permission, comments, target }) {
   const lines = [
     "// Permission policy for the operator-level permission layer (issue #654).",
     `// Target: ${target}`,
-    "// Generated from the guards declared in `.pi/pi-agentic-workflow.json`",
+    "// Generated from the guards declared in the `.pi/pi-agentic-workflow` config",
     "// (`guardPlugins`): re-run `agentic-workflow provision permissions` after a",
     "// change there instead of editing a rule twice. Last matching rule wins, so a",
     "// specific rule belongs after its catch-all.",

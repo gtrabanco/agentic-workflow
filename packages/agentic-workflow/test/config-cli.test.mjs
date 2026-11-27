@@ -35,7 +35,7 @@ test("init writes a commented file and refuses to overwrite it", () => {
   try {
     const created = run(["init", "--project", project, "--global-dir", global]);
     assert.equal(created.status, 0, created.stderr);
-    const text = readFileSync(join(project, ".pi", "agentic-workflow.json"), "utf8");
+    const text = readFileSync(join(project, ".pi", "agentic-workflow.json5"), "utf8");
     assert.match(text, /agentic-workflow config/);
     assert.match(text, /logSession/);
     // Issue #626: the first file an operator writes explains the guard vocabulary.
@@ -79,12 +79,12 @@ test("set validates before writing and never coerces", () => {
   try {
     const ok = run(["set", "logSession", "true", "--project", project, "--global-dir", global]);
     assert.equal(ok.status, 0, ok.stderr);
-    assert.deepEqual(JSON.parse(readFileSync(join(project, ".pi", "agentic-workflow.json"), "utf8")), { logSession: true });
+    assert.deepEqual(JSON.parse(readFileSync(join(project, ".pi", "agentic-workflow.json5"), "utf8")), { logSession: true });
     const bad = run(["set", "memory.engram", "yes", "--project", project, "--global-dir", global]);
     assert.equal(bad.status, 2);
     assert.match(bad.stderr, /CONFIG REFUSAL/);
     assert.match(bad.stderr, /expected boolean/);
-    assert.equal(readFileSync(join(project, ".pi", "agentic-workflow.json"), "utf8").includes("yes"), false);
+    assert.equal(readFileSync(join(project, ".pi", "agentic-workflow.json5"), "utf8").includes("yes"), false);
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
@@ -166,7 +166,7 @@ test("an installed package extends the schema and the same CLI edits its file", 
       JSON.stringify({
         contract: "config-extension@1",
         key: "pi",
-        file: "pi-agentic-workflow.json",
+        file: "pi-agentic-workflow",
         description: "pi package config",
         schema: { type: "object", additionalProperties: false, properties: { default: { type: "object", additionalProperties: false, properties: { model: { type: "string" } } } } },
         defaults: { default: { model: "inherit" } },
@@ -177,7 +177,7 @@ test("an installed package extends the schema and the same CLI edits its file", 
     assert.equal(JSON.parse(listed.stdout).some((node) => node.path === "pi.default.model" && node.category === "pi"), true);
     const set = run(["set", "pi.default.model", '"nan/qwen3-32b"', "--project", project, "--global-dir", global]);
     assert.equal(set.status, 0, set.stderr);
-    assert.deepEqual(JSON.parse(readFileSync(join(project, ".pi", "pi-agentic-workflow.json"), "utf8")), { default: { model: "nan/qwen3-32b" } });
+    assert.deepEqual(JSON.parse(readFileSync(join(project, ".pi", "pi-agentic-workflow.json5"), "utf8")), { default: { model: "nan/qwen3-32b" } });
     // Issue #626: `guard.default` and the extension's own `default` share a
     // first segment, so the unprefixed path is refused and the section prefix is
     // what names the node (the CLI's own teaching message says so).
@@ -217,10 +217,10 @@ test("config default materializes every file of the requested scopes", () => {
     assert.equal(receipt.contract, "config-materialize@1");
     assert.equal(receipt.scope, "both");
     const files = receipt.files.map((entry) => `${entry.scope}/${entry.file}`).sort();
-    assert.deepEqual(files, ["global/agentic-workflow.json", "project/agentic-workflow.json"]);
-    const text = readFileSync(join(project, ".pi", "agentic-workflow.json"), "utf8");
+    assert.deepEqual(files, ["global/agentic-workflow", "project/agentic-workflow"], "the receipt names the stem (#740 S4)");
+    const text = readFileSync(join(project, ".pi", "agentic-workflow.json5"), "utf8");
     assert.match(text, /\/\/ memory\.engram\b/);
-    assert.equal(readJsoncFile(join(project, ".pi", "agentic-workflow.json")).memory.engram, false);
+    assert.equal(readJsoncFile(join(project, ".pi", "agentic-workflow.json5")).memory.engram, false);
     // stdout is the receipt; the progress channel never writes it.
     assert.equal(run1.stderr.includes("config-materialize@1"), false, "the receipt is stdout-only");
   } finally {
@@ -270,7 +270,7 @@ test("config default refuses an unknown scope and a broken file without touching
     const badScope = run(["default", "--scope", "resolved", "--project", project, "--global-dir", global]);
     assert.equal(badScope.status, 2);
     assert.match(badScope.stderr, /CONFIG REFUSAL/);
-    assert.equal(existsSync(join(project, ".pi", "agentic-workflow.json")), false);
+    assert.equal(existsSync(join(project, ".pi", "agentic-workflow.json5")), false);
 
     mkdirSync(join(project, ".pi"), { recursive: true });
     const file = join(project, ".pi", "agentic-workflow.json");
@@ -299,8 +299,142 @@ test("config default refuses before any byte moves in any scope", () => {
     assert.equal(refused.status, 2, refused.stderr);
     assert.match(refused.stderr, /CONFIG REFUSAL — .*nothing was written/u);
     assert.equal(readFileSync(file, "utf8"), broken, "the refusing file keeps its bytes");
-    assert.equal(existsSync(join(global, "agentic-workflow.json")), false, "no scope is written before the refusal");
+    assert.equal(existsSync(join(global, "agentic-workflow.json5")), false, "no scope is written before the refusal");
     assert.equal(readdirSync(join(project, ".pi")).some((name) => name.includes(".bak-")), false, "a refused run takes no backup");
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+// ── stem resolution, JSON5 and the write-side rule (issue #740) ─────────────
+
+test("a config is located by stem across json/jsonc/json5, and json wins silently (#740 S2)", () => {
+  const { root, global, project } = fixture();
+  try {
+    mkdirSync(join(project, ".pi"), { recursive: true });
+    const read = () => run(["get", "memory.engram", "--scope", "project", "--project", project, "--global-dir", global]);
+
+    writeFileSync(join(project, ".pi", "agentic-workflow.jsonc"), "// a JSON5 file\n{ memory: { engram: true }, }\n");
+    const jsonc = read();
+    assert.equal(jsonc.status, 0, jsonc.stderr);
+    assert.equal(JSON.parse(jsonc.stdout), true, "the middle extension is read");
+
+    writeFileSync(join(project, ".pi", "agentic-workflow.json"), '{ "memory": { "engram": false } }');
+    assert.equal(JSON.parse(read().stdout), false, "json is read before jsonc, silently");
+
+    rmSync(join(project, ".pi", "agentic-workflow.json"));
+    rmSync(join(project, ".pi", "agentic-workflow.jsonc"));
+    writeFileSync(join(project, ".pi", "agentic-workflow.json5"), "{ memory: { engram: true }, }\n");
+    const json5 = read();
+    assert.equal(json5.status, 0, json5.stderr);
+    assert.equal(JSON.parse(json5.stdout), true, "the last extension is read");
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("a write lands in the file that exists and never renames it (#740 S3)", () => {
+  const { root, global, project } = fixture();
+  try {
+    mkdirSync(join(project, ".pi"), { recursive: true });
+    const file = join(project, ".pi", "agentic-workflow.jsonc");
+    writeFileSync(file, '// keep me\n{ memory: { engram: false } }\n');
+    const set = run(["set", "memory.engram", "true", "--project", project, "--global-dir", global, "--json"]);
+    assert.equal(set.status, 0, set.stderr);
+    assert.equal(JSON.parse(set.stdout).file, file, "the receipt names the file written");
+    assert.equal(readJsoncFile(file).memory.engram, true);
+    assert.deepEqual(
+      readdirSync(join(project, ".pi")).sort(),
+      ["agentic-workflow.jsonc"],
+      "neither a .json nor a .json5 copy is created",
+    );
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("config default creates <stem>.json5 over an absent pair and keeps an existing name (#740 S3)", () => {
+  const { root, global, project } = fixture();
+  try {
+    const created = run(["default", "--scope", "project", "--project", project, "--global-dir", global, "--json"]);
+    assert.equal(created.status, 0, created.stderr);
+    assert.deepEqual(readdirSync(join(project, ".pi")).filter((name) => !name.includes(".bak-")), ["agentic-workflow.json5"]);
+
+    writeFileSync(join(project, ".pi", "agentic-workflow.jsonc"), "{ memory: { engram: true } }\n");
+    const kept = run(["default", "--scope", "project", "--project", project, "--global-dir", global, "--json"]);
+    assert.equal(kept.status, 0, kept.stderr);
+    const row = JSON.parse(kept.stdout).files[0];
+    assert.equal(row.path, join(project, ".pi", "agentic-workflow.jsonc"));
+    assert.equal(readJsoncFile(row.path).memory.engram, true, "the operator's value survives");
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("validate --sanitize drops a value that no longer validates, not only unknown keys (#740 S7)", () => {
+  const { root, global, project } = fixture();
+  try {
+    mkdirSync(join(project, ".pi"), { recursive: true });
+    const file = join(project, ".pi", "agentic-workflow.jsonc");
+    writeFileSync(file, '{ "memory": { "engram": true, "ghost": 1 }, "advance": { "iterationsCap": "twelve", "sensitivePaths": [] } }');
+    const strict = run(["validate", "--scope", "project", "--project", project, "--global-dir", global]);
+    assert.equal(strict.status, 2);
+    assert.match(strict.stderr, /memory\.ghost/);
+    assert.match(strict.stderr, /advance\.iterationsCap/);
+
+    const sanitized = run(["validate", "--sanitize", "--scope", "project", "--project", project, "--global-dir", global]);
+    assert.equal(sanitized.status, 0, sanitized.stderr);
+    assert.deepEqual(readJsoncFile(file), { memory: { engram: true }, advance: { sensitivePaths: [] } });
+    const again = run(["validate", "--scope", "project", "--project", project, "--global-dir", global]);
+    assert.equal(again.status, 0, "the sanitized file validates");
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("a JSON5-only value is refused instead of silently written as null (#740 S5)", () => {
+  const { root, global, project } = fixture();
+  try {
+    mkdirSync(join(project, ".pi"), { recursive: true });
+    const file = join(project, ".pi", "agentic-workflow.jsonc");
+    writeFileSync(file, '{ "advance": { "iterationsCap": 12 } }\n');
+    const refused = run(["set", "advance.iterationsCap", "1e999", "--project", project, "--global-dir", global]);
+    assert.equal(refused.status, 2, "a non-finite value is an INVALID refusal");
+    assert.match(refused.stderr, /CONFIG REFUSAL/);
+    assert.match(refused.stderr, /finite/u);
+    assert.equal(readFileSync(file, "utf8").includes("null"), false);
+    assert.equal(readJsoncFile(file).advance.iterationsCap, 12, "the file keeps its bytes");
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("a drop-in extension descriptor is read by stem from any of the three extensions (#740 S2)", () => {
+  const { root, global, project } = fixture();
+  try {
+    const dir = join(project, "config-extensions");
+    mkdirSync(dir, { recursive: true });
+    const descriptor = {
+      contract: "config-extension@1",
+      key: "demo",
+      file: "demo",
+      description: "a drop-in section",
+      schema: { type: "object", additionalProperties: false, properties: { level: { type: "string" } } },
+      defaults: { level: "low" },
+    };
+    writeFileSync(join(dir, "demo.jsonc"), `// a JSON5 descriptor\n${JSON.stringify(descriptor, null, 2)}\n`);
+    const listed = run(["list", "--project", project, "--global-dir", global, "--json"]);
+    assert.equal(listed.status, 0, listed.stderr);
+    assert.equal(JSON.parse(listed.stdout).some((node) => node.path === "demo.level" && node.category === "pi"), true);
+
+    writeFileSync(join(dir, "demo.json"), JSON.stringify({ ...descriptor, description: "shadowed" }));
+    const shadowed = run(["list", "--project", project, "--global-dir", global, "--json"]);
+    assert.equal(shadowed.status, 0, shadowed.stderr);
+    assert.deepEqual(
+      JSON.parse(shadowed.stdout).filter((node) => node.path === "demo.level").length,
+      1,
+      "one descriptor per stem: the .json candidate wins silently",
+    );
   } finally {
     rmSync(root, { recursive: true, force: true });
   }

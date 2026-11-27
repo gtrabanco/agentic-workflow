@@ -14,8 +14,9 @@
  *
  * So the push range is checked as one fact: every author *and* committer of
  * the never-published commits of `<base>..<head>` must match the approved
- * profile the project declares in the unified config (`gitIdentity` in
- * `.pi/agentic-workflow.json`, project over global). Publication is the last
+ * profile the project declares in the unified config (`gitIdentity` in the
+ * project's `.pi/agentic-workflow.{json,jsonc,json5}`, project over global).
+ * Publication is the last
  * moment this is cheap to stop; after the push the only repair is a history
  * rewrite.
  *
@@ -158,7 +159,7 @@ function renderSkipped(reason) {
 export function renderResult({ status, commits, offenders, profile }) {
   if (status === "skipped") return renderSkipped(offenders);
   if (status === "ok") {
-    const where = profile.sources.profile === "project" ? ".pi/agentic-workflow.json" : "the global agentic-workflow.json";
+    const where = profile.sources.profile === "project" ? profile.sources.project : profile.sources.global;
     return `PUSH IDENTITY — ok: ${commits.length} commit(s) verified against ${describeApproved(profile.approved)} (${where})\n`;
   }
   const lines = [`PUSH IDENTITY — failed: ${offenders.length} of ${commits.length} commit(s) outside the approved profile`];
