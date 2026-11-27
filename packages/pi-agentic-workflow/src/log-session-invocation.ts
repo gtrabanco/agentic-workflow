@@ -375,7 +375,7 @@ export function composeDirective(record: InvocationRecord): string {
     );
     // Issue #734: the body speaks the door's own contract — `subcommand` is one
     // argv token (the service), so the operation and its flags travel in `args`.
-    // `"journal write"` as one token is a service the crate does not have.
+    // A service and operation joined in one string is a service the crate lacks.
     lines.push(
       `agentic_workflow_run { "subcommand": "journal", "args": ["write", "--kind", "narrative", "--session", "${record.session}", "--summary", "<your Summary>", "--decisions", "<…>", "--next", "<…>"] }`,
     );
