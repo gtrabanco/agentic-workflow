@@ -1,0 +1,8 @@
+## 2026-11-27T13:29:16Z — feat/722-relay-seam-inline — root-caused and repaired corrupted worktree FS sync for relay.seam config section
+
+- **Commits:** 0 (no changes committed — the fix was restoring the filesystem to match the already-pushed HEAD dfa657dae)
+- **Files:** 1 file repaired: packages/agentic-workflow-schema/src/config.ts (40081 bytes → 41853 bytes)
+- **Summary:** Root-caused why every session in this worktree printed "pi-agentic-workflow: Engram not registered — the package's config file is invalid". The .pi/agentic-workflow.json contained "relay": { "seam": "ask" } but the filesystem's packages/agentic-workflow-schema/src/config.ts was stale (40081 bytes, missing the relay section entirely) — the commit 03eb8d34a that added it was on the same HEAD, but the worktree's index had cached a matching mtime so git never detected the drift. The stale source produced a dist/config.js without the relay section, which the loader then rejected as unknown config section "relay". Repaired by rewriting the file from the git blob (git cat-file -p), rebuilding the schema package (tsc), and rebuilding pi-agentic-workflow — loadConfig now returns ok: true with zero problems.
+
+- **Decisions:** No code changes were needed — the commit was already on the remote (origin/feat/722-relay-seam-inline at 23f8bafdf). The defect was purely a worktree FS/desync artifact where the file content didn't match the blob despite git status reporting clean.
+- **Next:** No immediate next step — the Engram error is resolved. If this worktree desync pattern recurs, git cat-file -p HEAD:<path> > <path> and rebuild is the fix.
