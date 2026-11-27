@@ -87,6 +87,32 @@ const journalOf = (root) => {
   }
 };
 
+/**
+ * Every `agentic_workflow_run { … }` body the directive hands the model, parsed
+ * as the call the runner door receives. Issue #734: the door forwards
+ * `subcommand` as ONE argv token and `args` verbatim, so the rendered bytes are
+ * the seam — reading them back is what lets a case execute the hand-off instead
+ * of restating its shape.
+ */
+function renderedCalls(directive) {
+  const calls = [];
+  for (const line of directive.split("\n")) {
+    const at = line.indexOf("agentic_workflow_run ");
+    if (at === -1) continue;
+    const open = line.indexOf("{", at);
+    assert.notEqual(open, -1, `the call on "${line.slice(0, 40)}…" carries a JSON body`);
+    // The write is its own line; the close sits inside a backtick span, so the
+    // body ends at the line's last brace, never at the line's end.
+    const close = line.lastIndexOf("}");
+    assert.ok(close > open, `the call on "${line.slice(0, 40)}…" closes its body`);
+    calls.push(JSON.parse(line.slice(open, close + 1)));
+  }
+  return calls;
+}
+
+/** The cells the directive leaves for the model, filled so the call can run. */
+const executableArgs = (call) => call.args.map((arg) => (/^<.*>$/u.test(arg) ? "fixture" : arg));
+
 // ---------------------------------------------------------------------------
 // O2 — the record is written by the handler, before any turn runs (S1, S2, AC1)
 // ---------------------------------------------------------------------------
@@ -316,6 +342,30 @@ test("S7: the directive names the tool the extension spawns, never a launcher to
   }
 });
 
+// Issue #734: the directive's bytes are executed by the tool it names, and that
+// tool forwards `subcommand` as ONE argv token — so `"journal write"` reached
+// the crate as a service with a space and was refused. This case runs the
+// rendered call against the crate in a fragment-carrier fixture, which is the
+// reproduction's step 3 inverted: the seam is measured end to end, never
+// restated as the string the emitter happens to carry.
+test("the rendered journal call is the one the crate accepts", () => {
+  const { root } = project({ journal: true, carrier: true });
+  try {
+    const { directive } = planInvocation({ root, sessionId: SESSION, now: NOW });
+    const call = renderedCalls(directive).find((entry) => entry.args?.includes("write"));
+    assert.ok(call, "the directive renders the write call");
+    assert.equal(call.subcommand, "journal", "subcommand is the service alone — never `journal write`");
+    assert.equal(call.args[0], "write", "the operation is the first args entry, where the door forwards it verbatim");
+
+    const run = spawnSync(process.execPath, [CLI, call.subcommand, ...executableArgs(call)], { cwd: root, encoding: "utf8" });
+    assert.equal(run.status, 0, `the crate accepted the rendered call — ${run.stderr.trim()}`);
+    const fragments = fs.readdirSync(path.join(root, JOURNAL_DIR)).filter((name) => name.endsWith(".md"));
+    assert.equal(fragments.length, 1, "the rendered call landed exactly one fragment");
+  } finally {
+    cleanup(root);
+  }
+});
+
 test("S7: a crate-route close is handed to the same tool, never composed as a shell command", () => {
   const { root } = project({ journal: true, carrier: true });
   try {
@@ -329,6 +379,17 @@ test("S7: a crate-route close is handed to the same tool, never composed as a sh
     assert.match(directive, /agentic_workflow_run \{ "subcommand": "session-close"/u, "the close is the tool's own subcommand");
     assert.match(directive, /"args": \["close"\]/u, "the close operation is in args, not subcommand");
     assert.doesNotMatch(directive, /`runner session-close close`/u, "never a symbolic citation the bash seam must refuse");
+
+    // The close travels the same door, so it is executed too: the crate must
+    // resolve the service and reach its own writer's validation, never the
+    // closed-world `Unknown service` the spaced form earned.
+    const call = renderedCalls(directive).find((entry) => entry.subcommand === "session-close");
+    assert.ok(call, "the close is rendered as a tool call");
+    assert.deepEqual(call.args, ["close"], "the operation is args[0], never part of `subcommand`");
+    const run = spawnSync(process.execPath, [CLI, call.subcommand, ...call.args], { cwd: root, encoding: "utf8" });
+    assert.doesNotMatch(`${run.stdout}${run.stderr}`, /Unknown service|unknown command/u, "the crate resolved the service and the operation");
+    assert.equal(run.status, 1, "the writer's own refusal is the answer, not a usage error");
+    assert.match(run.stderr, /write the entry first/u, "the crate's session-close validation ran");
   } finally {
     cleanup(root);
   }
