@@ -114,9 +114,12 @@ additive to the addendum, never a rewrite of its states.
 ## Retirements
 
 Strictly additive: no surface is retired, and no name is claimed twice. The
-computed inventory (`runner residual-classify --inventory --base origin/main`)
-is recorded in the `## Log` at P5; its rows are the new config section, the two
-new published config exports and the new addendum line, each with its consumer.
+computed inventory (`runner residual-classify --inventory --base origin/main`,
+receipt E12) answers five added symbols — `RELAY_SEAMS`, `RELAY_SEAM_DEFAULT`,
+`RelaySeam`, `normalizeRelaySeam` and `relaySeamLine` — every one `state: used`
+with `reason: live-consumer` (the schema registry, the router and the contract
+suite). Zero `orphan` rows, so nothing is left without a consumer and no
+planned-consumer promise is needed.
 
 ## Non-goals
 
@@ -185,6 +188,21 @@ none
   conductor's model tier in a dated run row; that is a different sense and is
   **not** touched (`does-not-affect`).
 
+- `scripts/test-timeout-allowlist.json` carried no suite bound for
+  `scripts/workflow-status-sensor.test.mjs`; under box load 8–11 the suite
+  measured 97–130s and crossed the shared 120s bound with zero assertion
+  failures. **affects** this unit's gate step, repaired in D2 with its measured
+  cost; no test or assertion moved.
+- This session's ambient `AGENTIC_WORKFLOW_DOC_EMBEDDINGS_*` variables leak into
+  the crate's `doc.*` suites (`embeddings-model-mismatch`,
+  `unavailable-embeddings-not-indexed`). **does-not-affect** this unit: both
+  crate runtimes pass with those four variables unset (E14); the leak is
+  reported here, never silenced in the tests.
+- `.worktrees/feat-726-argument-hint-npm-hoisting` is a merged-but-dirty
+  worktree of another unit; `worktree-guard` reports `STALE … dirty` and refuses
+  to remove it. **affects** the full gate's verdict only (D4); this unit never
+  touches another unit's working tree.
+
 ## Tasks
 
 P1…P5, dependency-topological, smallest within a ready set.
@@ -240,21 +258,21 @@ whose receipt lands where `required-evidence` says.
 
 | obligation-id | authority-source | affected-use-case-or-invariant | phase | task | implementation-owner | validator | required-evidence | status |
 |---|---|---|---|---|---|---|---|---|
-| O1 | S1 · PE-001 · PE-002 | With pi-web present and the packet `bootstrap-needed`, the addendum the conductor reads orders the owner's answer before any dispatch and says to stop for it — the 719-class reading ("then dispatch") is no longer the only instruction | P3 | P3 | direct application (this session) | `bun test scripts/relay-route.test.mjs` exits 0 with the case `pi-web present: bootstrap-needed mandates the ask and the stop` | `E` line naming the case and its exit | planned |
-| O2 | S1 · PE-001 · PE-002 | With pi-web present and the packet `draft`, the addendum orders the same ask-and-stop, and leg 1 is seeded only after the owner's answer | P3 | P3 | direct application (this session) | `bun test scripts/relay-route.test.mjs` exits 0 with the case `pi-web present: draft mandates the ask and the stop` | `E` line naming the case and its exit | planned |
-| O3 | S1 · PE-001 | `RELAY.md` §Bootstrap carries the ask-and-stop as a required, numbered step that names both answers (relay legs, inline) and the recorded default; a condition is not enough | P4 | P4 | direct application (this session) | `bun test scripts/relay-route.test.mjs` exits 0 with the contract case reading `RELAY.md` §Bootstrap for `ask`, `stop`, `relay.seam` and both answers | `E` line naming the case and its exit | planned |
-| O4 | S1 · PE-001 | `skills/unit-lane/SKILL.md` step 4's hand-off paragraph names the ask-and-stop and cites `RELAY.md` §Bootstrap rather than restating a state table | P4 | P4 | direct application (this session) | the same contract case reads `SKILL.md` and matches its ask-and-stop pointer | `E` line naming the case and its exit | planned |
-| O5 | S2 · S4 · PE-001 · PE-003 | The degradation keeps its `relay: unavailable`-only meaning: an unavailable relay prints the per-phase `/execute-phase` fallback and no `relay-seam` line, and a present-but-unapproved packet is explicitly *not* a degradation | P3 | P3 | direct application (this session) | `bun test scripts/relay-route.test.mjs` exits 0 with the case `pi-web absent: degradation stays unavailable-only` and the contract case reading §Degradation for the present-unapproved exclusion | `E` line naming both cases | planned |
-| O6 | S3 · PE-004 | The `relay` section exists with one closed vocabulary (`ask`, `inline`), the shipped default `ask`, and the section's own description stating it never bypasses the host's consent gate | P2 | P2 | direct application (this session) | `bun test packages/agentic-workflow-schema/test/config-contract.test.mjs` exits 0 with the `relay section` case | `E` line naming the case and its exit | planned |
-| O7 | S3 · PE-004 · PE-011 | Absent key = `ask`: a project with no `.pi/agentic-workflow.json` prints `relay-seam: ask`, and the schema resolves the same default | P2 | P2 | direct application (this session) | the schema case asserts `defaults.seam === "ask"` AND `bun test scripts/relay-route.test.mjs` exits 0 with the absent-key case | `E` line naming both | planned |
-| O8 | S3 · PE-012 | `inline` preselects the question and never skips it: the same addendum still prints the ask and the stop, and the schema refuses an unknown value instead of coercing it | P2 | P2 | direct application (this session) | `bun test packages/agentic-workflow-schema/test/config-contract.test.mjs` exits 0 with the unknown-value refusal AND `bun test scripts/relay-route.test.mjs` exits 0 with the `inline` case | `E` line naming both | planned |
-| O9 | S3 · PE-005 | The config key ships a runtime consumer: the router prints the resolved seam, so `inline` changes stdout and no unread key enters the schema | P3 | P3 | direct application (this session) | `bun test scripts/relay-route.test.mjs` exits 0 with the case asserting `relay-seam: inline` under the project config | `E` line naming the case | planned |
-| O10 | S3 · PE-006 · PE-007 | The declared section reaches its state surfaces: the generated `config.schema.json` carries `relay`, and the committed `.pi/agentic-workflow.json` materializes its default | P5 | P5 | direct application (this session) | `bun packages/agentic-workflow/bin/agentic-workflow.mjs config validate --scope both` exits 0 AND `bun run --cwd packages/agentic-workflow-schema check:config-schema` exits 0 | `E` lines with both exits | planned |
-| O11 | S4 · PE-003 | The seam is an addendum: the machine block (route, `next:`, rows, read-set, fingerprint) is byte-identical with and without pi-web and with either seam value | P3 | P3 | direct application (this session) | `bun test scripts/relay-route.test.mjs` exits 0 with the existing `the hint is an addendum, the machine block is identical` and `the hint never changes the route or the read-set` cases | `E` line naming both cases | planned |
-| O12 | S3 · PE-006 | `docs/workflow/CONFIG.md` names the key in the base list, the Sections table and its own seam note, and states `absent = ask` and the no-bypass rule | P4 | P4 | direct application (this session) | `bun test scripts/relay-route.test.mjs` exits 0 with the contract case reading `CONFIG.md` for `relay`, `seam`, `ask`, `inline` and `absent` | `E` line naming the case | planned |
-| O13 | S1 · S2 · S3 · S4 · PE-008 · PE-009 · PE-010 | The state and docs surfaces ship with the change: the fix row registered, the unit doc's evidence current, the journal entry a fragment, and the projection re-emitted | P5 | P5 | direct application (this session) | `bun packages/agentic-workflow/bin/agentic-workflow.mjs roadmap check docs/fix/722-relay-seam-inline/SPEC.md` exits 0 AND `bun scripts/docs-generate.mjs --check` exits 0 AND `bun packages/agentic-workflow/bin/agentic-workflow.mjs journal aggregate --check` exits 0 | `E` lines with the three outcomes | planned |
-| O14 | S1 · S3 · S4 | Red-first and regression: the test commit precedes the implementation commit, the observed-red run is recorded, and every existing relay-route case keeps its assertion | P1 | P1 | direct application (this session) | `git log --oneline --reverse origin/main..HEAD` lists the RED commit before the implementation commits AND `bun test scripts/relay-route.test.mjs` exits 0 with the original thirteen cases named | `E` lines with the reversed list and the green run | planned |
-| O15 | S1 · S2 · S3 · S4 | The whole gate is green in the foreground, and no command's stdout/stderr/exit changed for a reason this unit did not ask for | P5 | P5 | direct application (this session) | `bun scripts/local-gate.mjs` exits 0 AND `bun scripts/run-root-suite.mjs` exits 0 | `G` lines with both verdicts | planned |
+| O1 | S1 · PE-001 · PE-002 | With pi-web present and the packet `bootstrap-needed`, the addendum the conductor reads orders the owner's answer before any dispatch and says to stop for it — the 719-class reading ("then dispatch") is no longer the only instruction | P3 | P3 | direct application (this session) | `bun test scripts/relay-route.test.mjs` exits 0 with the case `pi-web present: bootstrap-needed mandates the ask and the stop` | `E` line naming the case and its exit | verified — E3 |
+| O2 | S1 · PE-001 · PE-002 | With pi-web present and the packet `draft`, the addendum orders the same ask-and-stop, and leg 1 is seeded only after the owner's answer | P3 | P3 | direct application (this session) | `bun test scripts/relay-route.test.mjs` exits 0 with the case `pi-web present: draft mandates the ask and the stop` | `E` line naming the case and its exit | verified — E3 |
+| O3 | S1 · PE-001 | `RELAY.md` §Bootstrap carries the ask-and-stop as a required, numbered step that names both answers (relay legs, inline) and the recorded default; a condition is not enough | P4 | P4 | direct application (this session) | `bun test scripts/relay-route.test.mjs` exits 0 with the contract case reading `RELAY.md` §Bootstrap for `ask`, `stop`, `relay.seam` and both answers | `E` line naming the case and its exit | verified — E3 |
+| O4 | S1 · PE-001 | `skills/unit-lane/SKILL.md` step 4's hand-off paragraph names the ask-and-stop and cites `RELAY.md` §Bootstrap rather than restating a state table | P4 | P4 | direct application (this session) | the same contract case reads `SKILL.md` and matches its ask-and-stop pointer | `E` line naming the case and its exit | verified — E3 |
+| O5 | S2 · S4 · PE-001 · PE-003 | The degradation keeps its `relay: unavailable`-only meaning: an unavailable relay prints the per-phase `/execute-phase` fallback and no `relay-seam` line, and a present-but-unapproved packet is explicitly *not* a degradation | P3 | P3 | direct application (this session) | `bun test scripts/relay-route.test.mjs` exits 0 with the case `pi-web absent: degradation stays unavailable-only` and the contract case reading §Degradation for the present-unapproved exclusion | `E` line naming both cases | verified — E3 |
+| O6 | S3 · PE-004 | The `relay` section exists with one closed vocabulary (`ask`, `inline`), the shipped default `ask`, and the section's own description stating it never bypasses the host's consent gate | P2 | P2 | direct application (this session) | `bun test packages/agentic-workflow-schema/test/config-contract.test.mjs` exits 0 with the `relay section` case | `E` line naming the case and its exit | verified — E4 |
+| O7 | S3 · PE-004 · PE-011 | Absent key = `ask`: a project with no `.pi/agentic-workflow.json` prints `relay-seam: ask`, and the schema resolves the same default | P2 | P2 | direct application (this session) | the schema case asserts `defaults.seam === "ask"` AND `bun test scripts/relay-route.test.mjs` exits 0 with the absent-key case | `E` line naming both | verified — E4, E3 |
+| O8 | S3 · PE-012 | `inline` preselects the question and never skips it: the same addendum still prints the ask and the stop, and the schema refuses an unknown value instead of coercing it | P2 | P2 | direct application (this session) | `bun test packages/agentic-workflow-schema/test/config-contract.test.mjs` exits 0 with the unknown-value refusal AND `bun test scripts/relay-route.test.mjs` exits 0 with the `inline` case | `E` line naming both | verified — E4, E3 |
+| O9 | S3 · PE-005 | The config key ships a runtime consumer: the router prints the resolved seam, so `inline` changes stdout and no unread key enters the schema | P3 | P3 | direct application (this session) | `bun test scripts/relay-route.test.mjs` exits 0 with the case asserting `relay-seam: inline` under the project config | `E` line naming the case | verified — E3 |
+| O10 | S3 · PE-006 · PE-007 | The declared section reaches its state surfaces: the generated `config.schema.json` carries `relay`, and the committed `.pi/agentic-workflow.json` materializes its default | P5 | P5 | direct application (this session) | `bun packages/agentic-workflow/bin/agentic-workflow.mjs config validate --scope both` exits 0 AND `bun run --cwd packages/agentic-workflow-schema check:config-schema` exits 0 | `E` lines with both exits | verified — E6, E7 |
+| O11 | S4 · PE-003 | The seam is an addendum: the machine block (route, `next:`, rows, read-set, fingerprint) is byte-identical with and without pi-web and with either seam value | P3 | P3 | direct application (this session) | `bun test scripts/relay-route.test.mjs` exits 0 with the existing `the hint is an addendum, the machine block is identical` and `the hint never changes the route or the read-set` cases | `E` line naming both cases | verified — E3 |
+| O12 | S3 · PE-006 | `docs/workflow/CONFIG.md` names the key in the base list, the Sections table and its own seam note, and states `absent = ask` and the no-bypass rule | P4 | P4 | direct application (this session) | `bun test scripts/relay-route.test.mjs` exits 0 with the contract case reading `CONFIG.md` for `relay`, `seam`, `ask`, `inline` and `absent` | `E` line naming the case | verified — E3 |
+| O13 | S1 · S2 · S3 · S4 · PE-008 · PE-009 · PE-010 | The state and docs surfaces ship with the change: the fix row registered, the unit doc's evidence current, the journal entry a fragment, and the projection re-emitted | P5 | P5 | direct application (this session) | `bun packages/agentic-workflow/bin/agentic-workflow.mjs roadmap check docs/fix/722-relay-seam-inline/SPEC.md` exits 0 AND `bun scripts/docs-generate.mjs --check` exits 0 AND `bun packages/agentic-workflow/bin/agentic-workflow.mjs journal aggregate --check` exits 0 | `E` lines with the three outcomes | verified — E8, E9, E13 |
+| O14 | S1 · S3 · S4 | Red-first and regression: the test commit precedes the implementation commit, the observed-red run is recorded, and every existing relay-route case keeps its assertion | P1 | P1 | direct application (this session) | `git log --oneline --reverse origin/main..HEAD` lists the RED commit before the implementation commits AND `bun test scripts/relay-route.test.mjs` exits 0 with the original thirteen cases named | `E` lines with the reversed list and the green run | verified — E1/E2 red · E3 green · E11 |
+| O15 | S1 · S2 · S3 · S4 | The whole gate is green in the foreground, and no command's stdout/stderr/exit changed for a reason this unit did not ask for | P5 | P5 | direct application (this session) | `bun scripts/local-gate.mjs` exits 0 AND `bun scripts/run-root-suite.mjs` exits 0 | `G` lines with both verdicts | in-progress — E14, G2 green; G1 is the 19-step selection; the full gate is blocked by a foreign dirty worktree (D4) |
 
 ## Triaged steps
 
@@ -269,7 +287,8 @@ Tiers: plan: cheap, implement: cheap, tests: strong, evidence: strong, review: s
 Skipped: research: trivial scope, design: trivial scope, release: not a feature
 Budget: strong
 relay: bootstrap-needed — no packet at .pi-web/relays/722-relay-seam-inline
-relay-next: create .pi-web/relays/722-relay-seam-inline/ (charter → docs/fix/722-relay-seam-inline/SPEC.md) then dispatch_relay(packet: ".pi-web/relays/722-relay-seam-inline", leg: "1") · legs: 6 = 5 phases + 1 coherence review
+relay-seam: ask (relay.seam; absent = ask) — preselects the owner's answer, never skips the question
+relay-next: create .pi-web/relays/722-relay-seam-inline/ (charter → docs/fix/722-relay-seam-inline/SPEC.md) · ASK the owner: relay legs, or inline `/execute-phase 722-relay-seam-inline P1` · STOP for the answer · on "relay" dispatch_relay(packet: ".pi-web/relays/722-relay-seam-inline", leg: "1") as the final action · legs: 6 = 5 phases + 1 coherence review
 ```
 
 ## Findings
@@ -347,9 +366,35 @@ Append-only; kinds are the closed set in `log-kind@1` (the template's).
   ```
 - **D1** — the seam's state-detection code is untouched; the observed failure's instruction surface is the router's `relay-next:` and the contract's §Bootstrap step 3, and both move. The config key's runtime consumer is the router (S3 + the "no unread key" policy), so the addendum is printed only while the question is live (`bootstrap-needed`, `draft`) and never for `active`, `complete`, `needs-help` or `unavailable`.
 
+- **E1** — 2026-11-27, `bun test scripts/relay-route.test.mjs` · exit 1 · the RED commit `c2e3967f4`: 9 fail / 13 pass — the new seam cases fail on the missing ask, the missing `relay-seam:` line, the missing CONFIG row and the unstated contract, while the thirteen pre-existing router cases stay green (the regression pin).
+- **E2** — 2026-11-27, `bun test packages/agentic-workflow-schema/test/config-contract.test.mjs` · exit 1 · `c2e3967f4`: `SyntaxError: Export named 'RELAY_SEAMS' not found in module …/dist/index.js`.
+- **E3** — 2026-11-27, `bun test scripts/relay-route.test.mjs` · exit 0 · 22 pass / 0 fail — the new cases: `bootstrap-needed mandates the ask and the stop`, `draft mandates the ask and the stop, and seeds no leg`, `relay.seam: inline preselects the question and never skips it`, `relay.seam: inline never reaches the machine block or the route`, `RELAY.md §Bootstrap mandates the ask-and-stop and names both answers`, `SKILL.md step 4 hands the unapproved seam to the ask-and-stop`, `RELAY.md §Degradation keeps its unavailable-only meaning`, `the 719-class path is unreachable`, `CONFIG.md documents relay.seam`.
+- **E4** — 2026-11-27, `bun test packages/agentic-workflow-schema/test/config-contract.test.mjs` · exit 0 · 24 pass / 0 fail — `the relay section records the owner's seam default and refuses an unknown value or key`.
+- **E5** — 2026-11-27, the differential run (`git archive origin/main` in `/tmp`, installed and built there; the same `scripts/fixtures/relay-route` for both) · exit 0 · with `PI_WEB_SESSION` unset the four units × triage/route are stdout/stderr/exit byte-identical; with it set the only differences are the `relay-seam:` line and the ask/STOP wording on `bootstrap-needed`/`draft` — `active`, `complete`, `docs` and every machine block are unchanged.
+- **E6** — 2026-11-27, `bun packages/agentic-workflow/bin/agentic-workflow.mjs config validate --scope both` · exit 0 · `global: ok`, `project: ok`; `bun run --cwd packages/agentic-workflow-schema check:config-schema` · exit 0 · `config.schema.json: current`.
+- **E7** — 2026-11-27, `bun packages/agentic-workflow/bin/agentic-workflow.mjs config default --scope project --no-backup` · exit 0 · `1 file(s) written · 1 key(s) materialized · 0 key(s) removed`; previewed first against a `/tmp` copy of `.pi/`, whose diff was exactly the `relay` block.
+- **E8** — 2026-11-27, `bun packages/agentic-workflow/bin/agentic-workflow.mjs ceremony roadmap row-upsert --slug 722-relay-seam-inline --status in-progress --issue 722` · exit 0 · `upserted: true`; `roadmap check docs/fix/722-relay-seam-inline/SPEC.md` · exit 0 · `verdict: PASS`, `violations: 0`.
+- **E9** — 2026-11-27, `bun scripts/docs-generate.mjs --check` · exit 0 · `3 checked · 0 missing · 0 stale · 0 orphaned`; the emitter wrote the new `722-relay-seam-inline | fix | in-progress` row into `docs/generated/units.md`.
+- **E10** — 2026-11-27, `bun scripts/check-skill-context.mjs` · exit 0 · `PASS context budgets: 33 skills`.
+- **E11** — 2026-11-27, `bun scripts/test-obligation-tags.mjs` · exit 0 · `147 suite(s) · 0 finding(s)` — the extended obligation tag resolves its two new prose paths.
+- **E12** — 2026-11-27, `bun packages/agentic-workflow/bin/agentic-workflow.mjs residual-classify --inventory --base origin/main` · exit 0 · `residual-classify-inventory@1`, 5 rows (`RELAY_SEAMS`, `RELAY_SEAM_DEFAULT`, `RelaySeam`, `normalizeRelaySeam`, `relaySeamLine`), each `state: used` with `reason: live-consumer`, 0 orphan.
+- **P1** — 2026-11-27, the planning ledgers froze at `ea0a5aeda` and the RED suite landed alone at `c2e3967f4` (9 fail / 13 pass); no implementation byte moved with it.
+- **P2** — 2026-11-27, the `relay` section, its one vocabulary and the generated schema landed at `03eb8d34a`; `config-contract` 24 pass.
+- **P3** — 2026-11-27, the router's seam reader and its ask-and-stop addendum landed at `6508075db`; the machine block stays byte-identical.
+- **P4** — 2026-11-27, the contract prose (`RELAY.md`, `SKILL.md`) and the config guide landed at `d23441e0f`; the prose contract cases are green.
+- **P5** — 2026-11-27, the state surfaces landed: the fix row (E8), the materialized config (E7), the generated projection (E9) and the unit doc's receipts.
+- **E13** — 2026-11-27, `bun packages/agentic-workflow/bin/agentic-workflow.mjs journal write --kind narrative --session "$PI_SESSION_ID" …` · exit 0 · `20261127T015328Z-feat-722-relay-seam-inline-narrative-01a21a66-….md`, 1,555 bytes; `journal aggregate --check` · exit 0 · `{"ok":true,"checked":1,"refusals":[]}`.
+- **E14** — 2026-11-27, the crate's two runtimes with this session's ambient `AGENTIC_WORKFLOW_DOC_EMBEDDINGS_*` variables unset · exit 0 · `bun run test` in `packages/agentic-workflow` and its `test:node` runner at `--jobs 1` both pass; `test:node` in `packages/agentic-workflow-schema` and `packages/pi-agentic-workflow` also exit 0. With the ambient variables set, the `doc.*` suites fail on `embeddings-model-mismatch` / `unavailable-embeddings-not-indexed` — an environment leak, recorded in `## Known pre-existing issues`.
+- **D2** — `scripts/test-timeout-allowlist.json`'s `workflow-status-sensor.test.mjs` row gains `suiteTimeoutMs: 240000` (ms). The 81-test suite measured 130s standalone and 97–107s in the root pool at box load 8–11 with zero assertion failures, crossing the shared 120s suite bound that no row granted it; the manifest's own rule says a suite that measures above the shared bound is named with its cost there. No per-test budget or assertion moved.
+- **D3** — the unit ships `.changeset/722-relay-seam-inline.md` declaring the three triggered packages plus `unit-lane` at minor: the config key is additive and the seam's behavior changes, so the train carries it; `lint-changeset` and `version-parity-gate --content` both pass with the intent in place.
+- **D4** — the full gate cannot pass in this environment: `worktree-guard` fails on `.worktrees/feat-726-argument-hint-npm-hoisting`, a *merged but dirty* worktree of another unit that the guard itself refuses to remove. It is not this unit's worktree and is not touched; the gate receipt is the 19-step selection above, and the open obligation O15 names the blocker for the owner.
 ## Next
 
-P1 — write the RED assertions and commit them alone.
+Hand the diff to the owner as the external verifier: the full gate's only red is
+`worktree-guard` on the foreign dirty worktree `feat-726` (D4), so the receipt is
+G1's 19-step selection plus G2. One owner decision remains: settle or remove that
+worktree (or authorize the full gate to run with it present), then the plain
+`bun scripts/local-gate.mjs` closes O15.
 
 ## References
 
