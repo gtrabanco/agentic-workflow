@@ -155,10 +155,14 @@ it. Frozen at the cut; `ac-hash:` in the frontmatter is this section's SHA-256.
   advice and this file cannot disagree.
 - **`packages/pi-agentic-workflow/README.md`** — the `/log-session` code door's
   section states the shape the directive hands over.
-- **The suites** — `test/log-session-invocation.test.mjs` gains the executable
-  pin (the seam's only mechanical guard) and
-  `test/runner-mapping-injection.test.mjs` gains the contract-shape case; every
-  pre-existing assertion stays.
+- **The suites** — `packages/pi-agentic-workflow/test/log-session-invocation.test.mjs`
+  gains the executable pin (the seam's only mechanical guard) and
+  `packages/pi-agentic-workflow/test/runner-mapping-injection.test.mjs` gains the
+  contract-shape case; every pre-existing assertion stays. The crate's
+  `packages/agentic-workflow/test/journal.write.test.mjs` carried a cross-package
+  pin on the literal spaced phrase (`/journal write/`) — the phrase the fix
+  removes — so the pin is re-bound to both halves of the door's shape, a
+  stronger assertion, never a relaxed one (D8).
 - **State** — the unit doc and ledgers, the `## Fixes` row through the crate's
   writer, the regenerated projection, the changeset, the journal fragment.
 - **Ask before touching:** nothing live. The installed canary emits the old
@@ -374,6 +378,8 @@ authoritative step list.
 - **E12** — 2026-11-27, `bun scripts/version-parity-gate.mjs --content` · exit 0 · `VERDICT: PASS`; `bun scripts/lint-changeset.mjs .changeset/734-log-session-subcommand-shape.md` · `ok`.
 - **E13** — 2026-11-27, `bun packages/agentic-workflow/bin/agentic-workflow.mjs roadmap fixrow docs/ROADMAP.md '<json>'` · `Receipt: pass` (before `7be3c5a2`, after `405a46e7`); `bun scripts/docs-generate.mjs` · `1 written · 2 unchanged · Roadmap: docs/ROADMAP.md — updated · verdict: PASS`.
 - **E14** — 2026-11-27, the side-effect sweep · `rg -n '"subcommand": "(?:journal write|session-close close)' packages/*/src skills template` · exit 1 (no render surface composes a spaced subcommand); `rg -n 'subcommand[^\n]*\.split\(' packages/pi-agentic-workflow/src` · exit 1; `git diff f1b04a3a9 -- packages/pi-agentic-workflow/src/extension/workflow-tools.ts` · empty (the door never learns the shorthand).
+- **E15** — 2026-11-27, `bun test packages/agentic-workflow/test/journal.write.test.mjs` · exit 1 · `the extension's invocation record names the same writer` — the crate's cross-package pin still asserted the literal spaced phrase the fix removes.
+- **D8** — 2026-11-27, that pin is re-bound, never relaxed: it now requires `"subcommand": "journal"` **and** `"args": ["write"` in the emitter's source, so a regression to a spaced service fails two assertions instead of one (IR3's repair direction: the code is judged, the intent is kept).
 - **P1** — 2026-11-27, unit doc, embedded ledgers, decisions record cut.
 - **P2** — 2026-11-27, state repaired (versions reverted, malformed CHANGELOG row removed, changeset re-scoped to the touched package) · `6260ae9db`.
 - **P3** — 2026-11-27, the executable pin and the contract-shape case appended; the base copy observed red · `a83beb307`.

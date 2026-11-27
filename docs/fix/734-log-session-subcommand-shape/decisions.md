@@ -74,3 +74,16 @@ spaced call as history. The sweep now names what can *compose* a call —
 quote the defect as the record. `ac-hash` is recomputed after this correction
 (pre-handoff, same session): a criterion that its own record can never satisfy
 is worse than no criterion.
+
+## D8 — the crate's cross-package pin is re-bound, never relaxed
+
+2026-11-27. `packages/agentic-workflow/test/journal.write.test.mjs` asserts that
+the pi code door names the journal writer, and it did so through the literal
+`/journal write/` — the spaced phrase the runner door can never execute. The
+fix removes that phrase from the emitter, so the pin went red. IR3 forbids
+repairing a red assertion by weakening it, and keeping the phrase in the source
+to satisfy the pin would be gaming it. The pin therefore binds the shape the
+door actually executes: `"subcommand": "journal"` *and* `"args": ["write"`, two
+independent literals where one stood before. The intent — the code door names
+the same writer — is unchanged, and a regression to a spaced service now fails
+two assertions instead of one.
