@@ -253,7 +253,10 @@ lane's plan step, and no triage route is re-derived here.
 
 ## Next
 
-Land P1's red corpus, then P2–P5; hand the diff to the external verifier.
+Await the external verifier's verdict on the diff. Every obligation row is closed
+against a foreground run; the one red gate line (`doc.structure` suite timeout)
+is an environment/load finding with its standalone green evidence recorded in
+`## Known pre-existing issues`, not a pending unit task.
 
 ## References
 
