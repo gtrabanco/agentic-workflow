@@ -533,6 +533,20 @@
           }
         }
       }
+    },
+    "relay": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "seam": {
+          "type": "string",
+          "enum": [
+            "ask",
+            "inline"
+          ],
+          "description": "The answer the lane's relay-or-inline question preselects: ask or inline; absent means ask, and inline never skips the question."
+        }
+      }
     }
   }
 }

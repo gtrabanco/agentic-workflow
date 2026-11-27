@@ -124,6 +124,18 @@ test("M5 — the injected block is inside its declared ceiling", async () => {
   assert.ok(RUNNER_MAPPING_ESTIMATE_MAX <= 200, "the ceiling stays short enough to be a preamble, not a section");
 });
 
+// Issue #734: the block deferred arity to the door, and the emitter that reads it
+// rendered `"subcommand": "journal write"` — one argv token to a door that never
+// splits. The block therefore pins the shape it hands the model: the service
+// stands alone, and the rest of the citation is `args`.
+test("M7 — the block pins the call shape the runner door executes", async () => {
+  const { runnerMappingText } = await suite();
+  const mapping = runnerMappingText(REPO_SKILLS);
+  assert.match(mapping, /`subcommand` is the service alone/u, "it says the service stands alone in `subcommand`");
+  assert.match(mapping, /every later token an `args` entry/u, "it says the rest of the citation travels in `args`");
+  assert.match(mapping, /`agentic_workflow_run`/u, "and it still names the tool that receives the call");
+});
+
 test("M6 — a toy skills tree proves the rule without the real tree", async (t) => {
   const root = mkdtempSync(join(tmpdir(), "pi-aw-mapping-"));
   t.after(() => rmSync(root, { recursive: true, force: true }));

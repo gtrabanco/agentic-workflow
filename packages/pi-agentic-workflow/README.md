@@ -388,6 +388,12 @@ What the handler does before the skill reaches the model:
 - **keeps the routing chain**: the skill is dispatched with the resolved values
   as its request, so `commands: { "log-session": { model: … } }`, the busy
   guard, the in-flight refusal and the first-run hint all behave as they did.
+- **hands over a call the runner door can execute**: the directive's
+  `agentic_workflow_run` body carries the service alone in `subcommand` and the
+  operation as the first `args` entry (`journal` + `["write", …]`, `session-close`
+  + `["close"]`), because the tool forwards `subcommand` as one argv token. That
+  is the shape `runner-mapping@1` states (issue #734), and a suite executes the
+  rendered call against the crate so the two cannot drift.
 
 Then, when the turn settles, the extension checks its own record: an entry at
 the resolved path clears it; none does not pass in silence — one warning names

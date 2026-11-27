@@ -39,6 +39,7 @@ test("the base registry carries the feature sections the issue names", () => {
     "contentGuard",
     "docRetention",
     "batchScheduler",
+    "relay",
   ]);
   for (const entry of BASE_CONFIG_SECTIONS) {
     assert.equal(entry.category, "feature");

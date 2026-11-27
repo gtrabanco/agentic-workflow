@@ -667,6 +667,11 @@ test("the extension's invocation record names the same writer", () => {
     path.join(repoRoot, "packages", "pi-agentic-workflow", "src", "log-session-invocation.ts"),
     "utf8",
   );
-  assert.match(source, /journal write/u, "the code door names the one writer");
+  // The writer is named in the tool call's own two-field shape (issue #734): the
+  // service stands alone in `subcommand` and the operation opens `args`, so the
+  // pin binds both halves instead of one spaced phrase — the phrase the runner
+  // door can never execute.
+  assert.match(source, /"subcommand": "journal"/u, "the code door names the crate's journal service");
+  assert.match(source, /"args": \["write"/u, "and its write operation, in the door's own argv shape");
   assert.doesNotMatch(source, /so write this one file/u, "the path-only instruction is gone");
 });
