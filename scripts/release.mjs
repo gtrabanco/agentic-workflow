@@ -7,9 +7,11 @@
  * release plan:
  *
  *   stable  — the unified version train: ALL packages carry the train version
- *             (SPEC AC-03 / D-40-2), companion CHANGELOG rows are written, and
- *             the `vX.Y.Z` git tag + `stable` branch push are planned at the
- *             release commit (#156: downstream tools pin a stable ref). The
+ *             (SPEC AC-03 / D-40-2), companion CHANGELOG rows are written, each
+ *             package's own pi.changelogPath section is written beside them
+ *             (issue #694), and the `vX.Y.Z` git tag + `stable` branch push are
+ *             planned at the release commit (#156: downstream tools pin a
+ *             stable ref). The
  *             npm dist-tag stable publishes under stays `latest` — npm's
  *             vocabulary, not a channel of this pipeline.
  *   canary  — a prerelease of the NEXT train: the base is the version the
@@ -43,7 +45,8 @@
  *             it and let the plan compute the next train.
  *
  * Modes: `plan` (default, read-only — `--dry-run` is an accepted alias),
- * `apply` (writes package.json versions + CHANGELOG companion rows for the
+ * `apply` (writes package.json versions + CHANGELOG companion rows + each
+ * declared package changelog section for the
  * stable channel, stamps every skill's SKILL.md frontmatter with the
  * train version (D-40-14), then deletes the consumed `.changeset/*.md` files
  * so the next cut carries only new intent), `publish-plan` (read-only TSV for
@@ -962,6 +965,84 @@ function insertCompanionRow(changelogPath, { name, dirName, version, date, level
 }
 
 /**
+ * The header a package changelog is created with. The file is a projection of
+ * the cut, not a hand-written page: Pi reads it to show an extension's "What's
+ * New", and the section body is the same summary the root companion row carries.
+ */
+const PACKAGE_CHANGELOG_HEADER = [
+  "# Changelog",
+  "",
+  "Release notes for this package, newest first. Written by `scripts/release.mjs apply`",
+  "at cut time — the same step that writes the repository's companion row — never by hand.",
+  "The whole train's history, including the other packages, is in the repository's",
+  "[`CHANGELOG.md`](../../CHANGELOG.md).",
+  "",
+  "",
+].join("\n");
+
+/**
+ * The file `pi.changelogPath` names, or `null` for a package that declares none
+ * (issue #694): the declaration IS the surface, so only a declaring package gets
+ * a file written. Validated before any write — Pi resolves the path inside the
+ * package root and refuses anything else, and an unpublished file reads as an
+ * absent one, so a path that escapes is a release-stopping defect, not a warning.
+ */
+function packageChangelogTarget(pkg) {
+  let json;
+  try {
+    json = JSON.parse(fs.readFileSync(pkg.path, "utf8"));
+  } catch (error) {
+    return fail(`${pkg.name}: package.json is unreadable (${error.message})`);
+  }
+  const declared = json.pi?.changelogPath;
+  if (declared === undefined) return null;
+  if (typeof declared !== "string" || declared.trim() === "") {
+    return fail(`${pkg.name}: pi.changelogPath must be a non-empty string, got ${JSON.stringify(declared)}`);
+  }
+  const dir = path.dirname(pkg.path);
+  const target = path.resolve(dir, declared);
+  const relative = path.relative(dir, target);
+  if (relative === "" || relative === ".." || relative.startsWith(`..${path.sep}`) || path.isAbsolute(relative)) {
+    fail(`${pkg.name}: pi.changelogPath ${JSON.stringify(declared)} resolves outside the package — Pi refuses to read it and the tarball would not carry it`);
+  }
+  if (fs.existsSync(target) && !fs.statSync(target).isFile()) {
+    fail(`${pkg.name}: pi.changelogPath ${JSON.stringify(declared)} is not a file`);
+  }
+  return target;
+}
+
+/**
+ * Write one versioned section into a package's own changelog (newest first).
+ * A re-run for the version already at the head REPLACES that section instead of
+ * stacking a second one — one section per version, and a failed step resumed by
+ * re-running `apply` must not leave two notes for one release.
+ */
+function writePackageChangelog(target, { version, date, summary }) {
+  const section = `## [${version}] - ${date}\n\n${summary}\n`;
+  if (!fs.existsSync(target)) {
+    fs.writeFileSync(target, `${PACKAGE_CHANGELOG_HEADER}${section}`);
+    return "created";
+  }
+  const text = fs.readFileSync(target, "utf8");
+  const head = /^##\s+\[?(\d+)\.(\d+)\.(\d+)\]?[^\n]*$/m.exec(text);
+  if (head === null) {
+    // A file carrying no version section yet: keep its prose and append.
+    fs.writeFileSync(target, `${text.endsWith("\n") ? text : `${text}\n`}\n${section}`);
+    return "appended";
+  }
+  const headVersion = `${head[1]}.${head[2]}.${head[3]}`;
+  const afterHead = text.slice(head.index + head[0].length);
+  const nextAt = afterHead.search(/^## /m);
+  if (headVersion === version) {
+    const tail = nextAt === -1 ? "" : afterHead.slice(nextAt);
+    fs.writeFileSync(target, `${text.slice(0, head.index)}${section}\n${tail}`);
+    return "replaced";
+  }
+  fs.writeFileSync(target, `${text.slice(0, head.index)}${section}\n${text.slice(head.index)}`);
+  return "prepended";
+}
+
+/**
  * Locate the insert position for a package's companion row — the first line
  * under the package's own table grid (newest row first). Fails closed: a missing
  * anchor or a grid-less table must never be written into (an indexOf(-1)
@@ -1097,15 +1178,24 @@ function main() {
     }
     if (args.mode === "apply") {
       // Pre-flight before ANY write: every package's companion table must
-      // carry its anchor + grid — a failed apply leaves zero writes.
+      // carry its anchor + grid, and every declared package changelog must
+      // resolve inside its package — a failed apply leaves zero writes.
       const changelog = fs.readFileSync(path.join(root, "CHANGELOG.md"), "utf8");
       for (const pkg of packages) companionRowStart(changelog, { name: pkg.name, dirName: pkg.dirName });
-      for (const pkg of packages) {
+      const packageChangelogs = packages.map((pkg) => ({ pkg, target: packageChangelogTarget(pkg) }));
+      for (const [index, pkg] of packages.entries()) {
+        const summary = summaryFor(pkg.name);
         setPackageVersion(pkg.path, version);
         insertCompanionRow(path.join(root, "CHANGELOG.md"), {
           name: pkg.name, dirName: pkg.dirName, version,
-          date, level: level ?? "patch", summary: summaryFor(pkg.name),
+          date, level: level ?? "patch", summary,
         });
+        const { target } = packageChangelogs[index];
+        if (target !== null) writePackageChangelog(target, { version, date, summary });
+      }
+      const declaredChangelogs = packageChangelogs.filter((entry) => entry.target !== null).length;
+      if (declaredChangelogs > 0) {
+        console.log(`package changelogs: ${declaredChangelogs} section(s) written for the packages that declare pi.changelogPath`);
       }
       rewriteLocalPins(root, packages, version);
       const stamped = stampSkillVersions(root, version);
