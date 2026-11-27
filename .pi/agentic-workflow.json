@@ -182,5 +182,12 @@
     // batchScheduler.surfaces — This project's lane trees, one project-relative directory per entry (`src/pages`, `apps/web`). Empty means undeclared: the shipped roots plus the project's own directories answer.
     // type: array · shipped default: []
     "surfaces": []
+  },
+  // relay — The owner's default answer at the lane's Relay seam: ask (the question stays open) or inline (preselect the inline per-phase hand-off). Absent means ask; neither value skips the question or bypasses pi-web's own dispatch consent gate (issue #722).
+  // type: object · shipped default: {"seam":"ask"}
+  "relay": {
+    // relay.seam — The answer the lane's relay-or-inline question preselects: ask or inline; absent means ask, and inline never skips the question.
+    // type: string · shipped default: "ask"
+    "seam": "ask"
   }
 }
