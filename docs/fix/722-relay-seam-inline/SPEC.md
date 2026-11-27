@@ -1,7 +1,7 @@
 ---
 type: fix
 scope: small
-roadmap_summary: Issue [#722](https://github.com/gtrabanco/agentic-workflow/issues/722) (S): the lane's Relay seam stops being an undefined state — with pi-web present and the packet unapproved, the conductor asks the owner (relay or inline) and stops, the degradation keeps its `relay: unavailable`-only meaning, and `relay.seam` (absent = `ask`) records the owner's preselected answer with the router as its runtime consumer.
+roadmap_summary: Issue [#722](https://github.com/gtrabanco/agentic-workflow/issues/722) (S): the lane's Relay seam stops being an undefined state — with pi-web present and the packet unapproved, the conductor asks the owner (relay or inline) and stops, the degradation keeps its `relay: unavailable`-only meaning, and `relay.seam` (absent = `ask`) records the answer the seam's question preselects — or that none does — with the router as its runtime consumer.
 ac-hash: 5d3e38afbb1c52016556dbb54cef70b1a75ed97b206c473646ff7b40178186f0
 ---
 

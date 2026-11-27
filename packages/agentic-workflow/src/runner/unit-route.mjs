@@ -526,8 +526,9 @@ ${READ_SET_MAX} paths, then an explicit remainder line), fingerprint.
 An addendum follows the fingerprint only when a pi-web session is present
 (PI_WEB_SESSION=1): \`relay: <state>\` names the unit's Relay packet state
 (bootstrap-needed, draft, active, complete, needs-help, unreadable),
-\`relay-seam:\` names the owner's preselected answer while the question is live
-(\`ask\` or \`inline\`, from \`relay.seam\`; absent means \`ask\`), and
+\`relay-seam:\` names the answer the question preselects while it is live
+(\`ask\` or \`inline\`, from \`relay.seam\`; absent means \`ask\`, and
+\`ask\` preselects nothing), and
 \`relay-next:\` carries the bootstrap or approval instruction when one is due —
 an unapproved packet orders the owner's answer and a stop before any dispatch,
 never a silent inline hand-off (issue #722). Without that marker the block says
@@ -627,7 +628,7 @@ export function relayAnswer(unitDir, slug, { catalog = null, phases = 0, command
   if (status === null) {
     answer.kind = "bootstrap-needed";
     answer.legs = phases + RELAY_REVIEW_LEGS;
-    answer.next = `create ${packet}/ (charter → ${unitDir}/SPEC.md) · ASK the owner: relay legs, or inline \`${inline}\` · STOP for the answer · on "relay" dispatch_relay(packet: "${packet}", leg: "1") as the final action · legs: ${answer.legs} = ${phases} phases + ${RELAY_REVIEW_LEGS} coherence review`;
+    answer.next = `create ${packet}/ (charter → ${unitDir}/SPEC.md) · ASK the owner: relay legs, or inline \`${inline}\` · STOP for the answer · on "relay" set \`State: Active\` in ${packet}/status.md then dispatch_relay(packet: "${packet}", leg: "1") as the final action · legs: ${answer.legs} = ${phases} phases + ${RELAY_REVIEW_LEGS} coherence review`;
     return answer;
   }
   const baton = batonOf(status);
@@ -639,7 +640,7 @@ export function relayAnswer(unitDir, slug, { catalog = null, phases = 0, command
   if (baton.state === "Draft — awaiting approval") {
     answer.kind = "draft";
     answer.legs = phases + RELAY_REVIEW_LEGS;
-    answer.next = `ASK the owner: relay legs, or inline \`${inline}\` · STOP for the answer · on "relay" set \`State: Active\` in ${packet}/status.md then dispatch leg "1"`;
+    answer.next = `ASK the owner: relay legs, or inline \`${inline}\` · STOP for the answer · on "relay" set \`State: Active\` in ${packet}/status.md then dispatch leg "1" as the final action`;
     return answer;
   }
   if (baton.state === "Complete") {
@@ -656,9 +657,17 @@ export function relayAnswer(unitDir, slug, { catalog = null, phases = 0, command
   return answer;
 }
 
-/** The seam line the addendum carries while the relay-or-inline question is live. */
+/**
+ * The seam line the addendum carries while the relay-or-inline question is live.
+ *
+ * The tail is per value: `ask` is the absence of a preselection, never a silent
+ * default, so the receipt says exactly what the owner's table says.
+ */
 export function relaySeamLine(seam) {
-  return `relay-seam: ${seam} (relay.seam; absent = ask) — preselects the owner's answer, never skips the question`;
+  const tail = seam === "inline"
+    ? "preselects the inline answer, never skips the question"
+    : "the question stays open";
+  return `relay-seam: ${seam} (relay.seam; absent = ask) — ${tail}`;
 }
 
 /** The hint as stdout lines: the state first, then the next action when there is one. */

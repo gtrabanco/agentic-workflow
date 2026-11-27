@@ -131,9 +131,10 @@ carrier and gates. Then:
    per-phase hand-off is the turn.
 
 The router prints the same instruction at the hand-off (`relay: bootstrap-needed`
-or `relay: draft`, plus a `relay-seam:` line carrying the recorded default and a
-`relay-next:` line naming the packet path, the unit doc, both answers, the stop
-and leg `"1"`).
+or `relay: draft`, plus a `relay-seam:` line carrying the resolved default and a
+`relay-next:` line). The bootstrap line names the packet path, the unit doc, both
+answers, the stop and leg `"1"`; the draft line names the answers, the stop and
+the approval step that precedes leg `"1"`.
 
 ## The seam's default — `relay.seam`
 

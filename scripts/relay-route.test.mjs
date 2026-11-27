@@ -123,6 +123,9 @@ test("pi-web present: bootstrap-needed mandates the ask and the stop (issue #722
   const asked = next.indexOf("ASK the owner");
   const dispatched = next.indexOf("dispatch_relay");
   assert.ok(asked > -1 && dispatched > asked, "the ask precedes the dispatch it authorizes");
+  const activated = next.indexOf("State: Active");
+  assert.ok(activated > -1 && activated < dispatched, "the baton is activated before the dispatch §Bootstrap step 4 orders");
+  assert.match(next, /as the final action/, "the dispatch is the turn's final operational action");
 });
 
 test("pi-web present: draft mandates the ask and the stop, and seeds no leg (issue #722 S1)", () => {
@@ -136,6 +139,18 @@ test("pi-web present: draft mandates the ask and the stop, and seeds no leg (iss
   assert.match(next, /STOP for the answer/i);
   assert.match(next, /set `State: Active` in \.pi-web\/relays\/22-packet-draft-unit\/status\.md/);
   assert.match(next, /leg "1"/);
+  assert.match(next, /as the final action/, "the dispatch is the turn's final operational action");
+});
+
+test("relay-seam: ask stays open, inline states the preselection (issue #722 S3)", () => {
+  const asked = run(["--triage", "20-relay-unit"]);
+  assert.equal(asked.status, 0, asked.stderr);
+  assert.match(asked.stdout, /^relay-seam: ask \(relay\.seam; absent = ask\) — the question stays open$/m,
+    "an ask default preselects nothing, exactly as RELAY.md §The seam's default says");
+  const inline = run(["--triage", "20-relay-unit"], { root: withProjectConfig(tree(), { relay: { seam: "inline" } }) });
+  assert.equal(inline.status, 0, inline.stderr);
+  assert.match(inline.stdout, /^relay-seam: inline \(relay\.seam; absent = ask\) — preselects the inline answer, never skips the question$/m);
+  for (const stdout of [asked.stdout, inline.stdout]) assert.match(stdout, /ASK the owner/, "neither value skips the question");
 });
 
 test("relay.seam: inline preselects the question and never skips it (issue #722 S3)", () => {

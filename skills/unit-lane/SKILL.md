@@ -246,8 +246,8 @@ closes, `execute-phase` resumes the lane and the remaining judgment steps
 (evidence, review, docs, release) run here.
 
 When a pi-web session is present the same hand-off is a Relay leg: the router
-prints `relay: bootstrap-needed` or `relay: draft` (with the packet path, the
-recorded `relay.seam` default and the leg count) and
+prints `relay: bootstrap-needed` (the packet path, the recorded `relay.seam` and
+the leg count) or `relay: draft` (the same ask, with no leg seeded yet) and
 [relay legs](references/RELAY.md) §Bootstrap owns the rest —
 **ask the owner (relay legs or inline) and stop for the answer**;
 `relay: bootstrap-needed` and
