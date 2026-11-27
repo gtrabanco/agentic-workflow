@@ -60,6 +60,10 @@ import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 
+// Inside the crate the schema package is the dependency (issue #553): a
+// repo-relative path under the project root names a file no consumer has.
+const { TEST_OBLIGATION_KINDS } = await import("@gtrabanco/agentic-workflow-schema");
+
 let ROOT = process.cwd();
 
 /** The tree this gate reads: the caller's root, else the cwd. */
@@ -73,7 +77,6 @@ export const TAG_PREFIX = "// test-obligation: ";
 /** The grammar's id, published by its owner doc (issue #596 S1/S7). */
 export const TAG_GRAMMAR_ID = "test-obligation-tag@1";
 export const TAG_GRAMMAR_OWNER = "skills/unit-lane/references/TESTS.md";
-export const VOCABULARY_SOURCE = "packages/agentic-workflow-schema/src/vocabularies.ts";
 export const VOCABULARY_EXPORT = "TEST_OBLIGATION_KINDS";
 export const SUITE_DIR = "scripts";
 export const SUITE_SUFFIX = ".test.mjs";
@@ -98,10 +101,10 @@ const uniq = (values) => [...new Set(values)];
 /* --------------------------------------------------------------- the sources */
 
 /**
- * The published obligation set, read from committed source. The reader is a
- * text scan rather than an import on purpose: the gate must run on a tree whose
+ * The published obligation set, read from committed source. The reader is a text
+ * scan rather than an import on purpose: the gate must run on a tree whose
  * `dist/` was never built (a fresh clone), and the const's declaration is the
- * authority either way.
+ * authority either way. Its caller is the parity reader below and the suite.
  */
 export function publishedObligationKinds(text) {
   const at = String(text).indexOf(`export const ${VOCABULARY_EXPORT} = Object.freeze([`);
@@ -303,12 +306,17 @@ export const SELECTION_RULE =
 
 const round = (value) => (Math.round(value * 100) / 100).toString();
 
-function gateReport({ suites, findings }) {
+function gateReport({ suites, findings, root }) {
   const lines = [
     `${CONTRACT_ID} — ${suites.length} suite(s) · ${findings.length} finding(s)`,
   ];
   for (const finding of findings) lines.push(`  ${finding.code} — ${finding.file} — ${finding.detail}`);
-  lines.push(`verdict: ${findings.length === 0 ? "PASS" : "FAIL"}`);
+  // No suite at all is a refusal, never a pass: the gate found nothing to judge,
+  // which is what a foreign tree looks like when its suites live elsewhere
+  // (issue #717). An estate of zero rows is a defect by this crate's own
+  // fail-closed standard, even though every individual row is fine.
+  if (suites.length === 0) lines.push(`  estate-empty — ${SUITE_DIR}/ — no suite under the declared legs (${root})`);
+  lines.push(`verdict: ${findings.length === 0 && suites.length > 0 ? "PASS" : "FAIL"}`);
   return lines.join("\n");
 }
 
@@ -684,22 +692,24 @@ export function main(argv = process.argv.slice(2), context = {}) {
     }
   }
 
-  const sourcePath = path.join(options.root, VOCABULARY_SOURCE);
-  if (!fs.existsSync(sourcePath)) {
-    process.stderr.write(`test-obligation-tags: ${VOCABULARY_SOURCE} is absent under ${options.root} — the closed set has no source to resolve against\n`);
-    process.exit(1);
-  }
-  const kinds = publishedObligationKinds(fs.readFileSync(sourcePath, "utf8"));
+  // The published set is the dependency's, never a path under the measured
+  // root: `packages/agentic-workflow-schema/src/vocabularies.ts` has no meaning
+  // in a target project, and reading it there made the whole command unusable
+  // on any tree that is not this repository (issue #717, the #553 rule).
+  const kinds = [...TEST_OBLIGATION_KINDS];
   if (kinds.length === 0) {
-    process.stderr.write(`test-obligation-tags: ${VOCABULARY_SOURCE} publishes no ${VOCABULARY_EXPORT}\n`);
+    process.stderr.write(`test-obligation-tags: the installed schema package publishes no ${VOCABULARY_EXPORT}\n`);
     process.exit(1);
   }
 
   if (options.mode === "vocabulary") {
     const ownerPath = path.join(options.root, TAG_GRAMMAR_OWNER);
     if (!fs.existsSync(ownerPath)) {
-      process.stderr.write(`test-obligation-tags: ${TAG_GRAMMAR_OWNER} is absent under ${options.root} — the grammar has no owner doc\n`);
-      process.exit(1);
+      // The owner doc ships with the skills tree, not with the crate: on a
+      // target project the parity check has nothing to compare and says so
+      // instead of refusing a file the project can never carry (issue #717).
+      process.stdout.write(`${CONTRACT_ID} vocabulary — n/a — product-internal: ${TAG_GRAMMAR_OWNER} ships with the skills tree, not with this crate\nverdict: PASS\n`);
+      process.exit(0);
     }
     const named = obligationBlockKinds(fs.readFileSync(ownerPath, "utf8"));
     const report = vocabularyReport({ kinds, named, owner: TAG_GRAMMAR_OWNER });
@@ -728,8 +738,11 @@ export function main(argv = process.argv.slice(2), context = {}) {
     const budget = options.budget === null ? null : readBudgetManifest(options.budget);
     const section = budget === null ? null : budgetSection(budget);
     const over = section === null ? [] : section.over;
-    const verdict = missing.length > 0 || over.length > 0 ? "FAIL" : "PASS";
-    const body = section === null ? text : `${text}\n\n${section.text}`;
+    // An estate with no row is a refusal, never a pass: a foreign tree whose
+    // suites live elsewhere looked exactly like a healthy one (issue #717).
+    const verdict = estate.length === 0 || missing.length > 0 || over.length > 0 ? "FAIL" : "PASS";
+    const empty = estate.length === 0 ? `\nestate-empty — no suite under ${SUITE_DIR}/ or packages/*/test/ (${options.root})` : "";
+    const body = section === null ? `${text}${empty}` : `${text}${empty}\n\n${section.text}`;
     if (options.mode === "json") {
       process.stdout.write(
         `${JSON.stringify(
@@ -772,9 +785,9 @@ export function main(argv = process.argv.slice(2), context = {}) {
     process.exit(findings.length === 0 ? 0 : 1);
   }
 
-  const report = gateReport({ suites, findings });
+  const report = gateReport({ suites, findings, root: options.root });
   process.stdout.write(`${report}\n`);
-  process.exit(findings.length === 0 ? 0 : 1);
+  process.exit(findings.length === 0 && suites.length > 0 ? 0 : 1);
 }
 
 if (process.argv[1] !== undefined && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) main(process.argv.slice(2));

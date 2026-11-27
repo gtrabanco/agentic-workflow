@@ -80,6 +80,18 @@ the unit-doc grammar apply; a document with no phase in either answers
 `BLOCKED: no-phases`. A `P<n>` bullet outside `## Tasks` (a progress-log line,
 for instance) is prose, never a phase.
 
+**Scope of the two shapes.** The four unit-doc templates seed one shape, every
+skill that writes a unit doc writes it, and it declares no layer, so no path
+table is consulted: the unit-doc grammar is the supported consumer shape. The
+plan grammar and its target→layer prefix table are **this repository's own
+legacy shape** — the table maps *this* tree (`skills/`, `packages/`, `scripts/`,
+`docs/`, `template/`, `.github/`, `.agentic-workflow/`), so a target under a
+project's own tree (`src/**`, `app/`, `lib/`) answers `BLOCKED: layer-unknown`,
+naming the token and this scope. A project that wants the plan grammar's
+cross-layer check would need a declared map; until one exists, the honest answer
+is a named refusal, never a silent pass. Only boxes 3 and 7 consult a phase's
+placement beyond that table.
+
 ### Mapping the eight boxes to a bullet phase
 
 A bullet has no separate title line and declares no layer, so two boxes have no
@@ -125,6 +137,14 @@ or, on the first failing box:
 
 ```text
 Phase-lint: BLOCKED — box <n>: <one-line reason>
+```
+
+A plan-grammar target no shipped prefix maps fails closed by name, before any
+box runs, because the cause is the document's tree rather than a rule:
+
+```text
+P<n> box-2: task <n> target `<token>` belongs to no layer the shipped prefix table knows — …
+verdict BLOCKED: layer-unknown
 ```
 
 A malformed `Relevant files:` sub-section reports under its own id:

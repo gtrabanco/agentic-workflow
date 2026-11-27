@@ -281,11 +281,16 @@ Layer: config/infra. Done-when: \`node --test scripts/parser.test.mjs\` → exit
 - [ ] Implement \`src/index.ts\` parser entry
 `;
 
-test("a box-2 target the prefix table cannot map blocks as unparseable", () => {
+// S5 / issue #717: an unmappable target used to fold into `unparseable`, whose
+// other causes are a broken document. The target that maps to no shipped prefix
+// is the *project's* tree, so the verdict names it (`layer-unknown`) and the
+// phase line names the token; `unparseable` keeps every other cause.
+test("a box-2 target the prefix table cannot map fails closed by name", () => {
   const file = fixture("unmappable-target.md", UNMAPPABLE_TARGET_PLAN);
   const { status, stdout } = nodeRun(file);
   assert.equal(status, 1);
-  assert.match(stdout, /^verdict BLOCKED: unparseable$/m);
+  assert.match(stdout, /^P1 box-2: task 1 target `src\/index\.ts` belongs to no layer/m);
+  assert.match(stdout, /^verdict BLOCKED: layer-unknown$/m);
 });
 
 // Fold F2 (supporting refinement) — a bare numeric ratio is an assertion, not a
@@ -869,6 +874,37 @@ test("a P<n> phase without a Layer line is unparseable", () => {
   assert.match(stdout, /^verdict BLOCKED: unparseable$/m);
 });
 
+// S5 (issue #717): the plan grammar's prefix table maps THIS repository's
+// trees. A project target is not an unreadable document, so it fails closed by
+// name — the same shape a consumer's own `src/**` tree hits — and the
+// untokenizable class keeps its own verdict.
+const FOREIGN_TARGET_PLAN = `# Foreign target plan
+
+### P1 — Add the ledger page
+
+Layer: ui. Done-when: \`bun test src/pages/ledger.test.ts\` → exit 0.
+
+- [ ] Create \`src/pages/ledger.ts\` with the page
+- [ ] Add tests in \`src/pages/ledger.test.ts\`
+`;
+
+test("S5: an unmapped target fails closed by name, citing the grammar scope", () => {
+  const file = fixture("foreign-target.md", FOREIGN_TARGET_PLAN);
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 1);
+  assert.match(stdout, /^P1 box-2: task 1 target `src\/pages\/ledger\.ts` belongs to no layer the shipped prefix table knows/m);
+  assert.match(stdout, /the unit-doc grammar is the supported consumer shape/m);
+  assert.match(stdout, /^verdict BLOCKED: layer-unknown$/m);
+  assert.doesNotMatch(stdout, /BLOCKED: unparseable/, "the unmappable target is its own reason");
+});
+
+test("S5: the untokenizable class keeps unparseable, so the new reason is not a rename", () => {
+  const file = fixture("ambiguous-layer-regression.md", AMBIGUOUS_LAYER_PLAN);
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 1);
+  assert.match(stdout, /^verdict BLOCKED: unparseable$/m);
+});
+
 test("a parsed plan with zero phase headings answers no-phases", () => {
   const file = fixture("no-phases.md", NO_PHASES_PLAN);
   const { status, stdout } = nodeRun(file);
@@ -1282,7 +1318,8 @@ test("the underscore-wrapped target shape stays fail-closed too (F56)", () => {
   const file = fixture("underscore-target.md", UNDERSCORE_TARGET_PLAN);
   const { status, stdout } = nodeRun(file);
   assert.equal(status, 1);
-  assert.match(stdout, /^verdict BLOCKED: unparseable$/m);
+  assert.match(stdout, /^P1 box-2: task 1 target `_docs\/x\.md_`/m);
+  assert.match(stdout, /^verdict BLOCKED: layer-unknown$/m, "the wrapped token maps to no shipped prefix, so it fails closed by name");
 });
 
 // Fold F57 — the target grammar was an anchored nested-quantifier regex whose
@@ -1300,7 +1337,7 @@ test("a past-the-engine-limit target token agrees across runtimes (F57)", { skip
   assert.equal(viaNode.error, undefined, "the linter must finish inside 30 s under node");
   assert.equal(viaBun.error, undefined, "the linter must finish inside 30 s under bun");
   assert.equal(viaNode.stdout, viaBun.stdout, "node and bun must agree byte for byte on the giant target");
-  assert.match(viaNode.stdout, /^verdict BLOCKED: unparseable$/m);
+  assert.match(viaNode.stdout, /^verdict BLOCKED: layer-unknown$/m);
 });
 
 // Fold F58 — box-1's word joiner (`and`/`y`) and the `,`/`/` symbol joiners had
@@ -1891,7 +1928,8 @@ test("an unmappable prose compound fails closed, never guesses a layer (F77)", (
   const file = fixture("f77-prose-compound.md", PROSE_COMPOUND_PLAN);
   const { status, stdout } = nodeRun(file);
   assert.equal(status, 1);
-  assert.match(stdout, /^verdict BLOCKED: unparseable$/m);
+  assert.match(stdout, /^P1 box-2: task 1 target `stdout\/stderr` belongs to no layer/m);
+  assert.match(stdout, /^verdict BLOCKED: layer-unknown$/m);
 });
 
 test("a real dotless target still maps by the `*.md` row (F77)", () => {

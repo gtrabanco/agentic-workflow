@@ -234,3 +234,35 @@ test("the CLI without a base is not-applicable, never a pass", () => {
     fs.rmSync(dir, { recursive: true, force: true });
   }
 });
+
+// Issue #717 (S7). The dimension vocabulary is this product's own invariant, so
+// the carrier's scope restriction is legitimate — but on a tree that does not
+// carry it the guard used to compare two empty dimension sets and answer as if
+// it had measured something. The carrier is now named in the report, and a
+// range that touches a review surface without it is refused by name.
+test("S7: an absent carrier is named instead of compared", () => {
+  const dir = scratch();
+  const write = (rel, content) => {
+    const absolute = path.join(dir, rel);
+    fs.mkdirSync(path.dirname(absolute), { recursive: true });
+    fs.writeFileSync(absolute, content);
+  };
+  try {
+    git(dir, ["init", "-q"]);
+    write("skills/review-x/SKILL.md", "# review-x\n");
+    git(dir, ["add", "-A"]);
+    git(dir, ["commit", "-q", "-m", "base"]);
+    const base = git(dir, ["rev-parse", "HEAD"]).stdout.trim();
+    write("skills/review-x/SKILL.md", "# review-x\n\nA changed review surface.\n");
+    git(dir, ["add", "-A"]);
+    git(dir, ["commit", "-q", "-m", "touch a review surface"]);
+
+    const result = runCli(dir, ["--base", base]);
+    assert.equal(result.status, 1, result.stderr);
+    assert.match(result.stdout, /^carrier \| skills\/product-audit\/references\/AUDIT_DIMENSIONS\.md absent$/m);
+    assert.match(result.stdout, /^finding — carrier-missing · /m);
+    assert.match(result.stdout, /^verdict \| refused$/m);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
