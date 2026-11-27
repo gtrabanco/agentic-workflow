@@ -237,7 +237,16 @@ none
 - Six `embed-profile*` cases in the package suite fail while this session exports
   `NAN_API_KEY`/`AGENTIC_WORKFLOW_DOC_EMBEDDINGS_*`/`PI_PROVIDER` —
   **does-not-affect** this unit; the suite is green with those variables unset
-  (the same six fail on `main` in this environment).
+  (the same six fail on `main` in this environment). The same class explains the
+  correction batch's first `crate-suite-bun` leg: `doc.query`/`doc.hybrid` failed
+  only with those variables exported (47/47 green with them unset), so the gate
+  runs for this batch export neither set (2026-11-27).
+- An `argument-hint` that is already double-quoted but carries an invalid escape
+  (e.g. `"[foo\q]"`) — **does-not-affect** this unit; the transform never
+  re-quotes a quoted scalar (re-quoting would corrupt its valid escapes), so such
+  a source frontmatter is unparseable at `origin/main` and at this head, byte for
+  byte — an authoring defect in the source, never a staging regression. Pinned by
+  the suite's own case (2026-11-27).
 
 ## Tasks
 
@@ -301,13 +310,16 @@ lane's plan step, and no triage route is re-derived here.
 
 ## Next
 
-The addendum (S8) is applied in this correction batch; PR
-[#736](https://github.com/gtrabanco/agentic-workflow/pull/736) carries it against
-`main`, and the external verifier's verdict / merge is the next step. Every
-obligation row is closed against a foreground run; the one red gate line
-(`doc.structure` suite timeout) is an environment/load finding with its
-standalone green evidence recorded in `## Known pre-existing issues`, not a
-pending unit task.
+The 2026-11-27 `EXTERNAL VERIFY` receipt's seven blockers are folded (F1–F3
+below, four commits: records, narrations, red corpus, engine), advisory 3 is
+folded with them, and the batch's own discovery — the transform broke
+block-scalar hints — is folded in the same slice per the owner's loop clause.
+Next: the delta external re-verify (blockers-only recheck of the receipt), then
+the owner's merge of PR [#736](https://github.com/gtrabanco/agentic-workflow/pull/736).
+Advisories 1, 2, 4, 5, 6 of the receipt remain triaged-and-left with their
+grounds in the receipt; none carries a pending unit task. Every obligation row
+is closed against a foreground run; `crate-suite-node`'s `doc.structure` bound
+is the environment/load finding recorded in `## Known pre-existing issues`.
 
 ## References
 
@@ -363,3 +375,97 @@ none
 - **E17** — 2026-11-27, the surrounding skill suites: `bun test packages/agentic-workflow/test/skills.screen.test.mjs packages/agentic-workflow/test/skills.discovery.test.mjs packages/agentic-workflow/test/skills.register.test.mjs scripts/skill-lint.test.mjs` · exit 0 · 58 pass / 0 fail.
 - **P2** — 2026-11-27, the S8 addendum committed on the PR branch (`test(726)` red suites first, then the `feat(skill-lint)` engine/docs commit) and pushed to PR [#736](https://github.com/gtrabanco/agentic-workflow/pull/736).
 - **E18** — 2026-11-27, the addendum's gates: `bun scripts/run-root-suite.mjs` · exit 1 · every suite green except `scripts/workflow-status-sensor.test.mjs (120.0s) — SUITE TIMEOUT` (0 assertion failures inside; standalone with the gate's `--timeout 30000` → 81/81 in 2m15s); `local-gate --only crate-suite-bun --jobs 1` · exit 1 · every suite green except `packages/agentic-workflow/test/doc.structure.test.mjs (240.3s) — SUITE TIMEOUT` (0 assertion failures inside; standalone node 19/19 earlier); `bun scripts/check-skill-context.mjs` · exit 0 · `PASS context budgets: 33 skills`; `bun scripts/check-skill-context.mjs --documents` · exit 0 · `PASS context documents: 7 budgeted documents`; `bun scripts/docs-generate.mjs --check` · exit 0 · `verdict: PASS`; `bun scripts/lint-changeset.mjs` · exit 0; `bun scripts/test-obligation-tags.mjs` · exit 0 · `147 suite(s) · 0 finding(s)`.
+- **L4** — 2026-11-27, the correction request, verbatim:
+  > Apply to this repository: triage and fix those that deserve to fix but understand the context before fix and check you haven't broke another different thing, if you have done, start the loop again until you fixed full symbol/related stuff
+
+  Resolved as a correction batch against this unit's 2026-11-27 `EXTERNAL VERIFY`
+  receipt (`base f1b04a3a9 · head 37f96b4f2`, `Verdict: NEEDS-DECISION`, 7
+  blockers / 6 advisories). Triage: blockers 1–7 all real, all folded (F1–F3);
+  advisory 3 folded with them because its fix is the same function the fixture
+  probe then found breaking block-scalar hints; advisories 1, 2, 4, 5, 6 assessed
+  and left (environment-embed class, documented load-sensitive bound, historical
+  `#591 S3` citation superseded in the same comment, validator wording whose
+  outcome reproduces, settled-unit records of their own time). No review-change,
+  audit-pr or fold cycle ran on this batch (`IR7`/S1's inline-application shape).
+- **F1** — 2026-11-27, folded blockers 2–7 in `e44326cf5`: the six live sibling
+  narrations that still asserted seven checks now say eight
+  (`packages/agentic-workflow/src/skills/discovery.mjs:9`,
+  `packages/agentic-workflow/src/runner/skills.mjs:8`,
+  `packages/agentic-workflow/README.md:66` and `:1043`,
+  `skills/init-workspace/references/BOOTSTRAP_DISCOVERY.md:82`,
+  `packages/agentic-workflow/test/skills.discovery.test.mjs:7`). Verified by the
+  six reproducers re-run green (each `rg` exits 1) and the live-tree sweep
+  (`rg -n 'seven .?skill-lint. checks|the seven checks' packages scripts skills
+  docs/workflow docs/CAPABILITIES.md README.md`) returning only
+  `skills.screen.test.mjs:2` — the receipt's advisory 4, a historical `#591 S3`
+  citation superseded two lines below by the eight-id-set sentence.
+- **F2** — 2026-11-27, folded blocker 1: O12's validator is re-cut (decision D4)
+  from the pattern that never matched this branch's roadmap to the row's
+  registration, and the row flipped back to `planned` in `cf351b36b` before it
+  re-verified — both halves run in the foreground after the flip: `rg -c '\|
+  pi-package-defects \|' docs/ROADMAP.md` → `1`, exit 0, and `bun
+  packages/agentic-workflow/bin/agentic-workflow.mjs verify
+  docs/fix/726-pi-package-defects/SPEC.md` → exit 0, `{"ok": true,
+  "violations": []}`; status `verified` again in this commit.
+- **F3** — 2026-11-27, folded advisory 3 together with the change-caused defect
+  the batch's own fixture probe found while understanding it (S1's loop clause):
+  quoting the first line of `argument-hint: >-` / `|` turned a hint `yaml@2.9.0`
+  reads as a string into a frontmatter `PARSE-ERROR` — base ships both shapes,
+  the transform broke them (`D5`, `PE-018`). Red corpus `6de1870a1` (6 pass /
+  2 fail), engine `5a5f761b6` (8 pass / 0 fail): block-scalar headers ship
+  byte-identical, comment-led (`#…`) and YAML-core non-string values (`null`,
+  `~`, bool, numeric) stage as the strings the host renders, and a quoted scalar
+  is never re-quoted. One correction disclosed: the new
+  `block-comment-header` case hardcoded its expected decode as `[--foo]`; the
+  measured base decode is `[--foo]\n` (clip chomping), so the literal was
+  repaired to base's own value — the byte-identical assertion beside it and every
+  pre-existing expectation untouched.
+- **E19** — 2026-11-27, the batch's frozen-failure corpus before the fixes: the
+  six sibling `rg` reproducers each printed their stale line (exit 0) and O12's
+  `rg -n '726-pi-package-defects.*in-progress' docs/ROADMAP.md` → exit 1; `bun
+  test test/argument-hint-frontmatter.test.mjs` in `packages/pi-agentic-workflow`
+  · exit 1 · 6 pass / 2 fail (the block-scalar byte-parity case and the
+  comment/typed string case), observed with the corpus in the tree and the old
+  engine (the corpus landed red as `6de1870a1`).
+- **E20** — 2026-11-27, the fixture probe before the real tree (`mktemp -d`
+  scratch, removed after): 39 hint shapes run through base decoding, the current
+  transform and the candidate predicate against the pinned `yaml@2.9.0` — the
+  current transform's two base-parity breaks (folded/literal block →
+  `PARSE-ERROR`) and the candidate's 39/39 (block shapes byte-identical and
+  base-equal, every other shape parsed as a string carrying the author's raw
+  text). The measurements behind `PE-018`: block headers → string, `#…` → null,
+  `null`/`true`/`123`/`1.5e3`/`.inf` → non-strings, `=foo`/`12:30`/`2026-11-27`
+  → plain strings (no action needed on the last three).
+- **E21** — 2026-11-27, green after the engine: `bun test
+  test/argument-hint-frontmatter.test.mjs` · exit 0 · 8 pass / 0 fail;
+  `bun run test` in `packages/pi-agentic-workflow` with the embed/provider env
+  unset · exit 0 · 1145 pass, 0 fail across 97 files (E5's 1142 + the three new
+  cases), tracked tree byte-clean afterwards.
+- **E22** — 2026-11-27, the batch's differential (both sides staged in `mktemp`
+  scratch from `git archive` of `origin/main` and this head — script, sources and
+  manifest; each side driving its own script copy with a scratch `node_modules`
+  pointing at the workspace): identical `32 skills / 115 files / 25 projected`;
+  110/115 staged files byte-identical; exactly five differ, each only on its
+  asked-for line — the three repaired `argument-hint:` quotes (E8's set) plus
+  `BOOTSTRAP_DISCOVERY.md:82` and `AUDIT_DIMENSIONS.md:147` (`seven` → `eight`).
+  The new predicate rewrites nothing shipped.
+- **G1** — 2026-11-27, the batch's gates with the embed/provider env unset:
+  `bun scripts/local-gate.mjs --only root-suite,crate-suite-bun,docs-generated-projection,skill-context-budgets,journal-carrier-check,secret-scan,dimension-regression,rigidity-review
+  --skip-network --jobs 2` · exit 0 · `PASS — 7 step(s) in 385s` (root-suite
+  147/147 exit 0 in 168s; crate-suite-bun exit 0 in 217s with `doc.structure`
+  green inside its bound at 207.1s; `dimension-regression` is skip-by-default as
+  a step and its suite `scripts/dimension-regression.test.mjs` passed inside
+  root-suite); `bun scripts/test-obligation-tags.mjs` · exit 0 · `147 suite(s) ·
+  0 finding(s)`; `bun scripts/lint-changeset.mjs` · exit 0; `bun scripts/docs-generate.mjs
+  --check` · exit 0 · `verdict: PASS`; `bun scripts/check-skill-context.mjs`
+  and `--documents` · exit 0 · PASS (33 skills / 7 documents — the `seven` →
+  `eight` swaps are byte-count-neutral, so no ceiling moved); `bun
+  scripts/skill-lint.mjs` · exit 0 · `118 file(s) · 8 check(s)` · `verdict:
+  PASS`. `crate-suite-node` was not re-run in this batch: its only red line is
+  the documented load-sensitive `doc.structure` bound (receipt advisory 2),
+  standalone green re-confirmed the same day (`node --test
+  --test-timeout=30000`, 19/19 in 87s).
+- **P3** — 2026-11-27, the batch's four commits (`cf351b36b` records, `e44326cf5`
+  narrations, `6de1870a1` red corpus, `5a5f761b6` engine) plus this evidence
+  commit pushed to PR [#736](https://github.com/gtrabanco/agentic-workflow/pull/736);
+  no merge, no approval — the delta external re-verify is next.
