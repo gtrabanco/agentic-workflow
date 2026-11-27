@@ -160,7 +160,7 @@ test("a block-scalar hint is staged byte-identical and still parses as a string"
   const shapes = [
     ["block-folded", ["argument-hint: >-", '  [--foo <bar>] [--search "<words>"]'], '[--foo <bar>] [--search "<words>"]'],
     ["block-literal", ["argument-hint: |", "  [--foo]"], "[--foo]\n"],
-    ["block-comment-header", ["argument-hint: > # keep", "  [--foo]"], "[--foo]"],
+    ["block-comment-header", ["argument-hint: > # keep", "  [--foo]"], "[--foo]\n"],
     ["block-single", ["argument-hint: >"], ""],
   ];
   for (const [slug, lines, expected] of shapes) {

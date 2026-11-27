@@ -11,8 +11,10 @@
 // pointerizes one declared prose section, resolved through the #407 section
 // locator and hash-bound to the exact bytes it removes
 // (`scripts/projection.mjs`); the argument-hint normalisation (issue #726,
-// below), which makes a `[...]`-shaped hint a quoted YAML string pi's own
-// frontmatter reader accepts; and the runner mapping (issue #696, below). A file
+// below), which makes any hint `yaml@2.9.0` would not read as a plain string a
+// quoted YAML string pi's own frontmatter reader accepts — and leaves a
+// block-scalar header alone, since its content already is one; and the runner
+// mapping (issue #696, below). A file
 // none of them reaches is byte-identical to its source — always. The standalone
 // `skills/` tree is never edited: all transforms read it and write only into the
 // staged copy.
@@ -125,6 +127,23 @@ function frontmatterEndOffset(text) {
 const ARGUMENT_HINT_LINE = /^(argument-hint:[ \t]*)(.*)$/mu;
 
 /**
+ * A YAML block-scalar header — `>`, `>-`, `|2`, `> #c` … yaml@2.9.0 reads the
+ * indented content that follows as one string, so the line must ship
+ * byte-identical: quoting the header orphans the content lines and breaks the
+ * whole frontmatter (decision D5, PE-018).
+ */
+const BLOCK_HEADER = /^[|>][0-9]*[+-]?(?:[ \t]+#.*)?$/u;
+
+/**
+ * YAML 1.2 core's non-string plain scalars — `null`/`~`, the booleans and the
+ * numeric forms — enumerated from measured `yaml@2.9.0` behaviour (PE-018). A
+ * hint YAML types as one of these is not the string the host renders, so it is
+ * quoted like any other shape the reader cannot read as a string.
+ */
+const CORE_NON_STRING =
+  /^(?:~|null|Null|NULL|true|True|TRUE|false|False|FALSE|[+-]?(?:0b[01_]+|0o[0-7_]+|0x[0-9a-fA-F_]+|[0-9][0-9_]*)(?:\.[0-9_]*)?(?:[eE][+-]?[0-9]+)?|[+-]?\.[0-9_]+(?:[eE][+-]?[0-9]+)?|[+-]?(?:\.inf|\.Inf|\.INF)|\.nan|\.NaN|\.NAN)$/u;
+
+/**
  * Whether a value is already a complete single- or double-quoted YAML scalar.
  * @param {string} value
  * @returns {boolean}
@@ -134,16 +153,20 @@ function isQuotedScalar(value) {
 }
 
 /**
- * Whether YAML reads a raw value as a plain string. Conservative by design: a
- * shape this reader is not sure about is quoted, never left to the parser.
+ * Whether YAML reads a raw value as a plain string. A block-scalar header is
+ * one (its content follows); a comment-led value and YAML core's non-string
+ * scalars are not. Conservative by design: a shape this reader is not sure
+ * about is quoted, never left to the parser.
  * @param {string} value
  * @returns {boolean}
  */
 function isPlainScalar(value) {
   if (value === "") return false;
-  if (/^[\[{&*!|>'"%@`,]/u.test(value)) return false;
+  if (BLOCK_HEADER.test(value)) return true;
+  if (/^[\[{&*!|>'"%@`,#]/u.test(value)) return false;
   if (/^[-?:](?:[ \t]|$)/u.test(value)) return false;
   if (/: | #/u.test(value)) return false;
+  if (CORE_NON_STRING.test(value)) return false;
   return !value.endsWith(":");
 }
 
@@ -162,7 +185,8 @@ function quoteScalar(value) {
  * (issue #726, defect 1). pi reads frontmatter with a YAML parser, so a raw
  * value starting with `[` is a flow sequence and rejects the whole file — the
  * skill silently loses its `skill:*` command. An already-quoted value is left
- * byte-identical; so is a value YAML reads as a plain scalar. The replacement is
+ * byte-identical; so is a block-scalar header and a value YAML reads as a plain
+ * string. The replacement is
  * one line, so every other byte of the file is untouched.
  * @param {string} text
  * @returns {string}
