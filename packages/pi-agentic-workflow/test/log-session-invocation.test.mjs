@@ -306,7 +306,8 @@ test("S7: the directive names the tool the extension spawns, never a launcher to
   try {
     const { record, directive } = planInvocation({ root, sessionId: SESSION, now: NOW });
     assert.equal(record.target, "fragment", "the fragment branch is the one that composed the launcher");
-    assert.match(directive, /agentic_workflow_run \{ "subcommand": "journal write"/u, "the entry is handed to the tool");
+    assert.match(directive, /agentic_workflow_run \{ "subcommand": "journal"/u, "the entry is handed to the tool");
+    assert.match(directive, /"args": \["write"/u, "the write operation is in args, not subcommand");
     assert.match(directive, new RegExp(`"--session", "${SESSION}"`, "u"), "with the session the record names");
     assert.match(directive, /The extension spawns the runner itself, at this package's own version/u, "and says so, so the model never looks for a binary");
     assert.doesNotMatch(directive, /(?:^|[\s`])agentic-workflow\s+[a-z]/mu, "no bare launcher survives anywhere in the composed bytes");
@@ -325,7 +326,8 @@ test("S7: a crate-route close is handed to the same tool, never composed as a sh
       crateBin: "/opt/crate/bin/agentic-workflow.mjs",
       run: () => ({ status: 0, stdout: "## 2026-11-20T00:00:00Z — test-branch — narrative\n- **Commits:** 0\n", stderr: "" }),
     });
-    assert.match(directive, /agentic_workflow_run \{ "subcommand": "session-close close" \}/u, "the close is the tool's own subcommand");
+    assert.match(directive, /agentic_workflow_run \{ "subcommand": "session-close"/u, "the close is the tool's own subcommand");
+    assert.match(directive, /"args": \["close"\]/u, "the close operation is in args, not subcommand");
     assert.doesNotMatch(directive, /`runner session-close close`/u, "never a symbolic citation the bash seam must refuse");
   } finally {
     cleanup(root);

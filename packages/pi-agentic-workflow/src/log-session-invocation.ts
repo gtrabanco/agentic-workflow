@@ -374,7 +374,7 @@ export function composeDirective(record: InvocationRecord): string {
       `Entry target — the fragment carrier is opted in: hand the entry to its writer through the tool below, which computes the name and bytes, and never touch ${record.journal}:`,
     );
     lines.push(
-      `agentic_workflow_run { "subcommand": "journal write", "args": ["--kind", "narrative", "--session", "${record.session}", "--summary", "<your Summary>", "--decisions", "<…>", "--next", "<…>"] }`,
+      `agentic_workflow_run { "subcommand": "journal", "args": ["write", "--kind", "narrative", "--session", "${record.session}", "--summary", "<your Summary>", "--decisions", "<…>", "--next", "<…>"] }`,
     );
     lines.push(
       `The extension spawns the runner itself, at this package's own version. Call the tool — never a launcher, never a package name, in a shell. Run at this second it lands at ${record.path}; the CLI never overwrites a collision.`,
@@ -389,7 +389,7 @@ export function composeDirective(record: InvocationRecord): string {
     lines.push("Session facts, from the project's own writer at invocation (`" + label + " render --kind auto`):");
     lines.push(record.facts.trimEnd());
     lines.push("");
-    const close = record.writer === "cli" ? `agentic_workflow_run { "subcommand": "${WRITER_COMMAND} close" }` : `${WRITER_SCRIPT} close`;
+    const close = record.writer === "cli" ? `agentic_workflow_run { "subcommand": "${WRITER_COMMAND}", "args": ["close"] }` : `${WRITER_SCRIPT} close`;
     lines.push(
       fragment
         ? `Run the skill's Process steps 3 and 5 with these values: write the entry with your Summary, Decisions and Next through the call above, then run \`${close}\`.`
