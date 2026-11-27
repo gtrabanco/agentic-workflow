@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// test-obligation: protects=packages/agentic-workflow/src/relay,packages/agentic-workflow/src/runner/catalog.json,skills/unit-lane/references/RELAY.md,docs/workflow/CONFIG.md obligations=contract,failure-path
+// test-obligation: protects=packages/agentic-workflow/src/relay,packages/agentic-workflow/src/runner/catalog.json,skills/unit-lane/references/RELAY.md,docs/workflow/CONFIG.md,docs/workflow/SKILLS.md,README.md obligations=contract,failure-path
 
 /**
  * relay-route.test.mjs — the lane's relay seam: the router's hint, its
@@ -22,7 +22,11 @@
  *     wording, never a claim that a dispatch happened, and the only degradation
  *     the contract defines (S2);
  *   - the machine block (route, `next:`, rows, read-set, fingerprint) is
- *     byte-identical in both environments: the hint is an addendum.
+ *     byte-identical in both environments: the hint is an addendum;
+ *   - the two hand-off summaries (`docs/workflow/SKILLS.md`, `README.md`) name
+ *     the seam's ask before they name Relay legs, each citing
+ *     `references/RELAY.md` §Bootstrap as the owner (external-verify 2026-11-27,
+ *     advisory 2).
  *
  * The fixture tree is `scripts/fixtures/relay-route/` (three feature units with
  * a packet in each state plus one docs unit); every mutating case copies it. The
@@ -320,4 +324,12 @@ test("CONFIG.md documents relay.seam: absent means ask, and never a bypass", () 
   assert.match(config, /`relay\.seam`/);
   assert.match(config, /absent (?:key )?(?:means|=) `ask`/i);
   assert.match(config, /never bypass/i);
+});
+
+test("the hand-off summaries name the seam's ask before Relay legs", () => {
+  for (const file of ["docs/workflow/SKILLS.md", "README.md"]) {
+    const text = repoFile(file);
+    assert.match(text, /first asks the owner/, `${file} orders the question before the hand-off`);
+    assert.match(text, /`references\/RELAY\.md` §Bootstrap/, `${file} cites the seam's owner`);
+  }
 });
