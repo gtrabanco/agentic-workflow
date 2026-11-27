@@ -109,7 +109,7 @@ test("a clean skill passes and the report names the scan scope (O10)", () => {
   withFixture({ "clean-skill": CLEAN_SKILL }, (root) => {
     const result = scan(root);
     assertClean(result);
-    assert.match(result.stdout, /^skill-lint — 1 file\(s\) · 7 check\(s\) · root /m);
+    assert.match(result.stdout, /^skill-lint — 1 file\(s\) · 8 check\(s\) · root /m);
     assert.match(result.stdout, /^skill-lint: 0 finding\(s\) in 0 file\(s\)$/m);
   });
 });
@@ -220,6 +220,22 @@ test("SL-07 flags a dated currency claim and an expiry (S8, O8)", () => {
 test("SL-07 admits a provenance date (S8, O8)", () => {
   const provenance = CLEAN_SKILL + body("\n1. Verified 2026-09-24 in this repository (decision 2026-09-24).\n");
   withFixture({ "provenance": provenance }, (root) => assertClean(scan(root)));
+});
+
+// ── SL-08 frontmatter flow scalars (issue #726 addendum) ───────────────────
+
+const hintSkill = (hint) => `---\nname: hint\nuser-invocable: false\nargument-hint: ${hint}\ndescription: >\n  A fixture skill.\n---\n\n## Process\n\n1. Do nothing.\n`;
+
+test("SL-08 flags an unquoted argument-hint flow scalar (issue #726)", () => {
+  for (const hint of ["[--unit <slug>]", "[finding-id …]", "{unit: slug}"]) {
+    withFixture({ hint: hintSkill(hint) }, (root) => assertSingleFinding(scan(root), "SL-08", "SKILL.md"));
+  }
+});
+
+test("SL-08 admits a quoted or placeholder-led hint (issue #726)", () => {
+  for (const hint of ['"[--unit <slug>]"', "[<slug> …]"]) {
+    withFixture({ hint: hintSkill(hint) }, (root) => assertClean(scan(root)));
+  }
 });
 
 // ── The changed-skill subset the linter's flow uses (O14) ───────────────────
