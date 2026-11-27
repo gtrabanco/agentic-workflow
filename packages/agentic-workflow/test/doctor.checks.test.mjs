@@ -463,6 +463,30 @@ test("a converged config file is ok, and absent files are not-applicable (issue 
   assert.deepEqual(row.evidence.files.find((file) => file.file === "agentic-workflow.json").removed, []);
 });
 
+test("config-files resolves the section stem across the three extensions (issue #740 S2)", async () => {
+  const base = healthyOps();
+  const converged = JSON.stringify(Object.fromEntries(BASE_CONFIG_SECTIONS.map((section) => [section.key, section.defaults])));
+  const jsoncPath = `${ROOT}/.pi/agentic-workflow.jsonc`;
+  const jsonc = { ...base, readText: (path) => (path === jsoncPath ? converged : base.readText(path)), exists: (path) => path === jsoncPath || base.exists(path) };
+  const jsoncRow = check(await runDoctor({ ops: jsonc, inventoryText: README }), "config-files");
+  assert.equal(jsoncRow.status, "ok", JSON.stringify(jsoncRow.evidence));
+  assert.deepEqual(
+    jsoncRow.evidence.files.map((file) => file.file),
+    ["agentic-workflow.jsonc"],
+    "the middle extension is the one the probe resolves for the base stem",
+  );
+
+  const jsonPath = `${ROOT}/.pi/agentic-workflow.json`;
+  const shadowed = {
+    ...base,
+    readText: (path) => (path === jsonPath ? converged : path === jsoncPath ? '{ "not": "read" }' : base.readText(path)),
+    exists: (path) => path === jsonPath || path === jsoncPath || base.exists(path),
+  };
+  const shadowedRow = check(await runDoctor({ ops: shadowed, inventoryText: README }), "config-files");
+  assert.equal(shadowedRow.status, "ok", "the .json file wins silently");
+  assert.equal(shadowedRow.evidence.files.some((file) => file.file === "agentic-workflow.json"), true);
+});
+
 test("a diverged config file names the new options and the removed keys (issue #600 S8)", async () => {
   const base = healthyOps();
   const text = JSON.stringify({ logSession: { enabled: true }, guards: { merge: false } });

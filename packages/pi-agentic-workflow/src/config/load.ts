@@ -1,20 +1,22 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
 import {
-  BASE_CONFIG_FILE,
   BASE_CONFIG_SECTIONS,
+  BASE_CONFIG_STEM,
   normalizeGuard,
   normalizeLogSession,
   parseJsonc,
   resolveConfigDocuments,
+  resolveConfigFileName,
+  sanitizeSectionValue,
   validateSectionValue,
 } from "@gtrabanco/agentic-workflow-schema";
 
 import { normalizeGitIdentity } from "../guards/git-identity.js";
 import { DEFAULT_CONFIG } from "./defaults.js";
 import { mergeConfigs } from "./merge.js";
-import { parseConfigFile } from "./schema.js";
+import { degradeConfig } from "./schema.js";
 import { SHIPPED_PATH_POLICY, intersectPathPolicy } from "./path-policy.js";
 import type { PathPolicyDegradation, PathProtectionOverride } from "./path-policy.js";
 import type { ConfigFile, ConfigPaths, ConfigProblem, EffectiveConfig } from "./types.js";
@@ -23,14 +25,18 @@ import type { ConfigFile, ConfigPaths, ConfigProblem, EffectiveConfig } from "./
  * Load the dedicated files into one effective configuration (issue #427).
  *
  * Two files, two owners, one resolved result:
- *  - `agentic-workflow.json` holds the cross-tool feature sections and is
+ *  - the `agentic-workflow` stem holds the cross-tool feature sections and is
  *    resolved by the shared schema package;
- *  - `pi-agentic-workflow.json` holds this package's routing/profiles/passes
+ *  - the `pi-agentic-workflow` stem holds this package's routing/profiles/passes
  *    section and is merged here.
  *
  * The rules this module owns:
  *  - a MISSING file resolves to the shipped default;
- *  - a PRESENT-but-invalid file is a problem — never a silent `inherit`;
+ *  - a file is located by stem across `.json`, `.jsonc` and `.json5` (#740 S2);
+ *  - a PRESENT-but-unparsable file is a problem — never a silent `inherit`;
+ *  - a key the schema no longer declares, or a value that no longer validates,
+ *    is dropped silently and the shipped default fills in (#740 S6): only a
+ *    parse failure refuses, and `config validate`/the doctor report the drops;
  *  - the project files are not even read while the project is untrusted.
  *
  * Reading is injected so tests drive every branch from memory; the caller
@@ -38,15 +44,21 @@ import type { ConfigFile, ConfigPaths, ConfigProblem, EffectiveConfig } from "./
  * module.
  */
 
-const CONFIG_FILE_NAME = "pi-agentic-workflow.json";
+const PI_CONFIG_STEM = "pi-agentic-workflow";
 const PROJECT_CONFIG_DIR_NAME = ".pi";
 
+/** The candidate that exists in `dir`, or the create name `<stem>.json5`. */
+function resolveIn(dir: string, stem: string): string {
+  return join(dir, resolveConfigFileName(stem, (fileName) => existsSync(join(dir, fileName))));
+}
+
 export function configFilePaths(agentDir: string, cwd: string): ConfigPaths {
+  const projectDir = join(cwd, PROJECT_CONFIG_DIR_NAME);
   return {
-    global: join(agentDir, CONFIG_FILE_NAME),
-    project: join(cwd, PROJECT_CONFIG_DIR_NAME, CONFIG_FILE_NAME),
-    globalBase: join(agentDir, BASE_CONFIG_FILE),
-    projectBase: join(cwd, PROJECT_CONFIG_DIR_NAME, BASE_CONFIG_FILE),
+    global: resolveIn(agentDir, PI_CONFIG_STEM),
+    project: resolveIn(projectDir, PI_CONFIG_STEM),
+    globalBase: resolveIn(agentDir, BASE_CONFIG_STEM),
+    projectBase: resolveIn(projectDir, BASE_CONFIG_STEM),
   };
 }
 
@@ -105,12 +117,14 @@ function loadScope(
 ): ConfigFile {
   const text = readText(scope, path, readFile, problems);
   if (text === null) return {};
-  const result = parseConfigFile(text);
-  if (!result.ok) {
-    for (const issue of result.issues) problems.push({ scope, path: issue.path, message: issue.message });
+  const parsed = parseJsonc(text);
+  if (!parsed.ok) {
+    problems.push({ scope, path: "$", message: `invalid JSON: line ${parsed.error.line}:${parsed.error.column}: ${parsed.error.message}` });
     return {};
   }
-  return result.config;
+  // Parse-only refusal (#740 S6): everything the schema no longer accepts is
+  // dropped here, and the resolver's defaults fill the hole silently.
+  return degradeConfig(parsed.value);
 }
 
 /** Read and validate one base feature file; every invalid section is a problem. */
@@ -124,19 +138,21 @@ function loadBaseScope(
   if (text === null) return {};
   const parsed = parseJsonc(text);
   if (!parsed.ok) {
-    problems.push({ scope, path: "$", message: `line ${parsed.error.line}:${parsed.error.column}: ${parsed.error.message}` });
+    problems.push({ scope, path: "$", message: `invalid JSON: line ${parsed.error.line}:${parsed.error.column}: ${parsed.error.message}` });
     return {};
   }
-  const known = new Set(BASE_CONFIG_SECTIONS.map((section) => section.key));
-  for (const key of Object.keys(parsed.value)) {
-    if (!known.has(key)) problems.push({ scope, path: `$.${key}`, message: `unknown config section "${key}"` });
-  }
+  // One section at a time (#740 S6): an unknown section and a value that no
+  // longer validates are dropped, never a problem, and a valid sibling survives.
+  const document: Record<string, unknown> = {};
   for (const section of BASE_CONFIG_SECTIONS) {
     const value = parsed.value[section.key];
     if (value === undefined) continue;
-    for (const issue of validateSectionValue(section, value)) problems.push({ scope, path: issue.path, message: issue.message });
+    const salvaged = sanitizeSectionValue(section, value);
+    if (salvaged.value === undefined) continue;
+    if (validateSectionValue(section, salvaged.value).length > 0) continue;
+    document[section.key] = salvaged.value;
   }
-  return parsed.value;
+  return document;
 }
 
 export function loadConfig({ agentDir, cwd, projectTrusted, readFile = readIfExists }: LoadConfigInput): LoadedConfig {
@@ -150,8 +166,8 @@ export function loadConfig({ agentDir, cwd, projectTrusted, readFile = readIfExi
 
   const baseResolved = resolveConfigDocuments({
     sections: BASE_CONFIG_SECTIONS,
-    global: { [BASE_CONFIG_FILE]: globalBase },
-    project: { [BASE_CONFIG_FILE]: projectBase },
+    global: { [BASE_CONFIG_STEM]: globalBase },
+    project: { [BASE_CONFIG_STEM]: projectBase },
   });
 
   const base = {

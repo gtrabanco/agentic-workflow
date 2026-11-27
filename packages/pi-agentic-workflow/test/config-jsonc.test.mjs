@@ -12,6 +12,9 @@
 // broken file is still refused at `$` with the parse error and its location.
 
 import assert from "node:assert/strict";
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import test from "node:test";
 
 import { configFilePaths, loadConfig } from "../dist/config/load.js";
@@ -103,14 +106,14 @@ test("J6: a broken file still fails the load closed (S4 — invalid is never a s
   assert.match(loaded.problems[0].message, /invalid JSON: line 1:\d+: /u);
 });
 
-test("J7: the native parser never widens what a config may contain (S5a)", () => {
+test("J7: the native parser never widens the end-of-input boundary (S5a, #740 S1)", () => {
   // Owner decision D1: Bun's parser reads first. It is not the acceptance
-  // boundary — it also takes JavaScript spellings and silently ignores whatever
-  // follows the first root value — so the schema package's parser still decides,
-  // and both runtimes refuse the same bytes for the same stated reason.
+  // boundary — it silently ignores whatever follows the first root value — so
+  // the schema package's parser still decides, and both runtimes refuse the same
+  // bytes for the same stated reason. Issue #740 S1 widened the GRAMMAR (a
+  // single-quoted string and a hex number are JSON5 and now accepted, pinned in
+  // the schema package's own suite); the STRICT EOF rule is what stays.
   for (const [label, text] of [
-    ["single-quoted string", "{'onSettle': 'restore'}"],
-    ["hex number", '{"profileFallback":{"retryAfterSeconds":0xA}}'],
     ["a concatenated root", '{"onSettle":"keep"},{"onSettle":"restore"}'],
     ["a truncated tail", '{"onSettle":"keep"} garbage'],
   ]) {
@@ -149,5 +152,50 @@ test("J8: the native parser is the first reader, never the authority (S5a)", (t)
     assert.equal(parseConfigFile('{"onSettle":"restore"}').ok, true);
   } finally {
     globalThis.Bun.JSONC.parse = original;
+  }
+});
+
+// ── issue #740: JSON5, stem resolution and degradation at load ──────────────
+
+test("J9: the loader reads the JSON5 spellings (issue #740 S1)", () => {
+  const paths = pathsFor("/agent", "/repo");
+  const files = new Map([
+    [paths.global, "{ default: { model: 'openai/gpt-5.2' }, /* hex */ profileFallback: { retryAfterSeconds: 0xA }, }"],
+  ]);
+  const loaded = loadConfig({ agentDir: "/agent", cwd: "/repo", projectTrusted: true, readFile: readerFor(files) });
+  assert.equal(loaded.ok, true, JSON.stringify(loaded.problems));
+  assert.deepEqual(loaded.problems, []);
+  assert.equal(loaded.config.default.model, "openai/gpt-5.2");
+  assert.equal(loaded.config.profileFallback.retryAfterSeconds, 10);
+});
+
+test("J10: an unknown key and an invalid value degrade at load, defaults fill in (issue #740 S6)", () => {
+  const paths = pathsFor("/agent", "/repo");
+  const files = new Map([
+    [paths.global, JSON.stringify({ default: { model: "openai/gpt-5.2" }, retiredKey: true })],
+    [paths.project, JSON.stringify({ onSettle: "keep", default: { model: "" } })],
+  ]);
+  const loaded = loadConfig({ agentDir: "/agent", cwd: "/repo", projectTrusted: true, readFile: readerFor(files) });
+  assert.equal(loaded.ok, true, "a schema-absent key no longer refuses the load");
+  assert.deepEqual(loaded.problems, [], "the drop is silent; config validate is the trail");
+  assert.equal(loaded.config.onSettle, "keep");
+  assert.equal(loaded.config.default.model, "openai/gpt-5.2", "the project's invalid model is dropped and the global value survives");
+});
+
+test("J11: both file pairs resolve by stem, so a .jsonc and a .json5 file are read (issue #740 S2)", () => {
+  const root = mkdtempSync(join(tmpdir(), "paw-json5-stem-"));
+  try {
+    const agentDir = join(root, "agent");
+    const cwd = join(root, "repo");
+    mkdirSync(join(cwd, ".pi"), { recursive: true });
+    mkdirSync(agentDir, { recursive: true });
+    writeFileSync(join(agentDir, "agentic-workflow.jsonc"), "// the middle extension\n{ memory: { engram: true } }\n");
+    writeFileSync(join(cwd, ".pi", "pi-agentic-workflow.json5"), "{ onSettle: 'restore' }\n");
+    const loaded = loadConfig({ agentDir, cwd, projectTrusted: true });
+    assert.equal(loaded.ok, true, JSON.stringify(loaded.problems));
+    assert.equal(loaded.config.memory.engram, true, "the global base file is found as .jsonc");
+    assert.equal(loaded.config.onSettle, "restore", "the project extension file is found as .json5");
+  } finally {
+    rmSync(root, { recursive: true, force: true });
   }
 });

@@ -103,8 +103,8 @@ test("overrides merge across scopes with globs union and requirements max", () =
 test("the base resolver applies the cross-scope override to the effective policy", () => {
   const resolved = resolveConfigDocuments({
     sections: BASE_CONFIG_SECTIONS,
-    global: { "agentic-workflow.json": { pathProtection: { protectedGlobs: ["g/**"] } } },
-    project: { "agentic-workflow.json": { pathProtection: { protectedGlobs: ["p/**"] } } },
+    global: { "agentic-workflow": { pathProtection: { protectedGlobs: ["g/**"] } } },
+    project: { "agentic-workflow": { pathProtection: { protectedGlobs: ["p/**"] } } },
   });
   const merged = mergeConfigs({}, {}, {
     logSession: { enabled: false, publisher: null },

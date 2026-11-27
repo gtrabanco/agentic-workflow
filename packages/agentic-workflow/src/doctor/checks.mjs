@@ -18,7 +18,7 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 
-import { BASE_CONFIG_SECTIONS, effectiveSections } from "@gtrabanco/agentic-workflow-schema";
+import { BASE_CONFIG_SECTIONS, configFileCandidates, effectiveSections } from "@gtrabanco/agentic-workflow-schema";
 
 import { discoverConfigExtensions } from "../config/discovery.mjs";
 import { divergenceForText } from "../config/materialize.mjs";
@@ -465,12 +465,17 @@ export const CHECK_PROBES = Object.freeze([
     probe: (ops) => {
       const discovered = discoverConfigExtensions({ projectDir: ops.root });
       const selected = effectiveSections(BASE_CONFIG_SECTIONS, discovered.extensions.map((entry) => entry.descriptor));
-      const files = sectionFiles(selected.sections).map((file) => {
-        const path = at(ops, ".pi", file);
+      const files = sectionFiles(selected.sections).map((stem) => {
+        // The stem resolves over the doctor's own seam (#740 S2): the first
+        // candidate that exists wins silently, and an absent pair is reported at
+        // the name a write would create.
+        const candidates = configFileCandidates(stem);
+        const name = candidates.find((candidate) => ops.exists(at(ops, ".pi", candidate))) ?? candidates[candidates.length - 1];
+        const path = at(ops, ".pi", name);
         const text = ops.readText(path);
-        const fileSections = selected.sections.filter((section) => section.file === file);
-        if (text === null) return { file, path, exists: false, missing: [], removed: [], converged: true };
-        return { file, path, ...divergenceForText(fileSections, text) };
+        const fileSections = selected.sections.filter((section) => section.file === stem);
+        if (text === null) return { file: name, path, exists: false, missing: [], removed: [], converged: true };
+        return { file: name, path, ...divergenceForText(fileSections, text) };
       });
       return { files, extensions: discovered.extensions.length };
     },
@@ -486,7 +491,7 @@ export const CHECK_PROBES = Object.freeze([
         const removed = diverged.reduce((total, file) => total + file.removed.length, 0);
         parts.push(`${diverged.map((file) => file.file).join(", ")}: ${missing} new options available, ${removed} removed keys — run config default`);
       }
-      for (const file of broken) parts.push(`${file.file} is not valid JSONC (${file.error}) — fix it by hand; config default refuses to rewrite it`);
+      for (const file of broken) parts.push(`${file.file} is not valid JSON5 (${file.error}) — fix it by hand; config default refuses to rewrite it`);
       return {
         status: "mismatch",
         advisory: parts.join("; "),

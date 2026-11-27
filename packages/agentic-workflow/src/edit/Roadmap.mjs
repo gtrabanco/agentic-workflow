@@ -196,13 +196,21 @@ export function rowUpsert(table, { nn, slug, status, dependsOn, description, exp
  * row is absent. slug keeps the raw cell (backticks included); callers that
  * compare slugs strip them. When duplicates exist the last row answers — the
  * one `parseIndexRows` keeps (a Map keyed by NN, overwritten in order).
+ *
+ * The Features `| NN |` scan keeps precedence; when it answers nothing, the
+ * `## Fixes` table answers by issue key through the very locator
+ * `fixRowUpsert` writes with, so the CAS read half and the write half key the
+ * same row (#740 correction P10, EXTERNAL VERIFY B2): Topic/Summary/Title maps
+ * to `slug`, the status column to `status`, Notes/Note to `description`, and
+ * the absent depends column answers `""`. A document without a `## Fixes`
+ * heading answers null exactly as before (D7).
  */
 export function findRow(table, nn) {
   const content = readFileSync(table, "utf8");
   const lines = content.split("\n");
   const matches = nnRowIndexes(lines, nn, lines.findIndex((l) => l.includes("| NN |")));
   const line = matches.length > 0 ? lines[matches[matches.length - 1]] : null;
-  if (!line) return null;
+  if (!line) return findFixRow(content, nn);
   const cells = line.split("|").map((c) => c.trim());
   return {
     nn: cells[1] ?? "",
@@ -212,6 +220,38 @@ export function findRow(table, nn) {
     description: cells[5] ?? "",
     line,
   };
+}
+
+/**
+ * The `## Fixes` half of the same read: locate the row by the issue number in
+ * the table's own key column — the writer's locator (`fixTableShape` +
+ * `issueKeyInCell`), so read and write can never disagree about which row the
+ * issue names (#740 EXTERNAL VERIFY B2). A table that is absent or malformed
+ * under the writer's own rules answers null, never a refusal: reading is never
+ * an error for an absent row.
+ */
+function findFixRow(content, nn) {
+  const shape = fixTableShape(content);
+  if (!shape.ok) return null;
+  const { lines, sepIdx, end, columns, keyColumn } = shape;
+  for (let i = sepIdx + 1; i < end && /^\s*\|/.test(lines[i]); i += 1) {
+    const cells = rowCells(lines[i]);
+    if (issueKeyInCell(cells[keyColumn] ?? "") !== nn) continue;
+    const values = {};
+    for (let c = 0; c < columns.length; c += 1) {
+      const bound = FIX_COLUMN_VALUES[headerWord(columns[c])];
+      if (bound !== undefined) values[bound] = cells[c] ?? "";
+    }
+    return {
+      nn,
+      slug: values.topic ?? "",
+      status: values.status ?? "",
+      dependsOn: "",
+      description: values.notes ?? "",
+      line: lines[i],
+    };
+  }
+  return null;
 }
 
 /**

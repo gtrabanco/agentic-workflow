@@ -75,7 +75,7 @@ targets `~/.pi/agent/extensions/pi-permission-system/config.json` instead.
 ## The project's own guards
 
 A project that needs more than the baseline declares it in
-`.pi/pi-agentic-workflow.json` (`guardPlugins`), which is the **one authoring
+the `.pi/pi-agentic-workflow` config (`guardPlugins`), which is the **one authoring
 surface** for rules this workflow renders. Then re-run the command above; the
 declaration is what changes, never the generated file.
 

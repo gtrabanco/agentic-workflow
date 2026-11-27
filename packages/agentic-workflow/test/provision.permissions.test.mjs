@@ -2,7 +2,7 @@
 // S6 bullet 3 / S9 / S11 bullet 2).
 //
 // "One claim per path": the project's guards are authored in
-// `pi-agentic-workflow.json` and the permission package's own `config.json` is a
+// `pi-agentic-workflow` config and the permission package's own `config.json` is a
 // projection of them. This suite pins the projection — the documented baseline,
 // the declarations appended after it so last-match-wins does what the author
 // meant, the collision refusal, and the one rule that keeps an operator's file
@@ -37,7 +37,7 @@ function freshRoot() {
   return root;
 }
 
-/** Every CLI spawn pins the agent dir: the global `pi-agentic-workflow.json` is
+/** Every CLI spawn pins the agent dir: the global `pi-agentic-workflow` config is
  *  read by the resolved merge, and an operator machine whose own agent file
  *  declares guards must not flip a suite that is about the project scope. */
 const cliEnv = (root) => ({ ...process.env, PI_CODING_AGENT_DIR: join(root, "empty-agent-dir") });
@@ -54,7 +54,7 @@ test("the projection carries the documented baseline: fail closed on bash, allow
   assert.equal(result.permission.bash["*"], "ask", "bash floors to ask");
   assert.equal(result.permission.bash["rm -rf *"], "deny");
   assert.match(result.text, /pi-permission-system\/config\.json/u, "the target path is in the header");
-  assert.match(result.text, /pi-agentic-workflow\.json/u, "the header names the authoring surface, so the copy is not mistaken for it");
+  assert.match(result.text, /pi-agentic-workflow/u, "the header names the authoring surface, so the copy is not mistaken for it");
 });
 
 /* ------------------------------------------------------------ declarations */

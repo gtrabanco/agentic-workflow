@@ -39,11 +39,17 @@ import { existsSync, readFileSync, statSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
-import { BASE_CONFIG_FILE, normalizeGuard, parseJsonc } from "@gtrabanco/agentic-workflow-schema";
+import { BASE_CONFIG_STEM, normalizeGuard, parseJsonc, resolveConfigFileName } from "@gtrabanco/agentic-workflow-schema";
 
-/** The base config file both scopes carry (the pipeline's one config file) — the
- *  schema package's published const (owner: `vocabulary-residency@1`). */
-export { BASE_CONFIG_FILE };
+/** The base config's stem both scopes carry (the pipeline's one config file) —
+ *  the schema package's published const (owner: `vocabulary-residency@1`). */
+export { BASE_CONFIG_STEM };
+
+/** The base config file one directory carries: the first existing candidate in
+ *  silent `json → jsonc → json5` order, or the create name (#740 S2). */
+export function baseConfigPath(dir) {
+  return path.join(dir, resolveConfigFileName(BASE_CONFIG_STEM, (fileName) => existsSync(path.join(dir, fileName))));
+}
 
 /** The enforce vocabulary, in the order the refusal lists it. */
 export const ENFORCE_VALUES = Object.freeze([
@@ -143,8 +149,8 @@ function readConfigFile(file) {
  * with none is inert, not refused).
  */
 export function resolveIdentityProfile({ root, env = process.env } = {}) {
-  const globalFile = path.join(globalAgentDir(env), BASE_CONFIG_FILE);
-  const projectFile = path.join(root ?? process.cwd(), ".pi", BASE_CONFIG_FILE);
+  const globalFile = baseConfigPath(globalAgentDir(env));
+  const projectFile = baseConfigPath(path.join(root ?? process.cwd(), ".pi"));
   const globalConfig = readConfigFile(globalFile);
   const projectConfig = readConfigFile(projectFile);
   const globalSection = typeof globalConfig.value?.gitIdentity === "object" && globalConfig.value.gitIdentity !== null ? globalConfig.value.gitIdentity : {};

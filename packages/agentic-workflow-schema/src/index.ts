@@ -4411,15 +4411,18 @@ export {
 // Unified config contract (issue #427)
 // ---------------------------------------------------------------------------
 export {
-  BASE_CONFIG_FILE,
   BASE_CONFIG_SECTIONS,
+  BASE_CONFIG_STEM,
   CONFIG_EXTENSION_CONTRACT,
   CONFIG_EXTENSIONS_DIR,
+  CONFIG_FILE_EXTENSIONS,
+  DEFAULT_CONFIG_EXTENSION,
   GUARD_MODES,
   GUARD_NAMES,
   RELAY_SEAMS,
   RELAY_SEAM_DEFAULT,
   composeConfigSchema,
+  configFileCandidates,
   effectiveSections,
   fillDefaults,
   mergeContentGuardOverrides,
@@ -4427,6 +4430,7 @@ export {
   normalizeLogSession,
   normalizeRelaySeam,
   resolveConfigDocuments,
+  resolveConfigFileName,
   sanitizeJsonSchema,
   sanitizeSectionValue,
   validateConfigExtension,

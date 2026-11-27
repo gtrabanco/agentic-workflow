@@ -6,18 +6,22 @@
 
 ## The two files, two scopes
 
-An agentic-workflow install reads two files at each scope:
+An agentic-workflow install reads two config stems at each scope. A stem
+resolves as `<stem>.json`, `<stem>.jsonc` or `<stem>.json5` — the first existing
+file wins silently, a write stays there, and a new file is created as
+`<stem>.json5`:
 
-| File | Owner | Holds |
+| Stem | Owner | Holds |
 |---|---|---|
-| `agentic-workflow.json` | the framework | cross-tool feature sections: `logSession`, `memory`, `telemetry`, `guard`, `gitIdentity`, `advance`, `pathProtection`, `contentGuard`, `batchScheduler` |
-| `pi-agentic-workflow.json` | the `pi-agentic-workflow` package | package-internal section: routing, profiles, passes, subagent limits, State Flow, shell-tool choice |
+| `agentic-workflow` | the framework | cross-tool feature sections: `logSession`, `memory`, `telemetry`, `guard`, `gitIdentity`, `advance`, `pathProtection`, `contentGuard`, `batchScheduler` |
+| `pi-agentic-workflow` | the `pi-agentic-workflow` package | package-internal section: routing, profiles, passes, subagent limits, State Flow, shell-tool choice |
 
 - Global scope: `~/.pi/agent/` (the host's agent directory, never hardcoded).
 - Project scope: `.pi/` in the project root.
 - Project overrides global; shipped defaults fill only keys the operator left
-  undefined. Both files are JSONC (comments and trailing commas allowed).
-- A package can publish another extension file instead of `pi-agentic-workflow.json`
+  undefined. Both files are JSON5 (comments, trailing commas, identifier keys,
+single quotes and the ES5 escapes).
+- A package can publish another extension stem instead of `pi-agentic-workflow`
   by shipping a `config-extension@1` descriptor and naming it from its
   `package.json` under `agenticWorkflow.config`. init-workspace never invents one.
 
@@ -30,7 +34,7 @@ run the package's own initializer — never hand-write the file:
 runner config init --scope project
 ```
 
-The command writes a commented `.pi/agentic-workflow.json` whose every value is
+The command writes a commented `.pi/agentic-workflow.json5` whose every value is
 a comment, so the file starts at the shipped defaults. It refuses to overwrite.
 On no, write nothing and record the residual; the CLI still resolves defaults.
 
@@ -51,8 +55,8 @@ After `config init`, and again on an existing install whose files drifted, ask
 
 > Every tunable option currently lives in code as a default, so your config file
 > shows only what you wrote. Materializing writes **every** option into
-> `.pi/agentic-workflow.json` (project) and the agent directory's
-> `agentic-workflow.json` (global), each with its shipped default and an English
+> the `agentic-workflow` config (project) and the agent directory's copy of it
+> (global), each with its shipped default and an English
 > comment that documents it. Values you already set are preserved; an option you
 > left undefined gains its default; an option the schema no longer declares is
 > dropped — after the existing file is copied to `<file>.bak-<timestamp>`.

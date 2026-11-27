@@ -194,7 +194,7 @@ import { resolvePasses, PassesError, DEFAULT_REVIEW_COMMAND } from "../src/passe
 import { provisionRg, realOps } from "../src/provision/rg.mjs";
 import { provisionPermissions } from "../src/provision/permissions.mjs";
 import { ConfigError, createConfigApi, renderInitTemplate } from "../src/config/api.mjs";
-import { readConfigDocument, scopeDirectories } from "../src/config/store.mjs";
+import { configPathFor, readConfigDocument, scopeDirectories } from "../src/config/store.mjs";
 import { discoverConfigExtensions } from "../src/config/discovery.mjs";
 import { detectHost, ResourcesError, RESOURCES_DETECT_CONTRACT_ID } from "../src/resources/detect.mjs";
 import { admitTrial, ADMIT_CONTRACT_ID } from "../src/resources/admit.mjs";
@@ -636,7 +636,14 @@ Options:
   --project <dir>       Project root (default: cwd).
   --global-dir <dir>    Global scope directory (default: $PI_CODING_AGENT_DIR or ~/.pi/agent).
   --json                Machine receipt.
+  --sanitize            validate: write the file back with every unknown key and every
+                        value that no longer validates dropped.
   --no-backup           config default: skip the <file>.bak-<timestamp> copy.
+
+Files:
+  A config lives at <stem>.json, <stem>.jsonc or <stem>.json5 — the first existing
+  candidate wins (json → jsonc → json5). A new file is created as <stem>.json5 and a
+  write always lands in the file that already exists.
 `;
 
 function parseConfigArgs(args) {
@@ -1298,10 +1305,10 @@ switch (command) {
         extensions: discovered.extensions.map((entry) => entry.descriptor),
       });
       let guards = {};
-      // The file the `pi` section owns (its descriptor's `file`), named for the
+      // The file the `pi` section owns (its descriptor's stem), named for the
       // refusal path below, which must reason about a file whose section is not
       // registered — the one state the resolved read cannot see.
-      const PI_CONFIG_FILE = "pi-agentic-workflow.json";
+      const PI_CONFIG_STEM = "pi-agentic-workflow";
       const refusePermissions = (reason, issues) => {
         const out = { ok: false, verdict: "refused", exitCode: 2, target: null, text: "", issues };
         if (parsed.json) process.stdout.write(`${JSON.stringify(out)}\n`);
@@ -1320,7 +1327,7 @@ switch (command) {
         const sectionIssues = api
           .validate("both")
           .flatMap((result) => result.issues)
-          .filter((issue) => issue.path.startsWith("pi.") || issue.path.endsWith(PI_CONFIG_FILE));
+          .filter((issue) => issue.path.startsWith("pi.") || issue.path.includes(PI_CONFIG_STEM));
         if (sectionIssues.length > 0) refusePermissions("the config file is not valid", sectionIssues);
         if (section.value.enabled !== false) guards = section.value.guards ?? {};
       } catch (error) {
@@ -1333,14 +1340,14 @@ switch (command) {
         // cannot resolve: silence there would drop it with success (B1).
         const { project, global } = scopeDirectories({ projectDir: root, env: process.env });
         for (const dir of [project, global]) {
-          const file = join(dir, PI_CONFIG_FILE);
+          const file = configPathFor(dir, PI_CONFIG_STEM);
           const read = readConfigDocument(file);
           if (!read.exists) continue;
           if (read.issues.length > 0) {
             refusePermissions("the config file cannot be read", [
               {
                 path: file,
-                message: `is not valid JSONC (${read.issues[0].message}) and the "pi" section is not registered, so its contents are unresolvable`,
+                message: `is not valid JSON5 (${read.issues[0].message}) and the "pi" section is not registered, so its contents are unresolvable`,
               },
             ]);
           }

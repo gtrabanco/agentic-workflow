@@ -63,7 +63,8 @@ export interface IdentityResolution {
   lines?: string[];
 }
 
-export declare const BASE_CONFIG_FILE: string;
+export declare const BASE_CONFIG_STEM: string;
+export declare function baseConfigPath(dir: string): string;
 export declare const ENFORCE_VALUES: readonly GitIdentityEnforce[];
 export declare const COMMIT_ENFORCING: readonly GitIdentityEnforce[];
 export declare const PUSH_ENFORCING: readonly GitIdentityEnforce[];

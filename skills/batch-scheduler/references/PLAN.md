@@ -135,7 +135,7 @@ reader goes through it: the declared side, the branch-diff side and
    extra trees and a declaration written before this vocabulary existed both
    keep resolving exactly as they did.
 2. **The project's declared roots** — `batchScheduler.surfaces` in
-   `.pi/agentic-workflow.json`, one project-relative directory per entry
+   `.pi/agentic-workflow` config, one project-relative directory per entry
    (`["src/pages","src/shared","migrations"]`). Authoritative: a directory the
    list omits resolves to nothing rather than quietly opening a lane. An empty
    list means *undeclared*, never "no lanes". Writer and offer:
