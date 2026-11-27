@@ -300,13 +300,6 @@ relay-next: create .pi-web/relays/722-relay-seam-inline/ (charter → docs/fix/7
 
 | id | S# / file:line | axis | severity | impact | class | route |
 |---|---|---|---|---|---|---|
-| F1 | packages/agentic-workflow/src/runner/unit-route.mjs:630,642 | brand | CRITICAL | blocking | fix-now | fold |
-| F2 | packages/agentic-workflow/src/runner/unit-route.mjs:661 | brand | WARNING | blocking | fix-now | fold |
-| F3 | scripts/relay-route.test.mjs:2 | code | WARNING | blocking | fix-now | fold |
-| F4 | skills/unit-lane/SKILL.md:249 · skills/unit-lane/references/RELAY.md:133-135 | brand | WARNING | docs-only | fix-now | fold |
-| F5 | docs/fix/722-relay-seam-inline/SPEC.md:400 | workflow | WARNING | docs-only | fix-now | fold |
-| F6 | 20261127T132948Z-feat-722-relay-seam-inline-narrative-dfa657da.md (repo root) | workflow | WARNING | docs-only | fix-now | fold |
-| F7 | .agentic-workflow/gate/gate-receipt.json (missing at review head) | workflow | WARNING | blocking | fix-now | fold |
 
 ## Log
 
@@ -418,6 +411,23 @@ Append-only; kinds are the closed set in `log-kind@1` (the template's).
 - **V6** — 20261127T132948Z-feat-722-relay-seam-inline-narrative-dfa657da.md (repo root) · reviewer review-change (code pass surface) · HEAD 802f1a25fa91beee9006994f198a0acdd70aa64e · recheck command run: the file is committed at the repository root (8 lines, commit 802f1a25f) while the journal carrier is `.agentic-workflow/journal/`; `runner journal aggregate --check` counts 4 fragments and ignores this one — an orphan copy · confirmed
 - **V7** — .agentic-workflow/gate/gate-receipt.json · reviewer review-change (verify pass) · HEAD 802f1a25fa91beee9006994f198a0acdd70aa64e · recheck command run: `runner gate-receipt verify` → `status: missing · verdict: fail` (exit 3 per its contract), the file is gitignored by design (.gitignore:44-46) and is absent from this checkout; G1/G2 record green gates only at earlier heads (72845fa18 / 07ecec725) — no current receipt exists until one is produced at the merge head · confirmed
 - **G3** — 2026-11-27, `HEAD 802f1a25fa91beee9006994f198a0acdd70aa64e`, `runner gate-receipt run` (producer: the review's own gate run, after the rows above were final and before the closing commit) · exit 1 · `GATE RECEIPT — verdict: fail · checks: 14 passed, 1 failed, 5 skipped`; the receiving suite `scripts/ceremony-findings-ledger.test.mjs` hit its shared 120s wall bound at 120.5s with every completed test green and zero assertion failures — the untouched-suite wall-clock-kill class D7 advisory (1) already dispositioned, under this box's ambient load; manifest <sha> slot: manifest eefab340f1527254e9d3c276804457fc9a6bac7196a0fd4630334266eaa62dd0 · the red mark is recorded, never consumed as a pass, and the fold cycle that repairs F1–F7 re-runs the gate
+
+- **F1** — 2026-11-27, folded in `cd5bdee20`: the bootstrap `relay-next` activates the baton (`set \`State: Active\``) before `dispatch_relay` and names it the final action, and the draft line names the same final action — both now state RELAY.md §Bootstrap step 4 instead of each under-describing it; verified by the bootstrap case's `State: Active` ordering assertion, the draft case's final-action assertion and `bun test scripts/relay-route.test.mjs` (25 pass).
+- **F2** — 2026-11-27, folded in `cd5bdee20`: `relaySeamLine`'s tail is per value — `ask` prints "the question stays open", `inline` prints the inline preselection — so the receipt matches RELAY.md §The seam's default for both answers; verified by the new `relay-seam: ask stays open, inline states the preselection` case.
+- **F3** — 2026-11-27, folded in `afb8eb94e`: the suite's obligation tag names `skills/unit-lane/SKILL.md`, and a pin refuses a tag that omits any prose surface the suite reads; verified red against the pre-fold tag (`header.includes("skills/unit-lane/SKILL.md")` → false) and green after.
+- **F4** — 2026-11-27, folded in `cd5bdee20`: `SKILL.md` step 4 and `RELAY.md` §Bootstrap scope what each state's addendum carries — the leg count and packet path belong to the bootstrap line, the draft line carries the ask without a seeded leg and names no unit doc; verified by the prose contract cases.
+- **F5** — 2026-11-27, folded in `afb8eb94e`: the `G2` line names the head of the run it records (`07ecec725038c96aee24bda713b4d84ec0d863f0`); citation re-anchored from `:400` to `:411` first, because the review's own ledger commit had shifted it and the mechanism — a receipt line with no HEAD — was intact; verified by `runner verify` → `ok: true, violations: []`.
+- **F6** — 2026-11-27, folded in `afb8eb94e`: the narrative fragment moves from the repository root into `.agentic-workflow/journal/`; verified by `runner journal aggregate --check` counting 5 fragments (was 4) and the root path being gone. The misplacement's cause (a session writing the fragment to its cwd instead of the carrier) is surfaced upstream as an advisory, not patched here.
+- **F7** — 2026-11-27, folded by this fold's producer run (`runner gate-receipt run` over the closed ledger), which is the repair itself: the merge gate reads a current green receipt at the fold's head instead of the `missing` state the review measured.
+
+swept: /preselects the owner's answer/ → expected 0 in docs/fix/722-relay-seam-inline/SPEC.md
+swept: /preselects the owner's answer/ → expected 0 in skills/unit-lane
+swept: /preselects the owner's answer/ → expected 0 in packages/agentic-workflow/src/runner
+swept: /the owner's preselected answer/ → expected 0 in docs
+swept: /"relay" dispatch_relay\(/ → expected 0 in docs/fix/722-relay-seam-inline/SPEC.md
+swept: /"relay" dispatch_relay\(/ → expected 0 in packages/agentic-workflow/src/runner
+swept: /default and the leg count/ → expected 0 in skills/unit-lane
+
 ## Next
 
 `→ Next: /review-change 722-relay-seam-inline` — the review receipt's sole owner;
