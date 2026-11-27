@@ -496,15 +496,25 @@ here:
   `subagents_retry` — subagent runs persist durable records with their own
   model/tools/cost accounting, and a crash reconciles the record instead of
   losing the work. The workflow-engine, starter and trajectory extensions
-  are **not** loaded. To disable the substrate entirely, remove the
-  `./node_modules/pi-extensible-workflows/dist/subagents/index.js` line from
-  this package's `pi.extensions` (a local `package.json` edit — pi has no
-  per-extension switch). Since 6.4.0 the extension ships **no release notes**
-  of its own (its startup notice is gone and `changelog-state.json` is no
-  longer used), and because it is registered **by path**, Pi's *Extension
-  Updates* page — which reads npm- and git-installed packages — cannot show
-  them for it: read `node_modules/pi-extensible-workflows/CHANGELOG.md` after
-  an upgrade.
+  are **not** loaded.
+
+  `pi.extensions` declares it through this package's own shim
+  (`./dist/extension/subagents-entry.js`), never through a
+  `node_modules/pi-extensible-workflows/…` path: pi resolves a manifest entry
+  relative to the package directory and drops a missing one silently, and npm's
+  hoisted layout (v11 default; bun's global strategy too) has no nested
+  `node_modules` inside this package, so the old path loaded nothing. The shim
+  resolves the dependency with Node's package resolution — nested or hoisted —
+  and when it cannot, one `session_start` diagnostic names
+  `pi-extensible-workflows/dist/subagents/index.js` instead of skipping in
+  silence. To disable the substrate entirely, remove the
+  `./dist/extension/subagents-entry.js` line from this package's
+  `pi.extensions` (a local `package.json` edit — pi has no per-extension
+  switch). Since 6.4.0 the extension ships **no release notes** of its own (its
+  startup notice is gone and `changelog-state.json` is no longer used), and
+  because it is loaded **by path**, Pi's *Extension Updates* page — which reads
+  npm- and git-installed packages — cannot show them for it: read
+  `node_modules/pi-extensible-workflows/CHANGELOG.md` after an upgrade.
 - **Resource limits, optional** (owner decision 6, 2026-10-28): the
   top-level `subagents` config key bounds the trial envelope — parallelism
   plus explicit caps. Absent, the layer self-detects the host with
