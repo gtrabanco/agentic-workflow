@@ -1,7 +1,7 @@
 ---
 type: fix
 scope: small
-ac-hash: a6f6fccb3f4f15b116eab9eadfd8f48e78a75bcbf9ebe7f200196a316afcaf72
+ac-hash: 574e98ca8de7d826e84b89b9c02af15a9444c477de05245e42762cab11f30050
 roadmap_summary: Issue [#734](https://github.com/gtrabanco/agentic-workflow/issues/734) (S): the `/log-session` hand-off rendered `"subcommand"` as the service **and** its operation in one spaced string (`"journal write"`), and the runner door forwards that field as one argv token, so the crate resolved a service with a space and refused — the directive now renders the service alone with the operation in `args`, the two-field shape is pinned in `runner-mapping@1`, and an executable case runs the rendered call against the crate in a fixture.
 ---
 
@@ -96,8 +96,12 @@ One observable, testable criterion per `S#`, each naming the check that proves
 it. Frozen at the cut; `ac-hash:` in the frontmatter is this section's SHA-256.
 
 - **AC-S1** — the order is applied inline against these ledgers: `git log
-  --oneline main..HEAD` carries this unit's conventional commits only, and no
-  review pack, fold cycle or self-granted gate exception ran (`## Log` L2/D1).
+  --oneline main..HEAD` carries this unit's conventional commits plus the two
+  declared #722 commits (`7c3ad28f9`, `6b94a16e0`) and their changeset, which
+  the owner kept on this branch (F1, option B2) — nothing else that is not
+  state, journal or chore — and no review pack, fold cycle or self-granted gate
+  exception ran except this unit's own review, whose receipt is named in
+  `## Findings` (`## Log` L2/D1).
 - **AC-S2, AC-S3** — the defect closes on both render sites: the directive
   renders `"subcommand": "journal"` with `"args": ["write", …]` and
   `"subcommand": "session-close"` with `"args": ["close"]`, never a spaced
@@ -192,7 +196,10 @@ counted, not promised: `rg -c '"journal write"' packages/pi-agentic-workflow/src
   cross-package test pin, declared by the changeset.
 - No migration for an installed canary still emitting the old shape (S9): the
   next pi release ships both sides from one package.
-- No new gate, no new config key.
+- No new gate, and no new config key **of this unit's own**: the `relay`
+  section that rides this branch belongs to issue #722 and is declared in
+  `## Known pre-existing issues` with its re-trigger condition. Its consumer is
+  not in this tree (F1).
 
 ## Risk tier
 
@@ -249,6 +256,21 @@ ceremony tier classify --paths <the unit's paths>`, verbatim:
   acceptance: the change ships from this package's next release and the crate's
   grammar already accepts the new form (E2). The temporary skew is S9's trade,
   and the owner's call.
+- **`relay.seam` ships before its reader (F1)** — the two #722 commits
+  (`7c3ad28f9`, `6b94a16e0`) and `.changeset/722-relay-seam-owner-default.md`
+  ride this branch, and no runtime in this tree reads the key yet (only the
+  schema package's own `src`/`dist`): `RELAY_SEAMS`, `RELAY_SEAM_DEFAULT` and
+  `normalizeRelaySeam` are published, unconsumed. **Owner decision 2026-11-27
+  (option A, then B2):** the key stays on #737 rather than being stripped,
+  because removing it would rewrite 5 published commits and force-push, which
+  the owner forbids; and a reader added here without the lane's Relay bootstrap
+  semantics (#722's `RELAY.md` half, carried by PR #739) would be a facade, not
+  a consumer. This unit therefore publishes a key before its consumer, against
+  the config-shipment policy, as a **declared, time-bounded deviation** — never
+  a silent one. **Re-trigger:** PR #739 (or the next release carrying #722)
+  must land the reader, and the `## Dependencies` blocker with it; if #739 is
+  dropped, the `relay` section is removed from `config.ts`, the projection and
+  its changeset in the change that drops it.
 - **`docs/LOGS.md` is written by the merge-time aggregator, never locally** —
   `does-not-affect`: this unit writes a journal fragment, which is the sanctioned
   local writer.
@@ -362,6 +384,7 @@ authoritative step list.
 
 | id | S# / file:line | axis | severity | impact | class | route |
 |---|---|---|---|---|---|---|
+| F1 | `packages/agentic-workflow-schema/src/config.ts:489-499,636-654` | workflow/architecture | WARNING | blocking | plan | product owner — owner decision 2026-11-27 (A, then B2): #737 keeps the #722 half; the shipped-before-reader deviation is declared in `## Known pre-existing issues` with its re-trigger (#739 lands the reader, or the section and its changeset are removed). Verified by `review-change` cycle 1, receipt `review-change:needs-decision` at `6b7106923`; the branch never carried a force-push. |
 
 ## Log
 
@@ -429,6 +452,9 @@ authoritative step list.
 - **D4** — 2026-11-27, the `runner-mapping@1` rule is worded inside the block's declared ceiling rather than re-pinned: measured 120 est before, the rule fits the 132-est ceiling (PE-006, E8).
 - **D5** — 2026-11-27, path protection: the two suite edits are expansions (append-only assertions); no pre-existing case is deleted, relaxed or narrowed.
 - **D7** — 2026-11-27, AC-S8's sweep is scoped to the render surface (`packages/*/src`, `skills`, `template`) after the first wording could only be satisfied by deleting the unit doc's own quote of the issue; `ac-hash` recomputed (decisions.md D7).
+- **V1** — 2026-11-27, `review-change` cycle 1 at `6b7106923`, receipt `review-change:needs-decision` (trace, never currency): axes code + security + verify + perf run, all four green on the #734 bytes; the sole row F1 is the cross-unit `#722` half. Its five findings-bearing claims were rechecked here: the pin's mutation test reproduced the E6 base-red corpus live (15 pass / 3 fail → restored 18 / 0), the crate pin, the two sweeps, the parity gate and `verify --no-git` all exit 0.
+- **D12** — 2026-11-27, F1's disposition: the owner chose `B2` after refusing the history rewrite (D11). F1 is written into `## Findings` with `route: product owner — owner decision 2026-11-27 (A, then B2)`, the deviation is declared in `## Known pre-existing issues` with its re-trigger, AC-S1 states what the branch actually carries, `## Depends on` names PR #739 as the reader's carrier, and `ac-hash` was recomputed to `574e98ca…` with the tree's own `acceptanceState` sensor (never by hand). No force-push was performed: the branch's published history is untouched.
+- **E24** — 2026-11-27, `acceptanceState(docs/fix/734-log-session-subcommand-shape/SPEC.md)` · `stale → match` after re-anchoring to `574e98ca8de7d826e84b89b9c02af15a9444c477de05245e42762cab11f30050` (`declared` equals `computed`).
 
 ## Next
 
@@ -452,7 +478,13 @@ release carries both sides (S9) and the fix row leaves `docs/ROADMAP.md`.
 
 ## Depends on
 
-Empty — independent.
+- **PR #739 (`feat/722-relay-seam-inline`) — soft, non-blocking for the #734
+  fix, blocking for the `relay` section this branch carries.** The two #722
+  commits ride here (F1) and their reader — the lane's Relay bootstrap in
+  `RELAY.md` plus the runtime consumer of `relay.seam` — lands there. Merging
+  this PR without it publishes a config key no runtime reads; the deviation is
+  declared in `## Known pre-existing issues` and re-triggers when #739 merges
+  or is dropped.
 
 ## Regression scope
 

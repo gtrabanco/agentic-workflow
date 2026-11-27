@@ -120,3 +120,28 @@ leg is green). O9 therefore closes as an evidenced `n/a`: the disposition is the
 owner's delivery decision, recorded here and in the PR body, never the writer's
 verdict on its own gate. The change's own validators stay green and are the
 evidence the reviewer reads.
+
+## D11 — the #722 half stays on this branch, published-before-reader and declared
+
+2026-11-27. Authority: the owner, twice, in this session. First `A` (strip the
+`#722` half), then — after the stripping route proved to need a history rewrite
+of five published commits — `No, prohibido force push, en ese caso se lo queda
+737`, and finally `B2`. The two `#722` commits (`7c3ad28f9`, `6b94a16e0`), the
+`relay` config section and `.changeset/722-relay-seam-owner-default.md`
+therefore stay.
+
+This reverses `review-change` cycle 1's F1 repair direction, so the reasoning is
+recorded rather than assumed: stripping was the clean option and the owner
+refused its only safe form. Adding a reader here was the reviewer's alternative
+and is **rejected as a facade** — the semantics of `relay.seam` (the lane's
+Relay bootstrap: ask, or preselect the inline per-phase hand-off after stating
+the seam) live in #722's `RELAY.md` half, carried by PR #739; a `normalizeRelaySeam`
+call wired into this package without that behaviour would compile, pass its own
+test and change nothing, which is worse than an honest gap.
+
+The deviation is therefore declared, never silent: the key ships before its
+reader, against the config-shipment policy, and records its re-trigger in
+`## Known pre-existing issues` (the reader lands on #739, or the section and its
+changeset are removed in the change that drops #739). AC-S1 was corrected to
+state what the branch actually carries and `ac-hash` recomputed with the tree's
+own sensor, because a criterion its own branch falsifies is worse than none.
