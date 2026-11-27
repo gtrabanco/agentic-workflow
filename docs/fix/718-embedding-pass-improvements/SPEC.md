@@ -372,6 +372,15 @@ is in `## Log` (D1) and in the handoff.
   (Implements: S1, S2, S3, S4, S5, S6)
   - Relevant files: scripts/local-gate.mjs, scripts/run-root-suite.mjs
 
+- P12 — Correction batch on the 2026-11-27 EXTERNAL VERIFY (owner-directed
+  "triage and fix"): fence the `--sync` scan behind the store lease (O12),
+  replace the hooks README's retired one-line resolution claim (blocker B1),
+  and correct the receipts the verify flagged (O10's count cell, the
+  Retirements `rg -c` receipt, the E5/E6 count erratum), with the A7/A8
+  dispositions recorded.
+  (validator: `cd packages/agentic-workflow && env -u AGENTIC_WORKFLOW_DOC_EMBEDDINGS_BASE_URL -u AGENTIC_WORKFLOW_DOC_EMBEDDINGS_MODEL -u AGENTIC_WORKFLOW_DOC_EMBEDDINGS_API_KEY -u AGENTIC_WORKFLOW_DOC_EMBEDDINGS_MAX_REQUEST_CHARS -u NAN_API_KEY bun test test/doc.embed-lease.test.mjs test/doc.hybrid.test.mjs` exits 0 and `rg -n "The resolution is one line in every shim" template/.agentic-workflow/hooks/README.md` exits 1)
+  (Implements: S1, S5)
+  - Relevant files: packages/agentic-workflow/src/doc/embeddings.mjs, packages/agentic-workflow/src/doc/retrieval.mjs, packages/agentic-workflow/src/doc/query.mjs, template/.agentic-workflow/hooks/README.md, packages/agentic-workflow/README.md, .changeset/718-embedding-pass-improvements.md
 ### Planning evidence
 
 Frozen in [`planning-evidence.md`](planning-evidence.md) — M sizing keeps the
