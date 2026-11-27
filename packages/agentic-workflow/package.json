@@ -1,6 +1,6 @@
 {
   "name": "@gtrabanco/agentic-workflow",
-  "version": "4.10.2",
+  "version": "4.10.1",
   "description": "Deterministic runner for the agentic-workflow lane: file services (agwo edit), sensors, guards and receipts. Pinned pure-JS dependencies, no native deps, no build step.",
   "license": "MIT",
   "author": "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>",
