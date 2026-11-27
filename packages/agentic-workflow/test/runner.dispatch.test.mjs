@@ -69,7 +69,7 @@ test("the dispatch table is the whole surface and a foreign name is refused", as
   assert.deepEqual(
     Object.keys(RUNNER_COMMANDS),
     [
-      "unit-route", "phase-lint", "diff-guard", "workflow-status", "pre-execution-snapshot", "needs-input",
+      "unit-route", "flow", "phase-lint", "diff-guard", "workflow-status", "pre-execution-snapshot", "needs-input",
       "substrate", "ledger-provenance", "quality-metrics", "forge-read", "ceremony", "skills",
       // The #553 migration: every deterministic command a shipped skill used to
       // reach through `scripts/` is a subcommand, so the table is the whole

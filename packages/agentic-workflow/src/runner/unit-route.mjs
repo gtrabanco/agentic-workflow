@@ -52,6 +52,14 @@ const PROJECT = process.env.UNIT_ROUTE_REPO
   ? path.resolve(process.env.UNIT_ROUTE_REPO)
   : gitRoot(process.cwd());
 
+/**
+ * The project root this router senses — the worktree enclosing the caller's
+ * working directory, or the `UNIT_ROUTE_REPO` fixture root. Exported so the lane
+ * driver (`flow.mjs`) reads the same tree this router answered for instead of
+ * resolving a second root (issue #669).
+ */
+export const projectRoot = () => PROJECT;
+
 /** Read-set cap; beyond it the block carries one explicit remainder line. */
 export const READ_SET_MAX = 12;
 /** Longest echoed cell before the sanitizer truncates it. */
@@ -794,7 +802,7 @@ function applyCeremonyProfile(catalog, result, profile) {
   return { result: { ...result, steps, tiers, budget }, applied, refused };
 }
 
-function loadCatalog() {
+export function loadCatalog() {
   // `UNIT_ROUTE_CATALOG` re-points the catalog at a copy, so a validation test
   // mutates its own bytes instead of the tracked
   // `packages/agentic-workflow/src/runner/catalog.json` — the
@@ -1091,7 +1099,7 @@ function firstUnfinishedPhase(unit) {
   return Math.min(...unfinished);
 }
 
-function runTriage(token, { json = false } = {}) {
+export function runTriage(token, { json = false } = {}) {
   const catalog = loadCatalog();
   const profile = loadCeremonyProfile();
   const { matches, clean } = resolveUnit(token);
@@ -1184,7 +1192,19 @@ function main(argv) {
   if (args.length === 0) fail(1, "usage: agentic-workflow unit-route <unit|issue>");
   if (args.length > 1) fail(1, `usage: agentic-workflow unit-route <unit|issue> — expected exactly one argument, got ${args.length}`);
 
-  const token = args[0];
+  print(computeRoute(args[0]));
+}
+
+/**
+ * The route one unit takes now, as a plain record — the same answer `main`
+ * prints. Extracted so the lane driver (`flow.mjs`) consumes the router's
+ * decision instead of keeping a second one (issue #669 D6): a second router is
+ * exactly the drift this repository refuses.
+ *
+ * Failure paths are the printer's own (`fail`/exits): a caller that needs the
+ * process alive reads the record, never the printer.
+ */
+export function computeRoute(token) {
   const { matches, clean } = resolveUnit(token);
 
   if (matches.length > 1) {
@@ -1196,15 +1216,13 @@ function main(argv) {
     const numeric = /^\d+$/.test(clean);
     if (numeric && fixIndexIssues().has(clean)) {
       const command = `/unit-lane --fix ${clean}`;
-      print({ unit: clean, status: "pending", route: "plan-from-issue", command, openCount: 0, rows: [], readSet: readSetFor("docs/fix", [], ["README.md"]), reviewCycles: 0, ledgerSize: 0 });
-      return;
+      return { unit: clean, status: "pending", route: "plan-from-issue", command, openCount: 0, rows: [], readSet: readSetFor("docs/fix", [], ["README.md"]), reviewCycles: 0, ledgerSize: 0, relay: null };
     }
     // A roadmap row's own issue number is the other tracked-issue surface this
     // command documents, so it resolves instead of dead-ending (F34).
     if (numeric && roadmapIssues().has(clean)) {
       const command = `/unit-lane --from-issue ${clean}`;
-      print({ unit: clean, status: "pending", route: "plan-from-issue", command, openCount: 0, rows: [], readSet: readSetFor(ROADMAP_DIR, [], [ROADMAP_FILE]), reviewCycles: 0, ledgerSize: 0 });
-      return;
+      return { unit: clean, status: "pending", route: "plan-from-issue", command, openCount: 0, rows: [], readSet: readSetFor(ROADMAP_DIR, [], [ROADMAP_FILE]), reviewCycles: 0, ledgerSize: 0, relay: null };
     }
     fail(1, `unknown unit: ${sanitize(clean)}`);
   }
@@ -1316,7 +1334,7 @@ function main(argv) {
   const relay = route === "execute" && emitsLegs(doc)
     ? relayAnswer(unit.dir, unit.slug, { catalog: loadCatalog(), phases: phaseCountOf(unit.dir), command })
     : null;
-  print({
+  return {
     unit: unit.slug,
     status,
     route,
@@ -1327,7 +1345,7 @@ function main(argv) {
     reviewCycles,
     ledgerSize,
     relay,
-  });
+  };
 }
 
 function print({ unit, status, route, command, openCount, rows, readSet, reviewCycles, ledgerSize, relay = null }) {

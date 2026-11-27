@@ -427,13 +427,13 @@ test("an unknown unit is refused and prints no next line", () => {
 
 test("the declared step-command table maps every catalog step, and the driver's grammars are declared", () => {
   const text = fs.readFileSync(LIFECYCLE, "utf8");
-  const block = /```text\nflow-step-commands@1\n([\s\S]*?)```/u.exec(text);
-  assert.notEqual(block, null, "docs/workflow/LIFECYCLE.md declares flow-step-commands@1");
+  const block = /```text\nflow-step-references@1\n([\s\S]*?)```/u.exec(text);
+  assert.notEqual(block, null, "docs/workflow/LIFECYCLE.md declares flow-step-references@1");
   const rows = block[1]
     .split("\n")
-    .filter((line) => line.startsWith("|"))
-    .slice(2)
-    .map((line) => line.split("|")[1].trim());
+    .filter((line) => line.trim() !== "")
+    .slice(1)
+    .map((line) => line.split("|")[0].trim());
   assert.deepEqual(rows.sort(), [...CATALOG.steps].sort(), "every catalog step has exactly one declared command row");
   for (const marker of ["flow-approval@1", "flow-stop-rules@1", "flow-session-modes@1"]) {
     assert.ok(text.includes(marker), `docs/workflow/LIFECYCLE.md declares ${marker}`);
