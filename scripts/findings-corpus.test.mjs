@@ -183,20 +183,27 @@ test("reader reconciliation: a settled carrier keeps its one-line marks and open
 
 test("harvest: the real tree yields the counts the planning ledger froze", () => {
   const corpus = buildCorpus(ROOT, { resolveFold: () => null });
-  // 1178 findings, 56 legacy ledgers, 229 fold-annotated rows and 183 review
+  // 1179 findings, 56 legacy ledgers, 229 fold-annotated rows and 183 review
   // marks were measured on the tree this merge produces, not on either parent:
   // main's lineage carries feature 719's `F9`-`F13` rows and its `R3` line, fix/729
   // adds its own `R1` and `R2` lines, feat/727 (brought in by main) records its own
   // `R1` line on top of main's 179 marks, and unit 728 contributes its `R1` line for
-  // this branch's review cycle. Two later reviews each add one mark and leave no
-  // open row behind: fix/718's cycle-1 review raised both counters with its `F1` row
-  // and `R1` mark, and its fold closed `F1` again; fix/722's review opened seven rows
-  // and its fold closed all seven. The corpus counts what the tree actually carries —
+  // this branch's review cycle. Three later reviews move the counters, each for its
+  // own reason: fix/718's cycle-1 review raised both with its `F1` row and `R1` mark
+  // and its fold closed `F1` again; fix/722's review opened seven rows and its fold
+  // closed all seven, leaving only its `R1` mark; fix/734's cycle-1 review adds its
+  // `F1` row, still open, and records no `R` line of its own. The corpus counts what
+  // the tree actually carries —
   // the mechanism issue #651 introduced — so a unit that records a finding or a
   // review mark raises it and a folded row lowers it; the assertions stay exact,
   // nothing is relaxed.
+  // This merge adds one finding row and no review mark: unit 734 writes its
+  // `review-change` cycle-1 disposition into `## Findings` as `F1` (issue #722's
+  // schema half riding the branch, `docs/fix/734-…/SPEC.md:387`) and records the
+  // review itself as a `## Log` `V1` line, which is not a `review-mark@1`. So
+  // `findings` reads 1179 while `reviewMarks` keeps counting 182.
 
-  assert.equal(corpus.findings.length, 1178, "every finding row in either carrier is in the corpus");
+  assert.equal(corpus.findings.length, 1179, "every finding row in either carrier is in the corpus");
   assert.equal(corpus.legacyLedgers, 56);
   assert.equal(corpus.foldAnnotated, 229);
   assert.equal(corpus.reviewMarks, 183);
