@@ -189,13 +189,15 @@ test("harvest: the real tree yields the counts the planning ledger froze", () =>
   // adds its own `R1` and `R2` lines, feat/727 (brought in by main) records its own
   // `R1` line on top of main's 179 marks, and unit 728 contributes its `R1` line for
   // this branch's review cycle. Fix/726's cycle-1 review adds its three fix-now
-  // rows (`F4`-`F6`) and its `R1` mark on top of those. The corpus counts what the
+  // rows (`F4`-`F6`) and its `R1` mark on top of those, and its fold closes those
+  // three rows again (`F4`-`F6` leave the table for `F` lines) while its `R2`
+  // mark stays. The corpus counts what the
   // tree actually carries —
   // the mechanism issue #651 introduced — so a unit that records a finding or a
   // review mark raises it and a folded row lowers it; the assertions stay exact,
   // nothing is relaxed.
 
-  assert.equal(corpus.findings.length, 1181, "every finding row in either carrier is in the corpus");
+  assert.equal(corpus.findings.length, 1178, "every finding row in either carrier is in the corpus");
   assert.equal(corpus.legacyLedgers, 56);
   assert.equal(corpus.foldAnnotated, 229);
   assert.equal(corpus.reviewMarks, 182);

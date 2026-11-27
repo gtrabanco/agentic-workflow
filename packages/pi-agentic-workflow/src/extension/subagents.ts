@@ -32,10 +32,7 @@ export const SUBAGENTS_ENTRY = "dist/subagents/index.js";
 /** The entry as a person reads it in a diagnostic. */
 export const SUBAGENTS_ENTRY_LABEL = `${SUBAGENTS_PACKAGE}/${SUBAGENTS_ENTRY}`;
 
-/** How many parent directories the package-root walk visits before giving up. */
-const MAX_PACKAGE_WALK = 8;
-
-export type SubagentsResolution = { ok: true; path: string; root: string } | { ok: false; reason: string };
+export type SubagentsResolution = { ok: true; path: string } | { ok: false; reason: string };
 
 export interface SubagentsProvisionOptions {
   /** The module URL (or absolute path) resolution starts from; a test seam. */
@@ -61,13 +58,16 @@ function messageOf(error: unknown): string {
 }
 
 /**
- * Walk up from `start` to the directory whose `package.json` names `name`.
- * A malformed or foreign manifest is skipped, never thrown on: this runs before
- * any user-visible surface exists.
+ * Walk up from `start` to the directory whose `package.json` names `name`. The
+ * walk ends at the filesystem root, not at a fixed depth: Node's resolution
+ * already found the package's entry, so the package root is always reachable
+ * and a private copy in a deep `node_modules` store stays findable. A malformed
+ * or foreign manifest is skipped, never thrown on: this runs before any
+ * user-visible surface exists.
  */
 function findPackageRoot(start: string, name: string): string | null {
   let current = start;
-  for (let depth = 0; depth < MAX_PACKAGE_WALK; depth += 1) {
+  for (;;) {
     const manifestPath = join(current, "package.json");
     if (existsSync(manifestPath)) {
       try {
@@ -81,7 +81,6 @@ function findPackageRoot(start: string, name: string): string | null {
     if (parent === current) return null;
     current = parent;
   }
-  return null;
 }
 
 /**
@@ -109,7 +108,7 @@ export function resolveSubagentsEntry(from: string = import.meta.url): Subagents
   if (!existsSync(entry)) {
     return { ok: false, reason: `${SUBAGENTS_PACKAGE} resolves to ${root} but ships no ${SUBAGENTS_ENTRY}` };
   }
-  return { ok: true, path: entry, root };
+  return { ok: true, path: entry };
 }
 
 /** The one-line message a failed provision leaves the session. */

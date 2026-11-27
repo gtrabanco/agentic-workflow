@@ -206,7 +206,7 @@ test("every block-scalar header order ships byte-identical (F4)", (t) => {
   // the source parsed a string.
   const shapes = [
     ["block-sign-digits", ["argument-hint: >-2", "  [--foo]"], "[--foo]"],
-    ["block-sign-digits-literal", ["argument-hint: |+2", "  [--foo]"], "[--foo]\n\n"],
+    ["block-sign-digits-literal", ["argument-hint: |+2", "  [--foo]"], "[--foo]\n"],
     ["block-digits-sign", ["argument-hint: >2-", "  [--foo]"], "[--foo]"],
   ];
   for (const [slug, lines, expected] of shapes) {
@@ -222,13 +222,21 @@ test("a raw hint spanning frontmatter lines is never half-rewritten (F5)", (t) =
   assert.deepEqual(parseYaml(frontmatterOf(staged))["argument-hint"], ["--a", "b"], "the source's own array type is its defect, not the staging's");
 });
 
-test("a duplicate argument-hint never ships its unrewritten sibling raw (F6)", (t) => {
+test("a duplicate argument-hint is staged with every line quoted and no wrong type (F6)", (t) => {
   const { staged } = stageFixture(t, "duplicate-hint", [
     'argument-hint: "[--first]"',
     "argument-hint: [--second <x>]",
   ]);
-  const hint = parseYaml(frontmatterOf(staged))["argument-hint"];
-  assert.equal(typeof hint, "string", `staged as ${Array.isArray(hint) ? "an array" : typeof hint}, not a string`);
-  assert.equal(hint, "[--second <x>]", "the last key wins in YAML, so the last value is the one that must ship safe");
-  assert.equal(staged.match(/^argument-hint: "/gmu)?.length, 2, "every argument-hint line is quoted");
+  assert.equal(
+    staged.match(/^argument-hint: "/gmu)?.length,
+    2,
+    "every argument-hint line is quoted — a duplicate left raw would be the value a lenient reader ships",
+  );
+  // yaml@2.9.0 refuses a duplicate key by spec (`Map keys must be unique`), so the
+  // shape is refused at base and at this head alike; what this fold guarantees is
+  // that the transform never leaves an unquoted, wrong-typed sibling behind — read
+  // with `uniqueKeys: false`, the last key wins and it is a string.
+  assert.throws(() => parseYaml(frontmatterOf(staged)), /Map keys must be unique/u, "the duplicate is refused by the YAML spec, not silently typed wrong");
+  const lenient = parseYaml(frontmatterOf(staged), { uniqueKeys: false })["argument-hint"];
+  assert.equal(lenient, "[--second <x>]", "the last key wins, and it is a string");
 });

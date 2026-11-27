@@ -110,9 +110,11 @@ Two packaging mechanics, and the surfaces that stop failing:
   `skills/fold-findings/SKILL.md`** — the three `argument-hint:` values YAML
   cannot read as strings today. Quoting is the fix; the hint text is unchanged.
 - **`packages/pi-agentic-workflow/scripts/bundle-skills.mjs`** — the staging
-  projection gains one transform: an `argument-hint` whose raw value YAML cannot
-  read as a plain or quoted string is rewritten as a double-quoted YAML string.
-  The source stays the source; the bundle can never ship an unparseable hint.
+  projection gains one transform: every `argument-hint:` line whose raw value
+  YAML would not read as a string is rewritten as a double-quoted YAML string,
+  while an already-quoted value, a block-scalar header in either indicator order
+  and a value continuing on the following lines ship byte-identical. The source
+  stays the source; the bundle can never ship an unparseable hint.
 - **`packages/pi-agentic-workflow/src/extension/subagents.ts`** (new) — the one
   owner of the dependency's resolution: resolve the package through Node's
   algorithm (hoisted or nested), locate `dist/subagents/index.js`, load its
@@ -290,9 +292,6 @@ lane's plan step, and no triage route is re-derived here.
 
 | id | S# / file:line | axis | severity | impact | class | route |
 |---|---|---|---|---|---|---|
-| F4 | S2 · packages/pi-agentic-workflow/scripts/bundle-skills.mjs:135-142 | code | CRITICAL | blocking | source | fold |
-| F5 | S2 · packages/pi-agentic-workflow/scripts/bundle-skills.mjs:127-171 | code | CRITICAL | blocking | source | fold |
-| F6 | S2 · packages/pi-agentic-workflow/scripts/bundle-skills.mjs:127 | code | WARNING | blocking | source | fold |
 
 ## Log
 
@@ -527,3 +526,49 @@ none
   narrations, `6de1870a1` red corpus, `5a5f761b6` engine) plus this evidence
   commit pushed to PR [#736](https://github.com/gtrabanco/agentic-workflow/pull/736);
   no merge, no approval — the delta external re-verify is next.
+- **F4** — 2026-11-27, folded: `BLOCK_HEADER` now admits the chomping indicator
+  and the indentation digits in either order (`[+-][0-9]*|[0-9]+[+-]?`), so
+  `>-2` / `|+2` / `>2-` headers ship byte-identical and their content lines stay
+  attached. Materialized from V1's recheck as the corpus case
+  `every block-scalar header order ships byte-identical (F4)`.
+  swept: /BLOCK_HEADER = \/\^\[\|>\]\[0-9\]\*/g → expected 0 in packages/pi-agentic-workflow/scripts/*.mjs
+- **F5** — 2026-11-27, folded: `isPlainScalar` leaves a value whose flow
+  collection does not close on its own line alone (`continuesBelow`), so a
+  multi-line raw value is never half-rewritten and its continuation line stays
+  attached; the source's own array type is its defect, not the staging's.
+  Materialized from V2's recheck as `a raw hint spanning frontmatter lines is
+  never half-rewritten (F5)`.
+- **F6** — 2026-11-27, folded: `ARGUMENT_HINT_LINE` is global, so every
+  `argument-hint:` line in the frontmatter is normalized, not just the first —
+  a duplicate left raw can no longer ride on YAML's last-key-wins. Measured
+  while folding: `yaml@2.9.0` refuses a duplicate key by spec at base and at
+  this head alike (`Map keys must be unique`), so the fold's guarantee is the
+  one it can prove — no unquoted, wrong-typed sibling is staged, and read with
+  `uniqueKeys: false` the surviving value is a string. Materialized from V3's
+  recheck as `a duplicate argument-hint is staged with every line quoted and no
+  wrong type (F6)`.
+- **F7** — 2026-11-27, folded (report-only note taken up on the owner's
+  instruction): the resolver's `SubagentsResolution.ok` arm no longer carries
+  the unconsumed `root` field, and `findPackageRoot` walks to the filesystem
+  root instead of the fixed `MAX_PACKAGE_WALK = 8` depth, so a package root
+  behind a deep `node_modules` store stays findable. Validators: the
+  subagents-provision suite (12/12) and `bun run test`.
+  swept: /MAX_PACKAGE_WALK/g → expected 0 in packages/pi-agentic-workflow/src/extension/*.ts
+  swept: /ok: true; path: string; root: string/g → expected 0 in packages/pi-agentic-workflow/src/extension/*.ts
+- **E23** — 2026-11-27, the fold's own runs at the fold head: `bun test
+  test/argument-hint-frontmatter.test.mjs` in `packages/pi-agentic-workflow` ·
+  exit 0 · 11 pass / 0 fail (8 pre-existing + the 3 fold cases); the same suite
+  against the pre-fold engine (`5574bdb56`'s `bundle-skills.mjs`) · exit 1 · 8
+  pass / 3 fail, so the corpus is the regression guard, in the red-first order
+  (`5574bdb56` corpus, engine after); the package's five affected suites · exit
+  0 · 50 pass / 0 fail; `tsc --noEmit` · exit 0;
+  `bun scripts/docs-generate.mjs --check` · exit 0 · `verdict: PASS`;
+  `bun scripts/check-skill-context.mjs` and `--documents` · exit 0 · PASS (33
+  skills / 7 documents); `bun scripts/skill-lint.mjs` · exit 0 · `0 finding(s)`,
+  `verdict: PASS`.
+- **R2** — 2026-11-27, the fold's cycle-1 closure: F4 + F5 + F6 (the three
+  fix-now rows R1 persisted) and F7 (the report-only note the owner asked to
+  fold) leave `## Findings` for their `F` lines above; the carrier holds no open
+  row. Batch class `all-repair-in-place`, one atomic commit — every row lives in
+  one file's one mechanism plus one resolver file, one validator set proves all
+  four, and they roll back together.

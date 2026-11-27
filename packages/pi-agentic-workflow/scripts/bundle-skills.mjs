@@ -11,9 +11,10 @@
 // pointerizes one declared prose section, resolved through the #407 section
 // locator and hash-bound to the exact bytes it removes
 // (`scripts/projection.mjs`); the argument-hint normalisation (issue #726,
-// below), which makes any hint `yaml@2.9.0` would not read as a plain string a
-// quoted YAML string pi's own frontmatter reader accepts — and leaves a
-// block-scalar header alone, since its content already is one; and the runner
+// below), which makes every `argument-hint:` line `yaml@2.9.0` would not read as
+// a string a quoted YAML string pi's own frontmatter reader accepts — and
+// leaves block-scalar headers and multi-line raw values alone, since their
+// content already parses (or is the source's own defect); and the runner
 // mapping (issue #696, below). A file
 // none of them reaches is byte-identical to its source — always. The standalone
 // `skills/` tree is never edited: all transforms read it and write only into the
@@ -124,15 +125,16 @@ function frontmatterEndOffset(text) {
 }
 
 /** One frontmatter `argument-hint:` line: its prefix and its raw value. */
-const ARGUMENT_HINT_LINE = /^(argument-hint:[ \t]*)(.*)$/mu;
+const ARGUMENT_HINT_LINE = /^(argument-hint:[ \t]*)(.*)$/gmu;
 
 /**
- * A YAML block-scalar header — `>`, `>-`, `|2`, `> #c` … yaml@2.9.0 reads the
- * indented content that follows as one string, so the line must ship
- * byte-identical: quoting the header orphans the content lines and breaks the
- * whole frontmatter (decision D5, PE-018).
+ * A YAML block-scalar header — `>`, `>-`, `|2`, `>-2`, `>2-`, `> #c` … yaml@2.9.0
+ * reads the indented content that follows as one string, and it accepts the
+ * chomping indicator and the indentation digits in either order, so both are
+ * admitted: quoting the header line orphans its content and breaks the whole
+ * frontmatter (decision D5, PE-018; cycle-1 finding F4).
  */
-const BLOCK_HEADER = /^[|>][0-9]*[+-]?(?:[ \t]+#.*)?$/u;
+const BLOCK_HEADER = /^[|>](?:[+-][0-9]*|[0-9]+[+-]?)?(?:[ \t]+#.*)?$/u;
 
 /**
  * YAML 1.2 core's non-string plain scalars — `null`/`~`, the booleans and the
@@ -153,6 +155,30 @@ function isQuotedScalar(value) {
 }
 
 /**
+ * Whether a flow collection opened on this line is left open — a value such as
+ * `[--a,` whose continuation sits on the following indented lines. Quoting the
+ * first line would orphan that continuation, so the line is left alone (cycle-1
+ * finding F5). Brackets inside a quoted section do not count.
+ * @param {string} value
+ * @returns {boolean}
+ */
+function continuesBelow(value) {
+  let depth = 0;
+  let quote = null;
+  for (const character of value) {
+    if (quote !== null) {
+      if (character === "\\" && quote === '"') continue;
+      if (character === quote) quote = null;
+      continue;
+    }
+    if (character === '"' || character === "'") quote = character;
+    else if (character === "[" || character === "{") depth += 1;
+    else if (character === "]" || character === "}") depth -= 1;
+  }
+  return depth > 0;
+}
+
+/**
  * Whether YAML reads a raw value as a plain string. A block-scalar header is
  * one (its content follows); a comment-led value and YAML core's non-string
  * scalars are not. Conservative by design: a shape this reader is not sure
@@ -163,6 +189,7 @@ function isQuotedScalar(value) {
 function isPlainScalar(value) {
   if (value === "") return false;
   if (BLOCK_HEADER.test(value)) return true;
+  if (continuesBelow(value)) return true;
   if (/^[\[{&*!|>'"%@`,#]/u.test(value)) return false;
   if (/^[-?:](?:[ \t]|$)/u.test(value)) return false;
   if (/: | #/u.test(value)) return false;
@@ -181,13 +208,16 @@ function quoteScalar(value) {
 }
 
 /**
- * Make a SKILL.md's `argument-hint:` a YAML string without changing its text
- * (issue #726, defect 1). pi reads frontmatter with a YAML parser, so a raw
- * value starting with `[` is a flow sequence and rejects the whole file — the
- * skill silently loses its `skill:*` command. An already-quoted value is left
- * byte-identical; so is a block-scalar header and a value YAML reads as a plain
- * string. The replacement is
- * one line, so every other byte of the file is untouched.
+ * Make every `argument-hint:` line in a SKILL.md's frontmatter a YAML string
+ * without changing its text (issue #726, defect 1; cycle-1 findings F4-F6).
+ * pi reads frontmatter with a YAML parser, so a raw value starting with `[` is
+ * a flow sequence and rejects the whole file — the skill silently loses its
+ * `skill:*` command. An already-quoted value is left byte-identical; so is a
+ * block-scalar header, a value YAML reads as a plain string, and a value that
+ * continues on the following indented lines (a multi-line flow collection:
+ * quoting its first line would orphan the rest). Every `argument-hint:`
+ * occurrence is rewritten, not just the first: YAML's last key wins, so a
+ * duplicate left raw would be the value that ships.
  * @param {string} text
  * @returns {string}
  */
