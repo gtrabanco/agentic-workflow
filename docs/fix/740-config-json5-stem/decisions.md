@@ -51,3 +51,27 @@ are the on-demand trail the issue names. The pi loader drops and fills defaults.
 The base file degrades per section through the exported sanitizer (recursive, so
 a valid sibling survives an invalid one); the pi file degrades per reported path
 through its own strict validator, which stays the load's acceptance authority.
+
+## D6 — the write-path refusal is whole-document
+
+`set`, `reset` and `validate --sanitize` refuse before any byte moves when the
+target file does not parse or when the document still carries a non-finite
+value anywhere — written section, other section, or unknown key alike — because
+`stringifyJsoncValue` serializes the whole document and S5's promise is
+absolute ("never written as null", EXTERNAL VERIFY B1/A1). The issues reuse
+`validateJsonSchema`'s own finite check so the refusal message has one owner;
+the broken-file refusal reuses `get`'s `the config file is not valid` shape and
+is filtered to the file the write targets, so a broken file of the other stem
+never blocks a write. `default`, `init` and the settings console already
+refuse and stay untouched; a root-level unknown key that `config validate`
+never reports is pre-existing and reported to the owner, not fixed here.
+
+## D7 — the CAS read half answers the Fixes table
+
+`findRow` falls back to the `## Fixes` table through the writer's own locator
+(`fixTableShape` + `issueKeyInCell`), so read and write key the row the same
+way (#740 EXTERNAL VERIFY B2): Topic/Summary/Title maps to `slug`, the status
+column to `status`, Notes/Note to `description`, and the absent depends column
+answers `""`. The Features NN scan keeps precedence, so a Features row's answer
+is byte-identical, and a document without a `## Fixes` heading answers `null`
+exactly as before.

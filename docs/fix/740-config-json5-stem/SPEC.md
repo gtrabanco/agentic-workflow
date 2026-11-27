@@ -143,6 +143,9 @@ none
 - P6 — The committed `.pi` configs are renamed to `.jsonc` and the repository's own contract suite reads them through the resolver. (validator: `bun test scripts/local-config-contract.test.mjs` exits 0) (Implements: S4)
 - P7 — Docs, changeset, roadmap row, evidence and the session journal. (validator: `bun scripts/lint-changeset.mjs` and `bun scripts/docs-generate.mjs --check` exit 0) (Implements: S0)
 - P8 — Verification: the differential run against the base commit and the root gate. (validator: `node scripts/run-root-suite.mjs --bail` exits 0 and the package suites exit 0) (Implements: S0, S1, S2, S3, S4, S5, S6, S7)
+- P9 — The write-path refusals: `set`, `reset` and `validate --sanitize` refuse before any byte moves when the target file does not parse (present-but-broken stays evidence) or when any value of the document is non-finite, instead of clobbering the file or serializing `NaN`/`Infinity` as `null`. (validator: `bun test packages/agentic-workflow/test/config-cli.test.mjs` exits 0 with the cross-section non-finite refusal and the present-but-broken refusal cases) (Implements: S5, S6)
+- P10 — `findRow` answers the `## Fixes` table by issue key, so the CAS read half agrees with the locator `fixRowUpsert` writes with. (validator: `bun test packages/agentic-workflow/test/roadmap-check.test.mjs` exits 0 with the fixes-read case) (Implements: S0)
+- P11 — Evidence and surface currency: the E3 count correction, the pi-nan stem narrations, the decisions and log for the correction batch. (validator: `bun scripts/docs-generate.mjs --check` exits 0 and `rg -n 'pi-agentic-workflow\.json|agentic-workflow\.json' packages/pi-nan-agentic-workflow` exits 1 with no matches) (Implements: S0, S4)
 
 The link grammar (`task-spec-link@1`) is honoured above: every task names the requirements it delivers and every requirement is delivered by one task.
 
