@@ -427,6 +427,7 @@ swept: /the owner's preselected answer/ → expected 0 in docs
 swept: /"relay" dispatch_relay\(/ → expected 0 in docs/fix/722-relay-seam-inline/SPEC.md
 swept: /"relay" dispatch_relay\(/ → expected 0 in packages/agentic-workflow/src/runner
 swept: /default and the leg count/ → expected 0 in skills/unit-lane
+- **E17** — 2026-11-27, `runner dimension-regression --base 06e0f2977` over the merge range · exit 0 · verdict clean: one review surface changed — `skills/product-audit/references/AUDIT_DIMENSIONS.md`, where main's #726 frontier moves `skill-lint`'s "seven checks" to "eight" — and no dimension is added or dropped, so all 20 ids the reference publishes survive with their `D`-free record.
 
 ## Next
 
