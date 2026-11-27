@@ -172,3 +172,9 @@ the batch and its recheck, it is not a re-verification.
   batch, and left unprobed since its base range is not this branch's.
 - The receipt's header "(uncommitted)" described the verification run itself;
   it ships with this batch record (commit 2).
+- **Batch self-correction** — the first `G6` wording carried no `HEAD`
+  citation, so `verify` refused it after the log append
+  (`receipt-malformed-head`, exit 2). Caught by the post-append verify run in
+  this same batch, corrected before handoff, and the whole G6 battery re-run
+  green at `HEAD 75d2fe2b8` — the loop S1 orders, run on the batch's own
+  defect.
