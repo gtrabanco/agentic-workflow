@@ -59,6 +59,7 @@ const PACING_ENV = Object.freeze({
   maxAttempts: "AGENTIC_WORKFLOW_DOC_EMBEDDINGS_MAX_ATTEMPTS",
   baseDelayMs: "AGENTIC_WORKFLOW_DOC_EMBEDDINGS_BASE_DELAY_MS",
   maxDelayMs: "AGENTIC_WORKFLOW_DOC_EMBEDDINGS_MAX_DELAY_MS",
+  fetchTimeoutMs: "AGENTIC_WORKFLOW_DOC_EMBEDDINGS_FETCH_TIMEOUT_MS",
 });
 
 /** A pacing parameter, or a named refusal — a zero/NaN pace is never accepted. */
@@ -158,9 +159,16 @@ export function resolveEmbedConfig({ config = {}, env = {}, cli = {} } = {}) {
  * the only place a provider says *why* it refused (`Context length exceeded for
  * model … maximum context length is 32768 tokens`), and discarding it left the
  * operator with a `provider down` label and no way to reach the cause.
+ *
+ * Every request is bounded (issue #718 S3): `fetchTimeoutMs` (the pacing knob's
+ * default, overridable through `provider.pacing.fetchTimeoutMs`) becomes the
+ * `AbortSignal.timeout` on the call, so a socket that accepts the request and
+ * never answers aborts instead of holding the pass open forever. The abort is a
+ * status-less error, which is exactly what the retry ladder already owns.
  */
-export function makeOpenAIProvider({ baseUrl, apiKey, model, fetchImpl } = {}) {
+export function makeOpenAIProvider({ baseUrl, apiKey, model, fetchImpl, fetchTimeoutMs = DEFAULT_PACING.fetchTimeoutMs } = {}) {
   const doFetch = fetchImpl ?? ((url, init) => fetch(url, init));
+  const timeoutMs = positiveInteger(fetchTimeoutMs, "fetchTimeoutMs");
   return {
     model,
     async embed(texts) {
@@ -168,6 +176,7 @@ export function makeOpenAIProvider({ baseUrl, apiKey, model, fetchImpl } = {}) {
         method: "POST",
         headers: { "content-type": "application/json", authorization: `Bearer ${apiKey}` },
         body: JSON.stringify({ model, input: texts }),
+        signal: AbortSignal.timeout(timeoutMs),
       });
       if (!response.ok) {
         const excerpt = await responseBodyExcerpt(response);

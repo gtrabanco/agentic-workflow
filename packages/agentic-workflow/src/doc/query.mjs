@@ -18,7 +18,7 @@ import { decodeVector } from "./embeddings.mjs";
 import { openDatabase } from "./sqlite.mjs";
 import { storePath, storePresent } from "./store.mjs";
 import { ensureFresh } from "./sync.mjs";
-import { storedEmbeddingModel, resolveEmbedConfig, makeOpenAIProvider, embeddingStats } from "./embeddings.mjs";
+import { storedEmbeddingModel, resolveEmbedConfig, makeOpenAIProvider, embeddingStats, resolvePacing } from "./embeddings.mjs";
 import { buildEnvelope, buildResultRow } from "./envelope.mjs";
 import { loadConfig } from "./config.mjs";
 
@@ -353,6 +353,9 @@ function fuseRrf(keywordRows, vectorRows) {
 }
 
 function realProviderOrNull(root) {
-  const cfg = resolveEmbedConfig({ config: loadConfig(root), env: process.env });
-  return cfg.configured ? makeOpenAIProvider(cfg) : null;
+  const config = loadConfig(root);
+  const cfg = resolveEmbedConfig({ config, env: process.env });
+  // Issue #718 S3: a query's provider round-trip is bounded by the same pacing
+  // knob a sync reads — a stalled socket must never hold a query open either.
+  return cfg.configured ? makeOpenAIProvider({ ...cfg, fetchTimeoutMs: resolvePacing({ config, env: process.env }).fetchTimeoutMs }) : null;
 }

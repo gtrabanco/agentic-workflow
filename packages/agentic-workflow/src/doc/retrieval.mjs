@@ -36,7 +36,7 @@ import { storePath } from "./store.mjs";
 import { syncIndex, rebuildIndex } from "./sync.mjs";
 import { queryIndex, statusIndex } from "./query.mjs";
 import { loadConfig, effectiveChunkLimit } from "./config.mjs";
-import { resolveEmbedConfig, makeOpenAIProvider, embedPendingChunks, embeddingStats } from "./embeddings.mjs";
+import { resolveEmbedConfig, makeOpenAIProvider, embedPendingChunks, embeddingStats, resolvePacing } from "./embeddings.mjs";
 import { NO_FEEDBACK } from "../feedback/index.mjs";
 
 /** How many failure shapes and chunk locators the envelope repeats before summarising. */
@@ -78,10 +78,17 @@ function rejectionRecord(rejected) {
  * `unavailable-embeddings-provider-down` and keeps the run `ok: true` (AC17);
  * a rejected request answers `embeddings-request-rejected` and keeps the count of
  * what did land. `onProgress(done, total)` is an optional callback the caller
- * uses to report progress over the wall-clock duration of the embed pass.
+ * uses to report progress over the wall-clock duration of the embed pass, and
+ * `pacing` is the resolved policy the provider's request timeout comes from
+ * (issue #718 S3) — resolved once here so the pass and its provider agree.
  */
-async function embedPass(root, { embedCfg, embedder, declareKeywordOnly, onProgress }) {
-  const provider = embedder !== undefined ? embedder : embedCfg.configured ? makeOpenAIProvider(embedCfg) : null;
+async function embedPass(root, { embedCfg, embedder, declareKeywordOnly, onProgress, pacing }) {
+  const provider =
+    embedder !== undefined
+      ? embedder
+      : embedCfg.configured
+        ? makeOpenAIProvider({ ...embedCfg, fetchTimeoutMs: pacing.fetchTimeoutMs })
+        : null;
   if (provider === null) {
     // AC17's root: keyword-only is a declared state, never a silent one. A
     // `--rebuild` is the documented escape hatch (a model or limit change), so
@@ -90,7 +97,7 @@ async function embedPass(root, { embedCfg, embedder, declareKeywordOnly, onProgr
     return { embedded: 0, degradations: declareKeywordOnly ? ["unavailable-embeddings-not-configured"] : [], rejected: null };
   }
   try {
-    const result = await embedPendingChunks(root, provider, { onProgress });
+    const result = await embedPendingChunks(root, provider, { onProgress, pacing });
     if (result.skipped === true) {
       // Model mismatch: keep the frozen key and declare the cause (AC18, D3).
       return { embedded: 0, degradations: ["embeddings-model-mismatch"], rejected: null };
@@ -144,14 +151,18 @@ export async function runDocOp(grammar, ctx = {}) {
           }),
     );
 
+    // The provider's request timeout is one of the pacing knobs, so the policy is
+    // resolved once for the pass and handed to the provider it paces (issue #718
+    // S3). The progress seam is forwarded for **both** chunking ops: a rebuild
+    // embeds the same pending set, so a silent one is the same frozen screen.
+    const pacing = resolvePacing({ config: cfg, env: process.env });
     const pass = await feedback.stage("embed", () =>
       embedPass(root, {
         embedCfg,
         embedder: ctx.embedder,
         declareKeywordOnly: grammar.op === "rebuild",
-        onProgress: grammar.op === "sync"
-          ? (done, total) => feedback.progress({ done, total, unit: "chunks" })
-          : undefined,
+        pacing,
+        onProgress: (done, total) => feedback.progress({ done, total, unit: "chunks" }),
       }),
     );
     feedback.detail(

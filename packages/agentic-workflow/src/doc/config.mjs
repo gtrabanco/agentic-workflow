@@ -53,10 +53,16 @@ export const DEFAULT_MAX_REQUEST_CHARS = 90000;
 
 /**
  * The pacing/write-policy defaults — the provider's published limits
- * (`32 texts/batch`, `60 requests/min`) plus a bounded retry ladder. Every one
- * of them is overridable (config `provider.pacing`, then the
- * `AGENTIC_WORKFLOW_DOC_EMBEDDINGS_<PARAM>` environment variables), so an
- * operator never edits code to match a provider's real limits (issue #443 S10).
+ * (`32 texts/batch`, `60 requests/min`), one bounded request timeout and a
+ * bounded retry ladder. Every one of them is overridable (config
+ * `provider.pacing`, then the `AGENTIC_WORKFLOW_DOC_EMBEDDINGS_<PARAM>`
+ * environment variables), so an operator never edits code to match a provider's
+ * real limits (issue #443 S10).
+ *
+ * `fetchTimeoutMs` is the one non-rate member (issue #718 S3): a socket that
+ * accepts a request and never answers produced no error to retry, so the pass
+ * hung with no progress. The timeout aborts the `fetch`, the abort surfaces as a
+ * status-less error, and the ladder below owns it like any other network fault.
  *
  * The names are the closed set `provider.pacing` may carry (issue #541 S3): the
  * validation below and the resolver in `embeddings.mjs` both iterate this
@@ -68,6 +74,7 @@ export const DEFAULT_PACING = Object.freeze({
   maxAttempts: 3,
   baseDelayMs: 1000,
   maxDelayMs: 60000,
+  fetchTimeoutMs: 30000,
 });
 
 /** The environment override for the request budget, beside the pacing overrides. */
