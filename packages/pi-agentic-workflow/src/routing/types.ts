@@ -119,6 +119,15 @@ export const ADVANCE_COMMAND = "advance";
  */
 export const AW_INDEX_COMMAND = "aw-index";
 
+/**
+ * The two lane entries (issue #669): `/flow` drives a unit through the closed
+ * catalog — sense, decide, hand one step over — and `/draft` is the same program
+ * stopped after the plan. Both are code, not skills: no `SKILL.md`, no argument
+ * hint, no catalogue entry.
+ */
+export const FLOW_COMMAND = "flow";
+export const DRAFT_COMMAND = "draft";
+
 export const SETTINGS_COMMAND = "agentic-workflow-settings";
 /** Shorthand alias for the same console — a pointer to the same handler, never a separate route (OB-5, AC6). */
 export const SETTINGS_COMMAND_ALIAS = "aw-settings";

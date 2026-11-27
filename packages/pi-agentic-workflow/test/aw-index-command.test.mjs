@@ -15,7 +15,7 @@ import { join, resolve } from "node:path";
 
 import { createExtension } from "../dist/extension/factory.js";
 import { readCatalogue } from "../dist/routing/catalogue.js";
-import { AW_INDEX_COMMAND, ADVANCE_COMMAND, SETTINGS_COMMAND, SETTINGS_COMMAND_ALIAS } from "../dist/routing/types.js";
+import { AW_INDEX_COMMAND, ADVANCE_COMMAND, DRAFT_COMMAND, FLOW_COMMAND, SETTINGS_COMMAND, SETTINGS_COMMAND_ALIAS } from "../dist/routing/types.js";
 import { renderIndexReport, derivedTimeoutMs, MAX_DERIVED_TIMEOUT_MS } from "../dist/extension/aw-index-command.js";
 import { configFor, modelRef } from "./helpers/session.mjs";
 
@@ -111,7 +111,7 @@ test("S5: the extension registers /aw-index itself — no skill, no catalogue en
     const { registered } = extensionOver({ skillsDir: tree.skillsDir });
     assert.deepEqual(
       [...registered.keys()],
-      ["synthetic", ADVANCE_COMMAND, AW_INDEX_COMMAND, SETTINGS_COMMAND, SETTINGS_COMMAND_ALIAS],
+      ["synthetic", ADVANCE_COMMAND, AW_INDEX_COMMAND, FLOW_COMMAND, DRAFT_COMMAND, SETTINGS_COMMAND, SETTINGS_COMMAND_ALIAS],
       "the native door is registered beside /advance, not from a skill dir",
     );
     assert.equal(typeof registered.get(AW_INDEX_COMMAND).handler, "function");
