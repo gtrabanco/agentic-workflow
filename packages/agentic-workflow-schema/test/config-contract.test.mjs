@@ -11,18 +11,24 @@ import test from "node:test";
 
 import {
   BASE_CONFIG_SECTIONS,
+  BASE_CONFIG_STEM,
   CONFIG_EXTENSION_CONTRACT,
+  CONFIG_FILE_EXTENSIONS,
+  DEFAULT_CONFIG_EXTENSION,
   GUARD_MODES,
   GUARD_NAMES,
   RELAY_SEAMS,
   composeConfigSchema,
+  configFileCandidates,
   fillDefaults,
   normalizeGuard,
   normalizeLogSession,
   normalizeRelaySeam,
   resolveConfigDocuments,
+  resolveConfigFileName,
   sanitizeSectionValue,
   validateConfigExtension,
+  validateJsonSchema,
   validateSectionValue,
 } from "../dist/index.js";
 
@@ -45,7 +51,7 @@ test("the base registry carries the feature sections the issue names", () => {
   ]);
   for (const entry of BASE_CONFIG_SECTIONS) {
     assert.equal(entry.category, "feature");
-    assert.equal(entry.file, "agentic-workflow.json");
+    assert.equal(entry.file, BASE_CONFIG_STEM, "the canonical identity is the stem (#740 S4)");
     assert.ok(entry.description.length > 0);
     assert.equal(typeof entry.schema, "object");
   }
@@ -159,7 +165,7 @@ test("S4: extension section keys accept camelCase and kebab-case, nothing else",
   const descriptor = (key) => ({
     contract: CONFIG_EXTENSION_CONTRACT,
     key,
-    file: "pkg.json",
+    file: "pkg",
     description: "a package section",
     schema: { type: "object" },
     defaults: {},
@@ -213,13 +219,13 @@ test("resolution is feature-by-feature, project over global, defaults for absent
   const resolved = resolveConfigDocuments({
     sections: BASE_CONFIG_SECTIONS,
     global: {
-      "agentic-workflow.json": {
+      "agentic-workflow": {
         logSession: { publisher: { command: ["global-sink"] } },
         memory: { engram: true },
       },
     },
     project: {
-      "agentic-workflow.json": {
+      "agentic-workflow": {
         logSession: { enabled: true },
         telemetry: { enabled: true },
       },
@@ -239,12 +245,57 @@ test("an invalid section is reported and the effective value is not invented", (
   const resolved = resolveConfigDocuments({
     sections: BASE_CONFIG_SECTIONS,
     global: {},
-    project: { "agentic-workflow.json": { memory: { engram: "yes" } } },
+    project: { "agentic-workflow": { memory: { engram: "yes" } } },
   });
   assert.equal(resolved.ok, false);
   assert.equal(resolved.issues.length, 1);
   assert.equal(resolved.issues[0].path, "memory.engram");
   assert.deepEqual(resolved.config.memory, { engram: false });
+});
+
+test("S2/S4: a stem resolves across the three extensions with silent json → jsonc → json5 precedence", () => {
+  assert.equal(BASE_CONFIG_STEM, "agentic-workflow");
+  assert.deepEqual([...CONFIG_FILE_EXTENSIONS], [".json", ".jsonc", ".json5"]);
+  assert.equal(DEFAULT_CONFIG_EXTENSION, ".json5");
+  assert.deepEqual(configFileCandidates("agentic-workflow"), [
+    "agentic-workflow.json",
+    "agentic-workflow.jsonc",
+    "agentic-workflow.json5",
+  ]);
+
+  const resolve = (present) => resolveConfigFileName("agentic-workflow", (name) => present.includes(name));
+  assert.equal(resolve(["agentic-workflow.json5", "agentic-workflow.json", "agentic-workflow.jsonc"]), "agentic-workflow.json");
+  assert.equal(resolve(["agentic-workflow.json5", "agentic-workflow.jsonc"]), "agentic-workflow.jsonc");
+  assert.equal(resolve(["agentic-workflow.json5"]), "agentic-workflow.json5");
+  assert.equal(resolve([]), "agentic-workflow.json5", "no candidate means the create name");
+});
+
+test("S5: a non-finite number is refused instead of serialized to null", () => {
+  const schema = { type: "object", additionalProperties: false, properties: { count: { type: "number" } } };
+  for (const value of [Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY]) {
+    const issues = validateJsonSchema(schema, { count: value }, "demo");
+    assert.equal(issues.length, 1, `${value} must be refused`);
+    assert.equal(issues[0].path, "demo.count");
+    assert.match(issues[0].message, /finite/u);
+  }
+  assert.deepEqual(validateJsonSchema(schema, { count: 3 }, "demo"), []);
+  // The writer's silent `null` is exactly what the refusal prevents.
+  assert.equal(JSON.stringify({ count: Number.NaN }), '{"count":null}');
+});
+
+test("S7: sanitize drops a declared key whose value no longer validates", () => {
+  const sanitized = sanitizeSectionValue(section("memory"), { engram: "yes", ghost: 1 });
+  assert.deepEqual(sanitized.value, {}, "both the invalid value and the unknown key are dropped");
+  assert.deepEqual(sanitized.removed.sort(), ["memory.engram", "memory.ghost"]);
+
+  const partial = sanitizeSectionValue(section("advance"), { iterationsCap: 12, sensitivePaths: "nope" });
+  assert.deepEqual(partial.value, { iterationsCap: 12 }, "a valid sibling survives an invalid one");
+  assert.deepEqual(partial.removed, ["advance.sensitivePaths"]);
+  assert.deepEqual(validateSectionValue(section("advance"), partial.value), [], "the sanitized value validates");
+
+  const arrayItem = sanitizeSectionValue(section("batchScheduler"), { surfaces: ["src", 7, "apps/web"] });
+  assert.deepEqual(arrayItem.value, { surfaces: ["src", "apps/web"] }, "an invalid array item is dropped");
+  assert.deepEqual(arrayItem.removed, ["batchScheduler.surfaces[1]"]);
 });
 
 test("sanitize removes unknown keys and reports their paths", () => {
@@ -261,10 +312,15 @@ test("composeConfigSchema produces one object schema naming every section", () =
 });
 
 test("an extension descriptor is validated before it can extend the schema", () => {
-  assert.deepEqual(validateConfigExtension({ contract: CONFIG_EXTENSION_CONTRACT, key: "pi", file: "pi-agentic-workflow.json", description: "pi", schema: { type: "object" }, defaults: {} }), []);
-  assert.equal(validateConfigExtension({ contract: "nope", key: "pi", file: "x.json", description: "pi", schema: { type: "object" }, defaults: {} }).length, 1);
-  assert.equal(validateConfigExtension({ contract: CONFIG_EXTENSION_CONTRACT, key: "memory", file: "x.json", description: "pi", schema: { type: "object" }, defaults: {} }).length, 1);
-  assert.equal(validateConfigExtension({ contract: CONFIG_EXTENSION_CONTRACT, key: "pi", file: "x.json", description: "pi", schema: { type: "object" }, defaults: {} }).length, 0);
+  assert.deepEqual(validateConfigExtension({ contract: CONFIG_EXTENSION_CONTRACT, key: "pi", file: "pi-agentic-workflow", description: "pi", schema: { type: "object" }, defaults: {} }), []);
+  assert.equal(validateConfigExtension({ contract: "nope", key: "pi", file: "x", description: "pi", schema: { type: "object" }, defaults: {} }).length, 1);
+  assert.equal(validateConfigExtension({ contract: CONFIG_EXTENSION_CONTRACT, key: "memory", file: "x", description: "pi", schema: { type: "object" }, defaults: {} }).length, 1);
+  assert.equal(validateConfigExtension({ contract: CONFIG_EXTENSION_CONTRACT, key: "pi", file: "x", description: "pi", schema: { type: "object" }, defaults: {} }).length, 0);
+  for (const name of ["pi-agentic-workflow.json", "pi-agentic-workflow.jsonc", "pi-agentic-workflow.json5"]) {
+    const issues = validateConfigExtension({ contract: CONFIG_EXTENSION_CONTRACT, key: "pi", file: name, description: "pi", schema: { type: "object" }, defaults: {} });
+    assert.equal(issues.length, 1, `${name} names a file, not the stem`);
+    assert.match(issues[0].message, /stem/u);
+  }
 });
 
 test("a section key may only be claimed once", () => {
@@ -273,8 +329,8 @@ test("a section key may only be claimed once", () => {
     global: {},
     project: {},
     extensions: [
-      { contract: CONFIG_EXTENSION_CONTRACT, key: "pi", file: "pi-agentic-workflow.json", description: "pi", schema: { type: "object" }, defaults: {} },
-      { contract: CONFIG_EXTENSION_CONTRACT, key: "pi", file: "other.json", description: "pi again", schema: { type: "object" }, defaults: {} },
+      { contract: CONFIG_EXTENSION_CONTRACT, key: "pi", file: "pi-agentic-workflow", description: "pi", schema: { type: "object" }, defaults: {} },
+      { contract: CONFIG_EXTENSION_CONTRACT, key: "pi", file: "other", description: "pi again", schema: { type: "object" }, defaults: {} },
     ],
   });
   assert.equal(resolved.ok, false);

@@ -1,10 +1,19 @@
 /**
- * JSONC — JSON with comments (issue #427 S3).
+ * JSON5 — the config dialect (issue #427 S3, widened by #740 S1).
  *
  * Bun parses JSONC natively; Node does not, and this package is dependency-free
  * by contract, so the parser lives here and both consumers read the same bytes.
  * A real tokenizer (not a comment-stripper) is what makes an error point at the
  * line and column the operator wrote instead of "invalid JSON somewhere".
+ *
+ * The dialect is JSON5 over the JSONC subset #427 shipped: ES5 identifier keys,
+ * single-quoted strings with the ES5 escapes (`\x`, `\u`, the line continuation),
+ * hex and leading/trailing-dot numbers, a leading `+`, and `Infinity`/`NaN`.
+ * Writes stay standard JSON (`stringifyJsoncValue`), so a non-finite value has no
+ * faithful round trip — the validator refuses it instead of letting the writer
+ * turn it into `null` (#740 S5). The strict end-of-input check is what keeps a
+ * concatenated file from failing open (#521 D1) and stays the acceptance
+ * boundary.
  */
 
 export interface JsoncError {
@@ -31,10 +40,18 @@ class ParseFailure extends Error {
   }
 }
 
+const WHITESPACE = /\s/u;
+const IDENTIFIER_START = /[$_\p{ID_Start}]/u;
+const IDENTIFIER_PART = /[$_\u200C\u200D\p{ID_Continue}]/u;
+const LINE_TERMINATOR = /[\n\r\u2028\u2029]/u;
+const HEX_DIGIT = /[0-9a-fA-F]/u;
+const DECIMAL_DIGIT = /[0-9]/u;
+
 class Reader {
   private index = 0;
   private line = 1;
   private column = 1;
+  private previous = "";
 
   constructor(private readonly text: string) {}
 
@@ -53,24 +70,31 @@ class Reader {
   advance(): string {
     const char = this.text[this.index] ?? "";
     this.index += 1;
-    if (char === "\n") {
-      this.line += 1;
+    if (LINE_TERMINATOR.test(char)) {
+      // CRLF is one line break, and a lone CR or U+2028/U+2029 is one too.
+      if (char !== "\n" || this.previous !== "\r") this.line += 1;
       this.column = 1;
     } else {
       this.column += 1;
     }
+    this.previous = char;
     return char;
+  }
+
+  /** Consume `count` characters known to be present. */
+  skip(count: number): void {
+    for (let offset = 0; offset < count; offset += 1) this.advance();
   }
 
   skipSpace(): void {
     for (;;) {
       const char = this.peek();
-      if (char === " " || char === "\t" || char === "\n" || char === "\r") {
+      if (WHITESPACE.test(char)) {
         this.advance();
         continue;
       }
       if (char === "/" && this.peek(1) === "/") {
-        while (!this.done && this.peek() !== "\n") this.advance();
+        while (!this.done && !LINE_TERMINATOR.test(this.peek())) this.advance();
         continue;
       }
       if (char === "/" && this.peek(1) === "*") {
@@ -91,22 +115,57 @@ class Reader {
     const char = this.peek();
     if (char === "{") return this.parseObject();
     if (char === "[") return this.parseArray();
-    if (char === '"') return this.parseString();
-    if (char === "-" || (char >= "0" && char <= "9")) return this.parseNumber();
-    if (this.text.startsWith("true", this.index)) {
-      for (let index = 0; index < 4; index += 1) this.advance();
-      return true;
-    }
-    if (this.text.startsWith("false", this.index)) {
-      for (let index = 0; index < 5; index += 1) this.advance();
-      return false;
-    }
-    if (this.text.startsWith("null", this.index)) {
-      for (let index = 0; index < 4; index += 1) this.advance();
-      return null;
-    }
+    if (char === '"' || char === "'") return this.parseString();
+    if (char === "+" || char === "-" || char === "." || DECIMAL_DIGIT.test(char)) return this.parseNumber();
+    if (IDENTIFIER_START.test(char)) return this.parseKeyword();
     if (this.done) this.fail("unexpected end of input; expected a value");
     return this.fail(`unexpected character ${JSON.stringify(char)}; expected a value`);
+  }
+
+  /** Read an ES5 IdentifierName, decoding a `\uXXXX` escape into its character. */
+  readIdentifier(): string {
+    let out = "";
+    if (this.peek() === "\\") out += this.readUnicodeEscape();
+    else if (IDENTIFIER_START.test(this.peek())) out += this.advance();
+    else this.fail("expected an identifier");
+
+    for (;;) {
+      if (this.peek() === "\\") {
+        const escaped = this.readUnicodeEscape();
+        if (!IDENTIFIER_PART.test(escaped)) this.fail(`invalid identifier escape ${JSON.stringify(escaped)}`);
+        out += escaped;
+        continue;
+      }
+      if (!IDENTIFIER_PART.test(this.peek())) return out;
+      out += this.advance();
+    }
+  }
+
+  /** `\uXXXX` — consumed whole, decoded to one character. */
+  readUnicodeEscape(): string {
+    this.advance();
+    if (this.peek() !== "u") this.fail("invalid identifier escape; expected \\u");
+    this.advance();
+    return this.readHex(4, "unicode");
+  }
+
+  readHex(count: number, label: string): string {
+    let digits = "";
+    for (let offset = 0; offset < count; offset += 1) {
+      if (!HEX_DIGIT.test(this.peek())) this.fail(`invalid ${label} escape; expected a hexadecimal digit`);
+      digits += this.advance();
+    }
+    return String.fromCharCode(Number.parseInt(digits, 16));
+  }
+
+  parseKeyword(): unknown {
+    const word = this.readIdentifier();
+    if (word === "true") return true;
+    if (word === "false") return false;
+    if (word === "null") return null;
+    if (word === "Infinity") return Number.POSITIVE_INFINITY;
+    if (word === "NaN") return Number.NaN;
+    return this.fail(`unexpected identifier ${JSON.stringify(word)}; expected a value`);
   }
 
   parseObject(): Record<string, unknown> {
@@ -119,8 +178,7 @@ class Reader {
     }
     for (;;) {
       this.skipSpace();
-      if (this.peek() !== '"') this.fail("expected a quoted property name");
-      const key = this.parseString();
+      const key = this.parsePropertyName();
       this.skipSpace();
       if (this.peek() !== ":") this.fail("expected ':' after the property name");
       this.advance();
@@ -142,6 +200,14 @@ class Reader {
       }
       this.fail("expected ',' or '}' after a property value");
     }
+  }
+
+  /** A quoted string or an unquoted ES5 identifier (a reserved word is legal). */
+  parsePropertyName(): string {
+    const char = this.peek();
+    if (char === '"' || char === "'") return this.parseString();
+    if (char === "\\" || IDENTIFIER_START.test(char)) return this.readIdentifier();
+    return this.fail("expected a property name");
   }
 
   parseArray(): unknown[] {
@@ -174,44 +240,125 @@ class Reader {
   }
 
   parseString(): string {
-    const start = this.index;
+    const quote = this.peek();
     this.advance();
+    let out = "";
     for (;;) {
       const char = this.peek();
       if (char === "") this.fail("unterminated string");
+      if (char === quote) {
+        this.advance();
+        return out;
+      }
+      if (LINE_TERMINATOR.test(char)) this.fail("unescaped line break in a string");
       if (char === "\\") {
         this.advance();
-        if (this.done) this.fail("unterminated escape sequence");
-        this.advance();
+        out += this.parseEscape();
         continue;
       }
-      this.advance();
-      if (char === '"') break;
+      out += this.advance();
     }
-    try {
-      return JSON.parse(this.text.slice(start, this.index)) as string;
-    } catch {
-      return this.fail("invalid string escape");
+  }
+
+  /** The character(s) one escape stands for; the backslash is already consumed. */
+  parseEscape(): string {
+    const char = this.peek();
+    this.advance();
+    switch (char) {
+      case "'":
+        return "'";
+      case '"':
+        return '"';
+      case "\\":
+        return "\\";
+      case "b":
+        return "\b";
+      case "f":
+        return "\f";
+      case "n":
+        return "\n";
+      case "r":
+        return "\r";
+      case "t":
+        return "\t";
+      case "v":
+        return "\v";
+      case "0":
+        if (DECIMAL_DIGIT.test(this.peek())) this.fail("octal escapes are not part of the dialect");
+        return "\0";
+      case "x":
+        return this.readHex(2, "hexadecimal");
+      case "u":
+        return this.readHex(4, "unicode");
+      case "\r":
+        if (this.peek() === "\n") this.advance();
+        return "";
+      case "\n":
+      case "\u2028":
+      case "\u2029":
+        return "";
+      case "":
+        return this.fail("unterminated escape sequence");
+      // `\/` and any other escaped character stand for themselves (JSON5's
+      // NonEscapeCharacter). Unlike JSON, that is not an error.
+      default:
+        return char;
     }
   }
 
   parseNumber(): number {
+    let sign = 1;
+    if (this.peek() === "+") this.advance();
+    else if (this.peek() === "-") {
+      this.advance();
+      sign = -1;
+    }
+
+    if (this.text.startsWith("Infinity", this.index)) {
+      this.skip(8);
+      if (IDENTIFIER_PART.test(this.peek())) this.fail("invalid number");
+      return sign === 1 ? Number.POSITIVE_INFINITY : Number.NEGATIVE_INFINITY;
+    }
+    if (this.text.startsWith("NaN", this.index)) {
+      this.skip(3);
+      if (IDENTIFIER_PART.test(this.peek())) this.fail("invalid number");
+      return sign === 1 ? Number.NaN : -Number.NaN;
+    }
+
+    if (this.peek() === "0" && (this.peek(1) === "x" || this.peek(1) === "X")) {
+      this.skip(2);
+      const start = this.index;
+      while (HEX_DIGIT.test(this.peek())) this.advance();
+      if (this.index === start) this.fail("invalid number; expected a hexadecimal digit");
+      if (IDENTIFIER_PART.test(this.peek())) this.fail("invalid number");
+      return sign * Number.parseInt(this.text.slice(start, this.index), 16);
+    }
+
     const start = this.index;
-    if (this.peek() === "-") this.advance();
-    while (this.peek() >= "0" && this.peek() <= "9") this.advance();
+    let digits = 0;
+    while (DECIMAL_DIGIT.test(this.peek())) {
+      digits += 1;
+      this.advance();
+    }
     if (this.peek() === ".") {
       this.advance();
-      while (this.peek() >= "0" && this.peek() <= "9") this.advance();
+      while (DECIMAL_DIGIT.test(this.peek())) {
+        digits += 1;
+        this.advance();
+      }
     }
+    if (digits === 0) this.fail("invalid number; expected a digit");
+    const integer = this.text.slice(start, this.index).split(".")[0];
+    if (integer.length > 1 && integer.startsWith("0")) this.fail("invalid number; a leading zero is not allowed");
     if (this.peek() === "e" || this.peek() === "E") {
       this.advance();
       if (this.peek() === "+" || this.peek() === "-") this.advance();
-      while (this.peek() >= "0" && this.peek() <= "9") this.advance();
+      const exponentStart = this.index;
+      while (DECIMAL_DIGIT.test(this.peek())) this.advance();
+      if (this.index === exponentStart) this.fail("invalid number; expected an exponent digit");
     }
-    const token = this.text.slice(start, this.index);
-    const value = Number(token);
-    if (!Number.isFinite(value)) this.fail(`invalid number ${JSON.stringify(token)}`);
-    return value;
+    if (IDENTIFIER_PART.test(this.peek())) this.fail("invalid number");
+    return sign * Number(this.text.slice(start, this.index));
   }
 }
 

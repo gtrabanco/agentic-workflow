@@ -12,6 +12,7 @@ import test from "node:test";
 
 import {
   BASE_CONFIG_SECTIONS,
+  BASE_CONFIG_STEM,
   CONTENT_AUTHOR_ASSOCIATIONS,
   CONTENT_GUARD_CONTRACT,
   CONTENT_GUARD_REASONS,
@@ -74,7 +75,7 @@ test("the contract publishes the four closed vocabularies", () => {
 test("contentGuard is a base feature section with the shipped strictest default", () => {
   assert.ok(section, "the base registry carries contentGuard");
   assert.equal(section.category, "feature");
-  assert.equal(section.file, "agentic-workflow.json");
+  assert.equal(section.file, BASE_CONFIG_STEM, "the canonical identity is the stem (#740 S4)");
   assert.ok(section.description.length > 0);
   assert.deepEqual(section.defaults, {
     trustedRoles: ["OWNER", "MEMBER", "COLLABORATOR"],
