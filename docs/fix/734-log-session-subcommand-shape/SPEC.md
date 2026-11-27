@@ -334,7 +334,7 @@ cut time and `verified` only against a foreground validator run.
 | O6 | S10 · PE-007, PE-008 · AC-S10 | The seam cannot drift silently: the executable case exists beside the emitter and is red on the base bytes (`Unknown service: journal write`) | P3 | P3 | direct application (this session) | `bun test packages/pi-agentic-workflow/test/log-session-invocation.test.mjs` exits 1 in the `f1b04a3a9` scratch copy and exits 0 here | `E` lines with both runs | verified — E6 (base: 22 pass / 4 fail, the executable case among them) and E7 (change: 26 pass / 0 fail) |
 | O7 | S9 · PE-009 · AC-S9 | One release carries both sides and the train stays aligned: the changeset declares the emitter's package and the crate whose cross-package pin it repairs, and every package reads one version | P2 | P2 | direct application (this session) | `bun scripts/version-parity-gate.mjs --content` exits 0; `rg -n '"version"' packages/*/package.json` matches four `4.10.1` | `E` line with both answers | verified — E12 (parity PASS, both packages `changeset-intent`; the four package versions read `4.10.1`) |
 | O8 | S1, S11 · AC-S1, AC-S11 | The unit ships as one inline application with a frozen ledger, and the owner's route decision is recorded: (a) implemented, (b) named and rejected | P1 | P1 | direct application (this session) | `rg -c '^## Specs$' docs/fix/734-log-session-subcommand-shape/SPEC.md` matches `1`, and `rg -n '^## Route' docs/fix/734-log-session-subcommand-shape/decisions.md` names route (a) | `E` line with both matches; `decisions.md` D1 | verified — E19 (the doc carries `## Specs` once and `decisions.md` D1 names route (a); D9 records why this row is not validated by `verify`) |
-| O9 | S1, S2, S3, S4, S5, S7, S8, S9, S10 · AC-S1 | The whole gate passes with the change in place, under the package suite and the root suite | P6 | P6 | direct application (this session) | `bun run --cwd packages/pi-agentic-workflow test` exits 0 and `bun scripts/local-gate.mjs` exits 0 | `G` lines with both verdicts and the counts | in-progress (G1 green; G2 green on 18 of 20 steps, the two reds environmental — see `## Log` and `## Known pre-existing issues`) |
+| O9 | S1, S2, S3, S4, S5, S7, S8, S9, S10 · AC-S1 | The whole gate passes with the change in place, under the package suite and the root suite | P6 | P6 | direct application (this session) | `bun run --cwd packages/pi-agentic-workflow test` exits 0 and `bun scripts/local-gate.mjs` exits 0 | `G` lines with both verdicts and the counts | n/a: the owner ordered the PR with the two environmental reds disclosed (`decisions.md` D10, `## Log` G2-G5); the change's own validators are green (G1, G4, G5, E6-E20) |
 
 ## Path protection
 
@@ -407,6 +407,7 @@ authoritative step list.
 - **G3** — 2026-11-27, HEAD `e966bf418`, `bun scripts/local-gate.mjs --only crate-suite-bun --jobs 1` (embedding variables unset) · the same step red again at load 7.75: the crate's own runner pool is six wide regardless of the gate's `--jobs`, and `doc.structure` spends 180-240s of shell spawns.
 - **G4** — 2026-11-27, HEAD `e966bf418`, the four steps G2 skipped — `bun scripts/local-gate.mjs --only crate-suite-node,schema-node-compat,pi-node-compat,pi-compat-guard --jobs 1` (embedding variables unset) · exit 0 · **`local-gate: PASS — 4 step(s) in 396s`** (`crate-suite-node` 252s, `schema-node-compat` 17s, `pi-node-compat` 57s, `pi-compat-guard` 70s).
 - **G5** — 2026-11-27, HEAD `e966bf418`, the crate suite at `--jobs 1` with the embedding variables unset — `bun scripts/run-root-suite.mjs --dir packages/agentic-workflow/test --cwd packages/agentic-workflow --test-timeout 30 --jobs 1` · **85/85 PASS, zero FAIL/TIMEOUT** — the same suites the red `crate-suite-bun` step runs, green when they are not competing for the box.
+- **D10** — 2026-11-27, owner order: `Create the PR` — the delivery proceeds with `worktree-guard`'s three stale worktrees and `crate-suite-bun`'s load-bound timeout disclosed in the PR body, and O9 closes as an evidenced `n/a` (the disposition is the owner's, never the writer's verdict).
 - **P1** — 2026-11-27, unit doc, embedded ledgers, decisions record cut.
 - **P2** — 2026-11-27, state repaired (versions reverted, malformed CHANGELOG row removed, changeset re-scoped to the touched package) · `6260ae9db`.
 - **P3** — 2026-11-27, the executable pin and the contract-shape case appended; the base copy observed red · `a83beb307`.
@@ -422,14 +423,11 @@ authoritative step list.
 
 ## Next
 
-The owner's decision on O9 — the only open obligation. Eight of nine rows are
-`verified`; the gate observes 18 of 20 steps green (`## Log` G1-G5), and the two
-reds are environmental and named in `## Known pre-existing issues`: three stale
-worktrees this unit never created, and `doc.structure.test.mjs` exceeding its
-declared 240s suite bound under concurrent sessions (the same 85 suites are
-green at `--jobs 1`, and the node leg is green). If the owner accepts those
-reds, O9 closes and the merge is the next step; after merge the next pi release
-carries both sides (S9) and the fix row leaves `docs/ROADMAP.md`.
+The merge, once the owner reads the PR's verification block: the ledger is
+closed (O9 records the owner's disposition of the two environmental reds,
+`## Log` D10), the change's own validators are green, and the two reds are named
+in `## Known pre-existing issues` and in the PR body. After merge the next pi
+release carries both sides (S9) and the fix row leaves `docs/ROADMAP.md`.
 
 ## References
 

@@ -97,3 +97,15 @@ an unrelated row is open. Its validator is now the two facts the row actually
 asserts (the `## Specs` section exists once; `decisions.md` names route (a)).
 This is not a relaxation: the closure check still runs over the whole ledger,
 and `verify` still refuses until O9 closes.
+
+## D10 — the owner ordered the PR with the two reds disclosed
+
+2026-11-27. Owner order: `Create the PR`. The gate's two red steps are
+environmental and were reported before that order — `worktree-guard` on three
+stale worktrees this unit never created, and `crate-suite-bun` on
+`doc.structure.test.mjs` exceeding its declared 240s suite bound under
+concurrent sessions (the same 85 suites are green at `--jobs 1`, and the node
+leg is green). O9 therefore closes as an evidenced `n/a`: the disposition is the
+owner's delivery decision, recorded here and in the PR body, never the writer's
+verdict on its own gate. The change's own validators stay green and are the
+evidence the reviewer reads.
