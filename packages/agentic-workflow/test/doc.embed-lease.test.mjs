@@ -198,4 +198,84 @@ describe("the embed lease (issue #718 S5)", () => {
       rmSync(dir, { recursive: true, force: true });
     }
   });
+
+  // external-verify 2026-11-27, A4/A5: the fence sat at the embed stage, so a
+  // fenced pass had already scanned — on a fresh store both launches scanned
+  // (one died `database is locked`, or its late re-chunk wiped the winner's
+  // rows with nothing left to repair them). The pass owns the store from
+  // before the scan (O12).
+  it("S5: a live lease fences the scan — a fenced sync performs no scan write", async () => {
+    const dir = fixture(2);
+    try {
+      await writeLease(dir, "other-terminal", Date.now());
+      const env = await runDocOp({ op: "sync" }, { rootDir: dir, embedder: recorder("mock-1") });
+      deepStrictEqual(env.degradations, ["unavailable-embeddings-lease-held"]);
+      strictEqual(env.store.lastSync.files_scanned, 0, "the fenced run never scans");
+      strictEqual(env.store.lastSync.files_changed, 0, "the fenced run never chunks");
+      strictEqual(env.store.lastSync.embedded, 0, "the fenced run embeds nothing");
+      strictEqual(env.store.files, 0, "the corpus never entered the store");
+      const { db } = await openDatabase(storePath(dir));
+      const chunksTable = db
+        .prepare("select count(*) as n from sqlite_master where type='table' and name='chunks'")
+        .get().n;
+      db.close();
+      strictEqual(chunksTable, 0, "the fenced run wrote no scan schema");
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it("S5: a fenced keyword-only sync declares the lease, not a second truth", async () => {
+    const dir = fixture(2);
+    try {
+      await writeLease(dir, "other-terminal", Date.now());
+      const env = await runDocOp({ op: "sync" }, { rootDir: dir });
+      deepStrictEqual(env.degradations, ["unavailable-embeddings-lease-held"]);
+      strictEqual(env.store.lastSync.files_scanned, 0, "the fenced keyword sync never scans");
+      strictEqual(env.store.lastSync.embedded, 0);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it("S5: a sync starting during a live pass returns fenced without scanning, and the winner releases", async () => {
+    const dir = fixture(3);
+    try {
+      await syncIndex(dir);
+      let release;
+      const gate = new Promise((resolve) => {
+        release = resolve;
+      });
+      let started;
+      const startedP = new Promise((resolve) => {
+        started = resolve;
+      });
+      const gated = {
+        model: "mock-1",
+        async embed(texts) {
+          started();
+          await gate;
+          return texts.map((_, i) => [i + 1, 0, 0]);
+        },
+      };
+      const winnerP = runDocOp({ op: "sync" }, { rootDir: dir, embedder: gated });
+      await startedP;
+
+      const loser = await runDocOp({ op: "sync" }, { rootDir: dir, embedder: recorder("mock-1") });
+      deepStrictEqual(loser.degradations, ["unavailable-embeddings-lease-held"]);
+      strictEqual(loser.store.lastSync.files_scanned, 0, "the loser does not re-scan the store the pass owns");
+
+      release();
+      const winner = await winnerP;
+      deepStrictEqual(winner.degradations, []);
+      strictEqual(winner.store.pending, 0, "the owner embeds every chunk");
+
+      const { db } = await openDatabase(storePath(dir));
+      const row = db.prepare("select owner from doc_lease where name = 'embed'").get() ?? null;
+      db.close();
+      strictEqual(row, null, "the winning run releases its lease");
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
 });
