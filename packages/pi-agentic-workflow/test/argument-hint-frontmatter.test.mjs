@@ -194,3 +194,41 @@ test("a quoted scalar with an invalid escape ships byte-identical (the source's 
   assert.equal(staged, source, "a quoted scalar is never re-quoted");
   assert.throws(() => parseYaml(frontmatterOf(staged)), "the invalid escape stays the source's own defect");
 });
+
+// The cycle-1 review corpus (F4/F5/F6): shapes the transform turned into a
+// frontmatter PARSE-ERROR where the source bytes parsed, and the authoring
+// defect that slips past a first-match-only rewrite.
+
+test("every block-scalar header order ships byte-identical (F4)", (t) => {
+  // yaml@2.9.0 reads the indicator before or after its chomping/indentation
+  // digits (`>-2` and `>2-` alike), so a header test that admits one order
+  // quotes the line and orphans its content — a PARSE-ERROR at this head where
+  // the source parsed a string.
+  const shapes = [
+    ["block-sign-digits", ["argument-hint: >-2", "  [--foo]"], "[--foo]"],
+    ["block-sign-digits-literal", ["argument-hint: |+2", "  [--foo]"], "[--foo]\n\n"],
+    ["block-digits-sign", ["argument-hint: >2-", "  [--foo]"], "[--foo]"],
+  ];
+  for (const [slug, lines, expected] of shapes) {
+    const { source, staged } = stageFixture(t, slug, lines);
+    assert.equal(staged, source, `${slug}: a block-scalar header ships byte-identical in either order`);
+    assert.equal(parseYaml(frontmatterOf(staged))["argument-hint"], expected, `${slug}: the block content stays a string`);
+  }
+});
+
+test("a raw hint spanning frontmatter lines is never half-rewritten (F5)", (t) => {
+  const { source, staged } = stageFixture(t, "multiline-flow", ["argument-hint: [--a,", "  b]"]);
+  assert.equal(staged, source, "a value that continues on the next line is left alone, never quoted on its first line");
+  assert.deepEqual(parseYaml(frontmatterOf(staged))["argument-hint"], ["--a", "b"], "the source's own array type is its defect, not the staging's");
+});
+
+test("a duplicate argument-hint never ships its unrewritten sibling raw (F6)", (t) => {
+  const { staged } = stageFixture(t, "duplicate-hint", [
+    'argument-hint: "[--first]"',
+    "argument-hint: [--second <x>]",
+  ]);
+  const hint = parseYaml(frontmatterOf(staged))["argument-hint"];
+  assert.equal(typeof hint, "string", `staged as ${Array.isArray(hint) ? "an array" : typeof hint}, not a string`);
+  assert.equal(hint, "[--second <x>]", "the last key wins in YAML, so the last value is the one that must ship safe");
+  assert.equal(staged.match(/^argument-hint: "/gmu)?.length, 2, "every argument-hint line is quoted");
+});
