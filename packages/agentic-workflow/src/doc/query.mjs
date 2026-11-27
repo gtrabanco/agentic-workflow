@@ -285,6 +285,11 @@ function toResults(rows, hasLogFilters, filters) {
 /** Status reporting — informational, never syncs. */
 export async function statusIndex(root) {
   const store = await storeValue(root);
+  // Issue #718 S4: the pending count is the input `/aw-index` sizes its spawn cap
+  // from, and it is answered by the crate's own write-path stat — never by a
+  // second SQLite reader in another package. Additive inside the open `store`
+  // record, and only where a store exists, so the absent-store shape stays put.
+  if (store.present === true) store.pending = (await embeddingStats(root)).pending;
   return buildEnvelope({ command: "status", results: [], store });
 }
 

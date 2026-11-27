@@ -91,9 +91,9 @@ async function embedPass(root, { embedCfg, embedder, declareKeywordOnly, onProgr
         : null;
   if (provider === null) {
     // AC17's root: keyword-only is a declared state, never a silent one. A
-    // `--rebuild` is the documented escape hatch (a model or limit change), so
-    // it states what it left behind; a `--sync` stays silent there, because the
-    // query path declares the cause whenever the store is actually asked.
+    // `--rebuild` is the documented escape hatch (a model or limit change), and a
+    // `--sync` that had pending chunks now states the corpus it leaves behind
+    // (issue #718 S6) — a warm one stays silent, because there is nothing to say.
     return { embedded: 0, degradations: declareKeywordOnly ? ["unavailable-embeddings-not-configured"] : [], rejected: null };
   }
   try {
@@ -161,12 +161,15 @@ export async function runDocOp(grammar, ctx = {}) {
     // resolved once for the pass and handed to the provider it paces (issue #718
     // S3). The progress seam is forwarded for **both** chunking ops: a rebuild
     // embeds the same pending set, so a silent one is the same frozen screen.
+    // The pending count is read *before* the pass (issue #718 S6): a sync that had
+    // work to embed and no key used to leave a keyword-only corpus unstated.
     const pacing = resolvePacing({ config: cfg, env: process.env });
+    const pendingBefore = (await embeddingStats(root)).pending;
     const pass = await feedback.stage("embed", () =>
       embedPass(root, {
         embedCfg,
         embedder: ctx.embedder,
-        declareKeywordOnly: grammar.op === "rebuild",
+        declareKeywordOnly: grammar.op === "rebuild" || pendingBefore > 0,
         pacing,
         onProgress: (done, total) => feedback.progress({ done, total, unit: "chunks" }),
       }),

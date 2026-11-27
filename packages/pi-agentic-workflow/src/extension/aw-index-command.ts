@@ -27,11 +27,38 @@ import type { CommandRegistrar } from "./factory.js";
 import type { InvocationContext, ModelRef } from "../routing/types.js";
 
 /**
- * A run so long that the operator would rather wait is still the operator's
- * call: a paced backfill of a large corpus is minutes of declared work, never a
- * silently truncated sync.
+ * The floor of the spawn cap: the scan pass plus a warm sync. A run whose pending
+ * count is unknown never gets less than this, so a store that answers nothing
+ * degrades to the shipped cap instead of an invented one.
  */
 const RUN_TIMEOUT_MS = 600_000;
+
+/** The status probe is a local read of two counts: it must never hold the command. */
+export const PROBE_TIMEOUT_MS = 30_000;
+
+/**
+ * How long one pending chunk costs, rounded up from the pace the issue measured
+ * (~65 chunks/min on a 12.9k-chunk corpus, issue #718), plus the scan pass and
+ * provider latency on top of the paced work.
+ */
+const EMBED_MS_PER_CHUNK = 1_000;
+const EMBED_SLACK_MS = 120_000;
+
+/**
+ * The cap a pending count buys (issue #718 S4): the paced work plus the scan,
+ * never below the shipped floor. The probe's answer sizes the window, so a medium
+ * corpus is not killed mid-pass and the operator does not have to re-run until
+ * `pending: 0`.
+ */
+export function derivedTimeoutMs(pending: number | null | undefined): number {
+  if (typeof pending !== "number" || !Number.isFinite(pending) || pending <= 0) return RUN_TIMEOUT_MS;
+  return Math.max(RUN_TIMEOUT_MS, pending * EMBED_MS_PER_CHUNK + EMBED_SLACK_MS);
+}
+
+/** The status envelope's one field the cap reads. */
+export interface StatusEnvelopeLike {
+  readonly store?: { readonly pending?: number | null } | null;
+}
 
 /**
  * The envelope the runner prints for `doc --sync --json-only`. Only the fields
@@ -109,6 +136,38 @@ function defaultRun(request: IndexRunRequest): IndexRunResult {
 }
 
 /**
+ * The store's pending count from `doc status --json-only`, or `null` when the
+ * probe cannot answer (an absent store, a refused spawn, output that is not the
+ * one envelope). A `null` keeps the shipped floor: an unreadable store is not a
+ * refusal to index, and a probe must never become the command's failure.
+ */
+async function pendingCount(
+  launchFor: (args: string[]) => Promise<RunnerAnswer>,
+  run: (request: IndexRunRequest) => IndexRunResult,
+  cwd: string,
+): Promise<number | null> {
+  let launch: RunnerAnswer;
+  try {
+    launch = await launchFor(["doc", "--status", "--json-only"]);
+  } catch {
+    return null;
+  }
+  let result: IndexRunResult;
+  try {
+    result = run({ program: launch.argv[0], argv: launch.argv.slice(1), cwd, timeoutMs: PROBE_TIMEOUT_MS });
+  } catch {
+    return null;
+  }
+  if (result.error || result.status !== 0) return null;
+  try {
+    const pending = (JSON.parse(result.stdout) as StatusEnvelopeLike)?.store?.pending;
+    return typeof pending === "number" && Number.isFinite(pending) ? pending : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Render the report from the sync envelope and nothing else (S9). A store that
  * predates the additive `pending`/`model`/`rejected` fields still renders — the
  * count is declared `unknown` rather than invented, and an absent `rejected`
@@ -170,7 +229,6 @@ export function registerAwIndexCommand<M extends ModelRef = ModelRef>(
 ): void {
   const launchFor = deps.launch ?? defaultLaunch;
   const run = deps.run ?? defaultRun;
-  const timeoutMs = deps.timeoutMs ?? RUN_TIMEOUT_MS;
 
   registrar.registerCommand(AW_INDEX_COMMAND, {
     description:
@@ -189,6 +247,10 @@ export function registerAwIndexCommand<M extends ModelRef = ModelRef>(
 
       let result: IndexRunResult;
       try {
+        // The operator asked for the indexing, not for a ten-minute ceiling: the
+        // cap is derived from what the store says is left, and only when the
+        // caller did not supply one (issue #718 S4).
+        const timeoutMs = deps.timeoutMs ?? derivedTimeoutMs(await pendingCount(launchFor, run, ctx.cwd));
         // The resolver answers a full argv; the spawn seam takes the program
         // beside the arguments it receives.
         result = run({ program: launch.argv[0], argv: launch.argv.slice(1), cwd: ctx.cwd, timeoutMs });
