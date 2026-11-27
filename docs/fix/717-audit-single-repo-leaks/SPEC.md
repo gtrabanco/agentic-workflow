@@ -365,7 +365,7 @@ ledger, and give the verdict. Nothing else is pending on this branch.
 ## References
 
 - **PR** [#742](https://github.com/gtrabanco/agentic-workflow/pull/742) — this
-  unit's delivery (base `main`, head `e2a1e8b`, 33 files, +1871/−66).
+  unit's delivery (base `main`, head `5d48982`, 33 files, +1871/−66).
 - Issue [#717](https://github.com/gtrabanco/agentic-workflow/issues/717) — the
   request this unit applies, quoted verbatim in `## Specs`.
 - `docs/fix/716-batch-scheduler-surface-vocab/` — the sibling unit of the same
