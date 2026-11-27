@@ -1,4 +1,4 @@
-// test-obligation: protects=packages/agentic-workflow/src/doc/embeddings.mjs,packages/agentic-workflow/src/doc/retrieval.mjs obligations=contract,failure-path,boundary
+// test-obligation: protects=packages/agentic-workflow/src/doc/embeddings.mjs,packages/agentic-workflow/src/doc/retrieval.mjs,packages/agentic-workflow/src/doc/sync.mjs obligations=contract,failure-path,boundary
 /**
  * The embed lease (issue #718 S5): one pass owns the store's pending set.
  *
@@ -274,6 +274,75 @@ describe("the embed lease (issue #718 S5)", () => {
       const row = db.prepare("select owner from doc_lease where name = 'embed'").get() ?? null;
       db.close();
       strictEqual(row, null, "the winning run releases its lease");
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  // review-change cycle 1 (F1, V1's reproducer): a live pass that loses its row
+  // to a takeover used to keep embedding with no signal — the owner-scoped
+  // heartbeat matched 0 rows and nobody read `changes` — so two passes paid the
+  // provider for the same chunks. The pass now stops spending and declares the
+  // cause, and the scan stage is fenced the same way.
+  it("F1: a pass that loses its lease mid-flight stops embedding and declares the cause", async () => {
+    const dir = fixture(4);
+    try {
+      await syncIndex(dir);
+      const clock = virtualClock();
+      let release;
+      const gate = new Promise((resolve) => {
+        release = resolve;
+      });
+      let started;
+      const startedP = new Promise((resolve) => {
+        started = resolve;
+      });
+      const loser = recorder("mock-1", async () => {
+        started();
+        await gate;
+      });
+      const pass = embedPendingChunks(dir, loser, { ...clock, pacing: PACED, random: () => 0 });
+      await startedP;
+
+      // A second pass takes the row over while the first one is in flight.
+      const { db } = await openDatabase(storePath(dir));
+      const taken = db
+        .prepare("update doc_lease set owner = 'them', heartbeat = ? where name = 'embed'")
+        .run(Date.now());
+      db.close();
+      strictEqual(taken.changes, 1, "the takeover landed on a live row");
+
+      release();
+      const result = await pass;
+      strictEqual(result.leaseHeld, true, "the loser learns it no longer owns the store");
+      strictEqual(loser.state.calls, 1, "no further request is spent after the lease is lost");
+
+      const left = await openDatabase(storePath(dir));
+      const pending = left.prepare("select count(*) as n from chunks where embedding is null").get().n;
+      left.close();
+      ok(pending > 0, "the chunks it never sent stay pending instead of silently matching the owner's work");
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it("F1: a scan that no longer owns the lease aborts instead of writing beside the owner", async () => {
+    const dir = fixture(2);
+    try {
+      // A lease the caller believes it holds, whose row belongs to another pass.
+      await writeLease(dir, "them", Date.now());
+      const scanned = await syncIndex(dir, { leaseOwner: "a-forgotten-owner" }).then(
+        () => {
+          throw new Error("the scan should not have finished under a lease it does not own");
+        },
+        (error) => error,
+      );
+      strictEqual(scanned.name, "LeaseLostError", "the scan reports the lost lease by name");
+
+      const { db } = await openDatabase(storePath(dir));
+      const rows = db.prepare("select count(*) as n from chunks").get().n;
+      db.close();
+      strictEqual(rows, 0, "the aborted scan wrote nothing");
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
