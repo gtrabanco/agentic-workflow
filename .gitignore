@@ -71,3 +71,8 @@ packages/*/.serena/
 
 # Workspace install output (bun workspaces: one lock at the root)
 node_modules/
+
+# ceremony-profile.test.mjs generates its fixture trees at test time and
+# deletes them in test.after: never committed, and never a review blocker when
+# an interrupted run leaves a stale corpus behind.
+scripts/fixtures/ceremony-profile/
