@@ -27,7 +27,9 @@ import { createHash } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
-import { UNIT_DOC_SECTION_SHAPES } from "@gtrabanco/agentic-workflow-schema";
+import { UNIT_DOC_SECTION_SHAPES, normalizeRelaySeam } from "@gtrabanco/agentic-workflow-schema";
+
+import { createConfigApi } from "../config/api.mjs";
 
 import { parseUnitDocPhases, loggedPhases, parseLog, parseSpecs, sectionText, sectionBounds } from "./unit-doc-phases.mjs";
 import { findingsSectionBody, parseCarrierBody } from "./findings-carrier.mjs";
@@ -523,12 +525,16 @@ ${READ_SET_MAX} paths, then an explicit remainder line), fingerprint.
 
 An addendum follows the fingerprint only when a pi-web session is present
 (PI_WEB_SESSION=1): \`relay: <state>\` names the unit's Relay packet state
-(bootstrap-needed, draft, active, complete, needs-help, unreadable) and
-\`relay-next:\` carries the bootstrap instruction when one is due. Without that
-marker the block says \`relay: unavailable — …\` and the per-phase /execute-phase
-hand-off stays printed: relay is an enhancement of the seam, never a dependency
-(owner: skills/unit-lane/references/RELAY.md). \`--triage\` prints the same
-addendum after its Budget line, and carries it as \`relay\` in --json mode.
+(bootstrap-needed, draft, active, complete, needs-help, unreadable),
+\`relay-seam:\` names the owner's preselected answer while the question is live
+(\`ask\` or \`inline\`, from \`relay.seam\`; absent means \`ask\`), and
+\`relay-next:\` carries the bootstrap or approval instruction when one is due —
+an unapproved packet orders the owner's answer and a stop before any dispatch,
+never a silent inline hand-off (issue #722). Without that marker the block says
+\`relay: unavailable — …\` and the per-phase /execute-phase hand-off stays
+printed: relay is an enhancement of the seam, never a dependency (owner:
+skills/unit-lane/references/RELAY.md). \`--triage\` prints the same addendum
+after its Budget line, and carries it as \`relay\` in --json mode.
 
 Exit codes: 0 a route was printed; 1 an unknown unit or an argument count other
 than one; 2 an ambiguous unit token (a number matching both a feature and a fix
@@ -566,6 +572,24 @@ function emitsLegs(doc) {
   return type !== "docs";
 }
 
+/**
+ * The owner's preselected answer at the Relay seam (issue #722 S3), read through
+ * the same config API the `config` CLI uses so `relay.seam` and this addendum
+ * can never disagree about "absent". The resolved value is global-then-project.
+ *
+ * A config this read cannot resolve degrades to the shipped `ask`: the router is
+ * a read-only hint, not the config validator, and the safe direction for an
+ * unreadable file is the open question — never the inline answer.
+ */
+function relaySeamDefault(root = PROJECT) {
+  try {
+    const { value } = createConfigApi({ projectDir: root }).get("resolved", ["relay", "seam"]);
+    return normalizeRelaySeam(value);
+  } catch {
+    return normalizeRelaySeam(undefined);
+  }
+}
+
 /** The leg tiers, read from the catalog's `budget_tier` rows — one source, no copy. */
 function relayTiers(catalog) {
   const legs = catalog.relay?.legs;
@@ -587,18 +611,23 @@ function relayTiers(catalog) {
 export function relayAnswer(unitDir, slug, { catalog = null, phases = 0, command = null } = {}) {
   const packet = `${RELAY_ROOT}/${slug}`;
   const tiers = catalog === null ? null : relayTiers(catalog);
-  const answer = { kind: null, packet: null, unitDoc: `${unitDir}/SPEC.md`, legs: null, tiers, next: command };
+  const answer = { kind: null, packet: null, unitDoc: `${unitDir}/SPEC.md`, legs: null, tiers, next: command, seam: null };
   if (!piWebPresent()) {
     answer.kind = "unavailable";
     answer.reason = RELAY_BRIDGE;
     return answer;
   }
+  answer.seam = relaySeamDefault();
   answer.packet = packet;
+  // The two answers the quiet seam asks for. The command is the router's own
+  // per-phase `next:` when it has one; triage has none, so the first phase is
+  // the honest answer there.
+  const inline = command ?? `/execute-phase ${slug} P1`;
   const status = readProject(`${packet}/status.md`);
   if (status === null) {
     answer.kind = "bootstrap-needed";
     answer.legs = phases + RELAY_REVIEW_LEGS;
-    answer.next = `create ${packet}/ (charter → ${unitDir}/SPEC.md) then dispatch_relay(packet: "${packet}", leg: "1") · legs: ${answer.legs} = ${phases} phases + ${RELAY_REVIEW_LEGS} coherence review`;
+    answer.next = `create ${packet}/ (charter → ${unitDir}/SPEC.md) · ASK the owner: relay legs, or inline \`${inline}\` · STOP for the answer · on "relay" dispatch_relay(packet: "${packet}", leg: "1") as the final action · legs: ${answer.legs} = ${phases} phases + ${RELAY_REVIEW_LEGS} coherence review`;
     return answer;
   }
   const baton = batonOf(status);
@@ -610,7 +639,7 @@ export function relayAnswer(unitDir, slug, { catalog = null, phases = 0, command
   if (baton.state === "Draft — awaiting approval") {
     answer.kind = "draft";
     answer.legs = phases + RELAY_REVIEW_LEGS;
-    answer.next = `obtain approval, set \`State: Active\` in ${packet}/status.md, then dispatch leg "1"`;
+    answer.next = `ASK the owner: relay legs, or inline \`${inline}\` · STOP for the answer · on "relay" set \`State: Active\` in ${packet}/status.md then dispatch leg "1"`;
     return answer;
   }
   if (baton.state === "Complete") {
@@ -627,6 +656,11 @@ export function relayAnswer(unitDir, slug, { catalog = null, phases = 0, command
   return answer;
 }
 
+/** The seam line the addendum carries while the relay-or-inline question is live. */
+export function relaySeamLine(seam) {
+  return `relay-seam: ${seam} (relay.seam; absent = ask) — preselects the owner's answer, never skips the question`;
+}
+
 /** The hint as stdout lines: the state first, then the next action when there is one. */
 export function relayLines(answer) {
   if (answer.kind === "unavailable") {
@@ -634,8 +668,8 @@ export function relayLines(answer) {
     // absent, never restate the command beside it.
     return [`relay: unavailable — ${answer.reason}`];
   }
-  if (answer.kind === "bootstrap-needed") return [`relay: bootstrap-needed — no packet at ${answer.packet}`, `relay-next: ${answer.next}`];
-  if (answer.kind === "draft") return [`relay: draft — awaiting approval`, `relay-next: ${answer.next}`];
+  if (answer.kind === "bootstrap-needed") return [`relay: bootstrap-needed — no packet at ${answer.packet}`, relaySeamLine(answer.seam), `relay-next: ${answer.next}`];
+  if (answer.kind === "draft") return ["relay: draft — awaiting approval", relaySeamLine(answer.seam), `relay-next: ${answer.next}`];
   if (answer.kind === "active") return [`relay: active (leg ${sanitize(answer.leg)})`];
   if (answer.kind === "complete") return ["relay: complete"];
   if (answer.kind === "needs-help") return [`relay: needs-help — ${answer.reason}`];
