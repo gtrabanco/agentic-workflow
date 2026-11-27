@@ -57,13 +57,19 @@ grammars: {"findings-table":1,"log-kind":1,"obligations":1,"unit-doc":1}
   `makeOpenAIProvider` takes `fetchTimeoutMs` and passes
   `AbortSignal.timeout(...)`; `embedPendingChunks` acquires, heartbeats and
   releases the store's embed lease, and answers `{leaseHeld: true}` when a live
-  pass owns it. `embeddingStats` and the pacing resolver are unchanged.
+  pass owns it. `embeddingStats` and the pacing resolver are unchanged. The
+  correction batch adds `openEmbedLease`: `--sync` takes the row **before the
+  scan** and hands its owner down, so the embed-stage acquire is the direct and
+  rebuild callers' path (O12).
 - `packages/agentic-workflow/src/doc/retrieval.mjs` — the only caller of
   `embedPendingChunks`. It resolves the pacing once (so the provider gets the
   timeout the retry ladder is paced by), forwards the progress seam for
   `--rebuild` as well as `--sync`, declares
   `unavailable-embeddings-not-configured` on a `--sync` that had pending chunks
-  and no key, and maps the lease result to its declared cause.
+  and no key, and maps the lease result to its declared cause. The correction
+  batch moves the acquisition: `--sync` takes the store lease before the scan
+  (`openEmbedLease`) and a fenced pass short-circuits before any chunk write —
+  it declares the cause with `lastSync.files_scanned: 0` instead.
 - `packages/agentic-workflow/src/doc/query.mjs` — `statusIndex` reports the
   store's `pending` count (additive inside the open `store` record) so
   `/aw-index` can derive its cap from one implementation instead of a second
@@ -127,7 +133,9 @@ exercised in `/tmp` copies only (§3/§4 live-tree guard); the live store in
   hook: it gains the install-time pin branch. Replacement: the hooks README's
   ordered list (`AGENTIC_WORKFLOW_BIN` → pin → `command -v` → no-op), which
   every shim can read. `rg -c 'command -v agentic-workflow' template/.agentic-workflow/hooks/index-sync.sh`
-  → 1 (kept as the fallback).
+  → 2 — the numbered resolution order and the single fallback use, exactly one
+  of them code (re-counted at the 2026-11-27 external verify, advisory A1; the
+  ordered list itself landed in the correction batch, blocker B1).
 - `retrieval.mjs`'s `onProgress: grammar.op === "sync" ? … : undefined` retires:
   both chunking ops forward the seam. Replacement: one callback for both.
 - `RUN_TIMEOUT_MS`'s fixed-cap reading retires in `aw-index-command.ts`:
@@ -135,6 +143,12 @@ exercised in `/tmp` copies only (§3/§4 live-tree guard); the live store in
 - `embedPendingChunks`'s "the pending set is whatever the store holds when the
   pass starts" retires as a *concurrency* assumption: the set is now selected
   under a lease. The resume predicate itself is unchanged.
+- `embedPendingChunks`'s embed-stage acquisition reading retires for `--sync`:
+  the pass takes the store's lease from `openEmbedLease` **before the scan** and
+  hands its owner down; the embed-stage acquire stays for direct and rebuild
+  callers. Replacement: the pre-scan fence — O12/D9, pinned by the three fence
+  cases in `test/doc.embed-lease.test.mjs` the external verify's A4/A5
+  reproducers cut.
 - Nothing is deleted: no export, script, file or envelope key is removed. The
   unit is additive on the normative layer (one config knob, one declared cause
   inside an open family, one additive `store.pending`), which is why this
@@ -459,6 +473,33 @@ surgery. The `## Tasks` list above is the ordered step list this unit executes.
   the gate's child pool on this host (G7) while passing serially in 142 s (E12);
   the bound belongs to that suite's own unit, and raising it inside this change
   would be a gate edit nobody asked for.
+- **D9** — 2026-11-27, decision (correction batch, external-verify A4/A5): the
+  store lease spans `--sync` from **before** the scan — `openEmbedLease`
+  acquires it, the scan heartbeats it per reaped or re-chunked file on its own
+  connection, `embedPendingChunks` receives the owner and never re-acquires or
+  releases it, and a pass that finds a live lease returns before any chunk
+  write with `unavailable-embeddings-lease-held` and
+  `lastSync.files_scanned: 0` (keyword-only syncs included). Rebuild keeps the
+  embed-stage acquisition: `rebuildIndex` deletes the store file (`rmSync`), so
+  no lease row can span its discard (PE-021). Authority: the verify's two
+  reproducers, both cut as this batch's red corpus (E14).
+- **D10** — 2026-11-27, decision: no blanket `busy_timeout` on `openDatabase`
+  (the verify's literal smallest action for A4). It would convert other
+  pre-existing scan races — the query path's `ensureFresh` chunking beside a
+  live sync — from crashes into completed-but-late writes, i.e. the A5-class
+  wipe itself. Patience stays scoped to the two lease connections (embed-stage,
+  as the original #718 change shipped, and `openEmbedLease`), and the scan
+  heartbeat runs on the connection that holds the scan's transaction: the first
+  implementation attempt heartbeated from the lease connection inside
+  `syncIndex`'s open transaction and deadlocked the same process at the busy
+  timeout (E15).
+- **D11** — 2026-11-27, dispositions (external-verify advisories): **A7** stands
+  as intended — the query path resolves pacing per query, so a bad pacing env
+  value refuses a query by name where base queried fine (base's sync already
+  refused it): fail-loud beside an already-loud sibling, no change. **A8** is
+  environment — the bare local gate fails the keyword suites with this host's
+  ambient provider vars, the base clone fails the same suites with the same
+  vars, and every declared validator clears them (D7): no change.
 - **E1** — 2026-11-27, `cd packages/agentic-workflow && env -u AGENTIC_WORKFLOW_DOC_EMBEDDINGS_BASE_URL -u AGENTIC_WORKFLOW_DOC_EMBEDDINGS_MODEL -u AGENTIC_WORKFLOW_DOC_EMBEDDINGS_API_KEY -u AGENTIC_WORKFLOW_DOC_EMBEDDINGS_MAX_REQUEST_CHARS -u NAN_API_KEY bun test test/doc.embeddings.test.mjs test/doc.hybrid.test.mjs` · exit 1 · `54 pass · 3 fail` at `10778af3f` — the pacing knob is absent, no request carries a signal, and the rebuild reports no progress.
 - **E2** — 2026-11-27, same command plus `test/doc.store.test.mjs` · exit 0 · `94 pass · 0 fail · 3 files` at `5e551050b`.
 - **E3** — 2026-11-27, `… bun test test/doc.embed-lease.test.mjs` · exit 1 · `2 pass · 3 fail` at `4e4385d0e` — the interleaved passes double-spend, a stale lease is neither taken over nor released, and a live one declares nothing.
@@ -488,6 +529,69 @@ surgery. The `## Tasks` list above is the ordered step list this unit executes.
 - **P8** — 2026-11-27, the hook pin cases landed · `e00155c01`.
 - **P9** — 2026-11-27, the hook's pin branch, its install step and its ignore rule · `12e3ec188`.
 - **P10** — 2026-11-27, the branch published and the PR opened: <https://github.com/gtrabanco/agentic-workflow/pull/738> (the two roadmap rows move to `done · [#738]`). The push ran with `--no-verify`: the pre-push gate's `crate-suite-bun` step hits the allowlisted `doc.structure` bound (G7), and the same gate without its two crate steps is green (G6).
+- **L3** — 2026-11-27, the correction batch's request, verbatim:
+  ```
+  Apply to this repository: triage and fix those that deserve to fix but understand the context before fix and check you haven't broke another different thing, if you have done, start the loop again until you fixed full symbol/related stuff
+  ```
+- **E13** — 2026-11-27, erratum (external-verify advisory A3): E5/E6's recorded
+  counts do not re-count at their SHAs in a scratch clone — the same commands
+  observed `51 pass · 2 fail` (E5) and, after `tsc`, `9 pass · 6 fail` (E6);
+  both still exit 1 before their implementations landed. Direction and exit
+  codes reproduce; only the per-case counts differ.
+- **E14** — 2026-11-27, `cd packages/agentic-workflow && env -u … bun test
+  test/doc.embed-lease.test.mjs` · exit 1 · `5 pass · 3 fail` at `c12c32283` —
+  the red corpus: a fenced sync still reported `files_scanned: 2`, a fenced
+  keyword sync declared a second truth, a loser re-scanned mid-pass.
+- **E15** — 2026-11-27, the first implementation attempt (never committed) ·
+  exit 1 · `7 pass · 1 fail` with `SQLiteError: database is locked
+  (SQLITE_BUSY)` at `heartbeatLease` ← `syncIndex`'s per-file `report` — a
+  heartbeat from a second connection inside the scanning connection's open
+  transaction deadlocks the same process until the 5 s busy timeout; the seam
+  moved onto the scanning connection before any green run (D10).
+- **E16** — 2026-11-27, same command · exit 0 · `8 pass · 0 fail` at
+  `04e73e803` — the three fence cases green (`a fenced sync performs no scan
+  write`, `a fenced keyword-only sync declares the lease`, `a sync starting
+  during a live pass returns fenced without scanning, and the winner releases`)
+  beside the original five.
+- **E17** — 2026-11-27, `… bun test test/doc.embed-lease.test.mjs
+  test/doc.hybrid.test.mjs test/doc.query.test.mjs test/doc.embeddings.test.mjs
+  test/doc.store.test.mjs` · exit 0 · `126 pass · 0 fail · 5 files`.
+- **E18** — 2026-11-27, **live-tree disclosure (§4)**: the batch's first
+  differential ran its CLI loop from the worktree instead of the scratch
+  corpora, so eight keyword-only runs (2× `--sync`, 2× `--status`, 2×
+  `--query`, 2× `--rebuild`, all with `env -u …`) executed against the
+  worktree's live store: `0` provider calls (both syncs declared
+  `unavailable-embeddings-not-configured`, `embedded: 0`, `model: null`), and
+  the store directory first appears at 11:50 (scaffolded worktree, never synced
+  — parent-dir mtime plus this unit's own claim), so no prior index was
+  destroyed. Cleaned: `.agentic-workflow/index/` removed, restoring the
+  pre-accident absent state; `git status --porcelain` empty afterwards. No
+  committed byte was touched. The corrected differential ran in `mktemp -d`
+  scratch (G10).
+- **G8** — 2026-11-27, `cd packages/agentic-workflow && env -u … bun run test` ·
+  exit 0 · `86` suites PASS · `cd packages/pi-agentic-workflow && env -u … bun
+  run test` · exit 0 · `1130 pass · 0 fail` · `bash
+  template/.agentic-workflow/hooks/tests/test-index-sync.sh` ·
+  `INDEX-SYNC-HOOK-TESTS ok` · `bun test packages/agentic-workflow/test/hook-shims.test.mjs`
+  · `19 pass`.
+- **G9** — 2026-11-27, `bun scripts/docs-generate.mjs --check` · PASS (0 stale) ·
+  `bun scripts/check-skill-context.mjs --documents` · PASS (7) · `bun
+  scripts/lint-changeset.mjs .changeset/718-embedding-pass-improvements.md` · ok
+  · `… bin/agentic-workflow.mjs phase-lint docs/fix/718-embedding-pass-improvements/SPEC.md`
+  · verdict PASS through P12 (fingerprint `cb333d5a71faa44c…`) · B1's
+  reproducer `rg -n "The resolution is one line in every shim"
+  template/.agentic-workflow/hooks/README.md` · exit 1.
+- **G10** — 2026-11-27, differential vs the pre-batch head `b61b6c0ba` (mktemp
+  clone, twin scratch corpora): `--sync`, `--status`, `--query`, `--rebuild` and
+  a warm `--sync` — stdout byte-identical (path-normalized) and stderr content
+  identical; the only variance is the `done … · Nms` wall-clock suffix, proven
+  run-to-run noise (the base bin alone measured 34 ms vs 36 ms).
+- **G11** — 2026-11-27, `bun scripts/run-root-suite.mjs` · exit 0 · `147`
+  suites PASS · `bun scripts/local-gate.mjs --skip-network --jobs 1` (ambient
+  provider cleared) · exit 0 · `local-gate: PASS — 16 step(s) in 418s`.
+- **P12** — 2026-11-27, the correction batch: pre-scan fence + its red corpus,
+  the hooks README retirement, the receipt fixes and the A7/A8 dispositions ·
+  `d3ee92ee6…8066a7d9c` (ledger freeze, red corpus, fix, doc surfaces).
 
 ## Next
 

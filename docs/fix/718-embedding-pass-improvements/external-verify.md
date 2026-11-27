@@ -58,3 +58,34 @@ Verdict: NEEDS-DECISION (1)
   the keyword suites that failed there (the pre-existing A8 mode); (3) the
   live store was never synced, rebuilt or re-embedded — `git status` clean at
   close; (4) E5/E6 counts differ from their receipts by one case (A3).
+
+## Addendum — 2026-11-27, correction batch applied
+
+Owner-directed batch (request L3 in the unit doc: "triage and fix those that
+deserve to fix…"). Findings closed: **B1 fixed** — `template/.agentic-workflow/hooks/README.md:30`
+now scopes the one-line order to the other shims and names index-sync's pin
+step (frozen reproducer `rg -n "The resolution is one line in every shim" …`
+exits 1, G9); **A1 fixed** — the Retirements receipt re-counted `→ 2` with its
+meaning; **A2 fixed** — O10's validator re-pinned as a floor (`matches ≥3`,
+observed 5); **A3 recorded** — E13's dated erratum (E5/E6 counts off by one,
+both red directions reproduce); **A4 + A5 fixed together** — the sync pass now
+owns the store from before the scan (`openEmbedLease`, red corpus E14, the
+in-batch deadlock observed and repaired E15, green E16/E17, differential G10,
+gates G8/G11); **A6 fixed** — the README marks `unavailable-embeddings-lease-held`
+an open-family member, never a `DOC_DEGRADATIONS` entry; **A7 / A8
+dispositioned, no change** (D11). Ledger: O12 added and `verified`; O10/O11
+evidence cells updated; decisions D9–D11 record the fence's scope (sync-only,
+by `rebuildIndex`'s `rmSync`, PE-021), the refusal of a blanket `busy_timeout`,
+and the two dispositions.
+
+**Live-tree disclosure (supersedes disclosure 3 above for this batch):** the
+batch's first differential ran its CLI loop from the worktree, so eight
+keyword-only runs (2× `--sync`, 2× `--status`, 2× `--query`, 2× `--rebuild`,
+all `env -u …`) executed against the worktree's live store — **zero provider
+calls** (`embedded: 0`, `model: null`, `unavailable-embeddings-not-configured`),
+and the store directory first appears at 11:50, so no prior index existed to
+destroy. Cleaned: `.agentic-workflow/index/` removed (pre-accident absent
+state), `git status --porcelain` empty; full record in the unit doc's E18. The
+corrected differential ran in `mktemp -d` scratch (G10).
+
+Recheck of this batch (P12): every validator green — G9/G11, E16/E17.
