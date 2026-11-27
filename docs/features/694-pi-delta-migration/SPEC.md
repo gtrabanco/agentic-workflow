@@ -459,6 +459,13 @@ Frozen at cut in `planning-obligations.md` (M/L shape) — never embedded here.
   exit 0 · `local-gate: PASS — 16 step(s) in 819s` (root suite, both crate
   suites under both runtimes, schema build, the pi and pi-node compat steps,
   docs-generated projection, secret scan, context budgets, version parity).
+- **G3** — 2026-11-27, the same gate re-run at the closing head (`5d770cfc6`),
+  after the two reds G1 records were repaired · exit 0 ·
+  `local-gate: PASS — 16 step(s) in 796s` — this is the receipt the handoff
+  stands on; G1 is kept because a red gate is never erased from the record.
+- **E17** — 2026-11-27, `bun scripts/version-parity-gate.mjs --pins` · exit 0 ·
+  `VERDICT: PASS`, every exact pin equal to its local package version (this
+  unit moves no pin, so the train is untouched).
 - **P1** — 2026-11-27 21:5x, the unit doc, both planning ledgers and the
   decision record frozen before the first line of code · `00f04cc73`.
 - **P2** — 2026-11-27 22:0x, the picker corpus rewritten for the new contract
