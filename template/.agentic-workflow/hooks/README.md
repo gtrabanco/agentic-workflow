@@ -21,18 +21,28 @@ a skill or a CI job spawns.
 | `turn-contract.sh` | `turn-contract` | the five boxes of the canonical turn contract, box4 asked of the checked remote's forge |
 | `git-identity-check.sh` | `git-identity-check` | the resolved author/committer against `gitIdentity`, and the signing policy |
 | `fullauto-merge.sh` | `fullauto-merge` | every precondition of the automated merge, then the merge itself |
-| `index-sync.sh` | `doc --sync --quiet` | the documentation index refresh (unit 65's fast path) |
+| `index-sync.sh` | `doc --sync --quiet` | the documentation index refresh (unit 65's fast path; runs the runner argv the install resolved) |
 | `adapters/pre-tool-guard.sh` | `guard-command --payload --format plain` | the decision, answered in plain text on stderr |
 | `adapters/copilot-guard.sh` | `guard-command --payload --format copilot` | the decision, answered as Copilot's `{continue, stopReason}` |
 | `adapters/normalize-hook-payload.sh` | `guard-command --payload --format json` | the payload normalized to `[command, path]` for an adapter that formats its own answer |
 | `secret-scan.sh` | `bun`, else `node` | the push-range secret scan (its own runner; see below) |
 
-The resolution is one line in every shim and it is ordered: `AGENTIC_WORKFLOW_BIN`
-when the caller set it, else `command -v agentic-workflow`. A project that installs
+The resolution is ordered: `AGENTIC_WORKFLOW_BIN` when the caller set it, else
+`command -v agentic-workflow` — one line in every shim except `index-sync.sh`,
+which adds the machine-local pin between those two steps (see below). A project that installs
 the scaffold gets the CLI from `npx`/`bunx` or a global install; a source checkout
 points the variable at `packages/agentic-workflow/bin/agentic-workflow.mjs`, which
 is what the hook suites do. `jq` is no longer required by any hook: the payload rule
 and every forge document are parsed in JavaScript.
+
+`index-sync.sh` is the one shim that must also run where the crate is **not** on
+`PATH` — a host that runs the workflow through `bunx` (issue #718). It adds one
+step between the override and `command -v`: the machine-local pin
+`.agentic-workflow/hooks/runner.local`, which `init-workspace` writes from the
+crate's own resolver answer (`runner resolve --json doc --sync --quiet`) as one
+argv token per line, and which the hook executes verbatim. The pin is a local
+file, gitignored on install, so the template ships no second runner version
+literal — the contract's pin stays the only one.
 
 ## Degradation
 
@@ -45,7 +55,7 @@ declared contract — never silence, and never a guess:
 | `git-identity-check.sh` | **refuses the commit** (exit 1), naming the missing CLI: an unverified identity is not an approved one |
 | `turn-contract.sh` | **exit 2**, naming the missing CLI: it never prints a receipt it did not compute |
 | `fullauto-merge.sh` | **exit 1**, naming the missing CLI: nothing merges without the preconditions |
-| `index-sync.sh` | **silent no-op, exit 0**: a best-effort index refresh must never fail a git operation (unit 65, AC21), so with no entry point installed the hook is inert and the `grep` fallback holds |
+| `index-sync.sh` | **silent no-op, exit 0**: a best-effort index refresh must never fail a git operation (unit 65, AC21), so with no entry point installed — no override, no pin, no `PATH` entry — the hook is inert and the `grep` fallback holds |
 | `secret-scan.sh` | **exit 2** naming both runtimes: a scanner that cannot look never reports nothing to see |
 
 The same rule covers a forge that cannot be asked: an uninstalled `gh`/`glab`/`gt`,
