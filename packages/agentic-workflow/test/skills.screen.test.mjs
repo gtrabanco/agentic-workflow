@@ -4,7 +4,8 @@
  *
  * The screen is the discovery route's whole mechanical half, so its contract is
  * pinned here rather than inferred from the report a caller prints: the closed
- * id set (exactly seven, `SL-01`…`SL-07`), the finding shape (`id`, `name`,
+ * id set (exactly eight since issue #726's addendum, `SL-01`…`SL-08`), the
+ * finding shape (`id`, `name`,
  * `file`, `line`, `detail`), the declared-marker allowance that keeps a machine
  * mark from being a hidden instruction, and the tree walk.
  *
@@ -20,11 +21,11 @@ import { test } from "node:test";
 import { SKILL_SCREEN_CHECKS, discoverSkillFiles, screenSkillFile, screenSkillTree } from "../src/skills/screen.mjs";
 import { REPO_ROOT, cleanup, tempTree, writeSkill } from "./skills.fixtures.mjs";
 
-test("the check set is closed at seven, SL-01…SL-07", () => {
-  assert.equal(SKILL_SCREEN_CHECKS.length, 7);
+test("the check set is closed at eight, SL-01…SL-08", () => {
+  assert.equal(SKILL_SCREEN_CHECKS.length, 8);
   assert.deepEqual(
     SKILL_SCREEN_CHECKS.map((check) => check.id),
-    ["SL-01", "SL-02", "SL-03", "SL-04", "SL-05", "SL-06", "SL-07"],
+    ["SL-01", "SL-02", "SL-03", "SL-04", "SL-05", "SL-06", "SL-07", "SL-08"],
   );
   assert.deepEqual(
     SKILL_SCREEN_CHECKS.map((check) => check.name),
@@ -36,6 +37,7 @@ test("the check set is closed at seven, SL-01…SL-07", () => {
       "credential-or-exfiltration",
       "backslash-path",
       "time-sensitive-claim",
+      "frontmatter-flow-scalar",
     ],
   );
   assert.ok(Object.isFrozen(SKILL_SCREEN_CHECKS), "the published check set is frozen");
@@ -120,6 +122,35 @@ test("--skill scope reports a missing skill instead of screening the whole tree"
   } finally {
     cleanup(root);
   }
+});
+
+// ── SL-08 frontmatter flow scalars (issue #726 addendum) ──────────────────
+
+const hintSkill = (hint) => `---\nname: hint\nuser-invocable: false\nargument-hint: ${hint}\ndescription: A fixture skill.\n---\n\nBody.\n`;
+
+test("SL-08 flags an unquoted argument-hint flow scalar", () => {
+  for (const [hint, opener] of [["[--unit <slug>]", "["], ["{unit: slug}", "{"], ["[finding-id …]", "["]]) {
+    const findings = screenSkillFile({ file: "skills/hint/SKILL.md", text: hintSkill(hint) });
+    assert.deepEqual(findings.map((finding) => finding.id), ["SL-08"], hint);
+    assert.equal(findings[0].line, 4, hint);
+    assert.ok(findings[0].detail.includes("argument-hint"), findings[0].detail);
+    assert.ok(findings[0].detail.includes(opener), findings[0].detail);
+  }
+});
+
+test("SL-08 admits quoted, placeholder-led and plain hint shapes", () => {
+  for (const hint of ['"[--unit <slug>]"', "[<slug> …]", "<target-dir>", "[<slug>] [--x]"]) {
+    assert.deepEqual(
+      screenSkillFile({ file: "skills/hint/SKILL.md", text: hintSkill(hint) }).map((finding) => finding.id),
+      [],
+      hint,
+    );
+  }
+});
+
+test("SL-08 does not screen an array-typed field", () => {
+  const text = `---\nname: tools\nuser-invocable: false\nallowed-tools: [Bash, Read]\nargument-hint: "[--x]"\ndescription: A fixture.\n---\n\nBody.\n`;
+  assert.deepEqual(screenSkillFile({ file: "skills/tools/SKILL.md", text }).map((finding) => finding.id), []);
 });
 
 test("the shipped skills tree screens clean (the pin)", () => {

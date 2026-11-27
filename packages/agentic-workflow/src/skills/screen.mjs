@@ -1,14 +1,14 @@
 #!/usr/bin/env node
 /**
- * screen.mjs — the seven skill-content checks, as code (fix #357, moved here by
- * issue #591).
+ * screen.mjs — the eight skill-content checks, as code (fix #357, moved here by
+ * issue #591; `SL-08` added by issue #726's addendum).
  *
- * The seven checks — a hidden HTML comment, an XML/HTML tag in the frontmatter
+ * The eight checks — a hidden HTML comment, an XML/HTML tag in the frontmatter
  * description, an invisible codepoint, an unpinned external URL, a
  * credential-access or exfiltration-shaped instruction, a Windows-style
- * backslash path, a dated currency claim — are owned by
- * `skills/skill-lint/references/CHECKS.md`. This module only mechanizes them; it
- * never carries a second copy of a rule's meaning and it repairs nothing.
+ * backslash path, a dated currency claim, a frontmatter flow scalar — are owned
+ * by `skills/skill-lint/references/CHECKS.md`. This module only mechanizes them;
+ * it never carries a second copy of a rule's meaning and it repairs nothing.
  *
  * It lives in the crate because the screen has two callers: this repository's
  * `scripts/skill-lint.mjs` (the authoring lint) and the `skills discover`
@@ -33,6 +33,7 @@ export const SKILL_SCREEN_CHECKS = Object.freeze(
     { id: "SL-05", name: "credential-or-exfiltration" },
     { id: "SL-06", name: "backslash-path" },
     { id: "SL-07", name: "time-sensitive-claim" },
+    { id: "SL-08", name: "frontmatter-flow-scalar" },
   ].map((check) => Object.freeze(check)),
 );
 
@@ -187,6 +188,20 @@ export function screenSkillFile({ file, text }) {
     if (description !== null) {
       for (const tag of description.match(FRONTMATTER_TAG) ?? []) add("SL-02", 1, `tag \`${tag}\` in the frontmatter description`);
     }
+    // SL-08 (issue #726): pi reads frontmatter with a YAML parser, so a value
+    // that opens with `[` or `{` is a flow collection — either it fails to close
+    // (the file is rejected and the skill loses its command) or it parses as an
+    // array where the host expects a string. The screen is scoped to
+    // `argument-hint`, the field whose contract is a string; `allowed-tools` is
+    // legitimately an array. A placeholder-led hint (`[<slug> …]`) is admitted
+    // exactly as the owner wrote it.
+    frontmatter[1].split("\n").forEach((line, index) => {
+      const field = /^([A-Za-z_][A-Za-z0-9_-]*):[ \t]*(.*)$/.exec(line);
+      if (field === null || field[1] !== "argument-hint") return;
+      const value = field[2].trim();
+      if (!/^[\[{]/u.test(value) || /^\[\s*</u.test(value)) return;
+      add("SL-08", index + 2, `${field[1]} opens with \`${value[0]}\` — quote the value as a YAML string`);
+    });
   }
 
   for (const match of text.matchAll(INVISIBLE)) {

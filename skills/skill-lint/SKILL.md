@@ -54,10 +54,10 @@ bun scripts/skill-lint.mjs                    # the whole tree — the sweep
 bun scripts/skill-lint.mjs --skill <name>     # only the skill(s) you changed
 ```
 
-Paste its block verbatim. The seven checks (hidden comments, frontmatter tags,
+Paste its block verbatim. The eight checks (hidden comments, frontmatter tags,
 invisible codepoints, unpinned URLs, credential/exfiltration shapes, backslash
-paths, time-sensitive claims), the shapes each admits and the smells this repo
-deliberately does not adopt are owned by
+paths, time-sensitive claims, frontmatter flow scalars), the shapes each admits
+and the smells this repo deliberately does not adopt are owned by
 [skill content checks](references/CHECKS.md). Exit `0` is `PASS`, `1` is
 `FAIL`, `2` is a usage error — never re-read the block for a verdict the exit
 code already gave.

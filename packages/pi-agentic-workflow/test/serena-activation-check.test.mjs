@@ -44,9 +44,12 @@ test("AC1: the package's own extension entry is still declared", () => {
   );
   // Issue #260 added the piew subagents extension (the durable-subagent
   // substrate, owner call 2026-11-08) — exactly one second entry, never the
-  // serena bridge (whose registration is consent-gated elsewhere).
+  // serena bridge (whose registration is consent-gated elsewhere). Issue #726
+  // moved it to the package-owned shim: a `node_modules/` path only exists when
+  // npm nests dependencies, so a hoisted install loaded no subagent layer at
+  // all. The shim resolves the dependency itself.
   assert.deepEqual(entries, [
     "./dist/extension/index.js",
-    "./node_modules/pi-extensible-workflows/dist/subagents/index.js",
+    "./dist/extension/subagents-entry.js",
   ]);
 });

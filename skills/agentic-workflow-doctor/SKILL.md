@@ -2,7 +2,7 @@
 name: agentic-workflow-doctor
 user-invocable: true
 version: 4.10.1
-argument-hint: [--unit <slug>] [--search "<words>"] [--candidate <n>]
+argument-hint: "[--unit <slug>] [--search \"<words>\"] [--candidate <n>]"
 description: >
   User-initiated batch ceremony-failure triage: mine this project's own journal
   and unit docs for its accumulated ceremony failures, apply a fixed

@@ -1,0 +1,6 @@
+## 2026-11-27T17:32:15Z — feat/726-argument-hint-npm-hoisting — narrative
+- **Commits:** 22 (`5e4228fb…e2c7696b`)
+- **Files:** 40 files
+- **Summary:** Resolved all merge conflicts between feat/726 (F4+F5+F6+F7 fold fix) and two waves of origin/main (#718 and #734), both merged with two-parent commits preserving history. No rebase, no force. Findings-corpus test freeze re-pinned to measured values (1179 findings, 183 marks). Roadmap rows #718 and #734 restored from main. Budgets JSON re-pinned and source notes restored. Gate 12/12, push 18/18. PR #736 MERGEABLE CLEAN.
+- **Decisions:** Fused main's two lineage changes (718: doc-index-embeddings, 734: log-session) into the feature branch via two consecutive merges rather than rebase — git history preserved as-is on the feature branch, main's commits grafted as parents. Findings-corpus counts never assumed; always measured via buildCorpus() on the merged tree before writing. Budgets JSON linesMax always measured (wc -l), not inferred from either parent. Shared-doc driver silently drops origin/main source notes in merge conflicts — always restore them.
+- **Next:** Re-run /review-change on the new HEAD (e2c7696b7) to verify F4-F6 remain resolved against the fully merged branch, then merge PR #736.

@@ -4,7 +4,7 @@
  *
  * The route's promise is narrow and mechanical, so the suite pins exactly that:
  * a candidate list with one row per candidate, a per-candidate lint receipt
- * drawn from the seven checks, a per-candidate consent record, and an install
+ * drawn from the eight checks, a per-candidate consent record, and an install
  * decision that **cannot** outrun the screen — a consented candidate that failed
  * the screen is `blocked` and names no install command.
  *
