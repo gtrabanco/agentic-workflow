@@ -67,6 +67,7 @@ new doc takes ownership of a task:
 | A new capability or integration surface | [`docs/CAPABILITIES.md`](docs/CAPABILITIES.md) |
 | Resuming a session, or what happened last | [`docs/LOGS.md`](docs/LOGS.md), [`docs/workflow/REPOSITORY_STATE.md`](docs/workflow/REPOSITORY_STATE.md) — the domain-separation safeguard's detail is [`docs/workflow/DOMAIN_SEPARATION.md`](docs/workflow/DOMAIN_SEPARATION.md) |
 | The tutorial as a whole | [`docs/workflow/README.md`](docs/workflow/README.md) — it owns the pages index |
+| Which command to run for a unit, and what it does next | [`docs/workflow/LIFECYCLE.md`](docs/workflow/LIFECYCLE.md) — the `/draft`, `/flow` and `/unit-lane` lifecycles, the review ladder, the command decision tree and the driver's four declared grammars |
 
 ## Deep references
 
@@ -647,6 +648,10 @@ workflow-doctor-mine-grammar | packages/agentic-workflow/README.md | block:workf
 workflow-doctor-bundle-grammar | packages/agentic-workflow/README.md | block:workflow-doctor-bundle@1 | n/a | no
 workflow-doctor-route-grammar | packages/agentic-workflow/README.md | block:workflow-doctor-route@1 | n/a | no
 doctor-triage-rubric | skills/agentic-workflow-doctor/references/RUBRIC.md | block:doctor-triage-rubric@1 | n/a | no
+flow-step-references | docs/workflow/LIFECYCLE.md | block:flow-step-references@1 | n/a | no
+flow-stop-rules | docs/workflow/LIFECYCLE.md | block:flow-stop-rules@1 | n/a | no
+flow-approval | docs/workflow/LIFECYCLE.md | block:flow-approval@1 | n/a | no
+flow-session-modes | docs/workflow/LIFECYCLE.md | block:flow-session-modes@1 | n/a | no
 ```
 
 ### Rendered facts (prose that restates a machine value)

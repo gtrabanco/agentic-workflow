@@ -22,6 +22,14 @@ autopilot role (`ship-roadmap`) are retired (feature 61): their work lives in
 `advance` conductor. **skill-lint** is a repo-only maintenance tool (not a
 workflow skill) and is excluded from the workflow skill index entirely.
 
+## Which command drives what
+
+The skills below are the steps; the entries that drive them are three:
+`/draft` (plan a unit, then always stop for approval), `/flow` (drive the unit
+to done from machine state) and `/unit-lane` (the portable conductor). The
+split, the review ladder to a `MERGE-READY` receipt and the command decision
+tree are [LIFECYCLE.md](LIFECYCLE.md)'s — read it before choosing a door.
+
 ## Context budget and progressive loading
 
 Skill metadata is always advertised by the agent, but a `SKILL.md` body enters

@@ -34,7 +34,7 @@
         }
       },
       "packages/pi-agentic-workflow/README.md": {
-        "linesMax": 1415,
+        "linesMax": 1416,
         "estimateMax": 20444,
         "sources": {
           "issue #726 (durable-subagents hoisting cure, 2026-11-27)": "the Subagent-layer section states that the shipped manifest entry is this package's own shim (`./dist/extension/subagents-entry.js`) rather than a `node_modules/` path, why a hoisted install made the old path void (pi drops a missing manifest entry silently), the Node-resolution cure that loads on nested and hoisted layouts, and the one `session_start` diagnostic that names `pi-extensible-workflows/dist/subagents/index.js` when it cannot resolve. Measured at the change with `bun scripts/check-skill-context.mjs --documents`: 1,402 lines / 19,301 est, so `linesMax` re-pins 1,392 -> 1,402 to the exact boundary the paragraph spends (the fix #571 precedent); `estimateMax` (20,444) keeps its headroom and is not re-based. The `documents` section has no emitter, so this row is a recorded hand edit, never a silent one.",
@@ -49,11 +49,19 @@
           "merge of origin/main (issue #718) into feat/726 (2026-11-27)": "the integration unions both lineages' README additions — main's `/aw-index` derived-cap bullet (7 lines) plus this unit's Subagent-layer rewrite (19 inserted, 9 deleted) — so the merged file measures 1,409 lines with `wc -l`, exactly 1,392 + 7 + 10 net. `linesMax` re-pins 1,402 -> 1,409 to the exact boundary the union spends (the fix #571 precedent); `estimateMax` (20,444) keeps its headroom and is not re-based. Both lineages' own source notes stay above this row, so neither history is lost. The `documents` section has no emitter, so this row is a recorded hand edit, never a silent one.",
           "issue #734 (the /log-session call shape, 2026-11-27)": "the /log-session code door states the shape the directive hands over — the service alone in `subcommand`, the operation as the first `args` entry, because the tool forwards `subcommand` as one argv token — measured at the change with `bun scripts/check-skill-context.mjs --documents`: 1,398 lines / 19,257 est, so `linesMax` re-pins 1,392 -> 1,398 to the exact boundary the sentence spends (the fix #571 precedent); `estimateMax` (20,444) keeps its headroom and is not re-based. The `documents` section has no emitter, so this row is a recorded hand edit, never a silent one.",
           "merge 2026-11-27 (#718 + #734)": "the two pending branches each re-pinned this file's `linesMax` (1398 for issue #734's call-shape sentence, 1399 for issue #718's `/aw-index` derived-cap bullet) and the merge carries both paragraphs, so the file measures 1,405 lines / 19,397 est with `bun scripts/check-skill-context.mjs --documents`: `linesMax` re-pins to that exact measurement (the fix #571 precedent, never a sum of the two re-pins and never a headroom grant); `estimateMax` (20,444) keeps its headroom and is not re-based. The `documents` section has no emitter, so this row is a recorded hand edit, never a silent one.",
-          "merge of origin/main (issue #734) into feat/726 (2026-11-27)": "the second integration unions main's `/log-session` call-shape paragraph (6 lines, issue #734) onto this branch's merged 1,409-line README, so the file measures 1,415 with `wc -l`. `linesMax` re-pins 1409 -> 1,415 to the exact boundary the union spends (the fix #571 precedent); `estimateMax` (20,444) keeps its headroom and is not re-based. Every lineage's own source note stays above this row, so no history is lost. The `documents` section has no emitter, so this row is a recorded hand edit, never a silent one."
+          "merge of origin/main (issue #734) into feat/726 (2026-11-27)": "the second integration unions main's `/log-session` call-shape paragraph (6 lines, issue #734) onto this branch's merged 1,409-line README, so the file measures 1,415 with `wc -l`. `linesMax` re-pins 1409 -> 1,415 to the exact boundary the union spends (the fix #571 precedent); `estimateMax` (20,444) keeps its headroom and is not re-based. Every lineage's own source note stays above this row, so no history is lost. The `documents` section has no emitter, so this row is a recorded hand edit, never a silent one.",
+          "issue #669 (the two lane entries, 2026-12-23)": "the code-door table gains `/flow` and `/draft` and its lead-in moves from three names to five, so the file measures 1,416 lines / 19,652 est with `bun scripts/check-skill-context.mjs --documents`. `linesMax` re-pins 1,415 -> 1,416 to the exact boundary the rows spend (the fix #571 precedent); `estimateMax` (20,444) keeps its headroom and is not re-based. The `documents` section has no emitter, so this row is a recorded hand edit, never a silent one."
+        }
+      },
+      "docs/workflow/LIFECYCLE.md": {
+        "linesMax": 215,
+        "estimateMax": 2589,
+        "sources": {
+          "issue #669 (the lifecycle page, 2026-12-23)": "the page is new with this unit and is the documentation-currency surface for every later unit that changes how the workflow is used, so it carries a budget from its first commit instead of entering an unchecked tree. Measured at the cut with `bun scripts/check-skill-context.mjs --documents`: 195 lines / 2,353 est, so both ceilings use the manifest's own arithmetic — ceil(195 x 1.10) = 215 and ceil(2353 x 1.10) = 2,589. The `documents` section has no emitter, so this row is a recorded hand edit, never a silent one."
         }
       },
       "AGENTS.md": {
-        "linesMax": 696,
+        "linesMax": 701,
         "proseLinesMax": 475,
         "estimateMax": 15798,
         "machineBlocks": [
@@ -61,7 +69,7 @@
           "normative-surfaces@1",
           "rendered-facts@1"
         ],
-        "machineLines": 235,
+        "machineLines": 239,
         "blockLines": {
           "inviolable-rules@1": 18
         },

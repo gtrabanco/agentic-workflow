@@ -237,6 +237,14 @@ The Evidence table uses the five columns: `AC`, `What was run`, `Exit / digest`,
 `Output (≤2 lines)`, `Verified-by`. The Progress log entry regex:
 `YYYY-MM-DD HH:MM — <what> → <commit/evidence> — next: <what>`.
 
+## The entries and the ladder
+
+The lane's own conductor is one of three entries into one program: `/draft` plans and
+always stops, `/flow` drives the unit to done, and `/unit-lane` remains the portable
+conductor. Which one to run, what each stops on, the review ladder to a
+`MERGE-READY` receipt and the driver's declared grammars are
+[LIFECYCLE.md](LIFECYCLE.md)'s — this page never restates them.
+
 ## Deterministic next-step — the sensor's queue
 
 `runner workflow-status` emits Envelope v2 on stdout. The top-level `next`
@@ -262,6 +270,8 @@ The sensor also emits `next.candidate_count` (candidates at that priority level)
 
 | Command | Purpose |
 |---------|---------|
+| `/draft <NN>` | Plan a unit and always stop after the plan with the approval block (issue #669) |
+| `/flow <NN>` | Drive the unit: the closed catalog decides the next step, the model executes only that step (issue #669) |
 | `/unit-lane <NN>` | Lane conductor: triage + steps + doc updates in one document |
 | `/unit-lane <NN> --retriage` | Force re-triage |
 | `/unit-lane "<idea>"` | Create a unit from a raw idea |
