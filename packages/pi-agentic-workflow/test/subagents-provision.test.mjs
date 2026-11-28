@@ -24,7 +24,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join, resolve } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 import {
@@ -67,8 +67,6 @@ function fixture(t, { layout, factory = 'export default function factory(pi) { p
   mkdirSync(extensionDir, { recursive: true });
   const from = pathToFileURL(join(extensionDir, "subagents-entry.js")).href;
   writeFileSync(join(extensionDir, "subagents-entry.js"), "// fixture shim\n");
-
-  if (omitPackage) return { root, from };
 
   if (omitPackage) return { root, from };
 
@@ -218,8 +216,10 @@ test("the README names the shim as the entry and the disable target", () => {
 // whatever the sandbox hoists. `pi update --all` never refreshes a hoisted peer
 // with no direct requester, so that copy can predate the export the layer
 // needs. Binding through the bare specifier is the dependency's file; what this
-// package controls is (a) preferring a host module that satisfies the declared
-// peer range and (b) telling the operator the resolved version and its repair.
+// package controls is (a) judging the copy the dependency's own import will
+// bind against the declared peer range — a nameable running host informs the
+// warning but never rescues a stale binding — and (b) telling the operator the
+// resolved version and its repair.
 
 test("the peer range comes from this package's own manifest, not a literal", () => {
   const manifest = JSON.parse(readFileSync(join(PKG_DIR, "package.json"), "utf8"));
@@ -279,13 +279,53 @@ test("an unreadable host version fails closed", async (t) => {
   assert.match(fake.notices[0][0], /could not read/i, `an unreadable version is named, not guessed: ${fake.notices[0][0]}`);
 });
 
-test("a scratch install shaped like the reporter's sandbox loads the layer", async (t) => {
-  // The reporter's sandbox: a hoisted 0.84.2 host copy beside the extensions,
-  // and the running host (1.7.0) reachable as the module that loaded us.
+test("a stale bound copy refuses even when a satisfying running host is nameable", async (t) => {
+  // EXTERNAL VERIFY blocker 1, the reporter's shape with the running host
+  // nameable: the gate must judge the copy the dependency's bare specifier
+  // binds, so the export-error/reinstall text cannot come back and the
+  // warning also says what the running host is.
   const { root, from } = fixture(t, { layout: "hoisted", host: { version: "0.84.2", codemode: false } });
   const runningHost = writeHostCopy(join(root, "host"), { version: "1.7.0" });
   const fake = fakeHost();
   const result = await provisionSubagents(fake.host, { from, hostModule: join(runningHost, "dist", "index.js") });
+  assert.equal(result.status, "unavailable", JSON.stringify(result));
+  fake.fireSessionStart();
+  assert.equal(fake.notices.length, 1, `exactly one diagnostic, got ${JSON.stringify(fake.notices)}`);
+  const [message] = fake.notices[0];
+  assert.ok(message.includes("0.84.2"), `the diagnostic names the bound copy's version: ${message}`);
+  assert.ok(message.includes("1.7.0"), `the diagnostic names the satisfying running host: ${message}`);
+  assert.match(message, /bun add /u, `the diagnostic names the repair: ${message}`);
+  assert.ok(!/Reinstall the package/u.test(message), `no retired reinstall advice for a peer mismatch: ${message}`);
+  assert.ok(!/Export named/u.test(message), `the doomed load is never attempted: ${message}`);
+  assert.equal(fake.tools.length, 0, "a refused host registers nothing");
+});
+
+test("a fresh copy beside this package cannot mask the stale copy the dependency binds", async (t) => {
+  // The shim's own walk can reach a fresh nested peer while the dependency's
+  // walk reaches the stale hoist — only the dependency's binding decides.
+  const { from } = fixture(t, { layout: "hoisted", host: { version: "0.84.2", codemode: false } });
+  const packageDir = dirname(dirname(dirname(fileURLToPath(new URL(from)))));
+  writeHostCopy(join(packageDir, "node_modules"), { version: "1.7.0" });
+  const fake = fakeHost();
+  const result = await provisionSubagents(fake.host, { from });
+  assert.equal(result.status, "unavailable", JSON.stringify(result));
+  fake.fireSessionStart();
+  assert.equal(fake.notices.length, 1, `exactly one diagnostic, got ${JSON.stringify(fake.notices)}`);
+  const [message] = fake.notices[0];
+  assert.ok(message.includes("0.84.2"), `the bound stale copy is named: ${message}`);
+  assert.ok(!/Reinstall the package/u.test(message), `no retired reinstall advice for a peer mismatch: ${message}`);
+  assert.equal(fake.tools.length, 0, "a refused host registers nothing");
+});
+
+test("a scratch install shaped like the reporter's sandbox loads the layer", async (t) => {
+  // The reporter's sandbox geometry with a satisfying host at the point the
+  // dependency's own import binds: the hoist carries the stale 0.84.2, the
+  // dependency's nested peer carries the 1.7.0 line — the layer loads with no
+  // diagnostic, so the manual remediation is not what gets it there.
+  const { from, dependencyDir } = fixture(t, { layout: "hoisted", host: { version: "0.84.2", codemode: false } });
+  writeHostCopy(join(dependencyDir, "node_modules"), { version: "1.7.0" });
+  const fake = fakeHost();
+  const result = await provisionSubagents(fake.host, { from });
   assert.equal(result.status, "loaded", JSON.stringify(result));
   fake.fireSessionStart();
   assert.equal(fake.notices.length, 0, `the reporter's manual remediation is no longer required, got ${JSON.stringify(fake.notices)}`);
