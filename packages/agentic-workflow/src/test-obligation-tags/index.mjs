@@ -25,8 +25,8 @@
  *   tag-shape               a half or empty declaration, refused by name rather
  *                           than half-trusted;
  *   tag-unknown-obligation  a value outside the published closed set
- *                           (`TEST_OBLIGATION_KINDS`, read from committed
- *                           source) — a private vocabulary is not a vocabulary;
+ *                           (`TEST_OBLIGATION_KINDS`, read from the installed
+ *                           schema package) — a private vocabulary is not one;
  *   tag-dead-surface        a protected path that no longer exists. This is the
  *                           rule that makes "the surface is gone, so the test
  *                           goes" detectable on every push instead of
