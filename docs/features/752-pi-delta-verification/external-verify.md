@@ -79,3 +79,47 @@ Spot check: `cd packages/pi-agentic-workflow && bun test
      match (E2 reported exit 0 · `9 pass / 0 fail across 2 files`; observed
      identical).
 Verdict: NEEDS-DECISION (B1)
+
+## Correction batch recheck — 2026-11-28 (§9, one batch, blockers only)
+
+Batch composition: B1 restated O13's validator cell
+(`docs/features/752-pi-delta-verification/planning-obligations.md:25`) to the
+working op-first `roadmap read docs/ROADMAP.md --nn 752` order — reopened to
+`planned` first, flipped back only on the foreground run (`## Log` E9); A1
+restored the lost `continuously` qualifier in
+`packages/pi-agentic-workflow/README.md:1412` (same line, budget re-measured
+green). No executable surface was touched by the batch.
+
+Blocker rechecks:
+
+- B1 → `bun packages/agentic-workflow/bin/agentic-workflow.mjs roadmap read
+  docs/ROADMAP.md --nn 752` → **exit 0, row reported `in-progress`** (the same
+  cell's command exited 2 at the batch head, `EDIT REFUSAL — Unknown roadmap
+  operation`); O13's other two clauses present — `.changeset/
+  752-pi-delta-verification.md` and the journal fragment
+  `20261128T151635Z-feat-752-pi-161-170-delta-narrative-752-pi-delta-verification.md`.
+  O13 stays `verified` on this run. The wrong spelling has no other occurrence
+  (`rg 'roadmap docs/ROADMAP\.md read'` → only this receipt's reproducer
+  quote); `docs/fix/702-ceremony-state-misreport/external-verify.md:45` records
+  the identical defect class, fixed the same way.
+
+Advisory dispositions (triaged under S1): A1 — **fixed** (the restored
+qualifier above); A2 — **no change**, the quoted legacy message reproduced at
+1.6.1 on the failed-lookup path (scratch `PI_CODING_AGENT_DIR`, valid schema +
+unknown id → `Error: Model "nan/ghost-model" not found.`), so the README
+sentence stands as written; A3 — **wontfix**, the planning ledgers freeze at
+cut except `status` (workflow §5; `planning-evidence.md`'s preamble "every row
+was sampled at the cut head"), so the cut-head `freshness` cells stay as
+sampled, per #694's identical rows.
+
+Regression checks in the batch (S1's "haven't broke another different thing"):
+`bun test packages/pi-agentic-workflow/test/verified-baseline.test.mjs` → 3
+pass / 0 fail · `rg -c 'Also verified against Pi 1\.7\.0 \(2026-11-28\)'` → 1 ·
+`wc -l` README → 1418 · `bun scripts/check-skill-context.mjs --documents` →
+PASS (README 1418 / 19,717 against 1418 / 20,444) · full
+`bun scripts/local-gate.mjs --jobs auto` → `local-gate: PASS — 20 step(s) in
+555s` (`## Log` G3).
+
+Correction-batch verdict: B1 green — this receipt's open blocker is closed
+here; the delta re-verify of this block is the next external run's call, not
+this batch's.

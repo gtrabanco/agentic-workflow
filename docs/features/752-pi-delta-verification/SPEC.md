@@ -401,6 +401,35 @@ V | V<n> | a finding's verification — the row it signs, the recheck and its re
 - **P3** — 2026-11-28, verification closed: `O1`–`O11` by `E1`–`E8` and `G1`,
   `O12` by this Log and the commit list, `O13` by the roadmap writer receipt,
   the changeset and the journal fragment, `O14` by `G2`.
+- **L3** — 2026-11-28, the correction batch over the `EXTERNAL VERIFY` receipt,
+  the requester verbatim:
+  ```
+  triage and fix those that deserve to fix but understand the context before fix and check you haven't broke another different thing, if you have done, start the loop again until you fixed full symbol/related stuff
+  ```
+- **E9** — 2026-11-28, the correction batch's foreground validators: B1 — RED at
+  the batch head `bun packages/agentic-workflow/bin/agentic-workflow.mjs
+  roadmap docs/ROADMAP.md read --nn 752` · exit 2 (`EDIT REFUSAL — Unknown
+  roadmap operation`); after restating O13's cell to the op-first order,
+  `bun packages/agentic-workflow/bin/agentic-workflow.mjs roadmap read
+  docs/ROADMAP.md --nn 752` · exit 0 · row `| 752 | \`pi-delta-verification\` |
+  in-progress | … |` (revision `c4590429…`), with O13's other clauses present
+  (`.changeset/752-pi-delta-verification.md`, the journal fragment
+  `20261128T151635Z-…`) — O13 reopened to `planned` before the fix and flipped
+  back on this run. A1 — `bun test
+  packages/pi-agentic-workflow/test/verified-baseline.test.mjs` · exit 0 ·
+  `3 pass / 0 fail`; `rg -c 'Also verified against Pi 1\.7\.0 \(2026-11-28\)'
+  packages/pi-agentic-workflow/README.md` → `1`; `wc -l` → `1418`;
+  `bun scripts/check-skill-context.mjs --documents` · exit 0 · PASS (README
+  1418 lines / 19,717 est against 1418 / 20,444). A2 — no edit: the quoted
+  legacy message reproduces at 1.6.1 on the failed-lookup path (scratch
+  `PI_CODING_AGENT_DIR`, valid schema + unknown id → `Error: Model
+  "nan/ghost-model" not found.`), so the README sentence stands; A3 —
+  `wontfix`: the ledgers freeze at cut except `status` (§5; the
+  `planning-evidence.md` preamble's "sampled at the cut head").
+- **G3** — 2026-11-28, the full local gate at the correction batch head:
+  `bun scripts/local-gate.mjs --jobs auto` with the session's four
+  `AGENTIC_WORKFLOW_DOC_EMBEDDINGS_*` variables unset · exit 0 ·
+  `local-gate: PASS — 20 step(s) in 555s`.
 
 ## Next
 
