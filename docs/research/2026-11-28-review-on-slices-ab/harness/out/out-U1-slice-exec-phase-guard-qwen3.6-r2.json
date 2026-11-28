@@ -1,0 +1,48 @@
+{
+ "id": "U1__slice__exec-phase-guard__qwen3.6__r2",
+ "unit": "U1",
+ "job": "slice__exec-phase-guard",
+ "model": "qwen3.6",
+ "run": 2,
+ "ms": 2647,
+ "usage": {
+  "completion_tokens": 566,
+  "prompt_tokens": 3577,
+  "total_tokens": 4143,
+  "completion_tokens_details": {
+   "reasoning_tokens": 0
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "skills/execute-phase/SKILL.md",
+   "line": 37,
+   "title": "Guard implementation missing from turn contract",
+   "detail": "The diff adds a checklist item claiming 'Required user inputs were answered concretely... if still blank the skill emits... and stops.' However, the 'Needs-input guard' section (lines 67-75) only documents the *policy* for re-asking and stopping. It does not provide the *implementation* logic (e.g., code snippet, specific validation step, or reference to a guard function) that actually performs the re-ask and emission. The turn contract asserts a behavior that is not defined in the procedural steps, creating a workflow gap where the agent knows *what* to claim but not *how* to execute the guard.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "skills/execute-phase/SKILL.md",
+   "line": 70,
+   "title": "Required input definition contradicts argument-hint",
+   "detail": "The 'Needs-input guard' section lists `<NN-slug>` as a required input that must be answered concretely. However, the `argument-hint` at line 4 is `<NN-slug> [P<k>|step] [--max-attempts N] [--force]`. In standard CLI parsing, `<NN-slug>` is a positional argument. If the user invokes the skill without it, the shell/CLI parser typically fails before the skill logic runs, or the skill receives an empty string. The guard logic described ('re-ask once... if still blank... stop') implies the skill receives the invocation but the value is empty/blank. This contradicts the `argument-hint` which implies `<NN-slug>` is mandatory for invocation. If the CLI enforces the hint, the guard is dead code. If the CLI does not enforce it, the hint is misleading. The document fails to specify how the skill handles the case where the argument is structurally absent vs. syntactically present but empty.",
+   "severity": "med",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "skills/execute-phase/SKILL.md",
+   "line": 37,
+   "title": "Guard output format inconsistent with other stop conditions",
+   "detail": "The new guard stops with `→ Next: execute-phase requires manual input — cannot proceed`. Other stop conditions in the document (e.g., line 100, line 115) use specific block formats like `UNIT LOOP — <unit> BLOCKED` or `BREACH → STOP`. The new guard's output is a simple sentence, not a structured block. This breaks consistency with the 'Turn contract' which implies a standardized 'Next' block, and makes programmatic parsing of the stop reason difficult for the workflow orchestrator.",
+   "severity": "low",
+   "axis": "brand"
+  }
+ ],
+ "raw": "[{\"file\":\"skills/execute-phase/SKILL.md\",\"line\":37,\"title\":\"Guard implementation missing from turn contract\",\"detail\":\"The diff adds a checklist item claiming 'Required user inputs were answered concretely... if still blank the skill emits... and stops.' However, the 'Needs-input guard' section (lines 67-75) only documents the *policy* for re-asking and stopping. It does not provide the *implementation* logic (e.g., code snippet, specific validation step, or reference to a guard function) that actually performs the re-ask and emission. The turn contract asserts a behavior that is not defined in the procedural steps, creating a workflow gap where the agent knows *what* to claim but not *how* to execute the guard.\",\"severity\":\"med\",\"axis\":\"workflow\"},{\"file\":\"skills/execute-phase/SKILL.md\",\"line\":70,\"title\":\"Required input definition contradicts argument-hint\",\"detail\":\"The 'Needs-input guard' section lists `<NN-slug>` as a required input that must be answered concretely. However, the `argument-hint` at line 4 is `<NN-slug> [P<k>|step] [--max-attempts N] [--force]`. In standard CLI parsing, `<NN-slug>` is a positional argument. If the user invokes the skill without it, the shell/CLI parser typically fails before the skill logic runs, or the skill receives an empty string. The guard logic described ('re-ask once... if still blank... stop') implies the skill receives the invocation but the value is empty/blank. This contradicts the `argument-hint` which implies `<NN-slug>` is mandatory for invocation. If the CLI enforces the hint, the guard is dead code. If the CLI does not enforce it, the hint is misleading. The document fails to specify how the skill handles the case where the argument is structurally absent vs. syntactically present but empty.\",\"severity\":\"med\",\"axis\":\"usage-docs\"},{\"file\":\"skills/execute-phase/SKILL.md\",\"line\":37,\"title\":\"Guard output format inconsistent with other stop conditions\",\"detail\":\"The new guard stops with `→ Next: execute-phase requires manual input — cannot proceed`. Other stop conditions in the document (e.g., line 100, line 115) use specific block formats like `UNIT LOOP — <unit> BLOCKED` or `BREACH → STOP`. The new guard's output is a simple sentence, not a structured block. This breaks consistency with the 'Turn contract' which implies a standardized 'Next' block, and makes programmatic parsing of the stop reason difficult for the workflow orchestrator.\",\"severity\":\"low\",\"axis\":\"brand\"}]"
+}

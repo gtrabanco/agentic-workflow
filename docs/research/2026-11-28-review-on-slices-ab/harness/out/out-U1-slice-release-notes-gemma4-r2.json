@@ -1,0 +1,32 @@
+{
+ "id": "U1__slice__release-notes__gemma4__r2",
+ "unit": "U1",
+ "job": "slice__release-notes",
+ "model": "gemma4",
+ "run": 2,
+ "ms": 2658,
+ "usage": {
+  "completion_tokens": 67,
+  "prompt_tokens": 6304,
+  "total_tokens": 6371,
+  "completion_tokens_details": {
+   "reasoning_tokens": 0
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "CHANGELOG.md",
+   "line": 71,
+   "title": "Duplicate version entry",
+   "detail": "The version 5.1.0 for `execute-phase` is duplicated in the CHANGELOG.md (lines 71 and 73).",
+   "severity": "low",
+   "axis": "code"
+  }
+ ],
+ "raw": "[{\"file\":\"CHANGELOG.md\",\"line\":71,\"title\":\"Duplicate version entry\",\"detail\":\"The version 5.1.0 for `execute-phase` is duplicated in the CHANGELOG.md (lines 71 and 73).\",\"severity\":\"low\",\"axis\":\"code\"}]"
+}

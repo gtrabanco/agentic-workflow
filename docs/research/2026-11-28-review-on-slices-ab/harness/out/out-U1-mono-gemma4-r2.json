@@ -1,0 +1,40 @@
+{
+ "id": "U1__mono__gemma4__r2",
+ "unit": "U1",
+ "job": "mono",
+ "model": "gemma4",
+ "run": 2,
+ "ms": 7615,
+ "usage": {
+  "completion_tokens": 214,
+  "prompt_tokens": 35476,
+  "total_tokens": 35690,
+  "completion_tokens_details": {
+   "reasoning_tokens": 0
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "CHANGELOG.md",
+   "line": 688,
+   "title": "Duplicate changelog entry",
+   "detail": "The changelog contains two identical entries for `unit-lane` 1.6.0 and `init-workspace` 3.4.0 (one in the main table and one immediately following it in the diff/current content block).",
+   "severity": "low",
+   "axis": "code"
+  },
+  {
+   "file": "docs/fix/258-harden-needs-input-contracts/SPEC.md",
+   "line": 184,
+   "title": "Incomplete task verification",
+   "detail": "Task P6 (Verification) is marked as `[ ]` (not completed), but the Progress log at line 214 claims `P6: root suite pass... All grep validators pass.` and the Evidence table at line 225 claims `AC5: root suites: grep validators all pass`. This is a spec-drift between task status and evidence/progress claims.",
+   "severity": "med",
+   "axis": "spec-drift"
+  }
+ ],
+ "raw": "[{\"file\":\"CHANGELOG.md\",\"line\":688,\"title\":\"Duplicate changelog entry\",\"detail\":\"The changelog contains two identical entries for `unit-lane` 1.6.0 and `init-workspace` 3.4.0 (one in the main table and one immediately following it in the diff/current content block).\",\"severity\":\"low\",\"axis\":\"code\"},{\"file\":\"docs/fix/258-harden-needs-input-contracts/SPEC.md\",\"line\":184,\"title\":\"Incomplete task verification\",\"detail\":\"Task P6 (Verification) is marked as `[ ]` (not completed), but the Progress log at line 214 claims `P6: root suite pass... All grep validators pass.` and the Evidence table at line 225 claims `AC5: root suites: grep validators all pass`. This is a spec-drift between task status and evidence/progress claims.\",\"severity\":\"med\",\"axis\":\"spec-drift\"}]"
+}

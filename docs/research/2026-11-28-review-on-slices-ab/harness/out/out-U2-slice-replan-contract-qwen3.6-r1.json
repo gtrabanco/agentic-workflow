@@ -1,0 +1,48 @@
+{
+ "id": "U2__slice__replan-contract__qwen3.6__r1",
+ "unit": "U2",
+ "job": "slice__replan-contract",
+ "model": "qwen3.6",
+ "run": 1,
+ "ms": 12752,
+ "usage": {
+  "completion_tokens": 873,
+  "prompt_tokens": 3208,
+  "total_tokens": 4081,
+  "completion_tokens_details": {
+   "reasoning_tokens": 0
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "skills/replan-findings/references/PHASE_APPEND.md",
+   "line": 28,
+   "title": "Workflow: Hardening placement rule contradicts execution order guarantee",
+   "detail": "The 'Placement' section states: 'Insertion is textual and ordered: the new phases sit in the position the rule above names, and the ledger's phase order is the execution order.' However, the rule for 'Final Hardening & PR phase already executed' instructs to append new phases AFTER the existing hardening phase, then append a NEW hardening phase. This results in an execution order where new phases are executed BEFORE the final hardening phase that is meant to 'close them out' (as the previous hardening was already executed and cannot cover them). This creates a logical contradiction where the 'close-out' phase is executed after the work it is supposed to close, violating the implied contract that the final phase validates the entire preceding set.",
+   "severity": "high",
+   "axis": "workflow"
+  },
+  {
+   "file": "skills/replan-findings/references/PHASE_APPEND.md",
+   "line": 45,
+   "title": "Spec-drift: Artifact revision reuse rule contradicts 'new write' definition",
+   "detail": "The 'Artifact-revision duty' section states: 'The same id may be reused by several reviews of unchanged bytes, never across a write.' This implies that if a write is reverted and then re-applied (or if the same content is written again), it might be considered 'unchanged bytes' allowing ID reuse. However, the previous bullet states: 'A revert to previously published bytes is a new write and gets a new id'. If a revert is a 'new write', it must get a new ID. If the subsequent re-application is identical to the original, is it a 'new write' (new ID) or 'unchanged bytes' (reuse)? The rule 'never across a write' is ambiguous regarding whether 'unchanged bytes' refers to the content hash or the logical operation. More critically, if a revert is a new write, the ID changes. If the next write is identical to the *original* (not the revert), does it reuse the original ID? The text 'never across a write' suggests IDs are write-scoped, but 'unchanged bytes' suggests content-scoping. This ambiguity breaks the deterministic contract required for the 'reversible Skills mirror package' mentioned in the unit description.",
+   "severity": "med",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "skills/replan-findings/SKILL.md",
+   "line": 63,
+   "title": "Usage-docs: Contradiction on 'planning-preflight' loading condition",
+   "detail": "The 'Bounded intake' section (point 3) states: 'Load the planning preflight only when an appended phase turns out to touch a surface the frozen evidence does not cover — and say so, never silently.' However, the 'Relationship to other skills' section states: 'planning-preflight is skipped on the router's replan route by design and loaded only when the frozen evidence leaves a gap'. While these seem similar, the 'Bounded intake' instruction is an imperative to the agent ('Load... only when...'), whereas the 'Relationship' section is a declarative statement about the route's design. The defect is that 'Bounded intake' implies a dynamic check *during* phase drafting ('turns out to touch'), while 'Relationship' implies a static route property ('skipped... by design'). If the route is 'skipped by design', the agent should not be attempting to load it conditionally; it should be absent. The 'Bounded intake' instruction creates a potential for the agent to incorrectly load the skill if it misinterprets 'gap' vs 'surface', contradicting the 'skipped by design' guarantee.",
+   "severity": "med",
+   "axis": "usage-docs"
+  }
+ ],
+ "raw": "[\n  {\n    \"file\": \"skills/replan-findings/references/PHASE_APPEND.md\",\n    \"line\": 28,\n    \"title\": \"Workflow: Hardening placement rule contradicts execution order guarantee\",\n    \"detail\": \"The 'Placement' section states: 'Insertion is textual and ordered: the new phases sit in the position the rule above names, and the ledger's phase order is the execution order.' However, the rule for 'Final Hardening & PR phase already executed' instructs to append new phases AFTER the existing hardening phase, then append a NEW hardening phase. This results in an execution order where new phases are executed BEFORE the final hardening phase that is meant to 'close them out' (as the previous hardening was already executed and cannot cover them). This creates a logical contradiction where the 'close-out' phase is executed after the work it is supposed to close, violating the implied contract that the final phase validates the entire preceding set.\",\n    \"severity\": \"high\",\n    \"axis\": \"workflow\"\n  },\n  {\n    \"file\": \"skills/replan-findings/references/PHASE_APPEND.md\",\n    \"line\": 45,\n    \"title\": \"Spec-drift: Artifact revision reuse rule contradicts 'new write' definition\",\n    \"detail\": \"The 'Artifact-revision duty' section states: 'The same id may be reused by several reviews of unchanged bytes, never across a write.' This implies that if a write is reverted and then re-applied (or if the same content is written again), it might be considered 'unchanged bytes' allowing ID reuse. However, the previous bullet states: 'A revert to previously published bytes is a new write and gets a new id'. If a revert is a 'new write', it must get a new ID. If the subsequent re-application is identical to the original, is it a 'new write' (new ID) or 'unchanged bytes' (reuse)? The rule 'never across a write' is ambiguous regarding whether 'unchanged bytes' refers to the content hash or the logical operation. More critically, if a revert is a new write, the ID changes. If the next write is identical to the *original* (not the revert), does it reuse the original ID? The text 'never across a write' suggests IDs are write-scoped, but 'unchanged bytes' suggests content-scoping. This ambiguity breaks the deterministic contract required for the 'reversible Skills mirror package' mentioned in the unit description.\",\n    \"severity\": \"med\",\n    \"axis\": \"spec-drift\"\n  },\n  {\n    \"file\": \"skills/replan-findings/SKILL.md\",\n    \"line\": 63,\n    \"title\": \"Usage-docs: Contradiction on 'planning-preflight' loading condition\",\n    \"detail\": \"The 'Bounded intake' section (point 3) states: 'Load the planning preflight only when an appended phase turns out to touch a surface the frozen evidence does not cover — and say so, never silently.' However, the 'Relationship to other skills' section states: 'planning-preflight is skipped on the router's replan route by design and loaded only when the frozen evidence leaves a gap'. While these seem similar, the 'Bounded intake' instruction is an imperative to the agent ('Load... only when...'), whereas the 'Relationship' section is a declarative statement about the route's design. The defect is that 'Bounded intake' implies a dynamic check *during* phase drafting ('turns out to touch'), while 'Relationship' implies a static route property ('skipped... by design'). If the route is 'skipped by design', the agent should not be attempting to load it conditionally; it should be absent. The 'Bounded intake' instruction creates a potential for the agent to incorrectly load the skill if it misinterprets 'gap' vs 'surface', contradicting the 'skipped by design' guarantee.\",\n    \"severity\": \"med\",\n    \"axis\": \"usage-docs\"\n  }\n]"
+}

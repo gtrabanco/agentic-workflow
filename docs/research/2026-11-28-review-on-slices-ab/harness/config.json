@@ -1,0 +1,162 @@
+{
+ "U1": {
+  "base": "8a6417a2b",
+  "tip": "d7c8b8341",
+  "unit": "fix/258-harden-needs-input-contracts",
+  "summary": "Fix unit 258 hardened needs-input interactive contracts across three workflow skills (execute-phase, unit-lane, init-workspace): adds a guard that stops execution when a required interactive input is missing, a turn-contract box, doc/manifest updates, CHANGELOG rows for the bumped skills, and the unit's own planning SPEC document.",
+  "slices": {
+   "exec-phase-guard": [
+    "skills/execute-phase/SKILL.md"
+   ],
+   "lane-guard": [
+    "skills/unit-lane/SKILL.md",
+    "skills/unit-lane/references/DESIGN.md",
+    "skills/unit-lane/references/RESEARCH.md"
+   ],
+   "init-consent": [
+    "skills/init-workspace/SKILL.md"
+   ],
+   "release-notes": [
+    "CHANGELOG.md",
+    "packages/pi-agentic-workflow/package.json"
+   ],
+   "artifacts-budget": [
+    "docs/workflow/SKILL_CONTEXT_BUDGETS.json",
+    "docs/fix/258-harden-needs-input-contracts/SPEC.md",
+    "docs/features/ROADMAP.md",
+    "docs/fix/README.md"
+   ]
+  },
+  "anchors": {}
+ },
+ "U2": {
+  "base": "b5358666",
+  "tip": "0e35b189",
+  "unit": "fix/224-deterministic-replan-routing",
+  "summary": "Fix unit 224 added a deterministic replan router: scripts/unit-route.mjs parses a unit's ledger/read-set and emits a typed route; script workflow-status gained class-routed next.suggested entries; the replan-findings skill declares a conditional replan entry; several review/fold/triage skills and workflow tutorial docs point to the canonical router; CHANGELOG + skill version bumps; SKILL_CONTEXT_BUDGETS ceilings; the reversible Skills mirror package under packages/pi-agentic-workflow; plus the unit's own SPEC/progress docs and fixture repo used by its tests.",
+  "slices": {
+   "budgets-plugin": [
+    ".claude-plugin/plugin.json",
+    "docs/workflow/SKILL_CONTEXT_BUDGETS.json"
+   ],
+   "mirror-bundle": [
+    "packages/pi-agentic-workflow/package.json",
+    "packages/pi-agentic-workflow/skills/fold-findings/SKILL.md",
+    "packages/pi-agentic-workflow/skills/fold-findings/references/FOLD_PROCESS.md",
+    "packages/pi-agentic-workflow/skills/plan-feature/SKILL.md",
+    "packages/pi-agentic-workflow/skills/plan-feature/references/ROUTING.md",
+    "packages/pi-agentic-workflow/skills/plan-fix/SKILL.md",
+    "packages/pi-agentic-workflow/skills/plan-fix/references/PLANNING_PROCESS.md",
+    "packages/pi-agentic-workflow/skills/replan-findings/SKILL.md",
+    "packages/pi-agentic-workflow/skills/replan-findings/references/PHASE_APPEND.md",
+    "packages/pi-agentic-workflow/skills/review-change/SKILL.md",
+    "packages/pi-agentic-workflow/skills/review-change/references/OUTPUT_AND_GUARDRAILS.md",
+    "packages/pi-agentic-workflow/skills/review-change/references/PERSIST_AND_DECIDE.md",
+    "packages/pi-agentic-workflow/skills/review-implementation/SKILL.md",
+    "packages/pi-agentic-workflow/skills/review-implementation/references/CLASSIFY.md",
+    "packages/pi-agentic-workflow/skills/triage-issue/SKILL.md",
+    "packages/pi-agentic-workflow/skills/triage-issue/references/REVIEW_FINDING_PROCESS.md",
+    "packages/pi-agentic-workflow/skills/workflow-status/SKILL.md",
+    "packages/pi-agentic-workflow/skills/workflow-status/references/SENSOR_SIGNALS.md"
+   ],
+   "release-notes": [
+    "CHANGELOG.es.md",
+    "CHANGELOG.md"
+   ],
+   "replan-contract": [
+    "skills/replan-findings/SKILL.md",
+    "skills/replan-findings/references/PHASE_APPEND.md"
+   ],
+   "review-pack-docs": [
+    "skills/fold-findings/SKILL.md",
+    "skills/fold-findings/references/FOLD_PROCESS.md",
+    "skills/plan-feature/SKILL.md",
+    "skills/plan-feature/references/ROUTING.md",
+    "skills/plan-fix/SKILL.md",
+    "skills/plan-fix/references/PLANNING_PROCESS.md",
+    "skills/review-change/SKILL.md",
+    "skills/review-change/references/OUTPUT_AND_GUARDRAILS.md",
+    "skills/review-change/references/PERSIST_AND_DECIDE.md",
+    "skills/review-implementation/SKILL.md",
+    "skills/review-implementation/references/CLASSIFY.md",
+    "skills/triage-issue/SKILL.md",
+    "skills/triage-issue/references/REVIEW_FINDING_PROCESS.md",
+    "skills/workflow-status/SKILL.md",
+    "skills/workflow-status/references/SENSOR_SIGNALS.md"
+   ],
+   "router-readset": [
+    "scripts/fixtures/unit-route/docs/LOGS.md",
+    "scripts/fixtures/unit-route/docs/features/10-replan-unit/review-findings.md",
+    "scripts/fixtures/unit-route/docs/features/11-fold-unit/review-findings.md",
+    "scripts/fixtures/unit-route/docs/features/12-decision-unit/review-findings.md",
+    "scripts/fixtures/unit-route/docs/features/13-execute-unit/review-findings.md",
+    "scripts/fixtures/unit-route/docs/features/14-empty-unit/.gitkeep",
+    "scripts/fixtures/unit-route/docs/features/30-dup-alpha/.gitkeep",
+    "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/ACCEPTANCE.md",
+    "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/SPEC.md",
+    "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+    "scripts/fixtures/unit-route/docs/features/38-workflow-status-sensor-script/PLAN.md",
+    "scripts/fixtures/unit-route/docs/features/38-workflow-status-sensor-script/TASKS.md",
+    "scripts/fixtures/unit-route/docs/features/40-cited-paths/ACCEPTANCE.md",
+    "scripts/fixtures/unit-route/docs/features/40-cited-paths/SPEC.md",
+    "scripts/fixtures/unit-route/docs/features/40-cited-paths/review-findings.md",
+    "scripts/fixtures/unit-route/docs/features/ROADMAP.md",
+    "scripts/fixtures/unit-route/docs/fix/30-dup-alpha/.gitkeep",
+    "scripts/fixtures/unit-route/docs/fix/README.md",
+    "scripts/fixtures/unit-route/docs/fix/_TEMPLATE/SPEC.md",
+    "scripts/fixtures/unit-route/scripts/phase-lint.mjs",
+    "scripts/fixtures/unit-route/skills/phase-lint/SKILL.md",
+    "scripts/fixtures/unit-route/src/file-1.txt",
+    "scripts/fixtures/unit-route/src/file-10.txt",
+    "scripts/fixtures/unit-route/src/file-11.txt",
+    "scripts/fixtures/unit-route/src/file-12.txt",
+    "scripts/fixtures/unit-route/src/file-13.txt",
+    "scripts/fixtures/unit-route/src/file-14.txt",
+    "scripts/fixtures/unit-route/src/file-15.txt",
+    "scripts/fixtures/unit-route/src/file-16.txt",
+    "scripts/fixtures/unit-route/src/file-17.txt",
+    "scripts/fixtures/unit-route/src/file-18.txt",
+    "scripts/fixtures/unit-route/src/file-19.txt",
+    "scripts/fixtures/unit-route/src/file-2.txt",
+    "scripts/fixtures/unit-route/src/file-20.txt",
+    "scripts/fixtures/unit-route/src/file-3.txt",
+    "scripts/fixtures/unit-route/src/file-4.txt",
+    "scripts/fixtures/unit-route/src/file-5.txt",
+    "scripts/fixtures/unit-route/src/file-6.txt",
+    "scripts/fixtures/unit-route/src/file-7.txt",
+    "scripts/fixtures/unit-route/src/file-8.txt",
+    "scripts/fixtures/unit-route/src/file-9.txt"
+   ],
+   "router-script": [
+    "scripts/unit-route.mjs"
+   ],
+   "sensor-route": [
+    "scripts/normative-drift.test.mjs",
+    "scripts/review-loop-discipline.test.mjs",
+    "scripts/unit-route.test.mjs",
+    "scripts/workflow-status-sensor.test.mjs",
+    "scripts/workflow-status.mjs"
+   ],
+   "tutorial-crossrefs": [
+    "docs/fix/README.md",
+    "docs/workflow/FEATURE_WORKFLOW.es.md",
+    "docs/workflow/FEATURE_WORKFLOW.md",
+    "docs/workflow/PORTABLE_PROMPT.es.md",
+    "docs/workflow/PORTABLE_PROMPT.md",
+    "docs/workflow/REVIEW_AND_CLASSIFY.es.md",
+    "docs/workflow/REVIEW_AND_CLASSIFY.md",
+    "docs/workflow/SKILLS.es.md",
+    "docs/workflow/SKILLS.md"
+   ],
+   "unit-artifacts": [
+    "docs/fix/224-deterministic-replan-routing/ACCEPTANCE.md",
+    "docs/fix/224-deterministic-replan-routing/SPEC.md",
+    "docs/fix/224-deterministic-replan-routing/planning-findings.md",
+    "docs/fix/224-deterministic-replan-routing/progress.md"
+   ]
+  },
+  "anchors": {
+   ".claude-plugin/plugin.json": "budgets-plugin"
+  }
+ }
+}

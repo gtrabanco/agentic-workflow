@@ -1,0 +1,56 @@
+{
+ "id": "U2__slice__replan-contract__glm5.3-flash__r2",
+ "unit": "U2",
+ "job": "slice__replan-contract",
+ "model": "glm5.3-flash",
+ "run": 2,
+ "ms": 30700,
+ "usage": {
+  "completion_tokens": 1957,
+  "prompt_tokens": 3070,
+  "total_tokens": 5027,
+  "completion_tokens_details": {
+   "reasoning_tokens": 1373
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "skills/replan-findings/references/PHASE_APPEND.md",
+   "line": 26,
+   "title": "Numbering rule contradicts insertion-before-hardening rule",
+   "detail": "The doc says numbering 'continues: P9, P10, … after the highest phase already present. Never renumber' and that 'the ledger's phase order is the execution order' (line 47). But the placement rule (line 33) says to insert new phases BEFORE the final Hardening & PR phase. With existing P1..P9 (P9 = hardening), the new P10 is placed before P9, so execution order becomes P1..P8, P10, P9 — phase numbers no longer match execution order, contradicting the doc's own invariant. The two rules cannot both hold without renumbering, which is forbidden.",
+   "severity": "med",
+   "axis": "code"
+  },
+  {
+   "file": "skills/replan-findings/references/PHASE_APPEND.md",
+   "line": 72,
+   "title": "Hand-off claims findings are 'closed' while fold ownership is elsewhere",
+   "detail": "The hand-off template prints 'Findings closed by the append: <F1> + <F2> + …'. This contradicts the same file's guardrail 'Never fold here. The fold belongs to execute-phase's fold cycle' and SKILL.md's 'fold-findings owns folded' / 'never edits a ledger row'. The append only carries finding ids 'so the fold can prove the row's work landed' (line 20); declaring findings 'closed' at append time misstates the verdict/ledger vocabulary the repo itself defines.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "skills/replan-findings/references/PHASE_APPEND.md",
+   "line": 31,
+   "title": "Placement rule undefined when no Hardening & PR phase exists",
+   "detail": "The rule covers only two cases: final hardening 'not yet executed' (insert before 'it') and 'already executed' (append after). If the SPEC ledger contains no Hardening & PR phase at all, 'insert the new phase(s) before it' has no referent and no placement is defined, though the doc claims placement is 'the hardening rule' that always applies.",
+   "severity": "low",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "skills/replan-findings/SKILL.md",
+   "line": 92,
+   "title": "Done-when hand-off contradicts the conditional hand-off template",
+   "detail": "SKILL.md 'Done when' states 'the hand-off is /review-plan <unit>' unconditionally, but PHASE_APPEND's hand-off template includes a branch where the next step is '/design-feature <unit>, then /review-spec, then replan' for a product-owned finding. The two documents disagree on what the terminal hand-off is after the append.",
+   "severity": "low",
+   "axis": "spec-drift"
+  }
+ ],
+ "raw": "[{\"file\":\"skills/replan-findings/references/PHASE_APPEND.md\",\"line\":26,\"title\":\"Numbering rule contradicts insertion-before-hardening rule\",\"detail\":\"The doc says numbering 'continues: P9, P10, … after the highest phase already present. Never renumber' and that 'the ledger's phase order is the execution order' (line 47). But the placement rule (line 33) says to insert new phases BEFORE the final Hardening & PR phase. With existing P1..P9 (P9 = hardening), the new P10 is placed before P9, so execution order becomes P1..P8, P10, P9 — phase numbers no longer match execution order, contradicting the doc's own invariant. The two rules cannot both hold without renumbering, which is forbidden.\",\"severity\":\"med\",\"axis\":\"code\"},{\"file\":\"skills/replan-findings/references/PHASE_APPEND.md\",\"line\":72,\"title\":\"Hand-off claims findings are 'closed' while fold ownership is elsewhere\",\"detail\":\"The hand-off template prints 'Findings closed by the append: <F1> + <F2> + …'. This contradicts the same file's guardrail 'Never fold here. The fold belongs to execute-phase's fold cycle' and SKILL.md's 'fold-findings owns folded' / 'never edits a ledger row'. The append only carries finding ids 'so the fold can prove the row's work landed' (line 20); declaring findings 'closed' at append time misstates the verdict/ledger vocabulary the repo itself defines.\",\"severity\":\"med\",\"axis\":\"workflow\"},{\"file\":\"skills/replan-findings/references/PHASE_APPEND.md\",\"line\":31,\"title\":\"Placement rule undefined when no Hardening & PR phase exists\",\"detail\":\"The rule covers only two cases: final hardening 'not yet executed' (insert before 'it') and 'already executed' (append after). If the SPEC ledger contains no Hardening & PR phase at all, 'insert the new phase(s) before it' has no referent and no placement is defined, though the doc claims placement is 'the hardening rule' that always applies.\",\"severity\":\"low\",\"axis\":\"usage-docs\"},{\"file\":\"skills/replan-findings/SKILL.md\",\"line\":92,\"title\":\"Done-when hand-off contradicts the conditional hand-off template\",\"detail\":\"SKILL.md 'Done when' states 'the hand-off is /review-plan <unit>' unconditionally, but PHASE_APPEND's hand-off template includes a branch where the next step is '/design-feature <unit>, then /review-spec, then replan' for a product-owned finding. The two documents disagree on what the terminal hand-off is after the append.\",\"severity\":\"low\",\"axis\":\"spec-drift\"}]"
+}

@@ -1,0 +1,32 @@
+{
+ "id": "U2__slice__router-readset__gemma4__r2",
+ "unit": "U2",
+ "job": "slice__router-readset",
+ "model": "gemma4",
+ "run": 2,
+ "ms": 4085,
+ "usage": {
+  "completion_tokens": 186,
+  "prompt_tokens": 9898,
+  "total_tokens": 10084,
+  "completion_tokens_details": {
+   "reasoning_tokens": 0
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 11,
+   "title": "Contradictory finding-mark for VF-80",
+   "detail": "The finding VF-80 is marked as `finding-mark` but the table structure and the content of the finding (which describes a code/verify defect) suggest it is a verification of a finding, yet it is listed as a primary row in a way that conflicts with the `finding-mark` status used for other rows. More critically, the finding VF-80 claims `verdict BLOCKED: unparseable` is the cause, but the row itself is categorized as `code` axis, creating ambiguity in whether the finding is the defect or the verification of the defect.",
+   "severity": "low",
+   "axis": "spec-drift"
+  }
+ ],
+ "raw": "[{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":11,\"title\":\"Contradictory finding-mark for VF-80\",\"detail\":\"The finding VF-80 is marked as `finding-mark` but the table structure and the content of the finding (which describes a code/verify defect) suggest it is a verification of a finding, yet it is listed as a primary row in a way that conflicts with the `finding-mark` status used for other rows. More critically, the finding VF-80 claims `verdict BLOCKED: unparseable` is the cause, but the row itself is categorized as `code` axis, creating ambiguity in whether the finding is the defect or the verification of the defect.\",\"severity\":\"low\",\"axis\":\"spec-drift\"}]"
+}

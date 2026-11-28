@@ -1,0 +1,32 @@
+{
+ "id": "U1__slice__lane-guard__gemma4__r1",
+ "unit": "U1",
+ "job": "slice__lane-guard",
+ "model": "gemma4",
+ "run": 1,
+ "ms": 1403,
+ "usage": {
+  "completion_tokens": 120,
+  "prompt_tokens": 5851,
+  "total_tokens": 5971,
+  "completion_tokens_details": {
+   "reasoning_tokens": 0
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "skills/unit-lane/SKILL.md",
+   "line": 101,
+   "title": "Inconsistent error message",
+   "detail": "The 'Needs-input guard' section for '--fix <issue-number> / --from-issue <issue-number>' states it will halt with 'requires manual input', but the Turn contract (line 24) and the primary guard description (line 23) specify the exact required string: '→ Next: unit-lane requires manual input — cannot proceed'.",
+   "severity": "med",
+   "axis": "spec-drift"
+  }
+ ],
+ "raw": "[{\"file\":\"skills/unit-lane/SKILL.md\",\"line\":101,\"title\":\"Inconsistent error message\",\"detail\":\"The 'Needs-input guard' section for '--fix <issue-number> / --from-issue <issue-number>' states it will halt with 'requires manual input', but the Turn contract (line 24) and the primary guard description (line 23) specify the exact required string: '→ Next: unit-lane requires manual input — cannot proceed'.\",\"severity\":\"med\",\"axis\":\"spec-drift\"}]"
+}

@@ -1,0 +1,56 @@
+{
+ "id": "U2__slice__release-notes__qwen3.6__r2",
+ "unit": "U2",
+ "job": "slice__release-notes",
+ "model": "qwen3.6",
+ "run": 2,
+ "ms": 8504,
+ "usage": {
+  "completion_tokens": 693,
+  "prompt_tokens": 12955,
+  "total_tokens": 13648,
+  "completion_tokens_details": {
+   "reasoning_tokens": 0
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "CHANGELOG.es.md",
+   "line": 96,
+   "title": "Malformación de tabla Markdown (celda de versión)",
+   "detail": "La fila de versión 0.10.0 tiene una estructura de tabla rota. La celda de versión '0.10.0' no está delimitada por pipes, apareciendo como texto suelto antes de la primera columna de datos, y la última celda de descripción termina con '|---|' en lugar de '|'. Esto rompe el renderizado de la tabla en Markdown. Evidencia: `| 0.10.0 | 2026-09-15 ...` vs la cabecera `| Versión | Fecha | Tipo | Qué cambió |` y las filas siguientes que siguen el formato `| 0.9.2 | ...`",
+   "severity": "high",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "CHANGELOG.md",
+   "line": 94,
+   "title": "Malformación de tabla Markdown (celda de versión)",
+   "detail": "La fila de versión 0.10.0 tiene una estructura de tabla rota. La celda de versión '0.10.0' no está delimitada por pipes, apareciendo como texto suelto antes de la primera columna de datos, y la última celda de descripción termina con '|---|' en lugar de '|'. Esto rompe el renderizado de la tabla en Markdown. Evidencia: `| 0.10.0 | 2026-09-15 ...` vs la cabecera `| Version | Date | Type | What changed |` y las filas siguientes que siguen el formato `| 0.9.2 | ...`",
+   "severity": "high",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "CHANGELOG.es.md",
+   "line": 96,
+   "title": "Inconsistencia de formato de tabla (falta separador)",
+   "detail": "La fila de versión 0.10.0 omite el separador de columna inicial (`|`) que es consistente con el resto de la tabla y la cabecera. La fila comienza con `| 0.10.0` pero la cabecera es `| Versión | ...`. Además, la fila termina con `|---|` en lugar de `|`. Evidencia: Comparar con la fila 0.9.2: `| 0.9.2 | 2026-09-13 | patch | ... |`",
+   "severity": "med",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "CHANGELOG.md",
+   "line": 94,
+   "title": "Inconsistencia de formato de tabla (falta separador)",
+   "detail": "La fila de versión 0.10.0 omite el separador de columna inicial (`|`) que es consistente con el resto de la tabla y la cabecera. La fila comienza con `| 0.10.0` pero la cabecera es `| Version | ...`. Además, la fila termina con `|---|` en lugar de `|`. Evidencia: Comparar con la fila 0.9.2: `| 0.9.2 | 2026-09-13 | patch | ... |`",
+   "severity": "med",
+   "axis": "usage-docs"
+  }
+ ],
+ "raw": "[{\"file\":\"CHANGELOG.es.md\",\"line\":96,\"title\":\"Malformación de tabla Markdown (celda de versión)\",\"detail\":\"La fila de versión 0.10.0 tiene una estructura de tabla rota. La celda de versión '0.10.0' no está delimitada por pipes, apareciendo como texto suelto antes de la primera columna de datos, y la última celda de descripción termina con '|---|' en lugar de '|'. Esto rompe el renderizado de la tabla en Markdown. Evidencia: `| 0.10.0 | 2026-09-15 ...` vs la cabecera `| Versión | Fecha | Tipo | Qué cambió |` y las filas siguientes que siguen el formato `| 0.9.2 | ...`\",\"severity\":\"high\",\"axis\":\"usage-docs\"},{\"file\":\"CHANGELOG.md\",\"line\":94,\"title\":\"Malformación de tabla Markdown (celda de versión)\",\"detail\":\"La fila de versión 0.10.0 tiene una estructura de tabla rota. La celda de versión '0.10.0' no está delimitada por pipes, apareciendo como texto suelto antes de la primera columna de datos, y la última celda de descripción termina con '|---|' en lugar de '|'. Esto rompe el renderizado de la tabla en Markdown. Evidencia: `| 0.10.0 | 2026-09-15 ...` vs la cabecera `| Version | Date | Type | What changed |` y las filas siguientes que siguen el formato `| 0.9.2 | ...`\",\"severity\":\"high\",\"axis\":\"usage-docs\"},{\"file\":\"CHANGELOG.es.md\",\"line\":96,\"title\":\"Inconsistencia de formato de tabla (falta separador)\",\"detail\":\"La fila de versión 0.10.0 omite el separador de columna inicial (`|`) que es consistente con el resto de la tabla y la cabecera. La fila comienza con `| 0.10.0` pero la cabecera es `| Versión | ...`. Además, la fila termina con `|---|` en lugar de `|`. Evidencia: Comparar con la fila 0.9.2: `| 0.9.2 | 2026-09-13 | patch | ... |`\",\"severity\":\"med\",\"axis\":\"usage-docs\"},{\"file\":\"CHANGELOG.md\",\"line\":94,\"title\":\"Inconsistencia de formato de tabla (falta separador)\",\"detail\":\"La fila de versión 0.10.0 omite el separador de columna inicial (`|`) que es consistente con el resto de la tabla y la cabecera. La fila comienza con `| 0.10.0` pero la cabecera es `| Version | ...`. Además, la fila termina con `|---|` en lugar de `|`. Evidencia: Comparar con la fila 0.9.2: `| 0.9.2 | 2026-09-13 | patch | ... |`\",\"severity\":\"med\",\"axis\":\"usage-docs\"}]"
+}

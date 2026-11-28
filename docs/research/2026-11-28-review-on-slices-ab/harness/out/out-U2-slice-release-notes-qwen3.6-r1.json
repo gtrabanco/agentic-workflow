@@ -1,0 +1,40 @@
+{
+ "id": "U2__slice__release-notes__qwen3.6__r1",
+ "unit": "U2",
+ "job": "slice__release-notes",
+ "model": "qwen3.6",
+ "run": 1,
+ "ms": 1841,
+ "usage": {
+  "completion_tokens": 249,
+  "prompt_tokens": 12955,
+  "total_tokens": 13204,
+  "completion_tokens_details": {
+   "reasoning_tokens": 0
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "CHANGELOG.es.md",
+   "line": 96,
+   "title": "Markdown table syntax error (missing pipe)",
+   "detail": "The new row for version 0.10.0 is missing the closing pipe character for the 'Qué cambió' column, breaking the table structure. The line ends with `...publicar el re-empaquetado. |---|` instead of `...publicar el re-empaquetado. |`.",
+   "severity": "high",
+   "axis": "code"
+  },
+  {
+   "file": "CHANGELOG.md",
+   "line": 94,
+   "title": "Markdown table syntax error (missing pipe)",
+   "detail": "The new row for version 0.10.0 is missing the closing pipe character for the 'What changed' column. The line ends with `...publish the re-bundle. |---|` instead of `...publish the re-bundle. |`.",
+   "severity": "high",
+   "axis": "code"
+  }
+ ],
+ "raw": "[\n  {\n    \"file\": \"CHANGELOG.es.md\",\n    \"line\": 96,\n    \"title\": \"Markdown table syntax error (missing pipe)\",\n    \"detail\": \"The new row for version 0.10.0 is missing the closing pipe character for the 'Qué cambió' column, breaking the table structure. The line ends with `...publicar el re-empaquetado. |---|` instead of `...publicar el re-empaquetado. |`.\",\n    \"severity\": \"high\",\n    \"axis\": \"code\"\n  },\n  {\n    \"file\": \"CHANGELOG.md\",\n    \"line\": 94,\n    \"title\": \"Markdown table syntax error (missing pipe)\",\n    \"detail\": \"The new row for version 0.10.0 is missing the closing pipe character for the 'What changed' column. The line ends with `...publish the re-bundle. |---|` instead of `...publish the re-bundle. |`.\",\n    \"severity\": \"high\",\n    \"axis\": \"code\"\n  }\n]"
+}

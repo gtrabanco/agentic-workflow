@@ -1,0 +1,128 @@
+{
+ "id": "U2__slice__review-pack-docs__deepseek-v4-flash__r2",
+ "unit": "U2",
+ "job": "slice__review-pack-docs",
+ "model": "deepseek-v4-flash",
+ "run": 2,
+ "ms": 7236,
+ "usage": {
+  "completion_tokens": 2038,
+  "prompt_tokens": 35631,
+  "total_tokens": 37669,
+  "completion_tokens_details": {
+   "reasoning_tokens": 0
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 35584
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "skills/fold-findings/SKILL.md",
+   "line": null,
+   "title": "Freeze-batch receipt omits retained row ids the prose requires",
+   "detail": "The freeze-batch paragraph says the receipt 'records the REPLAN-ROUTE branch and every retained (unfolded) row id', but the fixed REPAIR-RECEIPT block has no field for retained row ids — its six fields are Repaired/Refuted-open/Gate/Batch class/Fold diff/Branch. A freeze-batch has nothing folded, so Repaired=none and Refuted/open=none; the retained replan rows have nowhere to be recorded, contradicting the stated contract.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "skills/fold-findings/SKILL.md",
+   "line": null,
+   "title": "REPLAN-ROUTE hand-off contradicts the REPLAN per-finding verdict hand-off",
+   "detail": "The closing-block table now routes freeze-batch to `node scripts/unit-route.mjs <unit>` → planner → `/review-plan` → `/execute-phase`, but the `→ Next:` block still says `any REPLAN (<F1> + <F2> + …) → confirm all proposed SPEC phases, then /execute-phase on this same branch` — skipping the router and the fresh `/review-plan` the table and FOLD_PROCESS step 9 now require. Two hand-offs in the same file disagree.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "skills/plan-feature/SKILL.md",
+   "line": null,
+   "title": "Allowlist says 'Both resources are normative' after adding a fourth path",
+   "detail": "The progressive-loading list was expanded to four numbered paths (ROUTING, planning-preflight, phase-contract, replan-findings) but the closing sentence still reads 'Both resources are normative, one hop from this file, and fail closed when missing.' The count no longer matches the list.",
+   "severity": "low",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "skills/plan-feature/references/ROUTING.md",
+   "line": null,
+   "title": "Replan exemption runs the router before the redirect gate, contradicting the gate's 'always first' contract",
+   "detail": "The file opens 'Redirect gate (always, before routing)' and plan-feature's turn contract says 'The redirect gate ran FIRST, before any SPEC edit'. The new 'Replan exemption — the router runs first. Before the status gate, run node scripts/unit-route.mjs <NN>' makes the router precede the gate, and on `route: replan` it says 'skip the STOP' — i.e. skip the redirect gate's STOP blocks (planned/in-progress/done/idea). That directly contradicts the gate's own 'No bypass flag exists for this gate' and the turn-contract box.",
+   "severity": "high",
+   "axis": "workflow"
+  },
+  {
+   "file": "skills/plan-feature/references/ROUTING.md",
+   "line": null,
+   "title": "Router invocation `<NN>` vs `<unit>` inconsistent across the slice",
+   "detail": "ROUTING.md and plan-feature SKILL.md invoke `node scripts/unit-route.mjs <NN>` / `<NN>`, while fold-findings, review-change, review-implementation, triage-issue and SENSOR_SIGNALS all invoke `node scripts/unit-route.mjs <unit>`. The router's accepted argument form is never stated, so a documented invocation (`<NN>` vs `<unit>`) is ambiguous and at least one of the two forms is wrong.",
+   "severity": "med",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "skills/plan-fix/SKILL.md",
+   "line": null,
+   "title": "plan-fix replan path appends to an existing SPEC but plan-fix's own output contract forbids that",
+   "detail": "Step 7 says on `route: replan` the phases 'are appended to the unit's existing SPEC ledger on the same branch instead of a new fix SPEC', yet the Output section and turn contract require `docs/fix/<primary>-<topic>/SPEC.md` with a fresh local commit and hand-off to `/review-plan fix-<primary>`. The skill has no branch for 'existing unit, append only' — its Hand-off block still prints 'SPEC drafted: docs/fix/<primary>-<topic>/SPEC.md' and 'Branch: fix/<primary>-<topic> (local, not pushed)', which is wrong for an in-progress unit on its own branch.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "skills/plan-fix/references/PLANNING_PROCESS.md",
+   "line": null,
+   "title": "Replan detection runs before ingest but needs the unit folder that ingest resolves",
+   "detail": "The new preamble says 'When the target resolves to an existing unit folder, run node scripts/unit-route.mjs <unit> first' and 'run the router before ingest', but step 1 (Ingest) is what resolves the issue numbers and derives the topic/unit; the router needs `<unit>` which is not known until after ingest. The ordering is self-contradictory.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "skills/review-change/references/PERSIST_AND_DECIDE.md",
+   "line": null,
+   "title": "REVIEW-FAIL Next block has a stray orphaned sub-bullet and broken indentation",
+   "detail": "The edited block leaves an orphaned fragment: after the adversarial sub-bullet the text reads `...instead of single-reviewer` then a blank line then `       (yes: <which box fired>; no: omit this line)` — a dangling continuation with no owning bullet, plus inconsistent leading indentation (`      ·` vs `     ·`). The fixed block is supposed to be emitted verbatim; as written it is malformed.",
+   "severity": "med",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "skills/review-change/references/PERSIST_AND_DECIDE.md",
+   "line": null,
+   "title": "REVIEW-FAIL replan line now names `/plan-fix <n>` for a fix, contradicting CLASSIFY's 'never plan-fix'",
+   "detail": "The new line says the router 'names the planner (`/plan-feature <unit>` for a feature, `/plan-fix <n>` for a fix)'. But review-implementation/references/CLASSIFY.md (same slice) states replan-in-unit 'never routes to `plan-fix` for a new unit or a new issue (AC 12)' and the fix-now routing says 'never `plan-fix`'. The two documents disagree on whether `/plan-fix` is a valid replan destination.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "skills/review-implementation/references/CLASSIFY.md",
+   "line": null,
+   "title": "Owning-stage `plan` hand-off asserts `route: replan` unconditionally",
+   "detail": "The table row for owning stage `plan` now reads 'run `node scripts/unit-route.mjs <unit>` → `route: replan`', presenting the router output as a foregone conclusion. A plan-owned finding does not guarantee the router emits `route: replan` (the router decides from the ledger's frozen route); the doc states the output rather than the condition, so a reader following it will treat a non-replan route as an error.",
+   "severity": "low",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "skills/triage-issue/SKILL.md",
+   "line": null,
+   "title": "Diagram still routes fix-now to plan-fix, contradicting CLASSIFY's 'never plan-fix'",
+   "detail": "The relationship diagram keeps `fix-now ─────────▶ plan-fix ─▶ execute-phase --fix`, while review-implementation/CLASSIFY.md in this same slice states fix-now 'is NEVER a tracked issue and NEVER routes to `plan-fix`' and 'never `plan-fix` (AC 12)'. The triage diagram contradicts the classifier's contract.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "skills/workflow-status/references/SENSOR_SIGNALS.md",
+   "line": null,
+   "title": "New plan-owner signal emits `/plan-feature <unit>` | `/plan-fix <issue>` but the router is the declared owner",
+   "detail": "The new trigger says the command is `{command: \"/plan-feature <unit>\" | \"/plan-fix <issue>\", ...}` and claims it is 'the same class→destination decision `scripts/unit-route.mjs` owns', yet it bypasses the router and hard-codes the planner. Every other surface in this slice says the router's `route: replan` line names the planner; the sensor duplicates (and can diverge from) that decision instead of emitting the router invocation.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "skills/workflow-status/references/SENSOR_SIGNALS.md",
+   "line": null,
+   "title": "Plan-owner signal fires on 'frozen route is the plan owner' but the ledger schema has no plan-owner route value",
+   "detail": "The trigger condition is 'an open row whose frozen route is the plan owner', but the fixed ledger schema quoted in the same file is `| id | file:line | axis | severity | class | route | folded |` and the class vocabulary is fix-now/replan-in-unit/decision-required/proposal/ignore — there is no `route` value meaning 'plan owner'. The sensor cannot mechanically detect the condition it declares, so the trigger is unimplementable as written.",
+   "severity": "med",
+   "axis": "code"
+  }
+ ],
+ "raw": "[{\"file\":\"skills/fold-findings/SKILL.md\",\"line\":null,\"title\":\"Freeze-batch receipt omits retained row ids the prose requires\",\"detail\":\"The freeze-batch paragraph says the receipt 'records the REPLAN-ROUTE branch and every retained (unfolded) row id', but the fixed REPAIR-RECEIPT block has no field for retained row ids — its six fields are Repaired/Refuted-open/Gate/Batch class/Fold diff/Branch. A freeze-batch has nothing folded, so Repaired=none and Refuted/open=none; the retained replan rows have nowhere to be recorded, contradicting the stated contract.\",\"severity\":\"med\",\"axis\":\"workflow\"},{\"file\":\"skills/fold-findings/SKILL.md\",\"line\":null,\"title\":\"REPLAN-ROUTE hand-off contradicts the REPLAN per-finding verdict hand-off\",\"detail\":\"The closing-block table now routes freeze-batch to `node scripts/unit-route.mjs <unit>` → planner → `/review-plan` → `/execute-phase`, but the `→ Next:` block still says `any REPLAN (<F1> + <F2> + …) → confirm all proposed SPEC phases, then /execute-phase on this same branch` — skipping the router and the fresh `/review-plan` the table and FOLD_PROCESS step 9 now require. Two hand-offs in the same file disagree.\",\"severity\":\"med\",\"axis\":\"workflow\"},{\"file\":\"skills/plan-feature/SKILL.md\",\"line\":null,\"title\":\"Allowlist says 'Both resources are normative' after adding a fourth path\",\"detail\":\"The progressive-loading list was expanded to four numbered paths (ROUTING, planning-preflight, phase-contract, replan-findings) but the closing sentence still reads 'Both resources are normative, one hop from this file, and fail closed when missing.' The count no longer matches the list.\",\"severity\":\"low\",\"axis\":\"usage-docs\"},{\"file\":\"skills/plan-feature/references/ROUTING.md\",\"line\":null,\"title\":\"Replan exemption runs the router before the redirect gate, contradicting the gate's 'always first' contract\",\"detail\":\"The file opens 'Redirect gate (always, before routing)' and plan-feature's turn contract says 'The redirect gate ran FIRST, before any SPEC edit'. The new 'Replan exemption — the router runs first. Before the status gate, run node scripts/unit-route.mjs <NN>' makes the router precede the gate, and on `route: replan` it says 'skip the STOP' — i.e. skip the redirect gate's STOP blocks (planned/in-progress/done/idea). That directly contradicts the gate's own 'No bypass flag exists for this gate' and the turn-contract box.\",\"severity\":\"high\",\"axis\":\"workflow\"},{\"file\":\"skills/plan-feature/references/ROUTING.md\",\"line\":null,\"title\":\"Router invocation `<NN>` vs `<unit>` inconsistent across the slice\",\"detail\":\"ROUTING.md and plan-feature SKILL.md invoke `node scripts/unit-route.mjs <NN>` / `<NN>`, while fold-findings, review-change, review-implementation, triage-issue and SENSOR_SIGNALS all invoke `node scripts/unit-route.mjs <unit>`. The router's accepted argument form is never stated, so a documented invocation (`<NN>` vs `<unit>`) is ambiguous and at least one of the two forms is wrong.\",\"severity\":\"med\",\"axis\":\"usage-docs\"},{\"file\":\"skills/plan-fix/SKILL.md\",\"line\":null,\"title\":\"plan-fix replan path appends to an existing SPEC but plan-fix's own output contract forbids that\",\"detail\":\"Step 7 says on `route: replan` the phases 'are appended to the unit's existing SPEC ledger on the same branch instead of a new fix SPEC', yet the Output section and turn contract require `docs/fix/<primary>-<topic>/SPEC.md` with a fresh local commit and hand-off to `/review-plan fix-<primary>`. The skill has no branch for 'existing unit, append only' — its Hand-off block still prints 'SPEC drafted: docs/fix/<primary>-<topic>/SPEC.md' and 'Branch: fix/<primary>-<topic> (local, not pushed)', which is wrong for an in-progress unit on its own branch.\",\"severity\":\"med\",\"axis\":\"workflow\"},{\"file\":\"skills/plan-fix/references/PLANNING_PROCESS.md\",\"line\":null,\"title\":\"Replan detection runs before ingest but needs the unit folder that ingest resolves\",\"detail\":\"The new preamble says 'When the target resolves to an existing unit folder, run node scripts/unit-route.mjs <unit> first' and 'run the router before ingest', but step 1 (Ingest) is what resolves the issue numbers and derives the topic/unit; the router needs `<unit>` which is not known until after ingest. The ordering is self-contradictory.\",\"severity\":\"med\",\"axis\":\"workflow\"},{\"file\":\"skills/review-change/references/PERSIST_AND_DECIDE.md\",\"line\":null,\"title\":\"REVIEW-FAIL Next block has a stray orphaned sub-bullet and broken indentation\",\"detail\":\"The edited block leaves an orphaned fragment: after the adversarial sub-bullet the text reads `...instead of single-reviewer` then a blank line then `       (yes: <which box fired>; no: omit this line)` — a dangling continuation with no owning bullet, plus inconsistent leading indentation (`      ·` vs `     ·`). The fixed block is supposed to be emitted verbatim; as written it is malformed.\",\"severity\":\"med\",\"axis\":\"usage-docs\"},{\"file\":\"skills/review-change/references/PERSIST_AND_DECIDE.md\",\"line\":null,\"title\":\"REVIEW-FAIL replan line now names `/plan-fix <n>` for a fix, contradicting CLASSIFY's 'never plan-fix'\",\"detail\":\"The new line says the router 'names the planner (`/plan-feature <unit>` for a feature, `/plan-fix <n>` for a fix)'. But review-implementation/references/CLASSIFY.md (same slice) states replan-in-unit 'never routes to `plan-fix` for a new unit or a new issue (AC 12)' and the fix-now routing says 'never `plan-fix`'. The two documents disagree on whether `/plan-fix` is a valid replan destination.\",\"severity\":\"med\",\"axis\":\"workflow\"},{\"file\":\"skills/review-implementation/references/CLASSIFY.md\",\"line\":null,\"title\":\"Owning-stage `plan` hand-off asserts `route: replan` unconditionally\",\"detail\":\"The table row for owning stage `plan` now reads 'run `node scripts/unit-route.mjs <unit>` → `route: replan`', presenting the router output as a foregone conclusion. A plan-owned finding does not guarantee the router emits `route: replan` (the router decides from the ledger's frozen route); the doc states the output rather than the condition, so a reader following it will treat a non-replan route as an error.\",\"severity\":\"low\",\"axis\":\"usage-docs\"},{\"file\":\"skills/triage-issue/SKILL.md\",\"line\":null,\"title\":\"Diagram still routes fix-now to plan-fix, contradicting CLASSIFY's 'never plan-fix'\",\"detail\":\"The relationship diagram keeps `fix-now ─────────▶ plan-fix ─▶ execute-phase --fix`, while review-implementation/CLASSIFY.md in this same slice states fix-now 'is NEVER a tracked issue and NEVER routes to `plan-fix`' and 'never `plan-fix` (AC 12)'. The triage diagram contradicts the classifier's contract.\",\"severity\":\"med\",\"axis\":\"workflow\"},{\"file\":\"skills/workflow-status/references/SENSOR_SIGNALS.md\",\"line\":null,\"title\":\"New plan-owner signal emits `/plan-feature <unit>` | `/plan-fix <issue>` but the router is the declared owner\",\"detail\":\"The new trigger says the command is `{command: \\\"/plan-feature <unit>\\\" | \\\"/plan-fix <issue>\\\", ...}` and claims it is 'the same class→destination decision `scripts/unit-route.mjs` owns', yet it bypasses the router and hard-codes the planner. Every other surface in this slice says the router's `route: replan` line names the planner; the sensor duplicates (and can diverge from) that decision instead of emitting the router invocation.\",\"severity\":\"med\",\"axis\":\"workflow\"},{\"file\":\"skills/workflow-status/references/SENSOR_SIGNALS.md\",\"line\":null,\"title\":\"Plan-owner signal fires on 'frozen route is the plan owner' but the ledger schema has no plan-owner route value\",\"detail\":\"The trigger condition is 'an open row whose frozen route is the plan owner', but the fixed ledger schema quoted in the same file is `| id | file:line | axis | severity | class | route | folded |` and the class vocabulary is fix-now/replan-in-unit/decision-required/proposal/ignore — there is no `route` value meaning 'plan owner'. The sensor cannot mechanically detect the condition it declares, so the trigger is unimplementable as written.\",\"severity\":\"med\",\"axis\":\"code\"}]"
+}

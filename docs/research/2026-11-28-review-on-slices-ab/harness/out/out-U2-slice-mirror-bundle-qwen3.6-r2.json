@@ -1,0 +1,72 @@
+{
+ "id": "U2__slice__mirror-bundle__qwen3.6__r2",
+ "unit": "U2",
+ "job": "slice__mirror-bundle",
+ "model": "qwen3.6",
+ "run": 2,
+ "ms": 8756,
+ "usage": {
+  "completion_tokens": 1531,
+  "prompt_tokens": 26723,
+  "total_tokens": 28254,
+  "completion_tokens_details": {
+   "reasoning_tokens": 0
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "packages/pi-agentic-workflow/skills/replan-findings/SKILL.md",
+   "line": 43,
+   "title": "Workflow: Contradiction on planning preflight loading",
+   "detail": "The SKILL.md states: 'Load the [planning preflight](<../planning-preflight/SKILL.md>) only when an appended phase turns out to touch a surface the frozen evidence does not cover'. However, the SKILL.md also states in the 'When to use' section: 'plan-feature or plan-fix, and only after node scripts/unit-route.mjs <unit> printed route: replan.' The plan-feature and plan-fix skills (and their references) mandate loading planning-preflight as a primary step before composing internal steps. The replan contract's conditional loading of planning-preflight contradicts the mandatory preflight requirement of the consumers that invoke it, creating a broken workflow where the consumer's gate is skipped.",
+   "severity": "high",
+   "axis": "workflow"
+  },
+  {
+   "file": "packages/pi-agentic-workflow/skills/replan-findings/references/PHASE_APPEND.md",
+   "line": 23,
+   "title": "Workflow: Contradiction on planning preflight loading",
+   "detail": "The PHASE_APPEND.md reference file does not explicitly mention planning-preflight, but the SKILL.md it supports claims to skip it. The SKILL.md says: 'No planning preflight. The finding already pins the scope, so the normalized-repository-state read planning-preflight owns is not consumed on this route.' This contradicts the plan-feature and plan-fix skills which require planning-preflight to 'own the normalized repository-state read and the ONE final architectural classification' before composing an internal step. The replan contract bypasses this classification, potentially leading to invalid phases.",
+   "severity": "high",
+   "axis": "workflow"
+  },
+  {
+   "file": "packages/pi-agentic-workflow/skills/plan-feature/references/ROUTING.md",
+   "line": 10,
+   "title": "Workflow: Contradiction on replan exemption scope",
+   "detail": "The ROUTING.md states: 'A route: replan line means the unit carries an open finding whose frozen route is the plan owner: skip the STOP and load [the replan contract]... Any other route keeps the gate and the hand-off its line names'. However, the 'Replan exemption' is placed *before* the status gate check. The status gate (step 2) stops on 'planned' roadmap status. If a unit is 'planned' but has a replan finding, the router says 'replan', so the status gate is skipped. This allows planning on a 'planned' unit, which the status gate explicitly forbids ('Never invoke plan-feature-scaffold — re-scaffolding an already-planned feature is the re-plan-loop bug this gate exists to close'). The replan exemption bypasses the anti-re-plan-loop gate.",
+   "severity": "high",
+   "axis": "workflow"
+  },
+  {
+   "file": "packages/pi-agentic-workflow/skills/plan-fix/references/PLANNING_PROCESS.md",
+   "line": 4,
+   "title": "Workflow: Contradiction on replan detection scope",
+   "detail": "The PLANNING_PROCESS.md states: 'When the target resolves to an existing unit folder, run node scripts/unit-route.mjs <unit> first. A route: replan line means the unit carries an open finding whose frozen route is the plan owner: load [the replan contract]... and append phases to that unit's SPEC ledger on its own branch — do not draft a new fix SPEC.' This contradicts the plan-fix skill's core purpose: 'Draft and locally commit a tightly scoped, phased fix SPEC... A fix unit has no Product half and never grows a fake one'. If the router says 'replan', plan-fix appends to an *existing* SPEC. But plan-fix is for *new* fixes (drafting a SPEC). If the unit already has a SPEC, it's likely a feature unit or an existing fix unit. If it's a feature unit, plan-fix shouldn't be used. If it's an existing fix unit, appending to it might be correct, but the skill's description says it drafts a *new* SPEC. The router's 'replan' path in plan-fix conflates 'replan a feature' with 'replan a fix', potentially using the wrong planner or contract.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "packages/pi-agentic-workflow/skills/review-change/references/OUTPUT_AND_GUARDRAILS.md",
+   "line": 30,
+   "title": "Usage-docs: Incomplete replan workflow description",
+   "detail": "The OUTPUT_AND_GUARDRAILS.md states: 'run node scripts/unit-route.mjs <unit> — its route: replan line names the planner... The planner re-cuts the plan on this branch, the user confirms the appended SPEC phase(s), a fresh /review-plan <unit> passes, and only then execute-phase runs them.' This describes the full workflow. However, the SKILL.md for review-change (the consumer) does not explicitly state this full workflow in its 'When to use' or 'Turn contract'. It relies on the router. The documentation in OUTPUT_AND_GUARDRAILS.md is more complete than the skill itself, which might lead users to believe the skill handles the full workflow, when it only triggers the router.",
+   "severity": "low",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "packages/pi-agentic-workflow/skills/review-implementation/references/CLASSIFY.md",
+   "line": 56,
+   "title": "Spec-drift: Contradiction in replan-in-unit route description",
+   "detail": "The CLASSIFY.md states: 'Set its Route to replan-in-unit: run node scripts/unit-route.mjs <unit> — its route: replan line names the planner... and the unit's SPEC ## Phases ledger gets one or more new phases... a fresh /review-plan <unit> passing before execute-phase runs them.' This is consistent with the new workflow. However, the previous version (base) said: 'Set its Route to replan-in-unit: the unit's SPEC ## Phases ledger gets one or more new phases... proposed to the user for confirmation, then executed via execute-phase.' The new version adds the router step. This is a spec update, not a drift, but it highlights that the 'replan-in-unit' class now has a mandatory router step, which is a significant behavioral change not fully reflected in all consumer skills' 'When to use' sections (e.g., triage-issue).",
+   "severity": "low",
+   "axis": "spec-drift"
+  }
+ ],
+ "raw": "[\n  {\n    \"file\": \"packages/pi-agentic-workflow/skills/replan-findings/SKILL.md\",\n    \"line\": 43,\n    \"title\": \"Workflow: Contradiction on planning preflight loading\",\n    \"detail\": \"The SKILL.md states: 'Load the [planning preflight](<../planning-preflight/SKILL.md>) only when an appended phase turns out to touch a surface the frozen evidence does not cover'. However, the SKILL.md also states in the 'When to use' section: 'plan-feature or plan-fix, and only after node scripts/unit-route.mjs <unit> printed route: replan.' The plan-feature and plan-fix skills (and their references) mandate loading planning-preflight as a primary step before composing internal steps. The replan contract's conditional loading of planning-preflight contradicts the mandatory preflight requirement of the consumers that invoke it, creating a broken workflow where the consumer's gate is skipped.\",\n    \"severity\": \"high\",\n    \"axis\": \"workflow\"\n  },\n  {\n    \"file\": \"packages/pi-agentic-workflow/skills/replan-findings/references/PHASE_APPEND.md\",\n    \"line\": 23,\n    \"title\": \"Workflow: Contradiction on planning preflight loading\",\n    \"detail\": \"The PHASE_APPEND.md reference file does not explicitly mention planning-preflight, but the SKILL.md it supports claims to skip it. The SKILL.md says: 'No planning preflight. The finding already pins the scope, so the normalized-repository-state read planning-preflight owns is not consumed on this route.' This contradicts the plan-feature and plan-fix skills which require planning-preflight to 'own the normalized repository-state read and the ONE final architectural classification' before composing an internal step. The replan contract bypasses this classification, potentially leading to invalid phases.\",\n    \"severity\": \"high\",\n    \"axis\": \"workflow\"\n  },\n  {\n    \"file\": \"packages/pi-agentic-workflow/skills/plan-feature/references/ROUTING.md\",\n    \"line\": 10,\n    \"title\": \"Workflow: Contradiction on replan exemption scope\",\n    \"detail\": \"The ROUTING.md states: 'A route: replan line means the unit carries an open finding whose frozen route is the plan owner: skip the STOP and load [the replan contract]... Any other route keeps the gate and the hand-off its line names'. However, the 'Replan exemption' is placed *before* the status gate check. The status gate (step 2) stops on 'planned' roadmap status. If a unit is 'planned' but has a replan finding, the router says 'replan', so the status gate is skipped. This allows planning on a 'planned' unit, which the status gate explicitly forbids ('Never invoke plan-feature-scaffold — re-scaffolding an already-planned feature is the re-plan-loop bug this gate exists to close'). The replan exemption bypasses the anti-re-plan-loop gate.\",\n    \"severity\": \"high\",\n    \"axis\": \"workflow\"\n  },\n  {\n    \"file\": \"packages/pi-agentic-workflow/skills/plan-fix/references/PLANNING_PROCESS.md\",\n    \"line\": 4,\n    \"title\": \"Workflow: Contradiction on replan detection scope\",\n    \"detail\": \"The PLANNING_PROCESS.md states: 'When the target resolves to an existing unit folder, run node scripts/unit-route.mjs <unit> first. A route: replan line means the unit carries an open finding whose frozen route is the plan owner: load [the replan contract]... and append phases to that unit's SPEC ledger on its own branch — do not draft a new fix SPEC.' This contradicts the plan-fix skill's core purpose: 'Draft and locally commit a tightly scoped, phased fix SPEC... A fix unit has no Product half and never grows a fake one'. If the router says 'replan', plan-fix appends to an *existing* SPEC. But plan-fix is for *new* fixes (drafting a SPEC). If the unit already has a SPEC, it's likely a feature unit or an existing fix unit. If it's a feature unit, plan-fix shouldn't be used. If it's an existing fix unit, appending to it might be correct, but the skill's description says it drafts a *new* SPEC. The router's 'replan' path in plan-fix conflates 'replan a feature' with 'replan a fix', potentially using the wrong planner or contract.\",\n    \"severity\": \"med\",\n    \"axis\": \"workflow\"\n  },\n  {\n    \"file\": \"packages/pi-agentic-workflow/skills/review-change/references/OUTPUT_AND_GUARDRAILS.md\",\n    \"line\": 30,\n    \"title\": \"Usage-docs: Incomplete replan workflow description\",\n    \"detail\": \"The OUTPUT_AND_GUARDRAILS.md states: 'run node scripts/unit-route.mjs <unit> — its route: replan line names the planner... The planner re-cuts the plan on this branch, the user confirms the appended SPEC phase(s), a fresh /review-plan <unit> passes, and only then execute-phase runs them.' This describes the full workflow. However, the SKILL.md for review-change (the consumer) does not explicitly state this full workflow in its 'When to use' or 'Turn contract'. It relies on the router. The documentation in OUTPUT_AND_GUARDRAILS.md is more complete than the skill itself, which might lead users to believe the skill handles the full workflow, when it only triggers the router.\",\n    \"severity\": \"low\",\n    \"axis\": \"usage-docs\"\n  },\n  {\n    \"file\": \"packages/pi-agentic-workflow/skills/review-implementation/references/CLASSIFY.md\",\n    \"line\": 56,\n    \"title\": \"Spec-drift: Contradiction in replan-in-unit route description\",\n    \"detail\": \"The CLASSIFY.md states: 'Set its Route to replan-in-unit: run node scripts/unit-route.mjs <unit> — its route: replan line names the planner... and the unit's SPEC ## Phases ledger gets one or more new phases... a fresh /review-plan <unit> passing before execute-phase runs them.' This is consistent with the new workflow. However, the previous version (base) said: 'Set its Route to replan-in-unit: the unit's SPEC ## Phases ledger gets one or more new phases... proposed to the user for confirmation, then executed via execute-phase.' The new version adds the router step. This is a spec update, not a drift, but it highlights that the 'replan-in-unit' class now has a mandatory router step, which is a significant behavioral change not fully reflected in all consumer skills' 'When to use' sections (e.g., triage-issue).\",\n    \"severity\": \"low\",\n    \"axis\": \"spec-drift\"\n  }\n]"
+}

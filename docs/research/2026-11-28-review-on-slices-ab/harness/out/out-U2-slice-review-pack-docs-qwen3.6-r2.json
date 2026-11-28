@@ -1,0 +1,64 @@
+{
+ "id": "U2__slice__review-pack-docs__qwen3.6__r2",
+ "unit": "U2",
+ "job": "slice__review-pack-docs",
+ "model": "qwen3.6",
+ "run": 2,
+ "ms": 17611,
+ "usage": {
+  "completion_tokens": 1460,
+  "prompt_tokens": 35585,
+  "total_tokens": 37045,
+  "completion_tokens_details": {
+   "reasoning_tokens": 0
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 33536
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "skills/fold-findings/SKILL.md",
+   "line": 184,
+   "title": "Workflow contract contradiction: REPLAN-ROUTE branch hand-off",
+   "detail": "The closing-block decision table (line 184) states that for `freeze-batch (≥ 1 replan-class row)`, the `→ Next:` consumer action is: `node scripts/unit-route.mjs <unit>` → the planner it names re-cuts the plan, then `/review-plan` before `/execute-phase` on this unit`. However, the `→ Next:` block in the 'Done when' section (lines 150-156) states that for `any REPLAN`, the next step is: `confirm all proposed SPEC phases, then /execute-phase on this same branch`. The table explicitly inserts a `/review-plan` step that the 'Done when' block omits, creating a contradiction in the required hand-off sequence for the same branch state.",
+   "severity": "high",
+   "axis": "workflow"
+  },
+  {
+   "file": "skills/fold-findings/references/FOLD_PROCESS.md",
+   "line": 58,
+   "title": "Workflow contract contradiction: Replan hand-off sequence",
+   "detail": "Step 9 'Replan' instructs: 'run `node scripts/unit-route.mjs <unit>` ... After the user confirms and a fresh `/review-plan <unit>` passes, `/execute-phase <unit>` completes them'. This matches the table in SKILL.md but contradicts the 'Done when' block in SKILL.md (line 153) which says `any REPLAN ... → confirm all proposed SPEC phases, then /execute-phase on this same branch`. The 'Done when' block is the 'Done when' definition for the skill, yet it omits the mandatory `/review-plan` step required by the process and the table. This is a spec-drift within the unit's own documentation.",
+   "severity": "med",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "skills/review-change/references/PERSIST_AND_DECIDE.md",
+   "line": 135,
+   "title": "Usage-docs: Incomplete hand-off instruction for replan",
+   "detail": "The `→ Next:` block for `REVIEW-FAIL` (line 135) lists: `any finding routed replan-in-unit or owned by plan? → node scripts/unit-route.mjs <unit> prints route: replan and names the planner ... the planner re-cuts the plan on this branch, a fresh /review-plan <unit> passes, then /execute-phase <unit>`. This correctly includes `/review-plan`. However, the `→ Next:` block for `REVIEW-PASS` (line 160) does not list a replan path because `REVIEW-PASS` implies no open findings. The defect is that the `REVIEW-FAIL` block is correct, but the `fold-findings` skill's 'Done when' block (line 153) contradicts it by omitting `/review-plan`. The defect here is that `PERSIST_AND_DECIDE.md` is consistent with `FOLD_PROCESS.md` but inconsistent with `fold-findings/SKILL.md`'s 'Done when' block. Since `fold-findings` is the consumer of the `REPLAN-ROUTE` branch from `review-change`'s ledger, the contradiction is primarily in `fold-findings`. However, `PERSIST_AND_DECIDE.md` line 135 is a 'usage-doc' for the reviewer. It is correct. The defect is in `fold-findings`.",
+   "severity": "low",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "skills/plan-feature/SKILL.md",
+   "line": 58,
+   "title": "Spec-drift: Replan contract loading condition",
+   "detail": "Step 4 of 'Progressive loading' says: 'Only when `node scripts/unit-route.mjs <NN>` prints `route: replan`: load the [replan contract]'. However, `ROUTING.md` (line 10) says: 'Before the status gate, run `node scripts/unit-route.mjs <NN>`. A `route: replan` line means the unit carries an open finding whose frozen route is the plan owner: skip the STOP and load [the replan contract]'. This is consistent. However, `plan-fix/SKILL.md` line 107 says: 'Only when `node scripts/unit-route.mjs <N>` prints `route: replan` for the target unit: load the [replan contract]'. This is also consistent. The defect is that `plan-feature` and `plan-fix` both load the replan contract based on the router output, but `fold-findings` (line 184) and `review-implementation` (line 96) describe the *outcome* of that router as leading to `execute-phase` after a review. The `plan-feature` skill itself does not describe the *execution* of the plan, only the *planning*. This is not a defect.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "skills/workflow-status/references/SENSOR_SIGNALS.md",
+   "line": 73,
+   "title": "Workflow: Contradictory trigger commands for replan",
+   "detail": "Step 13 (line 73) defines the trigger for a unit with an open finding whose frozen route is the plan owner as: `{command: \"/plan-feature <unit>\" | \"/plan-fix <issue>\", ...}`. However, `scripts/unit-route.mjs` is described in `fold-findings` (line 124) and `review-implementation` (line 96) as the *deterministic router* that *names* the planner. The sensor signal suggests the *user* or *driver* should run `/plan-feature` or `/plan-fix` directly. But `fold-findings` (line 124) and `PERSIST_AND_DECIDE.md` (line 135) instruct the consumer to run `node scripts/unit-route.mjs <unit>` *first* to get the planner name. The sensor signal bypasses the router script, contradicting the 'deterministic replan router' contract established in the unit. The sensor should recommend running the router, not the planner directly.",
+   "severity": "high",
+   "axis": "workflow"
+  }
+ ],
+ "raw": "[\n  {\n    \"file\": \"skills/fold-findings/SKILL.md\",\n    \"line\": 184,\n    \"title\": \"Workflow contract contradiction: REPLAN-ROUTE branch hand-off\",\n    \"detail\": \"The closing-block decision table (line 184) states that for `freeze-batch (≥ 1 replan-class row)`, the `→ Next:` consumer action is: `node scripts/unit-route.mjs <unit>` → the planner it names re-cuts the plan, then `/review-plan` before `/execute-phase` on this unit`. However, the `→ Next:` block in the 'Done when' section (lines 150-156) states that for `any REPLAN`, the next step is: `confirm all proposed SPEC phases, then /execute-phase on this same branch`. The table explicitly inserts a `/review-plan` step that the 'Done when' block omits, creating a contradiction in the required hand-off sequence for the same branch state.\",\n    \"severity\": \"high\",\n    \"axis\": \"workflow\"\n  },\n  {\n    \"file\": \"skills/fold-findings/references/FOLD_PROCESS.md\",\n    \"line\": 58,\n    \"title\": \"Workflow contract contradiction: Replan hand-off sequence\",\n    \"detail\": \"Step 9 'Replan' instructs: 'run `node scripts/unit-route.mjs <unit>` ... After the user confirms and a fresh `/review-plan <unit>` passes, `/execute-phase <unit>` completes them'. This matches the table in SKILL.md but contradicts the 'Done when' block in SKILL.md (line 153) which says `any REPLAN ... → confirm all proposed SPEC phases, then /execute-phase on this same branch`. The 'Done when' block is the 'Done when' definition for the skill, yet it omits the mandatory `/review-plan` step required by the process and the table. This is a spec-drift within the unit's own documentation.\",\n    \"severity\": \"med\",\n    \"axis\": \"spec-drift\"\n  },\n  {\n    \"file\": \"skills/review-change/references/PERSIST_AND_DECIDE.md\",\n    \"line\": 135,\n    \"title\": \"Usage-docs: Incomplete hand-off instruction for replan\",\n    \"detail\": \"The `→ Next:` block for `REVIEW-FAIL` (line 135) lists: `any finding routed replan-in-unit or owned by plan? → node scripts/unit-route.mjs <unit> prints route: replan and names the planner ... the planner re-cuts the plan on this branch, a fresh /review-plan <unit> passes, then /execute-phase <unit>`. This correctly includes `/review-plan`. However, the `→ Next:` block for `REVIEW-PASS` (line 160) does not list a replan path because `REVIEW-PASS` implies no open findings. The defect is that the `REVIEW-FAIL` block is correct, but the `fold-findings` skill's 'Done when' block (line 153) contradicts it by omitting `/review-plan`. The defect here is that `PERSIST_AND_DECIDE.md` is consistent with `FOLD_PROCESS.md` but inconsistent with `fold-findings/SKILL.md`'s 'Done when' block. Since `fold-findings` is the consumer of the `REPLAN-ROUTE` branch from `review-change`'s ledger, the contradiction is primarily in `fold-findings`. However, `PERSIST_AND_DECIDE.md` line 135 is a 'usage-doc' for the reviewer. It is correct. The defect is in `fold-findings`.\",\n    \"severity\": \"low\",\n    \"axis\": \"usage-docs\"\n  },\n  {\n    \"file\": \"skills/plan-feature/SKILL.md\",\n    \"line\": 58,\n    \"title\": \"Spec-drift: Replan contract loading condition\",\n    \"detail\": \"Step 4 of 'Progressive loading' says: 'Only when `node scripts/unit-route.mjs <NN>` prints `route: replan`: load the [replan contract]'. However, `ROUTING.md` (line 10) says: 'Before the status gate, run `node scripts/unit-route.mjs <NN>`. A `route: replan` line means the unit carries an open finding whose frozen route is the plan owner: skip the STOP and load [the replan contract]'. This is consistent. However, `plan-fix/SKILL.md` line 107 says: 'Only when `node scripts/unit-route.mjs <N>` prints `route: replan` for the target unit: load the [replan contract]'. This is also consistent. The defect is that `plan-feature` and `plan-fix` both load the replan contract based on the router output, but `fold-findings` (line 184) and `review-implementation` (line 96) describe the *outcome* of that router as leading to `execute-phase` after a review. The `plan-feature` skill itself does not describe the *execution* of the plan, only the *planning*. This is not a defect.\",\n    \"severity\": \"low\",\n    \"axis\": \"spec-drift\"\n  },\n  {\n    \"file\": \"skills/workflow-status/references/SENSOR_SIGNALS.md\",\n    \"line\": 73,\n    \"title\": \"Workflow: Contradictory trigger commands for replan\",\n    \"detail\": \"Step 13 (line 73) defines the trigger for a unit with an open finding whose frozen route is the plan owner as: `{command: \\\"/plan-feature <unit>\\\" | \\\"/plan-fix <issue>\\\", ...}`. However, `scripts/unit-route.mjs` is described in `fold-findings` (line 124) and `review-implementation` (line 96) as the *deterministic router* that *names* the planner. The sensor signal suggests the *user* or *driver* should run `/plan-feature` or `/plan-fix` directly. But `fold-findings` (line 124) and `PERSIST_AND_DECIDE.md` (line 135) instruct the consumer to run `node scripts/unit-route.mjs <unit>` *first* to get the planner name. The sensor signal bypasses the router script, contradicting the 'deterministic replan router' contract established in the unit. The sensor should recommend running the router, not the planner directly.\",\n    \"severity\": \"high\",\n    \"axis\": \"workflow\"\n  }\n]"
+}

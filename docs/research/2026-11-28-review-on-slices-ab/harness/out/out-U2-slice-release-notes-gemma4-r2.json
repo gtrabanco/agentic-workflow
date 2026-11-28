@@ -1,0 +1,32 @@
+{
+ "id": "U2__slice__release-notes__gemma4__r2",
+ "unit": "U2",
+ "job": "slice__release-notes",
+ "model": "gemma4",
+ "run": 2,
+ "ms": 2447,
+ "usage": {
+  "completion_tokens": 190,
+  "prompt_tokens": 13110,
+  "total_tokens": 13300,
+  "completion_tokens_details": {
+   "reasoning_tokens": 0
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "CHANGELOG.es.md",
+   "line": 11,
+   "title": "Inconsistent versioning type for re-bundle",
+   "detail": "The entry for `@gtrabanco/pi-agentic-workflow` version 0.10.0 is marked as 'menor' (minor), but the description states it is a 'Re-empaquetado' (re-bundle) that includes multiple version bumps for several skills (e.g., `review-change` 3.5.1 is a patch, `plan-feature` 5.2.0 is minor). While the package itself has no code changes, the description of the change as a 're-bundle' of multiple versioned components contradicts the single 'menor' classification if the intent is to reflect the actual delta of the constituent skills being released together.",
+   "severity": "low",
+   "axis": "spec-drift"
+  }
+ ],
+ "raw": "[{\"file\":\"CHANGELOG.es.md\",\"line\":11,\"title\":\"Inconsistent versioning type for re-bundle\",\"detail\":\"The entry for `@gtrabanco/pi-agentic-workflow` version 0.10.0 is marked as 'menor' (minor), but the description states it is a 'Re-empaquetado' (re-bundle) that includes multiple version bumps for several skills (e.g., `review-change` 3.5.1 is a patch, `plan-feature` 5.2.0 is minor). While the package itself has no code changes, the description of the change as a 're-bundle' of multiple versioned components contradicts the single 'menor' classification if the intent is to reflect the actual delta of the constituent skills being released together.\",\"severity\":\"low\",\"axis\":\"spec-drift\"}]"
+}

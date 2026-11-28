@@ -1,0 +1,32 @@
+{
+ "id": "U2__slice__budgets-plugin__gemma4__r1",
+ "unit": "U2",
+ "job": "slice__budgets-plugin",
+ "model": "gemma4",
+ "run": 1,
+ "ms": 2609,
+ "usage": {
+  "completion_tokens": 152,
+  "prompt_tokens": 6346,
+  "total_tokens": 6498,
+  "completion_tokens_details": {
+   "reasoning_tokens": 0
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "docs/workflow/SKILL_CONTEXT_BUDGETS.json",
+   "line": 118,
+   "title": "Inconsistent route key",
+   "detail": "The route `plan-feature:issue` is defined in the `routes` object, but the unit description and the `plan-feature:scaffold` entry suggest the intended key for the issue-based scaffold is `plan-feature:scaffold` or a similar mapping. More critically, the `plan-feature:scaffold` route exists but the `plan-feature:issue` route uses a different naming convention than the `plan-fix:issue` route, creating potential routing ambiguity in the deterministic router.",
+   "severity": "low",
+   "axis": "code"
+  }
+ ],
+ "raw": "[{\"file\":\"docs/workflow/SKILL_CONTEXT_BUDGETS.json\",\"line\":118,\"title\":\"Inconsistent route key\",\"detail\":\"The route `plan-feature:issue` is defined in the `routes` object, but the unit description and the `plan-feature:scaffold` entry suggest the intended key for the issue-based scaffold is `plan-feature:scaffold` or a similar mapping. More critically, the `plan-feature:scaffold` route exists but the `plan-feature:issue` route uses a different naming convention than the `plan-fix:issue` route, creating potential routing ambiguity in the deterministic router.\",\"severity\":\"low\",\"axis\":\"code\"}]"
+}

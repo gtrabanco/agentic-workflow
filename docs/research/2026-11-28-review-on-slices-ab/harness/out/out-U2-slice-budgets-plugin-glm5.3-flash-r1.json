@@ -1,0 +1,32 @@
+{
+ "id": "U2__slice__budgets-plugin__glm5.3-flash__r1",
+ "unit": "U2",
+ "job": "slice__budgets-plugin",
+ "model": "glm5.3-flash",
+ "run": 1,
+ "ms": 11668,
+ "usage": {
+  "completion_tokens": 774,
+  "prompt_tokens": 5244,
+  "total_tokens": 6018,
+  "completion_tokens_details": {
+   "reasoning_tokens": 602
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": ".claude-plugin/plugin.json",
+   "line": null,
+   "title": "replan-findings skill missing from plugin manifest",
+   "detail": "The unit introduces a replan-findings skill (docs/workflow/SKILL_CONTEXT_BUDGETS.json gains a \"replan-findings\" entry: \"conditional replan entry; PHASE_APPEND.md holds the append contract...\"), but the plugin manifest .claude-plugin/plugin.json — included as an unchanged anchor — does not list \"./skills/replan-findings\" in its skills array (it ends at \"./skills/verification-contract\", \"./skills/workflow-status\"). A newly added skill that is budget-tracked and referenced by the router is not registered, so it would not be discoverable/loadable via the plugin.",
+   "severity": "high",
+   "axis": "workflow"
+  }
+ ],
+ "raw": "[{\"file\":\".claude-plugin/plugin.json\",\"line\":null,\"title\":\"replan-findings skill missing from plugin manifest\",\"detail\":\"The unit introduces a replan-findings skill (docs/workflow/SKILL_CONTEXT_BUDGETS.json gains a \\\"replan-findings\\\" entry: \\\"conditional replan entry; PHASE_APPEND.md holds the append contract...\\\"), but the plugin manifest .claude-plugin/plugin.json — included as an unchanged anchor — does not list \\\"./skills/replan-findings\\\" in its skills array (it ends at \\\"./skills/verification-contract\\\", \\\"./skills/workflow-status\\\"). A newly added skill that is budget-tracked and referenced by the router is not registered, so it would not be discoverable/loadable via the plugin.\",\"severity\":\"high\",\"axis\":\"workflow\"}]"
+}

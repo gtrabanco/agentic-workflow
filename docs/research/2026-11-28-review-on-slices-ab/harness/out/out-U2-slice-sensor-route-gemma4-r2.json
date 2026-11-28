@@ -1,0 +1,48 @@
+{
+ "id": "U2__slice__sensor-route__gemma4__r2",
+ "unit": "U2",
+ "job": "slice__sensor-route",
+ "model": "gemma4",
+ "run": 2,
+ "ms": 8553,
+ "usage": {
+  "completion_tokens": 426,
+  "prompt_tokens": 21386,
+  "total_tokens": 21812,
+  "completion_tokens_details": {
+   "reasoning_tokens": 0
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "scripts/normative-drift.test.mjs",
+   "line": 28,
+   "title": "Route vocabulary mismatch",
+   "detail": "The test asserts that the router's closed route set is `['replan', 'decision', 'fold', 'execute', 'plan-from-issue']`, but the sensor's `readSuggestions` logic in `scripts/workflow-status.mjs` (and the corresponding test in `scripts/workflow-status-sensor.test.mjs`) uses `/plan-fix/` and `/plan-feature/` as command prefixes, which are not in the router's declared `ROUTES` set.",
+   "severity": "high",
+   "axis": "workflow"
+  },
+  {
+   "file": "scripts/workflow-status-sensor.test.mjs",
+   "line": 65,
+   "title": "Command mismatch in suggested routes",
+   "detail": "The test asserts that a replan row results in a command `/plan-feature 90-alpha`, but the router's vocabulary (as tested in `scripts/normative-drift.test.mjs`) only contains `plan-from-issue`. The sensor is emitting a command that the router does not recognize as a valid route.",
+   "severity": "high",
+   "axis": "workflow"
+  },
+  {
+   "file": "scripts/workflow-status.mjs",
+   "line": 101,
+   "title": "Inconsistent route matching",
+   "detail": "The `PLAN_ROUTE` regex `replan[- ]in[- ]unit|owned by plan|plan owner|plan-owner` is used to identify replan rows, but the router's actual route name is `replan`. If a row's route is exactly `replan`, the regex matches, but the sensor's logic for `readSuggestions` uses `row.route` or `row.klass`. If `row.route` is `replan`, it works, but the sensor's `trigger` string includes `replan-in-unit`, which is a different token than the router's `replan`.",
+   "severity": "med",
+   "axis": "code"
+  }
+ ],
+ "raw": "[{\"file\":\"scripts/normative-drift.test.mjs\",\"line\":28,\"title\":\"Route vocabulary mismatch\",\"detail\":\"The test asserts that the router's closed route set is `['replan', 'decision', 'fold', 'execute', 'plan-from-issue']`, but the sensor's `readSuggestions` logic in `scripts/workflow-status.mjs` (and the corresponding test in `scripts/workflow-status-sensor.test.mjs`) uses `/plan-fix/` and `/plan-feature/` as command prefixes, which are not in the router's declared `ROUTES` set.\",\"severity\":\"high\",\"axis\":\"workflow\"},{\"file\":\"scripts/workflow-status-sensor.test.mjs\",\"line\":65,\"title\":\"Command mismatch in suggested routes\",\"detail\":\"The test asserts that a replan row results in a command `/plan-feature 90-alpha`, but the router's vocabulary (as tested in `scripts/normative-drift.test.mjs`) only contains `plan-from-issue`. The sensor is emitting a command that the router does not recognize as a valid route.\",\"severity\":\"high\",\"axis\":\"workflow\"},{\"file\":\"scripts/workflow-status.mjs\",\"line\":101,\"title\":\"Inconsistent route matching\",\"detail\":\"The `PLAN_ROUTE` regex `replan[- ]in[- ]unit|owned by plan|plan owner|plan-owner` is used to identify replan rows, but the router's actual route name is `replan`. If a row's route is exactly `replan`, the regex matches, but the sensor's logic for `readSuggestions` uses `row.route` or `row.klass`. If `row.route` is `replan`, it works, but the sensor's `trigger` string includes `replan-in-unit`, which is a different token than the router's `replan`.\",\"severity\":\"med\",\"axis\":\"code\"}]"
+}

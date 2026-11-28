@@ -1,0 +1,40 @@
+{
+ "id": "U1__slice__lane-guard__gemma4__r2",
+ "unit": "U1",
+ "job": "slice__lane-guard",
+ "model": "gemma4",
+ "run": 2,
+ "ms": 2994,
+ "usage": {
+  "completion_tokens": 217,
+  "prompt_tokens": 5851,
+  "total_tokens": 6068,
+  "completion_tokens_details": {
+   "reasoning_tokens": 0
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "skills/unit-lane/SKILL.md",
+   "line": 74,
+   "title": "Inconsistent error message for missing issue number",
+   "detail": "The 'Needs-input guard' section states that if an issue number is blank, it should halt with `requires manual input`, but the Turn contract (line 31) and the guard description (line 56) specify the exact string `→ Next: unit-lane requires manual input — cannot proceed`. The shorter string contradicts the established contract.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "skills/unit-lane/SKILL.md",
+   "line": 74,
+   "title": "Inconsistent error message for missing unit kind",
+   "detail": "The 'Needs-input guard' section (line 74) says to halt with `requires manual input`, but the Turn contract (line 31) and the guard description (line 56) specify the exact string `→ Next: unit-lane requires manual input — cannot proceed`.",
+   "severity": "med",
+   "axis": "workflow"
+  }
+ ],
+ "raw": "[{\"file\":\"skills/unit-lane/SKILL.md\",\"line\":74,\"title\":\"Inconsistent error message for missing issue number\",\"detail\":\"The 'Needs-input guard' section states that if an issue number is blank, it should halt with `requires manual input`, but the Turn contract (line 31) and the guard description (line 56) specify the exact string `→ Next: unit-lane requires manual input — cannot proceed`. The shorter string contradicts the established contract.\",\"severity\":\"med\",\"axis\":\"workflow\"},{\"file\":\"skills/unit-lane/SKILL.md\",\"line\":74,\"title\":\"Inconsistent error message for missing unit kind\",\"detail\":\"The 'Needs-input guard' section (line 74) says to halt with `requires manual input`, but the Turn contract (line 31) and the guard description (line 56) specify the exact string `→ Next: unit-lane requires manual input — cannot proceed`.\",\"severity\":\"med\",\"axis\":\"workflow\"}]"
+}

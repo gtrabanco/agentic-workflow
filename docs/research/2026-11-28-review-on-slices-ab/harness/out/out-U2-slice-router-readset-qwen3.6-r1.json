@@ -1,0 +1,48 @@
+{
+ "id": "U2__slice__router-readset__qwen3.6__r1",
+ "unit": "U2",
+ "job": "slice__router-readset",
+ "model": "qwen3.6",
+ "run": 1,
+ "ms": 4447,
+ "usage": {
+  "completion_tokens": 717,
+  "prompt_tokens": 8534,
+  "total_tokens": 9251,
+  "completion_tokens_details": {
+   "reasoning_tokens": 0
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/40-cited-paths/review-findings.md",
+   "line": 4,
+   "title": "Finding F1 cites non-existent files",
+   "detail": "The review-findings table for feature 40 (cited-paths) lists F1 as affecting src/file-1.txt through src/file-6.txt. However, the diff shows that src/file-7.txt, src/file-8.txt, and src/file-9.txt are also created in this unit (new files with content 'x'). The finding description explicitly states 'cites src/file-7.txt and src/file-8.txt and src/file-9.txt' but the file:line column for F1 does not include these files, creating a discrepancy between the cited scope and the actual material changes. Similarly, F2 cites file-10 through file-13 but omits file-14 and file-15 which are also present.",
+   "severity": "med",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/40-cited-paths/review-findings.md",
+   "line": 5,
+   "title": "Finding F2 cites non-existent files",
+   "detail": "The review-findings table for feature 40 lists F2 as affecting src/file-10.txt through src/file-13.txt. The diff shows that src/file-14.txt and src/file-15.txt are also created in this unit. The finding description explicitly states 'cites src/file-14.txt and src/file-15.txt' but the file:line column for F2 does not include these files.",
+   "severity": "med",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/40-cited-paths/review-findings.md",
+   "line": 6,
+   "title": "Finding F3 omits cited files",
+   "detail": "The review-findings table for feature 40 lists F3 as affecting src/file-16.txt through src/file-20.txt. The diff shows that src/file-7.txt, src/file-8.txt, and src/file-9.txt were already cited in F1, but src/file-14.txt and src/file-15.txt were cited in F2. There are no other files in the src directory in the diff. However, the finding F3 description does not mention any specific citations, yet the file:line column lists files 16-20. If the 'cited-paths' feature is about verifying citations, the findings should reflect the specific citation logic. The inconsistency is that F1 and F2 have explicit 'cites...' text in the route column, while F3 does not, despite all being part of the same feature set with similar file structures. More critically, the ROADMAP.md lists feature 40 as 'cap case', implying a specific boundary condition test. The findings do not clearly demonstrate the 'cap' behavior (e.g., max file count, specific path depth) but rather arbitrary splits.",
+   "severity": "low",
+   "axis": "spec-drift"
+  }
+ ],
+ "raw": "[\n  {\n    \"file\": \"scripts/fixtures/unit-route/docs/features/40-cited-paths/review-findings.md\",\n    \"line\": 4,\n    \"title\": \"Finding F1 cites non-existent files\",\n    \"detail\": \"The review-findings table for feature 40 (cited-paths) lists F1 as affecting src/file-1.txt through src/file-6.txt. However, the diff shows that src/file-7.txt, src/file-8.txt, and src/file-9.txt are also created in this unit (new files with content 'x'). The finding description explicitly states 'cites src/file-7.txt and src/file-8.txt and src/file-9.txt' but the file:line column for F1 does not include these files, creating a discrepancy between the cited scope and the actual material changes. Similarly, F2 cites file-10 through file-13 but omits file-14 and file-15 which are also present.\",\n    \"severity\": \"med\",\n    \"axis\": \"spec-drift\"\n  },\n  {\n    \"file\": \"scripts/fixtures/unit-route/docs/features/40-cited-paths/review-findings.md\",\n    \"line\": 5,\n    \"title\": \"Finding F2 cites non-existent files\",\n    \"detail\": \"The review-findings table for feature 40 lists F2 as affecting src/file-10.txt through src/file-13.txt. The diff shows that src/file-14.txt and src/file-15.txt are also created in this unit. The finding description explicitly states 'cites src/file-14.txt and src/file-15.txt' but the file:line column for F2 does not include these files.\",\n    \"severity\": \"med\",\n    \"axis\": \"spec-drift\"\n  },\n  {\n    \"file\": \"scripts/fixtures/unit-route/docs/features/40-cited-paths/review-findings.md\",\n    \"line\": 6,\n    \"title\": \"Finding F3 omits cited files\",\n    \"detail\": \"The review-findings table for feature 40 lists F3 as affecting src/file-16.txt through src/file-20.txt. The diff shows that src/file-7.txt, src/file-8.txt, and src/file-9.txt were already cited in F1, but src/file-14.txt and src/file-15.txt were cited in F2. There are no other files in the src directory in the diff. However, the finding F3 description does not mention any specific citations, yet the file:line column lists files 16-20. If the 'cited-paths' feature is about verifying citations, the findings should reflect the specific citation logic. The inconsistency is that F1 and F2 have explicit 'cites...' text in the route column, while F3 does not, despite all being part of the same feature set with similar file structures. More critically, the ROADMAP.md lists feature 40 as 'cap case', implying a specific boundary condition test. The findings do not clearly demonstrate the 'cap' behavior (e.g., max file count, specific path depth) but rather arbitrary splits.\",\n    \"severity\": \"low\",\n    \"axis\": \"spec-drift\"\n  }\n]"
+}

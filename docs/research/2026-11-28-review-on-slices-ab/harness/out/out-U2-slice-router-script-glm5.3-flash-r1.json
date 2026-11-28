@@ -1,0 +1,72 @@
+{
+ "id": "U2__slice__router-script__glm5.3-flash__r1",
+ "unit": "U2",
+ "job": "slice__router-script",
+ "model": "glm5.3-flash",
+ "run": 1,
+ "ms": 134964,
+ "usage": {
+  "completion_tokens": 2315,
+  "prompt_tokens": 4150,
+  "total_tokens": 6465,
+  "completion_tokens_details": {
+   "reasoning_tokens": 1569
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "scripts/unit-route.mjs",
+   "line": 131,
+   "title": "resolveUnit comment contradicts numeric matching",
+   "detail": "Comment says 'A pure number matches on the folder prefix' but the code filters `folder.number === clean` — exact equality, not prefix. Token `22` will not match folder `224-deterministic-replan-routing` (number `224`), and `224` will not match `2240-x`. Documented invocation behavior differs from implementation.",
+   "severity": "med",
+   "axis": "code"
+  },
+  {
+   "file": "scripts/unit-route.mjs",
+   "line": 100,
+   "title": "routeOfRow documented to return null but never does",
+   "detail": "Docstring: 'Classify one open row into the route it demands, or `null` for none.' The body ends with an unconditional `return \"fold\"`; no path returns null. Dead contract — callers (and the exported API surface) are told a null case exists that cannot occur, and genuinely non-foldable rows are silently routed to fold.",
+   "severity": "low",
+   "axis": "code"
+  },
+  {
+   "file": "scripts/unit-route.mjs",
+   "line": 196,
+   "title": "roadmapStatus/fixIndexStatus split on '|' ignoring escaped pipes",
+   "detail": "openRows uses cellsOf() specifically to handle `\\|` escapes ('Split a Markdown table row on pipes that are not escaped'), but roadmapStatus and fixIndexStatus use plain `line.split(\"|\")`. A roadmap cell containing `\\|` (e.g. a escaped-pipe unit slug or status text) splits into wrong cells, so `cells[1] !== String(number)` can mis-match or the status cell read from cells[3] is wrong. Inconsistent parsing of the same table vocabulary.",
+   "severity": "low",
+   "axis": "code"
+  },
+  {
+   "file": "scripts/unit-route.mjs",
+   "line": 96,
+   "title": "isOpen treats 'no' as open",
+   "detail": "isOpen returns true for any value except yes/—/-/n-a/empty, so a ledger row explicitly folded with `no` (a natural negative in the yes/no folded column the parser otherwise assumes) is counted as an open row and can route the unit to replan/decision/fold. If the repo's folded vocabulary is yes/no, closed rows marked 'no' are misrouted.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "scripts/unit-route.mjs",
+   "line": 283,
+   "title": "printed rows list ignores route selection",
+   "detail": "When route is replan or decision, `selected` holds only the matching rows (used for the read set), but the printed `rows:` field is `rows.map(...)` — all open row ids, including fold rows. The block therefore shows rows that the chosen route did not act on, with no distinction; a consumer keying on `rows` cannot tell which rows drove a replan/decision route.",
+   "severity": "low",
+   "axis": "code"
+  },
+  {
+   "file": "scripts/unit-route.mjs",
+   "line": 246,
+   "title": "bare-file citations resolved against project root, not the unit",
+   "detail": "BARE_FILE_RE captures names like `SPEC.md`; citedPaths then tests `exists(candidate)` relative to PROJECT root. Unit ledgers cite their own unit's SPEC.md/PLAN.md, which live under `docs/fix/<slug>/`, not the repo root — so those citations are silently dropped from the read set unless a root-level file of the same name happens to exist (in which case the wrong file is printed). The header promise 'the printed set is real and bounded' holds, but the set is wrong for the common bare-name case.",
+   "severity": "med",
+   "axis": "code"
+  }
+ ],
+ "raw": "[{\"file\":\"scripts/unit-route.mjs\",\"line\":131,\"title\":\"resolveUnit comment contradicts numeric matching\",\"detail\":\"Comment says 'A pure number matches on the folder prefix' but the code filters `folder.number === clean` — exact equality, not prefix. Token `22` will not match folder `224-deterministic-replan-routing` (number `224`), and `224` will not match `2240-x`. Documented invocation behavior differs from implementation.\",\"severity\":\"med\",\"axis\":\"code\"},\n{\"file\":\"scripts/unit-route.mjs\",\"line\":100,\"title\":\"routeOfRow documented to return null but never does\",\"detail\":\"Docstring: 'Classify one open row into the route it demands, or `null` for none.' The body ends with an unconditional `return \\\"fold\\\"`; no path returns null. Dead contract — callers (and the exported API surface) are told a null case exists that cannot occur, and genuinely non-foldable rows are silently routed to fold.\",\"severity\":\"low\",\"axis\":\"code\"},\n{\"file\":\"scripts/unit-route.mjs\",\"line\":196,\"title\":\"roadmapStatus/fixIndexStatus split on '|' ignoring escaped pipes\",\"detail\":\"openRows uses cellsOf() specifically to handle `\\\\|` escapes ('Split a Markdown table row on pipes that are not escaped'), but roadmapStatus and fixIndexStatus use plain `line.split(\\\"|\\\")`. A roadmap cell containing `\\\\|` (e.g. a escaped-pipe unit slug or status text) splits into wrong cells, so `cells[1] !== String(number)` can mis-match or the status cell read from cells[3] is wrong. Inconsistent parsing of the same table vocabulary.\",\"severity\":\"low\",\"axis\":\"code\"},\n{\"file\":\"scripts/unit-route.mjs\",\"line\":96,\"title\":\"isOpen treats 'no' as open\",\"detail\":\"isOpen returns true for any value except yes/—/-/n-a/empty, so a ledger row explicitly folded with `no` (a natural negative in the yes/no folded column the parser otherwise assumes) is counted as an open row and can route the unit to replan/decision/fold. If the repo's folded vocabulary is yes/no, closed rows marked 'no' are misrouted.\",\"severity\":\"med\",\"axis\":\"workflow\"},\n{\"file\":\"scripts/unit-route.mjs\",\"line\":283,\"title\":\"printed rows list ignores route selection\",\"detail\":\"When route is replan or decision, `selected` holds only the matching rows (used for the read set), but the printed `rows:` field is `rows.map(...)` — all open row ids, including fold rows. The block therefore shows rows that the chosen route did not act on, with no distinction; a consumer keying on `rows` cannot tell which rows drove a replan/decision route.\",\"severity\":\"low\",\"axis\":\"code\"},\n{\"file\":\"scripts/unit-route.mjs\",\"line\":246,\"title\":\"bare-file citations resolved against project root, not the unit\",\"detail\":\"BARE_FILE_RE captures names like `SPEC.md`; citedPaths then tests `exists(candidate)` relative to PROJECT root. Unit ledgers cite their own unit's SPEC.md/PLAN.md, which live under `docs/fix/<slug>/`, not the repo root — so those citations are silently dropped from the read set unless a root-level file of the same name happens to exist (in which case the wrong file is printed). The header promise 'the printed set is real and bounded' holds, but the set is wrong for the common bare-name case.\",\"severity\":\"med\",\"axis\":\"code\"}]"
+}

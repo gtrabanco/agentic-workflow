@@ -1,0 +1,96 @@
+{
+ "id": "U2__slice__tutorial-crossrefs__deepseek-v4-flash__r2",
+ "unit": "U2",
+ "job": "slice__tutorial-crossrefs",
+ "model": "deepseek-v4-flash",
+ "run": 2,
+ "ms": 6356,
+ "usage": {
+  "completion_tokens": 1856,
+  "prompt_tokens": 26392,
+  "total_tokens": 28248,
+  "completion_tokens_details": {
+   "reasoning_tokens": 0
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 26368
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "docs/workflow/SKILLS.md",
+   "line": 7,
+   "title": "Internal-step count bumped to 19 but the enumerated list still totals 18",
+   "detail": "The header now says '19 internal steps' and the parenthetical enumerates: plan-feature's two planning steps (2), evidence-grounding + pre-execution-review (2), review-implementation (1), planning-preflight (1), phase-contract (1), verification-contract (1), the 9-skill review pack (9) = 17, plus the newly added `replan-findings` row = 18. The count claims 19 but the enumerated set is 18; the same mismatch is mirrored in SKILLS.es.md ('19 pasos internos'). Either a step is missing from the enumeration or the count is wrong — the doc contradicts itself.",
+   "severity": "med",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/workflow/REVIEW_AND_CLASSIFY.md",
+   "line": 79,
+   "title": "replan-in-unit route now requires a fresh /review-plan, contradicting the fix-now/replan-in-unit bullet that still says 'never a downgrade (AC 12)' without the gate",
+   "detail": "The new bullet says replan-in-unit runs `node scripts/unit-route.mjs <unit>`, names the planner, appends phases, then 'a fresh `/review-plan <unit>` passes, then `execute-phase` runs them'. But the same file's earlier classification section (line ~66) still lists replan-in-unit as 'new user-confirmed phases' with no review-plan gate, and the 'Where it sits' paragraph adds '(fresh `/review-plan` before execution)' only in the summary. The two statements of the same contract disagree on whether the review-plan gate is part of the route; a reader following the classification table would skip it.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "docs/workflow/REVIEW_AND_CLASSIFY.es.md",
+   "line": 88,
+   "title": "Spanish doc says the router line names the planner, but the English doc says the same line names the planner — yet the router output is `route: replan`, not a planner name",
+   "detail": "Both docs claim 'su línea `route: replan` nombra el planificador (`/plan-feature` para una feature, `/plan-fix` para un fix)'. The literal `route: replan` line cannot name a planner — it is a fixed route token. The planner selection is described as coming from that line, which is a usage-docs claim about behavior the router (per the unit's own description: 'emits a typed route') does not support: the route is `replan`, and the planner is chosen by unit type, not by the route line. The docs attribute planner identity to a line that only carries the route class.",
+   "severity": "med",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "docs/workflow/FEATURE_WORKFLOW.md",
+   "line": 285,
+   "title": "replan-in-unit now says 'runs node scripts/unit-route.mjs <unit>' but the same doc's review-findings.md ledger section still describes replan-in-unit as appending phases directly",
+   "detail": "The diff changes the replan-in-unit bullet to route through `node scripts/unit-route.mjs <unit>` and a planner. But the same file's `review-findings.md` section (the fix-now fold ledger, ~line 200) still describes the ledger schema and fold cycle without mentioning the router or the `route: replan` gate, and the `execute-phase` fold cycle description still ticks rows `folded: yes` with no replan route. The two surfaces in one doc describe different replan mechanics.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "docs/workflow/PORTABLE_PROMPT.md",
+   "line": 141,
+   "title": "Portable prompt hardcodes `node scripts/unit-route.mjs <unit>` into a prompt meant to be adapted to other repos",
+   "detail": "The portable prompt's own preamble says it regenerates the workflow 'adapted to that project's architecture, documentation, and conventions, rather than copying this repo's specifics verbatim' and instructs the agent to 'reference THIS project's real paths/commands'. The new text embeds the literal path `node scripts/unit-route.mjs <unit>` — a repo-specific script path — into the prompt body, contradicting the prompt's own adaptation contract. The same defect is mirrored in PORTABLE_PROMPT.es.md.",
+   "severity": "med",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "docs/workflow/PORTABLE_PROMPT.es.md",
+   "line": 147,
+   "title": "Spanish portable prompt embeds English command and English route token into a Spanish doc, and the same hardcoded path defect",
+   "detail": "The Spanish portable prompt inserts `node scripts/unit-route.mjs <unit>` and `route: replan` verbatim into Spanish prose, and the surrounding sentence mixes languages ('runs ... so the planner its `route: replan` line names appends'). Beyond the hardcoded-path defect shared with the English file, the inserted text is not translated and reads as a broken sentence in the Spanish doc.",
+   "severity": "low",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "docs/fix/README.md",
+   "line": 30,
+   "title": "Fix #224 row claims 'every destination surface the census names (eight skill files, three tutorial pairs) converges on it' but this slice only touches tutorial docs, not the eight skill files",
+   "detail": "The #224 row states the fix converges 'eight skill files, three tutorial pairs' on the router. This review slice ('tutorial-crossrefs') contains only tutorial docs (FEATURE_WORKFLOW, PORTABLE_PROMPT, REVIEW_AND_CLASSIFY, SKILLS) plus the fix index — no skill files. The row's claim is a unit-level receipt; if the skill-file slices are separate, the row is still asserting a completed convergence that this slice's material cannot substantiate, and the row is marked `done` while the unit is still being reviewed slice-by-slice. The `done` status contradicts the in-flight review state.",
+   "severity": "med",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/workflow/SKILLS.md",
+   "line": 109,
+   "title": "replan-findings row says it is 'composed by plan-feature / plan-fix on that route' but the router is described as emitting `route: replan` only for replan, and plan-feature/plan-fix are the planners — the composition direction is inverted",
+   "detail": "The new row says `replan-findings` is 'composed by `plan-feature` / `plan-fix` on that route'. But the router (`unit-route.mjs`) is what decides the route and gates the conditional load; the planners are the destinations the route names, not the composers of the replan entry. The doc elsewhere (REVIEW_AND_CLASSIFY) says the router line 'names the planner', i.e. the planner is downstream of the route, not the composer of the replan skill. The composition claim contradicts the routing direction stated in the sibling docs.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "docs/workflow/SKILLS.es.md",
+   "line": 111,
+   "title": "Spanish SKILLS row says replan-findings is 'compuesto por plan-feature / plan-fix' — same inverted composition as the English row",
+   "detail": "Mirror of the English defect: 'compuesto por `plan-feature` / `plan-fix` en esa ruta' attributes composition of the replan entry to the planners, while the router is the gate that decides the route and the planners are the named destinations. Contradicts the routing direction in REVIEW_AND_CLASSIFY.es.md.",
+   "severity": "med",
+   "axis": "workflow"
+  }
+ ],
+ "raw": "[\n  {\n    \"file\": \"docs/workflow/SKILLS.md\",\n    \"line\": 7,\n    \"title\": \"Internal-step count bumped to 19 but the enumerated list still totals 18\",\n    \"detail\": \"The header now says '19 internal steps' and the parenthetical enumerates: plan-feature's two planning steps (2), evidence-grounding + pre-execution-review (2), review-implementation (1), planning-preflight (1), phase-contract (1), verification-contract (1), the 9-skill review pack (9) = 17, plus the newly added `replan-findings` row = 18. The count claims 19 but the enumerated set is 18; the same mismatch is mirrored in SKILLS.es.md ('19 pasos internos'). Either a step is missing from the enumeration or the count is wrong — the doc contradicts itself.\",\n    \"severity\": \"med\",\n    \"axis\": \"spec-drift\"\n  },\n  {\n    \"file\": \"docs/workflow/REVIEW_AND_CLASSIFY.md\",\n    \"line\": 79,\n    \"title\": \"replan-in-unit route now requires a fresh /review-plan, contradicting the fix-now/replan-in-unit bullet that still says 'never a downgrade (AC 12)' without the gate\",\n    \"detail\": \"The new bullet says replan-in-unit runs `node scripts/unit-route.mjs <unit>`, names the planner, appends phases, then 'a fresh `/review-plan <unit>` passes, then `execute-phase` runs them'. But the same file's earlier classification section (line ~66) still lists replan-in-unit as 'new user-confirmed phases' with no review-plan gate, and the 'Where it sits' paragraph adds '(fresh `/review-plan` before execution)' only in the summary. The two statements of the same contract disagree on whether the review-plan gate is part of the route; a reader following the classification table would skip it.\",\n    \"severity\": \"med\",\n    \"axis\": \"workflow\"\n  },\n  {\n    \"file\": \"docs/workflow/REVIEW_AND_CLASSIFY.es.md\",\n    \"line\": 88,\n    \"title\": \"Spanish doc says the router line names the planner, but the English doc says the same line names the planner — yet the router output is `route: replan`, not a planner name\",\n    \"detail\": \"Both docs claim 'su línea `route: replan` nombra el planificador (`/plan-feature` para una feature, `/plan-fix` para un fix)'. The literal `route: replan` line cannot name a planner — it is a fixed route token. The planner selection is described as coming from that line, which is a usage-docs claim about behavior the router (per the unit's own description: 'emits a typed route') does not support: the route is `replan`, and the planner is chosen by unit type, not by the route line. The docs attribute planner identity to a line that only carries the route class.\",\n    \"severity\": \"med\",\n    \"axis\": \"usage-docs\"\n  },\n  {\n    \"file\": \"docs/workflow/FEATURE_WORKFLOW.md\",\n    \"line\": 285,\n    \"title\": \"replan-in-unit now says 'runs node scripts/unit-route.mjs <unit>' but the same doc's review-findings.md ledger section still describes replan-in-unit as appending phases directly\",\n    \"detail\": \"The diff changes the replan-in-unit bullet to route through `node scripts/unit-route.mjs <unit>` and a planner. But the same file's `review-findings.md` section (the fix-now fold ledger, ~line 200) still describes the ledger schema and fold cycle without mentioning the router or the `route: replan` gate, and the `execute-phase` fold cycle description still ticks rows `folded: yes` with no replan route. The two surfaces in one doc describe different replan mechanics.\",\n    \"severity\": \"med\",\n    \"axis\": \"workflow\"\n  },\n  {\n    \"file\": \"docs/workflow/PORTABLE_PROMPT.md\",\n    \"line\": 141,\n    \"title\": \"Portable prompt hardcodes `node scripts/unit-route.mjs <unit>` into a prompt meant to be adapted to other repos\",\n    \"detail\": \"The portable prompt's own preamble says it regenerates the workflow 'adapted to that project's architecture, documentation, and conventions, rather than copying this repo's specifics verbatim' and instructs the agent to 'reference THIS project's real paths/commands'. The new text embeds the literal path `node scripts/unit-route.mjs <unit>` — a repo-specific script path — into the prompt body, contradicting the prompt's own adaptation contract. The same defect is mirrored in PORTABLE_PROMPT.es.md.\",\n    \"severity\": \"med\",\n    \"axis\": \"usage-docs\"\n  },\n  {\n    \"file\": \"docs/workflow/PORTABLE_PROMPT.es.md\",\n    \"line\": 147,\n    \"title\": \"Spanish portable prompt embeds English command and English route token into a Spanish doc, and the same hardcoded path defect\",\n    \"detail\": \"The Spanish portable prompt inserts `node scripts/unit-route.mjs <unit>` and `route: replan` verbatim into Spanish prose, and the surrounding sentence mixes languages ('runs ... so the planner its `route: replan` line names appends'). Beyond the hardcoded-path defect shared with the English file, the inserted text is not translated and reads as a broken sentence in the Spanish doc.\",\n    \"severity\": \"low\",\n    \"axis\": \"usage-docs\"\n  },\n  {\n    \"file\": \"docs/fix/README.md\",\n    \"line\": 30,\n    \"title\": \"Fix #224 row claims 'every destination surface the census names (eight skill files, three tutorial pairs) converges on it' but this slice only touches tutorial docs, not the eight skill files\",\n    \"detail\": \"The #224 row states the fix converges 'eight skill files, three tutorial pairs' on the router. This review slice ('tutorial-crossrefs') contains only tutorial docs (FEATURE_WORKFLOW, PORTABLE_PROMPT, REVIEW_AND_CLASSIFY, SKILLS) plus the fix index — no skill files. The row's claim is a unit-level receipt; if the skill-file slices are separate, the row is still asserting a completed convergence that this slice's material cannot substantiate, and the row is marked `done` while the unit is still being reviewed slice-by-slice. The `done` status contradicts the in-flight review state.\",\n    \"severity\": \"med\",\n    \"axis\": \"spec-drift\"\n  },\n  {\n    \"file\": \"docs/workflow/SKILLS.md\",\n    \"line\": 109,\n    \"title\": \"replan-findings row says it is 'composed by plan-feature / plan-fix on that route' but the router is described as emitting `route: replan` only for replan, and plan-feature/plan-fix are the planners — the composition direction is inverted\",\n    \"detail\": \"The new row says `replan-findings` is 'composed by `plan-feature` / `plan-fix` on that route'. But the router (`unit-route.mjs`) is what decides the route and gates the conditional load; the planners are the destinations the route names, not the composers of the replan entry. The doc elsewhere (REVIEW_AND_CLASSIFY) says the router line 'names the planner', i.e. the planner is downstream of the route, not the composer of the replan skill. The composition claim contradicts the routing direction stated in the sibling docs.\",\n    \"severity\": \"med\",\n    \"axis\": \"workflow\"\n  },\n  {\n    \"file\": \"docs/workflow/SKILLS.es.md\",\n    \"line\": 111,\n    \"title\": \"Spanish SKILLS row says replan-findings is 'compuesto por plan-feature / plan-fix' — same inverted composition as the English row\",\n    \"detail\": \"Mirror of the English defect: 'compuesto por `plan-feature` / `plan-fix` en esa ruta' attributes composition of the replan entry to the planners, while the router is the gate that decides the route and the planners are the named destinations. Contradicts the routing direction in REVIEW_AND_CLASSIFY.es.md.\",\n    \"severity\": \"med\",\n    \"axis\": \"workflow\"\n  }\n]"
+}

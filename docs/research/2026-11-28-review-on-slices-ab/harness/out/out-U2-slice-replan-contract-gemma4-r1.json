@@ -1,0 +1,32 @@
+{
+ "id": "U2__slice__replan-contract__gemma4__r1",
+ "unit": "U2",
+ "job": "slice__replan-contract",
+ "model": "gemma4",
+ "run": 1,
+ "ms": 2173,
+ "usage": {
+  "completion_tokens": 197,
+  "prompt_tokens": 3322,
+  "total_tokens": 3519,
+  "completion_tokens_details": {
+   "reasoning_tokens": 0
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "skills/replan-findings/SKILL.md",
+   "line": 88,
+   "title": "Inconsistent hand-off target",
+   "detail": "The 'Done when' section states the hand-off is '/review-plan <unit>', but the 'Append contract' section (line 56) states the write 'hands off to /review-plan — never straight to /execute-phase'. While both point to /review-plan, the 'Append contract' implies a hand-off to a process, whereas the 'Done when' section describes the hand-off as a specific command. More critically, the 'Hand-off' section in the reference file (PHASE_APPEND.md) provides a specific text template for the hand-off that includes a 'Next:' line, which is not explicitly required or described in the main SKILL.md 'Done when' checklist.",
+   "severity": "low",
+   "axis": "spec-drift"
+  }
+ ],
+ "raw": "[{\"file\":\"skills/replan-findings/SKILL.md\",\"line\":88,\"title\":\"Inconsistent hand-off target\",\"detail\":\"The 'Done when' section states the hand-off is '/review-plan <unit>', but the 'Append contract' section (line 56) states the write 'hands off to /review-plan — never straight to /execute-phase'. While both point to /review-plan, the 'Append contract' implies a hand-off to a process, whereas the 'Done when' section describes the hand-off as a specific command. More critically, the 'Hand-off' section in the reference file (PHASE_APPEND.md) provides a specific text template for the hand-off that includes a 'Next:' line, which is not explicitly required or described in the main SKILL.md 'Done when' checklist.\",\"severity\":\"low\",\"axis\":\"spec-drift\"}]"
+}

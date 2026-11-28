@@ -1,0 +1,64 @@
+{
+ "id": "U2__slice__release-notes__glm5.3-flash__r1",
+ "unit": "U2",
+ "job": "slice__release-notes",
+ "model": "glm5.3-flash",
+ "run": 1,
+ "ms": 18315,
+ "usage": {
+  "completion_tokens": 1267,
+  "prompt_tokens": 12634,
+  "total_tokens": 13901,
+  "completion_tokens_details": {
+   "reasoning_tokens": 626
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "CHANGELOG.es.md",
+   "line": 97,
+   "title": "Stray '|---|' appended to table rows",
+   "detail": "Multiple new ES rows end with a literal '|---|' inside the last cell (e.g. 0.10.0 row: '...publicar el re-empaquetado. |---|'; same on workflow-status 3.5.0, review-change 3.5.1, fold-findings 1.5.0, triage-issue 2.8.0, plan-feature 5.2.0, plan-fix 3.2.0). This adds a spurious extra column to each row, corrupting the markdown tables. The EN rows for the same entries do not carry it.",
+   "severity": "med",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "CHANGELOG.es.md",
+   "line": 95,
+   "title": "Header separator reduced to 3 columns while rows have 4+",
+   "detail": "The diff changes each ES table header from '|---|---|---|---|' (4 cols) to '|---|---|---|' (3 cols), but the rows (existing and new) still have 4 cells (plus the stray '|---|'), so the separator no longer matches the row shape in the package, workflow-status, review-change, fold-findings, triage-issue, plan-feature and plan-fix tables.",
+   "severity": "med",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "CHANGELOG.md",
+   "line": 391,
+   "title": "Behavior change shipped as a patch bump",
+   "detail": "review-change 3.5.1 is typed 'patch', but the entry describes a routing behavior change: 'the REVIEW-FAIL → Next: block and the Routing table route a replan-in-unit / plan-owned finding through node scripts/unit-route.mjs <unit> ... replacing the two contradictory sentences that sent the class to the executor and to plan-feature separately.' The file's own versioning policy says patch = 'wording, examples, clarifications, internal tidy-ups; no behavior change.' A changed routing destination is a new routing case, which the policy assigns to minor.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "CHANGELOG.md",
+   "line": 609,
+   "title": "Undefined bump type '—' for replan-findings 1.0.0",
+   "detail": "The new-skill row uses Type '—', but the declared policy table only defines major/minor/patch bumps; no category or meaning for '—' is declared anywhere in this material, leaving the versioning vocabulary contradicted by its own table.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "CHANGELOG.es.md",
+   "line": 611,
+   "title": "ES mirror omits review-implementation/replan-findings type mismatch context",
+   "detail": "ES row for replan-findings 1.0.0 also uses '—' as type while ES policy table only defines mayor/menor/parche — same undefined-vocabulary issue as the EN side, so the two language versions agree but both contradict the declared policy.",
+   "severity": "low",
+   "axis": "spec-drift"
+  }
+ ],
+ "raw": "[{\"file\":\"CHANGELOG.es.md\",\"line\":97,\"title\":\"Stray '|---|' appended to table rows\",\"detail\":\"Multiple new ES rows end with a literal '|---|' inside the last cell (e.g. 0.10.0 row: '...publicar el re-empaquetado. |---|'; same on workflow-status 3.5.0, review-change 3.5.1, fold-findings 1.5.0, triage-issue 2.8.0, plan-feature 5.2.0, plan-fix 3.2.0). This adds a spurious extra column to each row, corrupting the markdown tables. The EN rows for the same entries do not carry it.\",\"severity\":\"med\",\"axis\":\"usage-docs\"},{\"file\":\"CHANGELOG.es.md\",\"line\":95,\"title\":\"Header separator reduced to 3 columns while rows have 4+\",\"detail\":\"The diff changes each ES table header from '|---|---|---|---|' (4 cols) to '|---|---|---|' (3 cols), but the rows (existing and new) still have 4 cells (plus the stray '|---|'), so the separator no longer matches the row shape in the package, workflow-status, review-change, fold-findings, triage-issue, plan-feature and plan-fix tables.\",\"severity\":\"med\",\"axis\":\"usage-docs\"},{\"file\":\"CHANGELOG.md\",\"line\":391,\"title\":\"Behavior change shipped as a patch bump\",\"detail\":\"review-change 3.5.1 is typed 'patch', but the entry describes a routing behavior change: 'the REVIEW-FAIL → Next: block and the Routing table route a replan-in-unit / plan-owned finding through node scripts/unit-route.mjs <unit> ... replacing the two contradictory sentences that sent the class to the executor and to plan-feature separately.' The file's own versioning policy says patch = 'wording, examples, clarifications, internal tidy-ups; no behavior change.' A changed routing destination is a new routing case, which the policy assigns to minor.\",\"severity\":\"med\",\"axis\":\"workflow\"},{\"file\":\"CHANGELOG.md\",\"line\":609,\"title\":\"Undefined bump type '—' for replan-findings 1.0.0\",\"detail\":\"The new-skill row uses Type '—', but the declared policy table only defines major/minor/patch bumps; no category or meaning for '—' is declared anywhere in this material, leaving the versioning vocabulary contradicted by its own table.\",\"severity\":\"low\",\"axis\":\"spec-drift\"},{\"file\":\"CHANGELOG.es.md\",\"line\":611,\"title\":\"ES mirror omits review-implementation/replan-findings type mismatch context\",\"detail\":\"ES row for replan-findings 1.0.0 also uses '—' as type while ES policy table only defines mayor/menor/parche — same undefined-vocabulary issue as the EN side, so the two language versions agree but both contradict the declared policy.\",\"severity\":\"low\",\"axis\":\"spec-drift\"}]"
+}

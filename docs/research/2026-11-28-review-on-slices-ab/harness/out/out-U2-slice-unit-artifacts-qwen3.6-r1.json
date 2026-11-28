@@ -1,0 +1,48 @@
+{
+ "id": "U2__slice__unit-artifacts__qwen3.6__r1",
+ "unit": "U2",
+ "job": "slice__unit-artifacts",
+ "model": "qwen3.6",
+ "run": 1,
+ "ms": 6714,
+ "usage": {
+  "completion_tokens": 782,
+  "prompt_tokens": 36421,
+  "total_tokens": 37203,
+  "completion_tokens_details": {
+   "reasoning_tokens": 0
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 35632
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/progress.md",
+   "line": 135,
+   "title": "Budget ceiling re-basing contradicts SPEC Rules",
+   "detail": "P8 receipt states: 'The converged prose grew four routes past their declared 10 % headroom... Each ceiling was raised to ceil(measured × 1.10)...'. However, the SPEC's 'Rules that must never be violated' section explicitly states: 'Skills stay within their context budgets. The new main file must satisfy the manifest's defaults (mainEstimateMax: 2800, mainLinesMax: 240).' Raising ceilings violates the 'must never be violated' rule. The P2 receipt also notes plan-feature's estimate grew to 2802 > 2800, which was 'compressed back', but P8 admits other routes exceeded headroom and ceilings were raised, implying the budget constraint was breached or redefined without SPEC amendment.",
+   "severity": "high",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/progress.md",
+   "line": 138,
+   "title": "Version pin maintenance contradicts version-bump obligation",
+   "detail": "P8 receipt states: 'A version pin was maintained. scripts/review-loop-discipline.test.mjs:10j pinned fold-findings's exact version: to 1.4.0... P4 bumps that skill to 1.5.0 by SPEC obligation, so the pin was advanced to 1.5.0... a version fact, not a weakened check.' However, OB-11 and AC13 require version bumps for reference edits. The SPEC's 'Rules' state 'Version every change'. The test pin was a 'feature 30's one-time contract pin'. Updating a test pin to match a SPEC-mandated bump is correct, but the receipt frames it as 'maintaining' a pin that was 'pinned... to 1.4.0'. If the pin was a hard constraint from a previous unit, changing it to satisfy this unit's bump is a cross-unit dependency violation not documented in 'Depends on'. The SPEC says 'Depends on: None'.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/progress.md",
+   "line": 105,
+   "title": "P2 estimate breach resolved by compression, not budget change",
+   "detail": "P2 receipt states: 'the added prose pushed plan-feature's main estimate to 2802 > 2800 and ROUTING.md to 2227 > 2200; both were compressed back under the defaults rather than raising the budget'. The SPEC's 'Rules' section mandates 'Skills stay within their context budgets' with specific maxes. Exceeding the budget and then compressing code to fit is a violation of the 'must never be violated' rule, even if the final state is compliant. The defect is that the implementation process breached the invariant, and the fix was a code quality compromise (compression) rather than a budget amendment or refactoring. This is a 'med' defect because the final state is compliant, but the path taken violated the spirit of the rule.",
+   "severity": "med",
+   "axis": "spec-drift"
+  }
+ ],
+ "raw": "[\n  {\n    \"file\": \"docs/fix/224-deterministic-replan-routing/progress.md\",\n    \"line\": 135,\n    \"title\": \"Budget ceiling re-basing contradicts SPEC Rules\",\n    \"detail\": \"P8 receipt states: 'The converged prose grew four routes past their declared 10 % headroom... Each ceiling was raised to ceil(measured × 1.10)...'. However, the SPEC's 'Rules that must never be violated' section explicitly states: 'Skills stay within their context budgets. The new main file must satisfy the manifest's defaults (mainEstimateMax: 2800, mainLinesMax: 240).' Raising ceilings violates the 'must never be violated' rule. The P2 receipt also notes plan-feature's estimate grew to 2802 > 2800, which was 'compressed back', but P8 admits other routes exceeded headroom and ceilings were raised, implying the budget constraint was breached or redefined without SPEC amendment.\",\n    \"severity\": \"high\",\n    \"axis\": \"spec-drift\"\n  },\n  {\n    \"file\": \"docs/fix/224-deterministic-replan-routing/progress.md\",\n    \"line\": 138,\n    \"title\": \"Version pin maintenance contradicts version-bump obligation\",\n    \"detail\": \"P8 receipt states: 'A version pin was maintained. scripts/review-loop-discipline.test.mjs:10j pinned fold-findings's exact version: to 1.4.0... P4 bumps that skill to 1.5.0 by SPEC obligation, so the pin was advanced to 1.5.0... a version fact, not a weakened check.' However, OB-11 and AC13 require version bumps for reference edits. The SPEC's 'Rules' state 'Version every change'. The test pin was a 'feature 30's one-time contract pin'. Updating a test pin to match a SPEC-mandated bump is correct, but the receipt frames it as 'maintaining' a pin that was 'pinned... to 1.4.0'. If the pin was a hard constraint from a previous unit, changing it to satisfy this unit's bump is a cross-unit dependency violation not documented in 'Depends on'. The SPEC says 'Depends on: None'.\",\n    \"severity\": \"med\",\n    \"axis\": \"workflow\"\n  },\n  {\n    \"file\": \"docs/fix/224-deterministic-replan-routing/progress.md\",\n    \"line\": 105,\n    \"title\": \"P2 estimate breach resolved by compression, not budget change\",\n    \"detail\": \"P2 receipt states: 'the added prose pushed plan-feature's main estimate to 2802 > 2800 and ROUTING.md to 2227 > 2200; both were compressed back under the defaults rather than raising the budget'. The SPEC's 'Rules' section mandates 'Skills stay within their context budgets' with specific maxes. Exceeding the budget and then compressing code to fit is a violation of the 'must never be violated' rule, even if the final state is compliant. The defect is that the implementation process breached the invariant, and the fix was a code quality compromise (compression) rather than a budget amendment or refactoring. This is a 'med' defect because the final state is compliant, but the path taken violated the spirit of the rule.\",\n    \"severity\": \"med\",\n    \"axis\": \"spec-drift\"\n  }\n]"
+}

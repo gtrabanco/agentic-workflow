@@ -1,0 +1,552 @@
+{
+ "id": "U2__mono__deepseek-v4-flash__r1",
+ "unit": "U2",
+ "job": "mono",
+ "model": "deepseek-v4-flash",
+ "run": 1,
+ "ms": 33082,
+ "usage": {
+  "completion_tokens": 11780,
+  "prompt_tokens": 171937,
+  "total_tokens": 183717,
+  "completion_tokens_details": {
+   "reasoning_tokens": 0
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "scripts/unit-route.mjs",
+   "line": null,
+   "title": "Router's `rows:` line lists every open row, not the selected ones",
+   "detail": "`main()` computes `selected` per route but `print()` is called with `rows: rowIds` where `const rowIds = rows.map((row) => row.id)` — every open row, not `selected`. The replan contract (`skills/replan-findings/SKILL.md` Bounded intake step 2: \"The `rows:` line names the findings … Read exactly those rows\") and `PHASE_APPEND.md` (\"For every finding the router's `rows:` line selected\") treat `rows:` as the selected set. On the unit-37 fixture the test asserts `rows: F83 F85 F88 F90 F92` while `open-rows: 5` — but the fixture ledger also has open F80? No: F80/F84/F89 are `yes`. However the AC1 test asserts `rows: F1 F2 F3` for `10-replan-unit` where F1 is a plain fold row and F3 a decision row — the replan route selected only F2, yet all three are printed as the rows to read. The contract's \"read exactly those rows\" then pulls non-selected rows into the bounded intake.",
+   "severity": "med",
+   "axis": "code"
+  },
+  {
+   "file": "scripts/unit-route.mjs",
+   "line": null,
+   "title": "`plan-from-issue` read set points at `docs/fix/README.md` only, ignoring the issue",
+   "detail": "`print({ unit: clean, status: \"pending\", route: \"plan-from-issue\", command, openCount: 0, rows: [], readSet: readSetFor(\"docs/fix\", [], [\"README.md\"]) })` — the read set is `docs/fix/README.md` regardless of the issue, and `unit` is the bare issue number. The router's own doc comment says `plan-from-issue  a tracked issue with no unit folder yet`, and the SPEC AC1 requires the route to answer from fixture ledgers; but the printed `read-set` gives the planner nothing about the issue it must plan. Not a crash, but the bounded read set is empty of the actual input.",
+   "severity": "low",
+   "axis": "code"
+  },
+  {
+   "file": "scripts/unit-route.mjs",
+   "line": null,
+   "title": "`roadmapStatus`/`fixIndexStatus` read the wrong column",
+   "detail": "`roadmapStatus` returns `cells[3]` of a roadmap row split on `|` — for `| 10 | \\`replan-unit\\` | in-progress | — | mixed ledger |` the split yields `['', ' 10 ', ' \\`replan-unit\\` ', ' in-progress ', ' — ', ' mixed ledger ', '']`, so `cells[3]` is the status (`in-progress`) — correct. But `fixIndexStatus` uses `cells[3]` on `| [#20](…) | pending-topic | \\`pending\\` | tracked issue… |` → `cells[3]` is `\\`pending\\`` — also correct. However `roadmapStatus` matches `cells[1] !== String(number)` where `cells[1]` is the NN cell — correct. No defect here; retracted.",
+   "severity": "low",
+   "axis": "code"
+  },
+  {
+   "file": "scripts/unit-route.mjs",
+   "line": null,
+   "title": "`isOpen` treats `n/a` and `—` as closed but the ledger schema uses `no`/`yes`",
+   "detail": "`isOpen` returns false for `yes`, `—`, `-`, `n/a`, and empty. The fold ledger's `folded` column is `no`/`yes` per `review-change`'s schema; `n/a`/`—` are not valid values there. A row with a malformed `folded` cell (e.g. `n/a`) is silently treated as closed and dropped from the route decision — a fail-open on a malformed ledger, contradicting the router's \"never guesses\" contract and AC3's fail-closed spirit.",
+   "severity": "low",
+   "axis": "code"
+  },
+  {
+   "file": "scripts/unit-route.mjs",
+   "line": null,
+   "title": "`citedPaths` keeps only paths that exist, so a cited-but-absent path is silently dropped",
+   "detail": "`if (!exists(candidate) || isDir(candidate)) continue;` — a finding citing a path that does not exist (e.g. a file to be created, or a typo) is silently omitted from the read set. The SPEC's AC2 says the read set is \"each cited repository path, deduped, sorted, and capped\"; the implementation narrows to existing paths. The progress log's P1 gotcha even celebrates this (\"a path cited by a FOLDED row … is provably absent from the replan set\"), but the same filter also drops a cited path from a *selected* row, so the planner never learns the finding cites a missing file.",
+   "severity": "med",
+   "axis": "code"
+  },
+  {
+   "file": "scripts/workflow-status.mjs",
+   "line": null,
+   "title": "`readSuggestions` duplicates the router's class→route regex instead of consuming it",
+   "detail": "`const PLAN_ROUTE = /replan[- ]in[- ]unit|owned by plan|plan owner|plan-owner/i;` is defined in `workflow-status.mjs` and again in `unit-route.mjs` (`const PLAN_ROUTE = /replan[- ]in[- ]unit|owned by plan|plan owner|plan-owner/i;`). The SPEC's Decision 1 and the CHANGELOG claim \"The class→destination decision is the router's (`scripts/unit-route.mjs`)\" and `SENSOR_SIGNALS.md` says \"the same class→destination decision `scripts/unit-route.mjs` owns\". Two independent copies of the regex can drift; the sensor does not import or shell out to the router. The `normative-drift` test only checks that both files *contain* the tokens, not that they share the decision.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "scripts/workflow-status.mjs",
+   "line": null,
+   "title": "`readSuggestions` uses `unit.issue` for fix units but `unit.id` for features",
+   "detail": "`const command = unit.kind === \"fix\" ? `/plan-fix ${unit.issue}` : `/plan-feature ${unit.id}`;` — the sensor test asserts `/plan-fix 91` for a fix unit, so `unit.issue` exists. But the router's `plan-from-issue` and `replan` commands use `unit.number` (`/plan-fix ${unit.number}`) and `unit.slug` (`/plan-feature ${unit.slug}`). The two surfaces emit different command strings for the same unit (`/plan-fix 91` vs `/plan-fix 91` — same here, but `/plan-feature 90-alpha` vs `/plan-feature 90-alpha` — also same). No concrete divergence found; retracted.",
+   "severity": "low",
+   "axis": "code"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/SPEC.md",
+   "line": null,
+   "title": "SPEC claims `next.suggested` is schema-declared but the sensor test validates it",
+   "detail": "SPEC PE-005 says `suggested` is declared at `envelope.schema.json:169` and \"the envelope gains one optional array\". The sensor test `P3/AC6` asserts `validateEnvelope(parseEnvelope(replan.stdout)).ok === true` — so the schema must already accept `suggested`. If the schema declares it, fine; if not, the test would fail. The SPEC's claim is consistent with the test. No defect.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/ACCEPTANCE.md",
+   "line": null,
+   "title": "AC7 validator greps 14 files but the SPEC Scope lists 8 skill + 6 tutorial = 14",
+   "detail": "AC7's grep list has 8 skill files + 6 tutorial files = 14, matching Scope. But the SPEC's `### In scope` also names `skills/workflow-status/references/SENSOR_SIGNALS.md` and `docs/workflow/SKILLS.md` (+ ES) as touched surfaces — those are not in AC7's census, which is fine since they don't route the class. No defect.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/progress.md",
+   "line": null,
+   "title": "P8 claims `node --test scripts/*.test.mjs` → 282 tests but the unit adds 14+53+17",
+   "detail": "P8 pastes `282 tests, 282 pass` for the full gate. The unit adds `scripts/unit-route.test.mjs` (14 cases) and extends `workflow-status-sensor.test.mjs` (+1 test) and `normative-drift.test.mjs` (+1 test). 282 is plausible as the new total. No contradiction visible.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/progress.md",
+   "line": null,
+   "title": "P8 admits re-basing four route ceilings past the declared 10% headroom rule",
+   "detail": "P8: \"The converged prose grew four routes past their declared 10 % headroom (plan-feature:issue/scoped, plan-fix:issue, review-change:adversarial/default-backend/default-web/synthesize). Each ceiling was raised to `ceil(measured × 1.10)`\". That is seven routes, not four, and the SPEC's Rules say \"Skills stay within their context budgets\" with `mainEstimateMax: 2800`/`mainLinesMax: 240` — the route ceilings are a separate budget. Raising a ceiling to `ceil(measured × 1.10)` is the declared rule, so this is compliant. But the count \"four routes\" vs the seven named is an internal inconsistency in the receipt.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/progress.md",
+   "line": null,
+   "title": "P8 advances a version pin in `review-loop-discipline.test.mjs` — a test edit",
+   "detail": "P8: \"`scripts/review-loop-discipline.test.mjs:10j` pinned `fold-findings`'s exact `version:` to 1.4.0 … the pin was advanced to 1.5.0 with the assertion unchanged in strength — a version fact, not a weakened check.\" The repo's own contract (`verification-contract`, pinned by `review-loop-discipline.test.mjs` §9) says tests are immutable and \"editing expectations never\" is allowed; the sole amendment path is a proven mis-encoding. A version bump is not a mis-encoding — the test was edited to match new behavior. The progress log discloses it, but the SPEC's Rules do not authorize it and the test-immutability contract forbids it.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/SPEC.md",
+   "line": null,
+   "title": "SPEC `## Status` records ACCEPTANCE blob `0dd2747…` but progress P8 re-freeze is artrev-0003",
+   "detail": "SPEC Status: `git hash-object … ACCEPTANCE.md` → `0dd2747222ce25617ffcf6eae851035a215d6504`. Progress cycle-3 receipt says the same blob matches. Consistent. No defect.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "skills/replan-findings/SKILL.md",
+   "line": null,
+   "title": "Replan contract says \"no planning preflight\" but `plan-feature`'s allowlist still loads it",
+   "detail": "`replan-findings` Bounded intake step 3: \"**No planning preflight.** The finding already pins the scope, so the normalized-repository-state read `planning-preflight` owns is not consumed on this route.\" But `plan-feature/SKILL.md` Progressive loading item 2 says \"Any route that can write planning artifacts: after the redirect gate permits routing, consume the [planning preflight] … before composing an internal step\" — with no replan exemption. The replan route *does* write planning artifacts (appended phases), so item 2 fires and the preflight is consumed, contradicting the replan contract. `plan-fix/SKILL.md` item 3 has the same unconditional preflight.",
+   "severity": "high",
+   "axis": "workflow"
+  },
+  {
+   "file": "skills/plan-feature/SKILL.md",
+   "line": null,
+   "title": "Replan exemption is in ROUTING.md but the Product-review gate still runs",
+   "detail": "`ROUTING.md` says the replan exemption skips \"the STOP\" (the status gate) and loads the replan contract. But `plan-feature/SKILL.md` Turn contract box 2 and Process step 2 require the Product-review gate (current `spec-review-pass` receipt) on every planning route, and `ROUTING.md`'s Product-review gate section says \"Run it before any write on every planning route.\" A replan write appends phases to the SPEC — a write — so the Product-review gate would block it unless a current spec-review-pass exists. The replan contract never mentions the Product-review gate. The exemption is incomplete: it exempts the status STOP but not the Product-review gate, so a replan on a unit whose Product half was never reviewed (or whose receipt is stale) is blocked with no documented path.",
+   "severity": "high",
+   "axis": "workflow"
+  },
+  {
+   "file": "skills/plan-fix/SKILL.md",
+   "line": null,
+   "title": "`plan-fix` replan entry runs the router on `<N>` (issue number) not the unit",
+   "detail": "`plan-fix/SKILL.md` item 7: \"Only when `node scripts/unit-route.mjs <N>` prints `route: replan` for the target unit\". `plan-fix`'s argument is an issue number (`argument-hint: <issue-number>`), and the router's `resolveUnit` matches a pure number against folder prefixes (`/^\\d+$/` → `folder.number === clean`). For a fix unit `docs/fix/91-alpha/`, the folder number is `91`, so `unit-route.mjs 91` resolves. But `PLANNING_PROCESS.md` says \"When the target resolves to an existing unit folder, run `node scripts/unit-route.mjs <unit>`\" — `<unit>` is ambiguous between the issue number and the folder slug. The router accepts both, so no break. Retracted.",
+   "severity": "low",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "skills/plan-fix/references/PLANNING_PROCESS.md",
+   "line": null,
+   "title": "Replan detection runs \"before ingest\" but ingest is what resolves the unit folder",
+   "detail": "`PLANNING_PROCESS.md`: \"**Replan detection — run the router before ingest.** When the target resolves to an existing unit folder, run `node scripts/unit-route.mjs <unit>` first.\" But step 1 (ingest) is what reads the issue and derives the topic; the unit folder is `docs/fix/<primary>-<topic>/` and the topic is derived *in* step 1. Before ingest, the planner has only the issue number, not the unit folder — so \"when the target resolves to an existing unit folder\" cannot be evaluated before ingest. The router can be run on the issue number (it matches folder prefix), but the instruction's ordering is self-contradictory.",
+   "severity": "med",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "skills/review-change/references/PERSIST_AND_DECIDE.md",
+   "line": null,
+   "title": "REVIEW-FAIL `→ Next:` block nests a sub-bullet inside a sub-bullet",
+   "detail": "The REVIEW-FAIL block has `· /audit-pr → only after the table is clean` then ` · any finding routed replan-in-unit …` (leading space + `·`) then ` · any finding owned by product?` then ` · independent proposals` then `· adversarial recommendation checklist fired`. The indentation is inconsistent (one space before `·` for some, none for others), and the replan sub-bullet is nested under `/audit-pr` visually. The step-14 instruction says \"each sub-bullet is its own line, exactly as quoted below\" — the quoted block itself has the mis-indentation.",
+   "severity": "low",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "skills/review-change/references/PERSIST_AND_DECIDE.md",
+   "line": null,
+   "title": "REVIEW-FAIL block's replan line says \"then `/execute-phase <unit>`\" but omits the user confirmation",
+   "detail": "The replan sub-bullet: \"the planner re-cuts the plan on this branch, a fresh `/review-plan <unit>` passes, then `/execute-phase <unit>`\". The `OUTPUT_AND_GUARDRAILS.md` and `CLASSIFY.md` versions say \"the user confirms the appended SPEC phase(s)\" before the review-plan. The PERSIST_AND_DECIDE version drops the user-confirmation step, so a consumer following it would skip the confirmation the other surfaces require.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "skills/fold-findings/SKILL.md",
+   "line": null,
+   "title": "Freeze-batch routes to the router but the router may answer `decision`, not `replan`",
+   "detail": "`fold-findings/SKILL.md` freeze-batch: \"the loop stops and routes to `node scripts/unit-route.mjs <unit>`, whose `route: replan` line names the planner\". But the freeze-batch fires on \"any row whose frozen class is `replan-in-unit` **or `decision-required`**\". If the taken queue's only replan-class row is `decision-required`, the router answers `route: decision` (its `DECISION_ROUTE` matches `decision-required`), not `route: replan` — so the instruction \"whose `route: replan` line names the planner\" is false for that case, and the consumer has no documented next step for a `decision` route.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "skills/fold-findings/references/FOLD_PROCESS.md",
+   "line": null,
+   "title": "Same freeze-batch/decision-required mismatch in FOLD_PROCESS step 7",
+   "detail": "`FOLD_PROCESS.md` step 7 table: \"≥ 1 row with frozen class `replan-in-unit` or `decision-required` … routes to `node scripts/unit-route.mjs <unit>`, whose `route: replan` line names the planner\". Same defect: a `decision-required`-only batch routes to `decision`, not `replan`.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "skills/triage-issue/references/REVIEW_FINDING_PROCESS.md",
+   "line": null,
+   "title": "Triage replan step says run the router but the router may answer `fold`/`execute`",
+   "detail": "`REVIEW_FINDING_PROCESS.md` step 3: \"A correction too large for the current fold is `replan-in-unit`. Run `node scripts/unit-route.mjs <unit>`; its `route: replan` line names the planner\". The triage skill has already classified the finding as `replan-in-unit` from the ledger row; the router re-derives the route from the same ledger and should answer `replan` — unless the row's `route` cell text doesn't match `PLAN_ROUTE` (e.g. a row whose class is `fix-now` and route is `replan-in-unit: …` — matches). Consistent. Retracted.",
+   "severity": "low",
+   "axis": "workflow"
+  },
+  {
+   "file": "docs/workflow/REVIEW_AND_CLASSIFY.md",
+   "line": null,
+   "title": "Tutorial says `fix-now / replan-in-unit` runs the router, but `fix-now` alone does not",
+   "detail": "`REVIEW_AND_CLASSIFY.md`: \"**fix-now / replan-in-unit** → run `node scripts/unit-route.mjs <unit>`\". The slash notation means \"fix-now or replan-in-unit\" in this doc's convention (the previous bullet is `fix-now` alone → fold). A plain `fix-now` finding should fold, not run the router. The router on a unit with only plain fix-now rows answers `fold`, so the instruction is harmless but misleading — it tells the operator to run the router for a plain fix-now, which the router then routes to `/fold-findings`. Not a break, but the doc's own preceding bullet already covers plain fix-now.",
+   "severity": "low",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "docs/workflow/PORTABLE_PROMPT.es.md",
+   "line": null,
+   "title": "Spanish portable prompt is untranslated English in the edited sentence",
+   "detail": "`PORTABLE_PROMPT.es.md` diff: the edited sentence is English (\"runs `node scripts/unit-route.mjs <unit>` so the planner its `route: replan` line names appends user-confirmed phases\") inside a file whose surrounding text is Spanish. The file's own header says the prompt block is \"deliberadamente **sin traducir**\" — so this is by design. No defect.",
+   "severity": "low",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "docs/workflow/SKILLS.md",
+   "line": null,
+   "title": "Internal-step count 18 → 19 but the list adds `replan-findings` and the count math",
+   "detail": "`SKILLS.md`: \"**19 user-facing skills** … + **19 internal steps**\". The parenthetical enumerates: 2 planning steps + 2 evidence owners + review-implementation + planning-preflight + phase-contract + verification-contract + 9 review pack = 2+2+1+1+1+1+9 = 17, plus `replan-findings` = 18, plus `implementation-discovery` (listed in the table) = 19. The prose parenthetical does not name `implementation-discovery` or `replan-findings` in the count sentence, so a reader counting the named items gets 17, not 19. The table below does list both. Minor doc inconsistency.",
+   "severity": "low",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "docs/workflow/SKILL_CONTEXT_BUDGETS.json",
+   "line": null,
+   "title": "`replan-findings` budget entry has no `mainEstimateMax`/`mainLinesMax` override",
+   "detail": "The new `replan-findings` entry only sets `referenceSources`; it inherits `defaults.mainEstimateMax: 2800`/`mainLinesMax: 240`. The skill's `SKILL.md` is 92 lines — well under. No defect.",
+   "severity": "low",
+   "axis": "perf"
+  },
+  {
+   "file": "docs/workflow/SKILL_CONTEXT_BUDGETS.json",
+   "line": null,
+   "title": "Route ceilings raised to `ceil(measured × 1.10)` but the SPEC's Rules say budgets are ceilings",
+   "detail": "The SPEC's Rules: \"Skills stay within their context budgets. The new main file must satisfy the manifest's defaults (`mainEstimateMax: 2800`, `mainLinesMax: 240`).\" The route ceilings are a separate budget with a declared 10% headroom rule (visible in the `sources` notes). Raising them to `ceil(measured × 1.10)` is the declared rule, so compliant. But `plan-feature:issue` went 11430 → 11572 (+142) and `plan-feature:scoped` 8934 → 9077 (+143) — both are `ceil(measured × 1.10)` only if measured is ~10520 and ~8252. The progress log says \"four routes\" but seven were raised. The count mismatch is the defect, not the values.",
+   "severity": "low",
+   "axis": "perf"
+  },
+  {
+   "file": "scripts/normative-drift.test.mjs",
+   "line": null,
+   "title": "New drift test asserts token presence, not the class→destination mapping",
+   "detail": "The new test: `for (const token of [\"replan-in-unit\", \"/plan-feature\", \"/plan-fix\", \"/fold-findings\"]) assert.ok(sensor.includes(token))` and `for (const token of [\"/plan-feature\", \"/plan-fix\", \"/fold-findings\"]) assert.ok(router.includes(token))`. This only checks that both files *mention* the tokens — it does not check that the sensor's class→destination mapping agrees with the router's. The SPEC's P3 task says \"Pin the canonical destination vocabulary in `scripts/normative-drift.test.mjs`\" and the test's own comment says \"neither may invent a fourth destination for the same class\" — but the assertion cannot detect a fourth destination; it only detects a missing token. A sensor that routes `replan-in-unit` to `/fold-findings` would still pass.",
+   "severity": "med",
+   "axis": "code"
+  },
+  {
+   "file": "scripts/unit-route.test.mjs",
+   "line": null,
+   "title": "AC4 determinism test runs against the live repo, not a fixture",
+   "detail": "`test(\"AC4: two consecutive runs print byte-identical stdout\", () => { const first = run([\"224-deterministic-replan-routing\"], { root: null }); … })` — `root: null` means `UNIT_ROUTE_REPO` is unset, so the router reads the live repo. The test asserts byte-identical stdout across two runs, which is fine for determinism, but it also depends on the live repo's `docs/fix/224-deterministic-replan-routing/` existing and its ledger being stable. If the unit's own ledger changes between the two runs (it won't within one test), fine. But the test is not hermetic — it reads the real repo, so a dirty tree or a concurrent edit could flake it. The AC4 read-only test also runs `git status --porcelain` on the live repo.",
+   "severity": "low",
+   "axis": "code"
+  },
+  {
+   "file": "scripts/unit-route.test.mjs",
+   "line": null,
+   "title": "AC2 test asserts `set.count === 23` for `40-cited-paths` but the fixture has 20 files + 3 unit surfaces",
+   "detail": "`assert.equal(set.count, 23, \"3 unit surfaces + 20 distinct cited files\")`. The fixture `40-cited-paths` has `SPEC.md`, `ACCEPTANCE.md`, `review-findings.md` (3 unit surfaces) and `src/file-1.txt` … `src/file-20.txt` (20 files). But `citedPaths` only keeps paths that exist — all 20 exist. So 23 is correct. No defect.",
+   "severity": "low",
+   "axis": "code"
+  },
+  {
+   "file": "scripts/unit-route.test.mjs",
+   "line": null,
+   "title": "AC12 sanitizer test asserts `!result.stdout.includes(longId)` but `longId` is 400+ chars",
+   "detail": "`const longId = \\`F9-${\\\"A\\\".repeat(400)}\\`;` and `assert.ok(!result.stdout.includes(longId), \"the long id is truncated by the sanitizer\")`. The sanitizer truncates to `CELL_MAX - 1 = 159` chars + `…`, so the full 400-char id is not in stdout — correct. But the test also asserts `assert.match(result.stdout, /F9-AAAA/)` — the truncated prefix. Correct. No defect.",
+   "severity": "low",
+   "axis": "code"
+  },
+  {
+   "file": "scripts/workflow-status.mjs",
+   "line": null,
+   "title": "`readSuggestions` is called for every unit but `next.suggested` is overwritten, not appended",
+   "detail": "`const nextSuggested = []; … nextSuggested.push(...readSuggestions(unit, dir)); … next.suggested = nextSuggested;` — this is correct (accumulates across units). No defect.",
+   "severity": "low",
+   "axis": "code"
+  },
+  {
+   "file": "scripts/workflow-status.mjs",
+   "line": null,
+   "title": "`readOpenRows` drops `VF-` rows but `readFixNow` previously did not",
+   "detail": "The refactor moves the `VF-` skip into `readOpenRows`, so `readFixNow` no longer sees `VF-` rows. Previously `readFixNow` iterated all rows and would have tried to parse a `VF-` row's severity (`confirmed`/`refuted`) — which is not in `SEVERITY_VOCABULARY`, so it would have been dropped with a named note. The new behavior silently skips `VF-` rows without a note. The `VF-` rows are finding-mark rows, not findings, so skipping is correct — but the change removes a previously-emitted observation. Minor behavior change not called out in the CHANGELOG.",
+   "severity": "low",
+   "axis": "code"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/SPEC.md",
+   "line": null,
+   "title": "SPEC's `## Depends on` says \"None\" but PE-013 discloses a cross-unit ordering dependency",
+   "detail": "`## Depends on`: \"None for this fix's own delivery: `#205`, `#172` and `#194` are independent\". Then: \"One cross-unit ordering note (RP-224-1): unit `37-phase-lint-script` is unmerged … so AC5's dogfood leg is verified against a committed fixture\". The dependency gate reads `## Depends on` and finds no dependency — correct, since the fixture removes the hard dependency. But the SPEC's own `### Planning evidence` PE-013 marks the live dogfood as \"post-merge, informational\" — consistent. No defect.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/SPEC.md",
+   "line": null,
+   "title": "SPEC's `## Status` says `pending` but the fix index says `done`",
+   "detail": "SPEC `## Status`: \"`pending` · `in-progress` · `done` (built, PR open — merge state lives in the forge)\" — this is the legend, not the value. The actual status is not stated in the SPEC; the fix index row says `done · [#225]`. The SPEC's `## Status` section is a legend with no value, so a reader cannot tell the unit's status from the SPEC. The fix index is the authority, but the SPEC's Status section is incomplete.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/ACCEPTANCE.md",
+   "line": null,
+   "title": "AC13 validator greps `^| 3\\.5\\.1 |` but the CHANGELOG cell is `| 3.5.1 | 2026-09-15 | patch |`",
+   "detail": "`grep -q \"^| 3\\.5\\.1 |\" CHANGELOG.md` — the CHANGELOG cell is `| 3.5.1 | 2026-09-15 | patch | **Canonical replan destination…`. The grep pattern `^| 3\\.5\\.1 |` matches the start of the line `| 3.5.1 |` — correct. No defect.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "CHANGELOG.md",
+   "line": null,
+   "title": "`review-change` 3.5.1 row says \"replacing the two contradictory sentences\" but the diff shows three surfaces changed",
+   "detail": "CHANGELOG: \"replacing the two contradictory sentences that sent the class to the executor and to `plan-feature` separately\". The diff changes `PERSIST_AND_DECIDE.md` (two sub-bullets merged into one) and `OUTPUT_AND_GUARDRAILS.md` (one bullet) — that's two files, but the SPEC's root cause names three contradictory destinations (`PERSIST_AND_DECIDE.md:133`, `:135-136`, `REVIEW_FINDING_PROCESS.md:17-21`). The CHANGELOG's \"two\" undercounts.",
+   "severity": "low",
+   "axis": "brand"
+  },
+  {
+   "file": "CHANGELOG.es.md",
+   "line": null,
+   "title": "Spanish CHANGELOG row has a stray `|---|` appended",
+   "detail": "`CHANGELOG.es.md` diff: `| 0.10.0 | 2026-09-15 | menor | **Re-empaquetado…** … |---|` — the row ends with `|---|` instead of `|`. The English CHANGELOG has the same defect: `| 0.10.0 | … |---|`. This is a malformed table row (extra `---` cell) in both changelogs.",
+   "severity": "med",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "CHANGELOG.md",
+   "line": null,
+   "title": "Same stray `|---|` in the English 0.10.0 row",
+   "detail": "`CHANGELOG.md` diff: `+| 0.10.0 | 2026-09-15 | minor | **Deterministic replan routing re-bundle (fix #224)**: … |---|` — the row ends with `|---|` instead of `|`. Malformed table row.",
+   "severity": "med",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "CHANGELOG.md",
+   "line": null,
+   "title": "`workflow-status` 3.5.0 row also ends with `|---|`",
+   "detail": "`CHANGELOG.md` diff: `+| 3.5.0 | 2026-09-15 | minor | **Class-routed `next.suggested` (fix #224):** … |---|` — same stray `|---|`.",
+   "severity": "med",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "CHANGELOG.md",
+   "line": null,
+   "title": "`review-change` 3.5.1 row ends with `|---|`",
+   "detail": "`CHANGELOG.md` diff: `+| 3.5.1 | 2026-09-15 | patch | **Canonical replan destination (fix #224):** … |---|` — same stray `|---|`.",
+   "severity": "med",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "CHANGELOG.md",
+   "line": null,
+   "title": "`fold-findings` 1.5.0 row ends with `|---|`",
+   "detail": "`CHANGELOG.md` diff: `+| 1.5.0 | 2026-09-15 | minor | **Canonical replan destination (fix #224):** … |---|` — same stray `|---|`.",
+   "severity": "med",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "CHANGELOG.md",
+   "line": null,
+   "title": "`triage-issue` 2.8.0 row ends with `|---|`",
+   "detail": "`CHANGELOG.md` diff: `+| 2.8.0 | 2026-09-15 | minor | **Canonical replan destination (fix #224):** … |---|` — same stray `|---|`.",
+   "severity": "med",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "CHANGELOG.es.md",
+   "line": null,
+   "title": "Spanish `workflow-status` 3.5.0 row ends with `|---|`",
+   "detail": "`CHANGELOG.es.md` diff: `+| 3.5.0 | 2026-09-15 | menor | **`next.suggested` enrutado por clase (fix #224):** … |---|` — same stray `|---|`.",
+   "severity": "med",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "CHANGELOG.es.md",
+   "line": null,
+   "title": "Spanish `plan-feature` 5.2.0 row ends with `|---|`",
+   "detail": "`CHANGELOG.es.md` diff: `+| 5.2.0 | 2026-09-15 | menor | **Entrada de replan (fix #224):** … |---|` — same stray `|---|`.",
+   "severity": "med",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "CHANGELOG.es.md",
+   "line": null,
+   "title": "Spanish `plan-fix` 3.2.0 row ends with `|---|`",
+   "detail": "`CHANGELOG.es.md` diff: `+| 3.2.0 | 2026-09-15 | menor | **Entrada de replan (fix #224):** … |---|` — same stray `|---|`.",
+   "severity": "med",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "CHANGELOG.es.md",
+   "line": null,
+   "title": "Spanish `review-change` 3.5.1 row ends with `|---|`",
+   "detail": "`CHANGELOG.es.md` diff: `+| 3.5.1 | 2026-09-15 | parche | **Destino canónico de replan (fix #224):** … |---|` — same stray `|---|`.",
+   "severity": "med",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "CHANGELOG.es.md",
+   "line": null,
+   "title": "Spanish `fold-findings` 1.5.0 row ends with `|---|`",
+   "detail": "`CHANGELOG.es.md` diff: `+| 1.5.0 | 2026-09-15 | menor | **Destino canónico de replan (fix #224):** … |---|` — same stray `|---|`.",
+   "severity": "med",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "CHANGELOG.es.md",
+   "line": null,
+   "title": "Spanish `triage-issue` 2.8.0 row ends with `|---|`",
+   "detail": "`CHANGELOG.es.md` diff: `+| 2.8.0 | 2026-09-15 | menor | **Destino canónico de replan (fix #224):** … |---|` — same stray `|---|`.",
+   "severity": "med",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "CHANGELOG.es.md",
+   "line": null,
+   "title": "Spanish `review-implementation` 1.8.0 row ends with `|---|`",
+   "detail": "`CHANGELOG.es.md` diff: `+| `review-implementation` | 1.8.0 | 2026-09-15 | menor | **Destino canónico de replan (fix #224):** … |---|` — same stray `|---|`.",
+   "severity": "med",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "CHANGELOG.es.md",
+   "line": null,
+   "title": "Spanish `replan-findings` 1.0.0 row ends with `|---|`",
+   "detail": "`CHANGELOG.es.md` diff: `+| `replan-findings` | 1.0.0 | 2026-09-15 | — | Nuevo contrato interno (fix #224): … |---|` — same stray `|---|`.",
+   "severity": "med",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "CHANGELOG.md",
+   "line": null,
+   "title": "English `review-implementation` 1.8.0 and `replan-findings` 1.0.0 rows end with `|---|`",
+   "detail": "`CHANGELOG.md` diff: `+| `review-implementation` | 1.8.0 | 2026-09-15 | minor | **Canonical replan destination (fix #224):** … |---|` and `+| `replan-findings` | 1.0.0 | 2026-09-15 | — | New internal contract (fix #224): … |---|` — same stray `|---|`.",
+   "severity": "med",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/progress.md",
+   "line": null,
+   "title": "P8 claims `282 tests, 282 pass` but the unit adds 14+1+1 = 16 new tests",
+   "detail": "P8: \"`NODE_PATH=… node --test scripts/*.test.mjs` → exit 0 · 282 tests, 282 pass, 0 fail.\" The unit adds `scripts/unit-route.test.mjs` (14 cases), one test in `workflow-status-sensor.test.mjs`, one in `normative-drift.test.mjs` = 16 new. If the pre-unit total was 266, 282 is correct. No contradiction visible.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/progress.md",
+   "line": null,
+   "title": "P8 says \"four routes\" but names seven",
+   "detail": "P8: \"The converged prose grew four routes past their declared 10 % headroom (plan-feature:issue/scoped, plan-fix:issue, review-change:adversarial/default-backend/default-web/synthesize).\" The parenthetical names 2 + 1 + 4 = 7 routes. The count \"four\" contradicts the list.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/progress.md",
+   "line": null,
+   "title": "P8's version-pin advance contradicts the test-immutability contract",
+   "detail": "P8: \"`scripts/review-loop-discipline.test.mjs:10j` pinned `fold-findings`'s exact `version:` to 1.4.0 … the pin was advanced to 1.5.0 with the assertion unchanged in strength — a version fact, not a weakened check.\" The repo's `verification-contract` (pinned by the same test file §9) says tests are immutable and \"editing expectations never\" is allowed; the sole amendment path is a proven mis-encoding of external semantics. A version bump is not a mis-encoding — the test was edited to match new behavior. The progress log discloses it, but the SPEC's Rules do not authorize it and the test-immutability contract forbids it.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "skills/replan-findings/SKILL.md",
+   "line": null,
+   "title": "Replan contract says \"no planning preflight\" but `plan-feature`/`plan-fix` allowlists still load it",
+   "detail": "`replan-findings` Bounded intake step 3: \"**No planning preflight.** The finding already pins the scope, so the normalized-repository-state read `planning-preflight` owns is not consumed on this route.\" But `plan-feature/SKILL.md` Progressive loading item 2 says \"Any route that can write planning artifacts: after the redirect gate permits routing, consume the [planning preflight] … before composing an internal step\" — with no replan exemption. The replan route *does* write planning artifacts (appended phases), so item 2 fires and the preflight is consumed, contradicting the replan contract. `plan-fix/SKILL.md` item 3 has the same unconditional preflight.",
+   "severity": "high",
+   "axis": "workflow"
+  },
+  {
+   "file": "skills/plan-feature/SKILL.md",
+   "line": null,
+   "title": "Replan exemption skips the status STOP but not the Product-review gate",
+   "detail": "`ROUTING.md` says the replan exemption skips \"the STOP\" (the status gate) and loads the replan contract. But `plan-feature/SKILL.md` Turn contract box 2 and Process step 2 require the Product-review gate (current `spec-review-pass` receipt) on every planning route, and `ROUTING.md`'s Product-review gate section says \"Run it before any write on every planning route.\" A replan write appends phases to the SPEC — a write — so the Product-review gate would block it unless a current spec-review-pass exists. The replan contract never mentions the Product-review gate. The exemption is incomplete: it exempts the status STOP but not the Product-review gate, so a replan on a unit whose Product half was never reviewed (or whose receipt is stale) is blocked with no documented path.",
+   "severity": "high",
+   "axis": "workflow"
+  },
+  {
+   "file": "skills/fold-findings/SKILL.md",
+   "line": null,
+   "title": "Freeze-batch routes to the router but the router may answer `decision`, not `replan`",
+   "detail": "`fold-findings/SKILL.md` freeze-batch: \"the loop stops and routes to `node scripts/unit-route.mjs <unit>`, whose `route: replan` line names the planner\". But the freeze-batch fires on \"any row whose frozen class is `replan-in-unit` **or `decision-required`**\". If the taken queue's only replan-class row is `decision-required`, the router answers `route: decision` (its `DECISION_ROUTE` matches `decision-required`), not `route: replan` — so the instruction \"whose `route: replan` line names the planner\" is false for that case, and the consumer has no documented next step for a `decision` route.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "skills/fold-findings/references/FOLD_PROCESS.md",
+   "line": null,
+   "title": "Same freeze-batch/decision-required mismatch in FOLD_PROCESS step 7",
+   "detail": "`FOLD_PROCESS.md` step 7 table: \"≥ 1 row with frozen class `replan-in-unit` or `decision-required` … routes to `node scripts/unit-route.mjs <unit>`, whose `route: replan` line names the planner\". Same defect: a `decision-required`-only batch routes to `decision`, not `replan`.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "scripts/unit-route.mjs",
+   "line": null,
+   "title": "Router's `rows:` line lists every open row, not the selected ones",
+   "detail": "`main()` computes `selected` per route but `print()` is called with `rows: rowIds` where `const rowIds = rows.map((row) => row.id)` — every open row, not `selected`. The replan contract (`skills/replan-findings/SKILL.md` Bounded intake step 2: \"The `rows:` line names the findings … Read exactly those rows\") and `PHASE_APPEND.md` (\"For every finding the router's `rows:` line selected\") treat `rows:` as the selected set. On the `10-replan-unit` fixture the AC1 test asserts `rows: F1 F2 F3` where F1 is a plain fold row and F3 a decision row — the replan route selected only F2, yet all three are printed as the rows to read. The contract's \"read exactly those rows\" then pulls non-selected rows into the bounded intake.",
+   "severity": "med",
+   "axis": "code"
+  },
+  {
+   "file": "scripts/unit-route.mjs",
+   "line": null,
+   "title": "`citedPaths` keeps only paths that exist, so a cited-but-absent path is silently dropped",
+   "detail": "`if (!exists(candidate) || isDir(candidate)) continue;` — a finding citing a path that does not exist (e.g. a file to be created, or a typo) is silently omitted from the read set. The SPEC's AC2 says the read set is \"each cited repository path, deduped, sorted, and capped\"; the implementation narrows to existing paths. The progress log's P1 gotcha even celebrates this (\"a path cited by a FOLDED row … is provably absent from the replan set\"), but the same filter also drops a cited path from a *selected* row, so the planner never learns the finding cites a missing file.",
+   "severity": "med",
+   "axis": "code"
+  },
+  {
+   "file": "scripts/workflow-status.mjs",
+   "line": null,
+   "title": "`readSuggestions` duplicates the router's class→route regex instead of consuming it",
+   "detail": "`const PLAN_ROUTE = /replan[- ]in[- ]unit|owned by plan|plan owner|plan-owner/i;` is defined in `workflow-status.mjs` and again in `unit-route.mjs` (`const PLAN_ROUTE = /replan[- ]in[- ]unit|owned by plan|plan owner|plan-owner/i;`). The SPEC's Decision 1 and the CHANGELOG claim \"The class→destination decision is the router's (`scripts/unit-route.mjs`)\" and `SENSOR_SIGNALS.md` says \"the same class→destination decision `scripts/unit-route.mjs` owns\". Two independent copies of the regex can drift; the sensor does not import or shell out to the router. The `normative-drift` test only checks that both files *contain* the tokens, not that they share the decision.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "scripts/normative-drift.test.mjs",
+   "line": null,
+   "title": "New drift test asserts token presence, not the class→destination mapping",
+   "detail": "The new test: `for (const token of [\"replan-in-unit\", \"/plan-feature\", \"/plan-fix\", \"/fold-findings\"]) assert.ok(sensor.includes(token))` and `for (const token of [\"/plan-feature\", \"/plan-fix\", \"/fold-findings\"]) assert.ok(router.includes(token))`. This only checks that both files *mention* the tokens — it does not check that the sensor's class→destination mapping agrees with the router's. The SPEC's P3 task says \"Pin the canonical destination vocabulary in `scripts/normative-drift.test.mjs`\" and the test's own comment says \"neither may invent a fourth destination for the same class\" — but the assertion cannot detect a fourth destination; it only detects a missing token. A sensor that routes `replan-in-unit` to `/fold-findings` would still pass.",
+   "severity": "med",
+   "axis": "code"
+  },
+  {
+   "file": "skills/review-change/references/PERSIST_AND_DECIDE.md",
+   "line": null,
+   "title": "REVIEW-FAIL block's replan line omits the user confirmation",
+   "detail": "The replan sub-bullet: \"the planner re-cuts the plan on this branch, a fresh `/review-plan <unit>` passes, then `/execute-phase <unit>`\". The `OUTPUT_AND_GUARDRAILS.md` and `CLASSIFY.md` versions say \"the user confirms the appended SPEC phase(s)\" before the review-plan. The PERSIST_AND_DECIDE version drops the user-confirmation step, so a consumer following it would skip the confirmation the other surfaces require.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "skills/plan-fix/references/PLANNING_PROCESS.md",
+   "line": null,
+   "title": "Replan detection runs \"before ingest\" but ingest is what resolves the unit folder",
+   "detail": "`PLANNING_PROCESS.md`: \"**Replan detection — run the router before ingest.** When the target resolves to an existing unit folder, run `node scripts/unit-route.mjs <unit>` first.\" But step 1 (ingest) is what reads the issue and derives the topic; the unit folder is `docs/fix/<primary>-<topic>/` and the topic is derived *in* step 1. Before ingest, the planner has only the issue number, not the unit folder — so \"when the target resolves to an existing unit folder\" cannot be evaluated before ingest. The router can be run on the issue number (it matches folder prefix), but the instruction's ordering is self-contradictory.",
+   "severity": "med",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "CHANGELOG.md",
+   "line": null,
+   "title": "Stray `|---|` appended to every new changelog row",
+   "detail": "Every new row in `CHANGELOG.md` and `CHANGELOG.es.md` ends with `|---|` instead of `|` — e.g. `| 0.10.0 | 2026-09-15 | minor | **Deterministic replan routing re-bundle (fix #224)**: … |---|`, `| 3.5.0 | 2026-09-15 | minor | **Class-routed `next.suggested` (fix #224):** … |---|`, `| 5.2.0 | … |---|`, `| 3.2.0 | … |---|`, `| 3.5.1 | … |---|`, `| 1.5.0 | … |---|`, `| 2.8.0 | … |---|`, `| `review-implementation` | 1.8.0 | … |---|`, `| `replan-findings` | 1.0.0 | … |---|`. The same defect appears in the Spanish changelog. The rows are malformed Markdown tables (an extra `---` cell), and the `normative-drift` version-tables check parses these cells — a malformed row can break the newest-cell-equals-frontmatter comparison.",
+   "severity": "med",
+   "axis": "usage-docs"
+  }
+ ],
+ "raw": "[{\"file\":\"scripts/unit-route.mjs\",\"line\":null,\"title\":\"Router's `rows:` line lists every open row, not the selected ones\",\"detail\":\"`main()` computes `selected` per route but `print()` is called with `rows: rowIds` where `const rowIds = rows.map((row) => row.id)` — every open row, not `selected`. The replan contract (`skills/replan-findings/SKILL.md` Bounded intake step 2: \\\"The `rows:` line names the findings … Read exactly those rows\\\") and `PHASE_APPEND.md` (\\\"For every finding the router's `rows:` line selected\\\") treat `rows:` as the selected set. On the unit-37 fixture the test asserts `rows: F83 F85 F88 F90 F92` while `open-rows: 5` — but the fixture ledger also has open F80? No: F80/F84/F89 are `yes`. However the AC1 test asserts `rows: F1 F2 F3` for `10-replan-unit` where F1 is a plain fold row and F3 a decision row — the replan route selected only F2, yet all three are printed as the rows to read. The contract's \\\"read exactly those rows\\\" then pulls non-selected rows into the bounded intake.\",\"severity\":\"med\",\"axis\":\"code\"},{\"file\":\"scripts/unit-route.mjs\",\"line\":null,\"title\":\"`plan-from-issue` read set points at `docs/fix/README.md` only, ignoring the issue\",\"detail\":\"`print({ unit: clean, status: \\\"pending\\\", route: \\\"plan-from-issue\\\", command, openCount: 0, rows: [], readSet: readSetFor(\\\"docs/fix\\\", [], [\\\"README.md\\\"]) })` — the read set is `docs/fix/README.md` regardless of the issue, and `unit` is the bare issue number. The router's own doc comment says `plan-from-issue  a tracked issue with no unit folder yet`, and the SPEC AC1 requires the route to answer from fixture ledgers; but the printed `read-set` gives the planner nothing about the issue it must plan. Not a crash, but the bounded read set is empty of the actual input.\",\"severity\":\"low\",\"axis\":\"code\"},{\"file\":\"scripts/unit-route.mjs\",\"line\":null,\"title\":\"`roadmapStatus`/`fixIndexStatus` read the wrong column\",\"detail\":\"`roadmapStatus` returns `cells[3]` of a roadmap row split on `|` — for `| 10 | \\\\`replan-unit\\\\` | in-progress | — | mixed ledger |` the split yields `['', ' 10 ', ' \\\\`replan-unit\\\\` ', ' in-progress ', ' — ', ' mixed ledger ', '']`, so `cells[3]` is the status (`in-progress`) — correct. But `fixIndexStatus` uses `cells[3]` on `| [#20](…) | pending-topic | \\\\`pending\\\\` | tracked issue… |` → `cells[3]` is `\\\\`pending\\\\`` — also correct. However `roadmapStatus` matches `cells[1] !== String(number)` where `cells[1]` is the NN cell — correct. No defect here; retracted.\",\"severity\":\"low\",\"axis\":\"code\"},{\"file\":\"scripts/unit-route.mjs\",\"line\":null,\"title\":\"`isOpen` treats `n/a` and `—` as closed but the ledger schema uses `no`/`yes`\",\"detail\":\"`isOpen` returns false for `yes`, `—`, `-`, `n/a`, and empty. The fold ledger's `folded` column is `no`/`yes` per `review-change`'s schema; `n/a`/`—` are not valid values there. A row with a malformed `folded` cell (e.g. `n/a`) is silently treated as closed and dropped from the route decision — a fail-open on a malformed ledger, contradicting the router's \\\"never guesses\\\" contract and AC3's fail-closed spirit.\",\"severity\":\"low\",\"axis\":\"code\"},{\"file\":\"scripts/unit-route.mjs\",\"line\":null,\"title\":\"`citedPaths` keeps only paths that exist, so a cited-but-absent path is silently dropped\",\"detail\":\"`if (!exists(candidate) || isDir(candidate)) continue;` — a finding citing a path that does not exist (e.g. a file to be created, or a typo) is silently omitted from the read set. The SPEC's AC2 says the read set is \\\"each cited repository path, deduped, sorted, and capped\\\"; the implementation narrows to existing paths. The progress log's P1 gotcha even celebrates this (\\\"a path cited by a FOLDED row … is provably absent from the replan set\\\"), but the same filter also drops a cited path from a *selected* row, so the planner never learns the finding cites a missing file.\",\"severity\":\"med\",\"axis\":\"code\"},{\"file\":\"scripts/workflow-status.mjs\",\"line\":null,\"title\":\"`readSuggestions` duplicates the router's class→route regex instead of consuming it\",\"detail\":\"`const PLAN_ROUTE = /replan[- ]in[- ]unit|owned by plan|plan owner|plan-owner/i;` is defined in `workflow-status.mjs` and again in `unit-route.mjs` (`const PLAN_ROUTE = /replan[- ]in[- ]unit|owned by plan|plan owner|plan-owner/i;`). The SPEC's Decision 1 and the CHANGELOG claim \\\"The class→destination decision is the router's (`scripts/unit-route.mjs`)\\\" and `SENSOR_SIGNALS.md` says \\\"the same class→destination decision `scripts/unit-route.mjs` owns\\\". Two independent copies of the regex can drift; the sensor does not import or shell out to the router. The `normative-drift` test only checks that both files *contain* the tokens, not that they share the decision.\",\"severity\":\"med\",\"axis\":\"workflow\"},{\"file\":\"scripts/workflow-status.mjs\",\"line\":null,\"title\":\"`readSuggestions` uses `unit.issue` for fix units but `unit.id` for features\",\"detail\":\"`const command = unit.kind === \\\"fix\\\" ? `/plan-fix ${unit.issue}` : `/plan-feature ${unit.id}`;` — the sensor test asserts `/plan-fix 91` for a fix unit, so `unit.issue` exists. But the router's `plan-from-issue` and `replan` commands use `unit.number` (`/plan-fix ${unit.number}`) and `unit.slug` (`/plan-feature ${unit.slug}`). The two surfaces emit different command strings for the same unit (`/plan-fix 91` vs `/plan-fix 91` — same here, but `/plan-feature 90-alpha` vs `/plan-feature 90-alpha` — also same). No concrete divergence found; retracted.\",\"severity\":\"low\",\"axis\":\"code\"},{\"file\":\"docs/fix/224-deterministic-replan-routing/SPEC.md\",\"line\":null,\"title\":\"SPEC claims `next.suggested` is schema-declared but the sensor test validates it\",\"detail\":\"SPEC PE-005 says `suggested` is declared at `envelope.schema.json:169` and \\\"the envelope gains one optional array\\\". The sensor test `P3/AC6` asserts `validateEnvelope(parseEnvelope(replan.stdout)).ok === true` — so the schema must already accept `suggested`. If the schema declares it, fine; if not, the test would fail. The SPEC's claim is consistent with the test. No defect.\",\"severity\":\"low\",\"axis\":\"spec-drift\"},{\"file\":\"docs/fix/224-deterministic-replan-routing/ACCEPTANCE.md\",\"line\":null,\"title\":\"AC7 validator greps 14 files but the SPEC Scope lists 8 skill + 6 tutorial = 14\",\"detail\":\"AC7's grep list has 8 skill files + 6 tutorial files = 14, matching Scope. But the SPEC's `### In scope` also names `skills/workflow-status/references/SENSOR_SIGNALS.md` and `docs/workflow/SKILLS.md` (+ ES) as touched surfaces — those are not in AC7's census, which is fine since they don't route the class. No defect.\",\"severity\":\"low\",\"axis\":\"spec-drift\"},{\"file\":\"docs/fix/224-deterministic-replan-routing/progress.md\",\"line\":null,\"title\":\"P8 claims `node --test scripts/*.test.mjs` → 282 tests but the unit adds 14+53+17\",\"detail\":\"P8 pastes `282 tests, 282 pass` for the full gate. The unit adds `scripts/unit-route.test.mjs` (14 cases) and extends `workflow-status-sensor.test.mjs` (+1 test) and `normative-drift.test.mjs` (+1 test). 282 is plausible as the new total. No contradiction visible.\",\"severity\":\"low\",\"axis\":\"spec-drift\"},{\"file\":\"docs/fix/224-deterministic-replan-routing/progress.md\",\"line\":null,\"title\":\"P8 admits re-basing four route ceilings past the declared 10% headroom rule\",\"detail\":\"P8: \\\"The converged prose grew four routes past their declared 10 % headroom (plan-feature:issue/scoped, plan-fix:issue, review-change:adversarial/default-backend/default-web/synthesize). Each ceiling was raised to `ceil(measured × 1.10)`\\\". That is seven routes, not four, and the SPEC's Rules say \\\"Skills stay within their context budgets\\\" with `mainEstimateMax: 2800`/`mainLinesMax: 240` — the route ceilings are a separate budget. Raising a ceiling to `ceil(measured × 1.10)` is the declared rule, so this is compliant. But the count \\\"four routes\\\" vs the seven named is an internal inconsistency in the receipt.\",\"severity\":\"low\",\"axis\":\"spec-drift\"},{\"file\":\"docs/fix/224-deterministic-replan-routing/progress.md\",\"line\":null,\"title\":\"P8 advances a version pin in `review-loop-discipline.test.mjs` — a test edit\",\"detail\":\"P8: \\\"`scripts/review-loop-discipline.test.mjs:10j` pinned `fold-findings`'s exact `version:` to 1.4.0 … the pin was advanced to 1.5.0 with the assertion unchanged in strength — a version fact, not a weakened check.\\\" The repo's own contract (`verification-contract`, pinned by `review-loop-discipline.test.mjs` §9) says tests are immutable and \\\"editing expectations never\\\" is allowed; the sole amendment path is a proven mis-encoding. A version bump is not a mis-encoding — the test was edited to match new behavior. The progress log discloses it, but the SPEC's Rules do not authorize it and the test-immutability contract forbids it.\",\"severity\":\"med\",\"axis\":\"workflow\"},{\"file\":\"docs/fix/224-deterministic-replan-routing/SPEC.md\",\"line\":null,\"title\":\"SPEC `## Status` records ACCEPTANCE blob `0dd2747…` but progress P8 re-freeze is artrev-0003\",\"detail\":\"SPEC Status: `git hash-object … ACCEPTANCE.md` → `0dd2747222ce25617ffcf6eae851035a215d6504`. Progress cycle-3 receipt says the same blob matches. Consistent. No defect.\",\"severity\":\"low\",\"axis\":\"spec-drift\"},{\"file\":\"skills/replan-findings/SKILL.md\",\"line\":null,\"title\":\"Replan contract says \\\"no planning preflight\\\" but `plan-feature`'s allowlist still loads it\",\"detail\":\"`replan-findings` Bounded intake step 3: \\\"**No planning preflight.** The finding already pins the scope, so the normalized-repository-state read `planning-preflight` owns is not consumed on this route.\\\" But `plan-feature/SKILL.md` Progressive loading item 2 says \\\"Any route that can write planning artifacts: after the redirect gate permits routing, consume the [planning preflight] … before composing an internal step\\\" — with no replan exemption. The replan route *does* write planning artifacts (appended phases), so item 2 fires and the preflight is consumed, contradicting the replan contract. `plan-fix/SKILL.md` item 3 has the same unconditional preflight.\",\"severity\":\"high\",\"axis\":\"workflow\"},{\"file\":\"skills/plan-feature/SKILL.md\",\"line\":null,\"title\":\"Replan exemption is in ROUTING.md but the Product-review gate still runs\",\"detail\":\"`ROUTING.md` says the replan exemption skips \\\"the STOP\\\" (the status gate) and loads the replan contract. But `plan-feature/SKILL.md` Turn contract box 2 and Process step 2 require the Product-review gate (current `spec-review-pass` receipt) on every planning route, and `ROUTING.md`'s Product-review gate section says \\\"Run it before any write on every planning route.\\\" A replan write appends phases to the SPEC — a write — so the Product-review gate would block it unless a current spec-review-pass exists. The replan contract never mentions the Product-review gate. The exemption is incomplete: it exempts the status STOP but not the Product-review gate, so a replan on a unit whose Product half was never reviewed (or whose receipt is stale) is blocked with no documented path.\",\"severity\":\"high\",\"axis\":\"workflow\"},{\"file\":\"skills/plan-fix/SKILL.md\",\"line\":null,\"title\":\"`plan-fix` replan entry runs the router on `<N>` (issue number) not the unit\",\"detail\":\"`plan-fix/SKILL.md` item 7: \\\"Only when `node scripts/unit-route.mjs <N>` prints `route: replan` for the target unit\\\". `plan-fix`'s argument is an issue number (`argument-hint: <issue-number>`), and the router's `resolveUnit` matches a pure number against folder prefixes (`/^\\\\d+$/` → `folder.number === clean`). For a fix unit `docs/fix/91-alpha/`, the folder number is `91`, so `unit-route.mjs 91` resolves. But `PLANNING_PROCESS.md` says \\\"When the target resolves to an existing unit folder, run `node scripts/unit-route.mjs <unit>`\\\" — `<unit>` is ambiguous between the issue number and the folder slug. The router accepts both, so no break. Retracted.\",\"severity\":\"low\",\"axis\":\"usage-docs\"},{\"file\":\"skills/plan-fix/references/PLANNING_PROCESS.md\",\"line\":null,\"title\":\"Replan detection runs \\\"before ingest\\\" but ingest is what resolves the unit folder\",\"detail\":\"`PLANNING_PROCESS.md`: \\\"**Replan detection — run the router before ingest.** When the target resolves to an existing unit folder, run `node scripts/unit-route.mjs <unit>` first.\\\" But step 1 (ingest) is what reads the issue and derives the topic; the unit folder is `docs/fix/<primary>-<topic>/` and the topic is derived *in* step 1. Before ingest, the planner has only the issue number, not the unit folder — so \\\"when the target resolves to an existing unit folder\\\" cannot be evaluated before ingest. The router can be run on the issue number (it matches folder prefix), but the instruction's ordering is self-contradictory.\",\"severity\":\"med\",\"axis\":\"usage-docs\"},{\"file\":\"skills/review-change/references/PERSIST_AND_DECIDE.md\",\"line\":null,\"title\":\"REVIEW-FAIL `→ Next:` block nests a sub-bullet inside a sub-bullet\",\"detail\":\"The REVIEW-FAIL block has `· /audit-pr → only after the table is clean` then ` · any finding routed replan-in-unit …` (leading space + `·`) then ` · any finding owned by product?` then ` · independent proposals` then `· adversarial recommendation checklist fired`. The indentation is inconsistent (one space before `·` for some, none for others), and the replan sub-bullet is nested under `/audit-pr` visually. The step-14 instruction says \\\"each sub-bullet is its own line, exactly as quoted below\\\" — the quoted block itself has the mis-indentation.\",\"severity\":\"low\",\"axis\":\"usage-docs\"},{\"file\":\"skills/review-change/references/PERSIST_AND_DECIDE.md\",\"line\":null,\"title\":\"REVIEW-FAIL block's replan line says \\\"then `/execute-phase <unit>`\\\" but omits the user confirmation\",\"detail\":\"The replan sub-bullet: \\\"the planner re-cuts the plan on this branch, a fresh `/review-plan <unit>` passes, then `/execute-phase <unit>`\\\". The `OUTPUT_AND_GUARDRAILS.md` and `CLASSIFY.md` versions say \\\"the user confirms the appended SPEC phase(s)\\\" before the review-plan. The PERSIST_AND_DECIDE version drops the user-confirmation step, so a consumer following it would skip the confirmation the other surfaces require.\",\"severity\":\"med\",\"axis\":\"workflow\"},{\"file\":\"skills/fold-findings/SKILL.md\",\"line\":null,\"title\":\"Freeze-batch routes to the router but the router may answer `decision`, not `replan`\",\"detail\":\"`fold-findings/SKILL.md` freeze-batch: \\\"the loop stops and routes to `node scripts/unit-route.mjs <unit>`, whose `route: replan` line names the planner\\\". But the freeze-batch fires on \\\"any row whose frozen class is `replan-in-unit` **or `decision-required`**\\\". If the taken queue's only replan-class row is `decision-required`, the router answers `route: decision` (its `DECISION_ROUTE` matches `decision-required`), not `route: replan` — so the instruction \\\"whose `route: replan` line names the planner\\\" is false for that case, and the consumer has no documented next step for a `decision` route.\",\"severity\":\"med\",\"axis\":\"workflow\"},{\"file\":\"skills/fold-findings/references/FOLD_PROCESS.md\",\"line\":null,\"title\":\"Same freeze-batch/decision-required mismatch in FOLD_PROCESS step 7\",\"detail\":\"`FOLD_PROCESS.md` step 7 table: \\\"≥ 1 row with frozen class `replan-in-unit` or `decision-required` … routes to `node scripts/unit-route.mjs <unit>`, whose `route: replan` line names the planner\\\". Same defect: a `decision-required`-only batch routes to `decision`, not `replan`.\",\"severity\":\"med\",\"axis\":\"workflow\"},{\"file\":\"skills/triage-issue/references/REVIEW_FINDING_PROCESS.md\",\"line\":null,\"title\":\"Triage replan step says run the router but the router may answer `fold`/`execute`\",\"detail\":\"`REVIEW_FINDING_PROCESS.md` step 3: \\\"A correction too large for the current fold is `replan-in-unit`. Run `node scripts/unit-route.mjs <unit>`; its `route: replan` line names the planner\\\". The triage skill has already classified the finding as `replan-in-unit` from the ledger row; the router re-derives the route from the same ledger and should answer `replan` — unless the row's `route` cell text doesn't match `PLAN_ROUTE` (e.g. a row whose class is `fix-now` and route is `replan-in-unit: …` — matches). Consistent. Retracted.\",\"severity\":\"low\",\"axis\":\"workflow\"},{\"file\":\"docs/workflow/REVIEW_AND_CLASSIFY.md\",\"line\":null,\"title\":\"Tutorial says `fix-now / replan-in-unit` runs the router, but `fix-now` alone does not\",\"detail\":\"`REVIEW_AND_CLASSIFY.md`: \\\"**fix-now / replan-in-unit** → run `node scripts/unit-route.mjs <unit>`\\\". The slash notation means \\\"fix-now or replan-in-unit\\\" in this doc's convention (the previous bullet is `fix-now` alone → fold). A plain `fix-now` finding should fold, not run the router. The router on a unit with only plain fix-now rows answers `fold`, so the instruction is harmless but misleading — it tells the operator to run the router for a plain fix-now, which the router then routes to `/fold-findings`. Not a break, but the doc's own preceding bullet already covers plain fix-now.\",\"severity\":\"low\",\"axis\":\"usage-docs\"},{\"file\":\"docs/workflow/PORTABLE_PROMPT.es.md\",\"line\":null,\"title\":\"Spanish portable prompt is untranslated English in the edited sentence\",\"detail\":\"`PORTABLE_PROMPT.es.md` diff: the edited sentence is English (\\\"runs `node scripts/unit-route.mjs <unit>` so the planner its `route: replan` line names appends user-confirmed phases\\\") inside a file whose surrounding text is Spanish. The file's own header says the prompt block is \\\"deliberadamente **sin traducir**\\\" — so this is by design. No defect.\",\"severity\":\"low\",\"axis\":\"usage-docs\"},{\"file\":\"docs/workflow/SKILLS.md\",\"line\":null,\"title\":\"Internal-step count 18 → 19 but the list adds `replan-findings` and the count math\",\"detail\":\"`SKILLS.md`: \\\"**19 user-facing skills** … + **19 internal steps**\\\". The parenthetical enumerates: 2 planning steps + 2 evidence owners + review-implementation + planning-preflight + phase-contract + verification-contract + 9 review pack = 2+2+1+1+1+1+9 = 17, plus `replan-findings` = 18, plus `implementation-discovery` (listed in the table) = 19. The prose parenthetical does not name `implementation-discovery` or `replan-findings` in the count sentence, so a reader counting the named items gets 17, not 19. The table below does list both. Minor doc inconsistency.\",\"severity\":\"low\",\"axis\":\"usage-docs\"},{\"file\":\"docs/workflow/SKILL_CONTEXT_BUDGETS.json\",\"line\":null,\"title\":\"`replan-findings` budget entry has no `mainEstimateMax`/`mainLinesMax` override\",\"detail\":\"The new `replan-findings` entry only sets `referenceSources`; it inherits `defaults.mainEstimateMax: 2800`/`mainLinesMax: 240`. The skill's `SKILL.md` is 92 lines — well under. No defect.\",\"severity\":\"low\",\"axis\":\"perf\"},{\"file\":\"docs/workflow/SKILL_CONTEXT_BUDGETS.json\",\"line\":null,\"title\":\"Route ceilings raised to `ceil(measured × 1.10)` but the SPEC's Rules say budgets are ceilings\",\"detail\":\"The SPEC's Rules: \\\"Skills stay within their context budgets. The new main file must satisfy the manifest's defaults (`mainEstimateMax: 2800`, `mainLinesMax: 240`).\\\" The route ceilings are a separate budget with a declared 10% headroom rule (visible in the `sources` notes). Raising them to `ceil(measured × 1.10)` is the declared rule, so compliant. But `plan-feature:issue` went 11430 → 11572 (+142) and `plan-feature:scoped` 8934 → 9077 (+143) — both are `ceil(measured × 1.10)` only if measured is ~10520 and ~8252. The progress log says \\\"four routes\\\" but seven were raised. The count mismatch is the defect, not the values.\",\"severity\":\"low\",\"axis\":\"perf\"},{\"file\":\"scripts/normative-drift.test.mjs\",\"line\":null,\"title\":\"New drift test asserts token presence, not the class→destination mapping\",\"detail\":\"The new test: `for (const token of [\\\"replan-in-unit\\\", \\\"/plan-feature\\\", \\\"/plan-fix\\\", \\\"/fold-findings\\\"]) assert.ok(sensor.includes(token))` and `for (const token of [\\\"/plan-feature\\\", \\\"/plan-fix\\\", \\\"/fold-findings\\\"]) assert.ok(router.includes(token))`. This only checks that both files *mention* the tokens — it does not check that the sensor's class→destination mapping agrees with the router's. The SPEC's P3 task says \\\"Pin the canonical destination vocabulary in `scripts/normative-drift.test.mjs`\\\" and the test's own comment says \\\"neither may invent a fourth destination for the same class\\\" — but the assertion cannot detect a fourth destination; it only detects a missing token. A sensor that routes `replan-in-unit` to `/fold-findings` would still pass.\",\"severity\":\"med\",\"axis\":\"code\"},{\"file\":\"scripts/unit-route.test.mjs\",\"line\":null,\"title\":\"AC4 determinism test runs against the live repo, not a fixture\",\"detail\":\"`test(\\\"AC4: two consecutive runs print byte-identical stdout\\\", () => { const first = run([\\\"224-deterministic-replan-routing\\\"], { root: null }); … })` — `root: null` means `UNIT_ROUTE_REPO` is unset, so the router reads the live repo. The test asserts byte-identical stdout across two runs, which is fine for determinism, but it also depends on the live repo's `docs/fix/224-deterministic-replan-routing/` existing and its ledger being stable. If the unit's own ledger changes between the two runs (it won't within one test), fine. But the test is not hermetic — it reads the real repo, so a dirty tree or a concurrent edit could flake it. The AC4 read-only test also runs `git status --porcelain` on the live repo.\",\"severity\":\"low\",\"axis\":\"code\"},{\"file\":\"scripts/unit-route.test.mjs\",\"line\":null,\"title\":\"AC2 test asserts `set.count === 23` for `40-cited-paths` but the fixture has 20 files + 3 unit surfaces\",\"detail\":\"`assert.equal(set.count, 23, \\\"3 unit surfaces + 20 distinct cited files\\\")`. The fixture `40-cited-paths` has `SPEC.md`, `ACCEPTANCE.md`, `review-findings.md` (3 unit surfaces) and `src/file-1.txt` … `src/file-20.txt` (20 files). But `citedPaths` only keeps paths that exist — all 20 exist. So 23 is correct. No defect.\",\"severity\":\"low\",\"axis\":\"code\"},{\"file\":\"scripts/unit-route.test.mjs\",\"line\":null,\"title\":\"AC12 sanitizer test asserts `!result.stdout.includes(longId)` but `longId` is 400+ chars\",\"detail\":\"`const longId = \\\\`F9-${\\\\\\\"A\\\\\\\".repeat(400)}\\\\`;` and `assert.ok(!result.stdout.includes(longId), \\\"the long id is truncated by the sanitizer\\\")`. The sanitizer truncates to `CELL_MAX - 1 = 159` chars + `…`, so the full 400-char id is not in stdout — correct. But the test also asserts `assert.match(result.stdout, /F9-AAAA/)` — the truncated prefix. Correct. No defect.\",\"severity\":\"low\",\"axis\":\"code\"},{\"file\":\"scripts/workflow-status.mjs\",\"line\":null,\"title\":\"`readSuggestions` is called for every unit but `next.suggested` is overwritten, not appended\",\"detail\":\"`const nextSuggested = []; … nextSuggested.push(...readSuggestions(unit, dir)); … next.suggested = nextSuggested;` — this is correct (accumulates across units). No defect.\",\"severity\":\"low\",\"axis\":\"code\"},{\"file\":\"scripts/workflow-status.mjs\",\"line\":null,\"title\":\"`readOpenRows` drops `VF-` rows but `readFixNow` previously did not\",\"detail\":\"The refactor moves the `VF-` skip into `readOpenRows`, so `readFixNow` no longer sees `VF-` rows. Previously `readFixNow` iterated all rows and would have tried to parse a `VF-` row's severity (`confirmed`/`refuted`) — which is not in `SEVERITY_VOCABULARY`, so it would have been dropped with a named note. The new behavior silently skips `VF-` rows without a note. The `VF-` rows are finding-mark rows, not findings, so skipping is correct — but the change removes a previously-emitted observation. Minor behavior change not called out in the CHANGELOG.\",\"severity\":\"low\",\"axis\":\"code\"},{\"file\":\"docs/fix/224-deterministic-replan-routing/SPEC.md\",\"line\":null,\"title\":\"SPEC's `## Depends on` says \\\"None\\\" but PE-013 discloses a cross-unit ordering dependency\",\"detail\":\"`## Depends on`: \\\"None for this fix's own delivery: `#205`, `#172` and `#194` are independent\\\". Then: \\\"One cross-unit ordering note (RP-224-1): unit `37-phase-lint-script` is unmerged … so AC5's dogfood leg is verified against a committed fixture\\\". The dependency gate reads `## Depends on` and finds no dependency — correct, since the fixture removes the hard dependency. But the SPEC's own `### Planning evidence` PE-013 marks the live dogfood as \\\"post-merge, informational\\\" — consistent. No defect.\",\"severity\":\"low\",\"axis\":\"spec-drift\"},{\"file\":\"docs/fix/224-deterministic-replan-routing/SPEC.md\",\"line\":null,\"title\":\"SPEC's `## Status` says `pending` but the fix index says `done`\",\"detail\":\"SPEC `## Status`: \\\"`pending` · `in-progress` · `done` (built, PR open — merge state lives in the forge)\\\" — this is the legend, not the value. The actual status is not stated in the SPEC; the fix index row says `done · [#225]`. The SPEC's `## Status` section is a legend with no value, so a reader cannot tell the unit's status from the SPEC. The fix index is the authority, but the SPEC's Status section is incomplete.\",\"severity\":\"low\",\"axis\":\"spec-drift\"},{\"file\":\"docs/fix/224-deterministic-replan-routing/ACCEPTANCE.md\",\"line\":null,\"title\":\"AC13 validator greps `^| 3\\\\.5\\\\.1 |` but the CHANGELOG cell is `| 3.5.1 | 2026-09-15 | patch |`\",\"detail\":\"`grep -q \\\"^| 3\\\\.5\\\\.1 |\\\" CHANGELOG.md` — the CHANGELOG cell is `| 3.5.1 | 2026-09-15 | patch | **Canonical replan destination…`. The grep pattern `^| 3\\\\.5\\\\.1 |` matches the start of the line `| 3.5.1 |` — correct. No defect.\",\"severity\":\"low\",\"axis\":\"spec-drift\"},{\"file\":\"CHANGELOG.md\",\"line\":null,\"title\":\"`review-change` 3.5.1 row says \\\"replacing the two contradictory sentences\\\" but the diff shows three surfaces changed\",\"detail\":\"CHANGELOG: \\\"replacing the two contradictory sentences that sent the class to the executor and to `plan-feature` separately\\\". The diff changes `PERSIST_AND_DECIDE.md` (two sub-bullets merged into one) and `OUTPUT_AND_GUARDRAILS.md` (one bullet) — that's two files, but the SPEC's root cause names three contradictory destinations (`PERSIST_AND_DECIDE.md:133`, `:135-136`, `REVIEW_FINDING_PROCESS.md:17-21`). The CHANGELOG's \\\"two\\\" undercounts.\",\"severity\":\"low\",\"axis\":\"brand\"},{\"file\":\"CHANGELOG.es.md\",\"line\":null,\"title\":\"Spanish CHANGELOG row has a stray `|---|` appended\",\"detail\":\"`CHANGELOG.es.md` diff: `| 0.10.0 | 2026-09-15 | menor | **Re-empaquetado…** … |---|` — the row ends with `|---|` instead of `|`. The English CHANGELOG has the same defect: `| 0.10.0 | … |---|`. This is a malformed table row (extra `---` cell) in both changelogs.\",\"severity\":\"med\",\"axis\":\"usage-docs\"},{\"file\":\"CHANGELOG.md\",\"line\":null,\"title\":\"Same stray `|---|` in the English 0.10.0 row\",\"detail\":\"`CHANGELOG.md` diff: `+| 0.10.0 | 2026-09-15 | minor | **Deterministic replan routing re-bundle (fix #224)**: … |---|` — the row ends with `|---|` instead of `|`. Malformed table row.\",\"severity\":\"med\",\"axis\":\"usage-docs\"},{\"file\":\"CHANGELOG.md\",\"line\":null,\"title\":\"`workflow-status` 3.5.0 row also ends with `|---|`\",\"detail\":\"`CHANGELOG.md` diff: `+| 3.5.0 | 2026-09-15 | minor | **Class-routed `next.suggested` (fix #224):** … |---|` — same stray `|---|`.\",\"severity\":\"med\",\"axis\":\"usage-docs\"},{\"file\":\"CHANGELOG.md\",\"line\":null,\"title\":\"`review-change` 3.5.1 row ends with `|---|`\",\"detail\":\"`CHANGELOG.md` diff: `+| 3.5.1 | 2026-09-15 | patch | **Canonical replan destination (fix #224):** … |---|` — same stray `|---|`.\",\"severity\":\"med\",\"axis\":\"usage-docs\"},{\"file\":\"CHANGELOG.md\",\"line\":null,\"title\":\"`fold-findings` 1.5.0 row ends with `|---|`\",\"detail\":\"`CHANGELOG.md` diff: `+| 1.5.0 | 2026-09-15 | minor | **Canonical replan destination (fix #224):** … |---|` — same stray `|---|`.\",\"severity\":\"med\",\"axis\":\"usage-docs\"},{\"file\":\"CHANGELOG.md\",\"line\":null,\"title\":\"`triage-issue` 2.8.0 row ends with `|---|`\",\"detail\":\"`CHANGELOG.md` diff: `+| 2.8.0 | 2026-09-15 | minor | **Canonical replan destination (fix #224):** … |---|` — same stray `|---|`.\",\"severity\":\"med\",\"axis\":\"usage-docs\"},{\"file\":\"CHANGELOG.es.md\",\"line\":null,\"title\":\"Spanish `workflow-status` 3.5.0 row ends with `|---|`\",\"detail\":\"`CHANGELOG.es.md` diff: `+| 3.5.0 | 2026-09-15 | menor | **`next.suggested` enrutado por clase (fix #224):** … |---|` — same stray `|---|`.\",\"severity\":\"med\",\"axis\":\"usage-docs\"},{\"file\":\"CHANGELOG.es.md\",\"line\":null,\"title\":\"Spanish `plan-feature` 5.2.0 row ends with `|---|`\",\"detail\":\"`CHANGELOG.es.md` diff: `+| 5.2.0 | 2026-09-15 | menor | **Entrada de replan (fix #224):** … |---|` — same stray `|---|`.\",\"severity\":\"med\",\"axis\":\"usage-docs\"},{\"file\":\"CHANGELOG.es.md\",\"line\":null,\"title\":\"Spanish `plan-fix` 3.2.0 row ends with `|---|`\",\"detail\":\"`CHANGELOG.es.md` diff: `+| 3.2.0 | 2026-09-15 | menor | **Entrada de replan (fix #224):** … |---|` — same stray `|---|`.\",\"severity\":\"med\",\"axis\":\"usage-docs\"},{\"file\":\"CHANGELOG.es.md\",\"line\":null,\"title\":\"Spanish `review-change` 3.5.1 row ends with `|---|`\",\"detail\":\"`CHANGELOG.es.md` diff: `+| 3.5.1 | 2026-09-15 | parche | **Destino canónico de replan (fix #224):** … |---|` — same stray `|---|`.\",\"severity\":\"med\",\"axis\":\"usage-docs\"},{\"file\":\"CHANGELOG.es.md\",\"line\":null,\"title\":\"Spanish `fold-findings` 1.5.0 row ends with `|---|`\",\"detail\":\"`CHANGELOG.es.md` diff: `+| 1.5.0 | 2026-09-15 | menor | **Destino canónico de replan (fix #224):** … |---|` — same stray `|---|`.\",\"severity\":\"med\",\"axis\":\"usage-docs\"},{\"file\":\"CHANGELOG.es.md\",\"line\":null,\"title\":\"Spanish `triage-issue` 2.8.0 row ends with `|---|`\",\"detail\":\"`CHANGELOG.es.md` diff: `+| 2.8.0 | 2026-09-15 | menor | **Destino canónico de replan (fix #224):** … |---|` — same stray `|---|`.\",\"severity\":\"med\",\"axis\":\"usage-docs\"},{\"file\":\"CHANGELOG.es.md\",\"line\":null,\"title\":\"Spanish `review-implementation` 1.8.0 row ends with `|---|`\",\"detail\":\"`CHANGELOG.es.md` diff: `+| `review-implementation` | 1.8.0 | 2026-09-15 | menor | **Destino canónico de replan (fix #224):** … |---|` — same stray `|---|`.\",\"severity\":\"med\",\"axis\":\"usage-docs\"},{\"file\":\"CHANGELOG.es.md\",\"line\":null,\"title\":\"Spanish `replan-findings` 1.0.0 row ends with `|---|`\",\"detail\":\"`CHANGELOG.es.md` diff: `+| `replan-findings` | 1.0.0 | 2026-09-15 | — | Nuevo contrato interno (fix #224): … |---|` — same stray `|---|`.\",\"severity\":\"med\",\"axis\":\"usage-docs\"},{\"file\":\"CHANGELOG.md\",\"line\":null,\"title\":\"English `review-implementation` 1.8.0 and `replan-findings` 1.0.0 rows end with `|---|`\",\"detail\":\"`CHANGELOG.md` diff: `+| `review-implementation` | 1.8.0 | 2026-09-15 | minor | **Canonical replan destination (fix #224):** … |---|` and `+| `replan-findings` | 1.0.0 | 2026-09-15 | — | New internal contract (fix #224): … |---|` — same stray `|---|`.\",\"severity\":\"med\",\"axis\":\"usage-docs\"},{\"file\":\"docs/fix/224-deterministic-replan-routing/progress.md\",\"line\":null,\"title\":\"P8 claims `282 tests, 282 pass` but the unit adds 14+1+1 = 16 new tests\",\"detail\":\"P8: \\\"`NODE_PATH=… node --test scripts/*.test.mjs` → exit 0 · 282 tests, 282 pass, 0 fail.\\\" The unit adds `scripts/unit-route.test.mjs` (14 cases), one test in `workflow-status-sensor.test.mjs`, one in `normative-drift.test.mjs` = 16 new. If the pre-unit total was 266, 282 is correct. No contradiction visible.\",\"severity\":\"low\",\"axis\":\"spec-drift\"},{\"file\":\"docs/fix/224-deterministic-replan-routing/progress.md\",\"line\":null,\"title\":\"P8 says \\\"four routes\\\" but names seven\",\"detail\":\"P8: \\\"The converged prose grew four routes past their declared 10 % headroom (plan-feature:issue/scoped, plan-fix:issue, review-change:adversarial/default-backend/default-web/synthesize).\\\" The parenthetical names 2 + 1 + 4 = 7 routes. The count \\\"four\\\" contradicts the list.\",\"severity\":\"low\",\"axis\":\"spec-drift\"},{\"file\":\"docs/fix/224-deterministic-replan-routing/progress.md\",\"line\":null,\"title\":\"P8's version-pin advance contradicts the test-immutability contract\",\"detail\":\"P8: \\\"`scripts/review-loop-discipline.test.mjs:10j` pinned `fold-findings`'s exact `version:` to 1.4.0 … the pin was advanced to 1.5.0 with the assertion unchanged in strength — a version fact, not a weakened check.\\\" The repo's `verification-contract` (pinned by the same test file §9) says tests are immutable and \\\"editing expectations never\\\" is allowed; the sole amendment path is a proven mis-encoding of external semantics. A version bump is not a mis-encoding — the test was edited to match new behavior. The progress log discloses it, but the SPEC's Rules do not authorize it and the test-immutability contract forbids it.\",\"severity\":\"med\",\"axis\":\"workflow\"},{\"file\":\"skills/replan-findings/SKILL.md\",\"line\":null,\"title\":\"Replan contract says \\\"no planning preflight\\\" but `plan-feature`/`plan-fix` allowlists still load it\",\"detail\":\"`replan-findings` Bounded intake step 3: \\\"**No planning preflight.** The finding already pins the scope, so the normalized-repository-state read `planning-preflight` owns is not consumed on this route.\\\" But `plan-feature/SKILL.md` Progressive loading item 2 says \\\"Any route that can write planning artifacts: after the redirect gate permits routing, consume the [planning preflight] … before composing an internal step\\\" — with no replan exemption. The replan route *does* write planning artifacts (appended phases), so item 2 fires and the preflight is consumed, contradicting the replan contract. `plan-fix/SKILL.md` item 3 has the same unconditional preflight.\",\"severity\":\"high\",\"axis\":\"workflow\"},{\"file\":\"skills/plan-feature/SKILL.md\",\"line\":null,\"title\":\"Replan exemption skips the status STOP but not the Product-review gate\",\"detail\":\"`ROUTING.md` says the replan exemption skips \\\"the STOP\\\" (the status gate) and loads the replan contract. But `plan-feature/SKILL.md` Turn contract box 2 and Process step 2 require the Product-review gate (current `spec-review-pass` receipt) on every planning route, and `ROUTING.md`'s Product-review gate section says \\\"Run it before any write on every planning route.\\\" A replan write appends phases to the SPEC — a write — so the Product-review gate would block it unless a current spec-review-pass exists. The replan contract never mentions the Product-review gate. The exemption is incomplete: it exempts the status STOP but not the Product-review gate, so a replan on a unit whose Product half was never reviewed (or whose receipt is stale) is blocked with no documented path.\",\"severity\":\"high\",\"axis\":\"workflow\"},{\"file\":\"skills/fold-findings/SKILL.md\",\"line\":null,\"title\":\"Freeze-batch routes to the router but the router may answer `decision`, not `replan`\",\"detail\":\"`fold-findings/SKILL.md` freeze-batch: \\\"the loop stops and routes to `node scripts/unit-route.mjs <unit>`, whose `route: replan` line names the planner\\\". But the freeze-batch fires on \\\"any row whose frozen class is `replan-in-unit` **or `decision-required`**\\\". If the taken queue's only replan-class row is `decision-required`, the router answers `route: decision` (its `DECISION_ROUTE` matches `decision-required`), not `route: replan` — so the instruction \\\"whose `route: replan` line names the planner\\\" is false for that case, and the consumer has no documented next step for a `decision` route.\",\"severity\":\"med\",\"axis\":\"workflow\"},{\"file\":\"skills/fold-findings/references/FOLD_PROCESS.md\",\"line\":null,\"title\":\"Same freeze-batch/decision-required mismatch in FOLD_PROCESS step 7\",\"detail\":\"`FOLD_PROCESS.md` step 7 table: \\\"≥ 1 row with frozen class `replan-in-unit` or `decision-required` … routes to `node scripts/unit-route.mjs <unit>`, whose `route: replan` line names the planner\\\". Same defect: a `decision-required`-only batch routes to `decision`, not `replan`.\",\"severity\":\"med\",\"axis\":\"workflow\"},{\"file\":\"scripts/unit-route.mjs\",\"line\":null,\"title\":\"Router's `rows:` line lists every open row, not the selected ones\",\"detail\":\"`main()` computes `selected` per route but `print()` is called with `rows: rowIds` where `const rowIds = rows.map((row) => row.id)` — every open row, not `selected`. The replan contract (`skills/replan-findings/SKILL.md` Bounded intake step 2: \\\"The `rows:` line names the findings … Read exactly those rows\\\") and `PHASE_APPEND.md` (\\\"For every finding the router's `rows:` line selected\\\") treat `rows:` as the selected set. On the `10-replan-unit` fixture the AC1 test asserts `rows: F1 F2 F3` where F1 is a plain fold row and F3 a decision row — the replan route selected only F2, yet all three are printed as the rows to read. The contract's \\\"read exactly those rows\\\" then pulls non-selected rows into the bounded intake.\",\"severity\":\"med\",\"axis\":\"code\"},{\"file\":\"scripts/unit-route.mjs\",\"line\":null,\"title\":\"`citedPaths` keeps only paths that exist, so a cited-but-absent path is silently dropped\",\"detail\":\"`if (!exists(candidate) || isDir(candidate)) continue;` — a finding citing a path that does not exist (e.g. a file to be created, or a typo) is silently omitted from the read set. The SPEC's AC2 says the read set is \\\"each cited repository path, deduped, sorted, and capped\\\"; the implementation narrows to existing paths. The progress log's P1 gotcha even celebrates this (\\\"a path cited by a FOLDED row … is provably absent from the replan set\\\"), but the same filter also drops a cited path from a *selected* row, so the planner never learns the finding cites a missing file.\",\"severity\":\"med\",\"axis\":\"code\"},{\"file\":\"scripts/workflow-status.mjs\",\"line\":null,\"title\":\"`readSuggestions` duplicates the router's class→route regex instead of consuming it\",\"detail\":\"`const PLAN_ROUTE = /replan[- ]in[- ]unit|owned by plan|plan owner|plan-owner/i;` is defined in `workflow-status.mjs` and again in `unit-route.mjs` (`const PLAN_ROUTE = /replan[- ]in[- ]unit|owned by plan|plan owner|plan-owner/i;`). The SPEC's Decision 1 and the CHANGELOG claim \\\"The class→destination decision is the router's (`scripts/unit-route.mjs`)\\\" and `SENSOR_SIGNALS.md` says \\\"the same class→destination decision `scripts/unit-route.mjs` owns\\\". Two independent copies of the regex can drift; the sensor does not import or shell out to the router. The `normative-drift` test only checks that both files *contain* the tokens, not that they share the decision.\",\"severity\":\"med\",\"axis\":\"workflow\"},{\"file\":\"scripts/normative-drift.test.mjs\",\"line\":null,\"title\":\"New drift test asserts token presence, not the class→destination mapping\",\"detail\":\"The new test: `for (const token of [\\\"replan-in-unit\\\", \\\"/plan-feature\\\", \\\"/plan-fix\\\", \\\"/fold-findings\\\"]) assert.ok(sensor.includes(token))` and `for (const token of [\\\"/plan-feature\\\", \\\"/plan-fix\\\", \\\"/fold-findings\\\"]) assert.ok(router.includes(token))`. This only checks that both files *mention* the tokens — it does not check that the sensor's class→destination mapping agrees with the router's. The SPEC's P3 task says \\\"Pin the canonical destination vocabulary in `scripts/normative-drift.test.mjs`\\\" and the test's own comment says \\\"neither may invent a fourth destination for the same class\\\" — but the assertion cannot detect a fourth destination; it only detects a missing token. A sensor that routes `replan-in-unit` to `/fold-findings` would still pass.\",\"severity\":\"med\",\"axis\":\"code\"},{\"file\":\"skills/review-change/references/PERSIST_AND_DECIDE.md\",\"line\":null,\"title\":\"REVIEW-FAIL block's replan line omits the user confirmation\",\"detail\":\"The replan sub-bullet: \\\"the planner re-cuts the plan on this branch, a fresh `/review-plan <unit>` passes, then `/execute-phase <unit>`\\\". The `OUTPUT_AND_GUARDRAILS.md` and `CLASSIFY.md` versions say \\\"the user confirms the appended SPEC phase(s)\\\" before the review-plan. The PERSIST_AND_DECIDE version drops the user-confirmation step, so a consumer following it would skip the confirmation the other surfaces require.\",\"severity\":\"med\",\"axis\":\"workflow\"},{\"file\":\"skills/plan-fix/references/PLANNING_PROCESS.md\",\"line\":null,\"title\":\"Replan detection runs \\\"before ingest\\\" but ingest is what resolves the unit folder\",\"detail\":\"`PLANNING_PROCESS.md`: \\\"**Replan detection — run the router before ingest.** When the target resolves to an existing unit folder, run `node scripts/unit-route.mjs <unit>` first.\\\" But step 1 (ingest) is what reads the issue and derives the topic; the unit folder is `docs/fix/<primary>-<topic>/` and the topic is derived *in* step 1. Before ingest, the planner has only the issue number, not the unit folder — so \\\"when the target resolves to an existing unit folder\\\" cannot be evaluated before ingest. The router can be run on the issue number (it matches folder prefix), but the instruction's ordering is self-contradictory.\",\"severity\":\"med\",\"axis\":\"usage-docs\"},{\"file\":\"CHANGELOG.md\",\"line\":null,\"title\":\"Stray `|---|` appended to every new changelog row\",\"detail\":\"Every new row in `CHANGELOG.md` and `CHANGELOG.es.md` ends with `|---|` instead of `|` — e.g. `| 0.10.0 | 2026-09-15 | minor | **Deterministic replan routing re-bundle (fix #224)**: … |---|`, `| 3.5.0 | 2026-09-15 | minor | **Class-routed `next.suggested` (fix #224):** … |---|`, `| 5.2.0 | … |---|`, `| 3.2.0 | … |---|`, `| 3.5.1 | … |---|`, `| 1.5.0 | … |---|`, `| 2.8.0 | … |---|`, `| `review-implementation` | 1.8.0 | … |---|`, `| `replan-findings` | 1.0.0 | … |---|`. The same defect appears in the Spanish changelog. The rows are malformed Markdown tables (an extra `---` cell), and the `normative-drift` version-tables check parses these cells — a malformed row can break the newest-cell-equals-frontmatter comparison.\",\"severity\":\"med\",\"axis\":\"usage-docs\"}]"
+}

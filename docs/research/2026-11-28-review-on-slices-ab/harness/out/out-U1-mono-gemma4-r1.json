@@ -1,0 +1,40 @@
+{
+ "id": "U1__mono__gemma4__r1",
+ "unit": "U1",
+ "job": "mono",
+ "model": "gemma4",
+ "run": 1,
+ "ms": 8182,
+ "usage": {
+  "completion_tokens": 250,
+  "prompt_tokens": 35476,
+  "total_tokens": 35726,
+  "completion_tokens_details": {
+   "reasoning_tokens": 0
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "CHANGELOG.md",
+   "line": 286,
+   "title": "Duplicate entry for execute-phase 5.1.0",
+   "detail": "The version 5.1.0 entry for `execute-phase` is duplicated in the changelog (lines 285-286 and 288-289), which creates noise and potential confusion in the version history.",
+   "severity": "low",
+   "axis": "code"
+  },
+  {
+   "file": "docs/fix/258-harden-needs-input-contracts/SPEC.md",
+   "line": 148,
+   "title": "Inconsistent validator for P5 task",
+   "detail": "The validator for P5 task (line 148) uses `grep -cE \"^(\\|.*258|.*harden-needs-input)\" CHANGELOG.md ≥ 3`, but the actual Evidence section (line 218) claims `4 rows (3 skill + 1 re-bundle)` were found. While the math matches, the regex is fragile if the re-bundle row doesn't match the specific pattern expected by the grep.",
+   "severity": "low",
+   "axis": "spec-drift"
+  }
+ ],
+ "raw": "[{\"file\":\"CHANGELOG.md\",\"line\":286,\"title\":\"Duplicate entry for execute-phase 5.1.0\",\"detail\":\"The version 5.1.0 entry for `execute-phase` is duplicated in the changelog (lines 285-286 and 288-289), which creates noise and potential confusion in the version history.\",\"severity\":\"low\",\"axis\":\"code\"},{\"file\":\"docs/fix/258-harden-needs-input-contracts/SPEC.md\",\"line\":148,\"title\":\"Inconsistent validator for P5 task\",\"detail\":\"The validator for P5 task (line 148) uses `grep -cE \\\"^(\\\\|.*258|.*harden-needs-input)\\\" CHANGELOG.md ≥ 3`, but the actual Evidence section (line 218) claims `4 rows (3 skill + 1 re-bundle)` were found. While the math matches, the regex is fragile if the re-bundle row doesn't match the specific pattern expected by the grep.\",\"severity\":\"low\",\"axis\":\"spec-drift\"}]"
+}

@@ -1,0 +1,33 @@
+{
+ "id": "U2__slice__unit-artifacts__glm5.3-flash__r1",
+ "unit": "U2",
+ "job": "slice__unit-artifacts",
+ "model": "glm5.3-flash",
+ "run": 1,
+ "ms": 137314,
+ "usage": {
+  "completion_tokens": 3458,
+  "prompt_tokens": 34008,
+  "total_tokens": 37466,
+  "completion_tokens_details": {
+   "reasoning_tokens": 2407
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 32768
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/progress.md",
+   "line": null,
+   "title": "Sensor routes decision rows to the fold, contradicting the router's decision route",
+   "detail": "P6 records the SENSOR_SIGNALS.md emission as \"plan-owned \u2192 the unit's planner \u2026; any other open row \u2192 the fold\". The SPEC's own route table (AC1) answers `decision` for a decision-required row, and S3 exists precisely to prevent \"a human decision taken by an agent\". A `decision`-class open row is \"any other open row\", so the emitted `next.suggested` sends it to `/fold-findings`, contradicting the router's `decision` route and S3's failure category. AC6 only pins replan/fix-now/none, so no validator catches this.",
+   "severity": "med",
+   "axis": "workflow"
+  }
+ ],
+ "raw": "[{\"file\":\"docs/fix/224-deterministic-replan-routing/progress.md\",\"line\":null,\"title\":\"Sensor routes decision rows to the fold, contradicting the router's decision route\",\"detail\":\"P6 records the SENSOR_SIGNALS.md emission as \\\"plan-owned \u2192 the unit's planner \u2026; any other open row \u2192 the fold\\\". The SPEC's own route table (AC1) answers `decision` for a decision-required row, and S3 exists precisely to prevent \\\"a human decision taken by an agent\\\". A `decision`-class open row is \\\"any other open row\\\", so the emitted `next.suggested` sends it to `/fold-findings`, contradicting the router's `decision` route and S3's failure category. AC6 only pins replan/fix-now/none, so no validator catches this.\",\"severity\":\"med\",\"axis\":\"workflow\"},{\"{\"file\":\"docs/fix/224-deterministic-replan-routing/progress.md\",\"line\":null,\"title\":\"P8 receipt miscounts the re-based routes: \\\"four\\\" vs seven enumerated\",\"detail\":\"P8 gate repair 1 says \\\"The converged prose grew four routes past their declared 10 % headroom\\\" then enumerates plan-feature:issue, plan-feature:scoped, plan-fix:issue, review-change:adversarial, review-change:default-backend, review-change:default-web, review-change:synthesize \u2014 seven routes. The receipt's own count contradicts its own list.\",\"severity\":\"med\",\"axis\":\"spec-drift\"},{\"{\"file\":\"docs/fix/224-deterministic-replan-routing/progress.md\",\"line\":null,\"title\":\"workflow-status reference ceiling re-based to ~0.1% headroom, contradicting the declared 10% headroom rule\",\"detail\":\"P6 gotcha: SENSOR_SIGNALS.md measured 2297 > the 2200 default, so `referenceEstimateMax` was \\\"re-based to 2300\\\" \u2014 3 units of headroom. P8 itself states the declared rule is a \\\"10 % headroom\\\" (ceil(measured \u00d7 1.10) \u2248 2527 for a 2297 measurement). The two budget repairs in this unit apply the headroom rule inconsistently, and the SPEC's Rules section says skills must satisfy the manifest's defaults rather than raising ceilings per edit.\",\"severity\":\"med\",\"axis\":\"perf\"},{\"{\"file\":\"docs/fix/224-deterministic-replan-routing/progress.md\",\"line\":null,\"title\":\"Version pin in review-loop-discipline.test.mjs rewritten to make the gate pass\",\"detail\":\"P8 repair 2: `scripts/review-loop-discipline.test.mjs:10j` pinned fold-findings' `version:` to 1.4.0; after P4's SPEC-obligated bump to 1.5.0, \\\"the pin was advanced to 1.5.0\\\". ACCEPTANCE's quality floor says \\\"Do not remove, skip, loosen, or rewrite a validator to manufacture PASS\\\" \u2014 editing the pinned expected value so the suite passes after the change is a validator rewrite, even if assertion strength is unchanged; no SPEC amendment covers it.\",\"severity\":\"med\",\"axis\":\"workflow\"},{\"{\"file\":\"docs/fix/224-deterministic-replan-routing/progress.md\",\"line\":null,\"title\":\"Route-ceiling re-bases are outside the SPEC's declared scope\",\"detail\":\"SPEC Scope lists only \\\"the new skill's budget entry in `docs/workflow/SKILL_CONTEXT_BUDGETS.json`\\\"; P8 additionally raises seven route ceilings for plan-feature, plan-fix and review-change in that same manifest. No amendment records this scope extension, and the SPEC's Rules section frames budgets as constraints to satisfy, not ceilings to raise.\",\"severity\":\"med\",\"axis\":\"spec-drift\"},{\"{\"file\":\"docs/fix/224-deterministic-replan-routing/progress.md\",\"line\":null,\"title\":\"Skill counts disagree: 19+19 in SKILLS.md vs 39 bundled\",\"detail\":\"P6 records the internal-step count moved \\\"18 \u2192 19 (user-facing count unchanged at 19)\\\" \u2014 38 total. P7 records the mirror re-bundle as \\\"39 skills / 125 files\\\". Either the SKILLS.md count or the bundler count is wrong; the two receipts cannot both describe the same skill tree.\",\"severity\":\"low\",\"axis\":\"spec-drift\"},{\"{\"file\":\"docs/fix/224-deterministic-replan-routing/ACCEPTANCE.md\",\"line\":null,\"title\":\"AC11's documented gate command fails as written without an env prefix\",\"detail\":\"AC11 validator is bare `node --test scripts/*.test.mjs` \u2192 exit 0, but the P8 execution needed `NODE_PATH=packages/agentic-workflow-schema/node_modules` prefixed (progress P8 gate; both portability notes record the schema package living only in that gitignored path). The documented invocation does not reproduce the recorded pass on a clean checkout.\",\"severity\":\"low\",\"axis\":\"usage-docs\"}]",
+ "truncated": true
+}

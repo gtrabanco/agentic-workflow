@@ -1,0 +1,88 @@
+{
+ "id": "U2__slice__mirror-bundle__qwen3.6__r1",
+ "unit": "U2",
+ "job": "slice__mirror-bundle",
+ "model": "qwen3.6",
+ "run": 1,
+ "ms": 38407,
+ "usage": {
+  "completion_tokens": 1476,
+  "prompt_tokens": 26723,
+  "total_tokens": 28199,
+  "completion_tokens_details": {
+   "reasoning_tokens": 0
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "packages/pi-agentic-workflow/skills/fold-findings/SKILL.md",
+   "line": 124,
+   "title": "Workflow contract violation: fold-findings instructs manual script execution",
+   "detail": "The SKILL.md states that on a freeze-batch, the loop 'stops and routes to `node scripts/unit-route.mjs <unit>`'. This contradicts the 'Review-end turn boundary' in review-change/SKILL.md and the general workflow contract that skills are user-invocable or composed by an orchestrator, not executed manually by the agent mid-turn. The agent should output a `→ Next:` block recommending the command, not execute it itself. Furthermore, fold-findings is a 'repair' skill; inserting a routing step that requires user confirmation (as per plan-feature/plan-fix docs) breaks the atomic 'repair' contract of the fold cycle.",
+   "severity": "high",
+   "axis": "workflow"
+  },
+  {
+   "file": "packages/pi-agentic-workflow/skills/fold-findings/references/FOLD_PROCESS.md",
+   "line": 46,
+   "title": "Workflow contract violation: fold-findings references manual script execution",
+   "detail": "Same defect as in SKILL.md. The reference doc states the loop 'stops and routes to `node scripts/unit-route.mjs <unit>`'. This is an operational instruction for the agent to run a script, which violates the separation of concerns where `workflow-status` or an orchestrator determines the next step, and skills report their state/next actions via `→ Next:` blocks.",
+   "severity": "high",
+   "axis": "workflow"
+  },
+  {
+   "file": "packages/pi-agentic-workflow/skills/plan-feature/SKILL.md",
+   "line": 58,
+   "title": "Spec drift: Replan exemption logic order",
+   "detail": "The 'Progressive loading' section lists step 4: 'Only when `node scripts/unit-route.mjs <NN>` prints `route: replan`: load the [replan contract]'. However, ROUTING.md (also in this slice) states under 'Replan exemption': 'Before the status gate, run `node scripts/unit-route.mjs <NN>`'. The SKILL.md loading order (step 4) implies the replan contract is loaded *after* the standard routing steps (status gate, product-review gate), whereas ROUTING.md says it runs *before* the status gate to potentially skip it. The SKILL.md loading sequence contradicts the exemption logic described in ROUTING.md.",
+   "severity": "med",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "packages/pi-agentic-workflow/skills/plan-fix/SKILL.md",
+   "line": 107,
+   "title": "Spec drift: Replan exemption logic order",
+   "detail": "Similar to plan-feature, SKILL.md lists the replan contract loading as step 7 (after planning preflight and phase contract). However, PLANNING_PROCESS.md (also in this slice) states under 'Replan detection': 'run `node scripts/unit-route.mjs <unit>` first... A `route: replan` line means... load [the replan contract]'. The SKILL.md progressive loading order contradicts the 'first' execution requirement in the reference process doc.",
+   "severity": "med",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "packages/pi-agentic-workflow/skills/review-change/references/OUTPUT_AND_GUARDRAILS.md",
+   "line": 30,
+   "title": "Usage-docs: Incorrect invocation for replan route",
+   "detail": "The doc states: 'run `node scripts/unit-route.mjs <unit>` — its `route: replan` line names the planner... The planner re-cuts the plan... a fresh `/review-plan <unit>` passes, and only then `execute-phase` runs them.' This implies the reviewer should execute the router and the planner. However, `review-change`'s own Turn Contract (in SKILL.md) states: 'it never invokes `/fold-findings`, `/execute-phase`, `/plan-feature`, `/design-feature`...'. The reviewer should not run the planner; it should report the finding and let the user/orchestrator decide.",
+   "severity": "high",
+   "axis": "workflow"
+  },
+  {
+   "file": "packages/pi-agentic-workflow/skills/review-change/references/PERSIST_AND_DECIDE.md",
+   "line": 133,
+   "title": "Usage-docs: Incorrect invocation for replan route",
+   "detail": "The doc states: 'any finding routed replan-in-unit or owned by plan? → `node scripts/unit-route.mjs <unit>` prints `route: replan`... the planner re-cuts the plan... a fresh `/review-plan <unit>` passes, then `/execute-phase <unit>`'. This instructs the reviewer to execute the entire replan and execution chain, which contradicts the `review-change` skill's boundary that it 'never invokes... `/execute-phase`... or edits code'.",
+   "severity": "high",
+   "axis": "workflow"
+  },
+  {
+   "file": "packages/pi-agentic-workflow/skills/triage-issue/SKILL.md",
+   "line": 112,
+   "title": "Workflow contract violation: Triage executes router",
+   "detail": "The diagram and text state: 'replan-in-unit runs `node scripts/unit-route.mjs <unit>`...'. Triage is a classification/decision skill. It should not execute the router or the planner. It should report the finding and recommend the next step (e.g., `→ Next: /plan-feature <unit>` after router confirms replan). Executing the router here bypasses the orchestrator's state management.",
+   "severity": "high",
+   "axis": "workflow"
+  },
+  {
+   "file": "packages/pi-agentic-workflow/skills/triage-issue/references/REVIEW_FINDING_PROCESS.md",
+   "line": 17,
+   "title": "Workflow contract violation: Triage process executes router",
+   "detail": "Same as above. The process doc instructs: 'Run `node scripts/unit-route.mjs <unit>`... and the fresh `/review-plan <unit>` that must pass before execution.' Triage should not run the review plan. It should triage the finding and hand off.",
+   "severity": "high",
+   "axis": "workflow"
+  }
+ ],
+ "raw": "[\n  {\n    \"file\": \"packages/pi-agentic-workflow/skills/fold-findings/SKILL.md\",\n    \"line\": 124,\n    \"title\": \"Workflow contract violation: fold-findings instructs manual script execution\",\n    \"detail\": \"The SKILL.md states that on a freeze-batch, the loop 'stops and routes to `node scripts/unit-route.mjs <unit>`'. This contradicts the 'Review-end turn boundary' in review-change/SKILL.md and the general workflow contract that skills are user-invocable or composed by an orchestrator, not executed manually by the agent mid-turn. The agent should output a `→ Next:` block recommending the command, not execute it itself. Furthermore, fold-findings is a 'repair' skill; inserting a routing step that requires user confirmation (as per plan-feature/plan-fix docs) breaks the atomic 'repair' contract of the fold cycle.\",\n    \"severity\": \"high\",\n    \"axis\": \"workflow\"\n  },\n  {\n    \"file\": \"packages/pi-agentic-workflow/skills/fold-findings/references/FOLD_PROCESS.md\",\n    \"line\": 46,\n    \"title\": \"Workflow contract violation: fold-findings references manual script execution\",\n    \"detail\": \"Same defect as in SKILL.md. The reference doc states the loop 'stops and routes to `node scripts/unit-route.mjs <unit>`'. This is an operational instruction for the agent to run a script, which violates the separation of concerns where `workflow-status` or an orchestrator determines the next step, and skills report their state/next actions via `→ Next:` blocks.\",\n    \"severity\": \"high\",\n    \"axis\": \"workflow\"\n  },\n  {\n    \"file\": \"packages/pi-agentic-workflow/skills/plan-feature/SKILL.md\",\n    \"line\": 58,\n    \"title\": \"Spec drift: Replan exemption logic order\",\n    \"detail\": \"The 'Progressive loading' section lists step 4: 'Only when `node scripts/unit-route.mjs <NN>` prints `route: replan`: load the [replan contract]'. However, ROUTING.md (also in this slice) states under 'Replan exemption': 'Before the status gate, run `node scripts/unit-route.mjs <NN>`'. The SKILL.md loading order (step 4) implies the replan contract is loaded *after* the standard routing steps (status gate, product-review gate), whereas ROUTING.md says it runs *before* the status gate to potentially skip it. The SKILL.md loading sequence contradicts the exemption logic described in ROUTING.md.\",\n    \"severity\": \"med\",\n    \"axis\": \"spec-drift\"\n  },\n  {\n    \"file\": \"packages/pi-agentic-workflow/skills/plan-fix/SKILL.md\",\n    \"line\": 107,\n    \"title\": \"Spec drift: Replan exemption logic order\",\n    \"detail\": \"Similar to plan-feature, SKILL.md lists the replan contract loading as step 7 (after planning preflight and phase contract). However, PLANNING_PROCESS.md (also in this slice) states under 'Replan detection': 'run `node scripts/unit-route.mjs <unit>` first... A `route: replan` line means... load [the replan contract]'. The SKILL.md progressive loading order contradicts the 'first' execution requirement in the reference process doc.\",\n    \"severity\": \"med\",\n    \"axis\": \"spec-drift\"\n  },\n  {\n    \"file\": \"packages/pi-agentic-workflow/skills/review-change/references/OUTPUT_AND_GUARDRAILS.md\",\n    \"line\": 30,\n    \"title\": \"Usage-docs: Incorrect invocation for replan route\",\n    \"detail\": \"The doc states: 'run `node scripts/unit-route.mjs <unit>` — its `route: replan` line names the planner... The planner re-cuts the plan... a fresh `/review-plan <unit>` passes, and only then `execute-phase` runs them.' This implies the reviewer should execute the router and the planner. However, `review-change`'s own Turn Contract (in SKILL.md) states: 'it never invokes `/fold-findings`, `/execute-phase`, `/plan-feature`, `/design-feature`...'. The reviewer should not run the planner; it should report the finding and let the user/orchestrator decide.\",\n    \"severity\": \"high\",\n    \"axis\": \"workflow\"\n  },\n  {\n    \"file\": \"packages/pi-agentic-workflow/skills/review-change/references/PERSIST_AND_DECIDE.md\",\n    \"line\": 133,\n    \"title\": \"Usage-docs: Incorrect invocation for replan route\",\n    \"detail\": \"The doc states: 'any finding routed replan-in-unit or owned by plan? → `node scripts/unit-route.mjs <unit>` prints `route: replan`... the planner re-cuts the plan... a fresh `/review-plan <unit>` passes, then `/execute-phase <unit>`'. This instructs the reviewer to execute the entire replan and execution chain, which contradicts the `review-change` skill's boundary that it 'never invokes... `/execute-phase`... or edits code'.\",\n    \"severity\": \"high\",\n    \"axis\": \"workflow\"\n  },\n  {\n    \"file\": \"packages/pi-agentic-workflow/skills/triage-issue/SKILL.md\",\n    \"line\": 112,\n    \"title\": \"Workflow contract violation: Triage executes router\",\n    \"detail\": \"The diagram and text state: 'replan-in-unit runs `node scripts/unit-route.mjs <unit>`...'. Triage is a classification/decision skill. It should not execute the router or the planner. It should report the finding and recommend the next step (e.g., `→ Next: /plan-feature <unit>` after router confirms replan). Executing the router here bypasses the orchestrator's state management.\",\n    \"severity\": \"high\",\n    \"axis\": \"workflow\"\n  },\n  {\n    \"file\": \"packages/pi-agentic-workflow/skills/triage-issue/references/REVIEW_FINDING_PROCESS.md\",\n    \"line\": 17,\n    \"title\": \"Workflow contract violation: Triage process executes router\",\n    \"detail\": \"Same as above. The process doc instructs: 'Run `node scripts/unit-route.mjs <unit>`... and the fresh `/review-plan <unit>` that must pass before execution.' Triage should not run the review plan. It should triage the finding and hand off.\",\n    \"severity\": \"high\",\n    \"axis\": \"workflow\"\n  }\n]"
+}

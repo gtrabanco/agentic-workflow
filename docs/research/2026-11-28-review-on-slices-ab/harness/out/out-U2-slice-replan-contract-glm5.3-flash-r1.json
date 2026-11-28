@@ -1,0 +1,56 @@
+{
+ "id": "U2__slice__replan-contract__glm5.3-flash__r1",
+ "unit": "U2",
+ "job": "slice__replan-contract",
+ "model": "glm5.3-flash",
+ "run": 1,
+ "ms": 34124,
+ "usage": {
+  "completion_tokens": 1420,
+  "prompt_tokens": 3070,
+  "total_tokens": 4490,
+  "completion_tokens_details": {
+   "reasoning_tokens": 825
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "skills/replan-findings/references/PHASE_APPEND.md",
+   "line": 76,
+   "title": "Fold ownership contradicts SKILL.md",
+   "detail": "PHASE_APPEND.md guardrail says \"The fold belongs to `execute-phase`'s fold cycle\", but the parent contract skills/replan-findings/SKILL.md guardrails state \"`review-change` owns the classification; `fold-findings` owns `folded`.\" Two different owners (`execute-phase` vs `fold-findings`) are named for the same fold duty inside the same unit's material.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "skills/replan-findings/references/PHASE_APPEND.md",
+   "line": 66,
+   "title": "Hand-off route bypasses the router gate",
+   "detail": "The hand-off template ends with \"a finding owned by product → /design-feature <unit>, then /review-spec, then replan\", implying a direct replan entry. SKILL.md's \"Load condition (the router decides — never inferred)\" section says only the line `node scripts/unit-route.mjs <unit> → route: replan` licenses this contract and \"No replan line → this contract is not loaded\". The template's \"then replan\" instructs re-entry without naming the router, contradicting the declared single-entry gate.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "skills/replan-findings/references/PHASE_APPEND.md",
+   "line": 63,
+   "title": "\"Findings closed by the append\" overstates the write",
+   "detail": "The hand-off prints \"Findings closed by the append: <F1> + <F2> + …\", but both files state the append never closes or folds findings: SKILL.md \"Never fold the finding in code on this route\" and PHASE_APPEND \"Never fold here. The fold belongs to `execute-phase`'s fold cycle\". The append only adds repair phases; the findings are not closed at hand-off time, so the printed line misreports state to the user and to any downstream parser of the hand-off.",
+   "severity": "low",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "skills/replan-findings/references/PHASE_APPEND.md",
+   "line": 57,
+   "title": "Phase-lint fingerprint format unverifiable against named contract",
+   "detail": "Step 3 requires recording `Phase-lint: PASS (8/8) · fingerprint P<n>:<layer>:<n-tasks>:<slug>` \"exactly as the planners do\", but the referenced phase-contract skill is not included in this slice and the fingerprint grammar (e.g. whether <n-tasks> is the ≤8 task count or a hash component) cannot be validated here; if it diverges from the planners' format the SPEC ledger would carry inconsistent receipts. Flagged as a repair the unit must confirm.",
+   "severity": "low",
+   "axis": "spec-drift"
+  }
+ ],
+ "raw": "[{\"file\":\"skills/replan-findings/references/PHASE_APPEND.md\",\"line\":76,\"title\":\"Fold ownership contradicts SKILL.md\",\"detail\":\"PHASE_APPEND.md guardrail says \\\"The fold belongs to `execute-phase`'s fold cycle\\\", but the parent contract skills/replan-findings/SKILL.md guardrails state \\\"`review-change` owns the classification; `fold-findings` owns `folded`.\\\" Two different owners (`execute-phase` vs `fold-findings`) are named for the same fold duty inside the same unit's material.\",\"severity\":\"med\",\"axis\":\"workflow\"},\n{\"file\":\"skills/replan-findings/references/PHASE_APPEND.md\",\"line\":66,\"title\":\"Hand-off route bypasses the router gate\",\"detail\":\"The hand-off template ends with \\\"a finding owned by product → /design-feature <unit>, then /review-spec, then replan\\\", implying a direct replan entry. SKILL.md's \\\"Load condition (the router decides — never inferred)\\\" section says only the line `node scripts/unit-route.mjs <unit> → route: replan` licenses this contract and \\\"No replan line → this contract is not loaded\\\". The template's \\\"then replan\\\" instructs re-entry without naming the router, contradicting the declared single-entry gate.\",\"severity\":\"med\",\"axis\":\"workflow\"},\n{\"file\":\"skills/replan-findings/references/PHASE_APPEND.md\",\"line\":63,\"title\":\"\\\"Findings closed by the append\\\" overstates the write\",\"detail\":\"The hand-off prints \\\"Findings closed by the append: <F1> + <F2> + …\\\", but both files state the append never closes or folds findings: SKILL.md \\\"Never fold the finding in code on this route\\\" and PHASE_APPEND \\\"Never fold here. The fold belongs to `execute-phase`'s fold cycle\\\". The append only adds repair phases; the findings are not closed at hand-off time, so the printed line misreports state to the user and to any downstream parser of the hand-off.\",\"severity\":\"low\",\"axis\":\"usage-docs\"},\n{\"file\":\"skills/replan-findings/references/PHASE_APPEND.md\",\"line\":57,\"title\":\"Phase-lint fingerprint format unverifiable against named contract\",\"detail\":\"Step 3 requires recording `Phase-lint: PASS (8/8) · fingerprint P<n>:<layer>:<n-tasks>:<slug>` \\\"exactly as the planners do\\\", but the referenced phase-contract skill is not included in this slice and the fingerprint grammar (e.g. whether <n-tasks> is the ≤8 task count or a hash component) cannot be validated here; if it diverges from the planners' format the SPEC ledger would carry inconsistent receipts. Flagged as a repair the unit must confirm.\",\"severity\":\"low\",\"axis\":\"spec-drift\"}]"
+}

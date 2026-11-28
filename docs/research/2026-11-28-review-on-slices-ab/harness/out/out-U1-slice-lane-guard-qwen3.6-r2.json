@@ -1,0 +1,56 @@
+{
+ "id": "U1__slice__lane-guard__qwen3.6__r2",
+ "unit": "U1",
+ "job": "slice__lane-guard",
+ "model": "qwen3.6",
+ "run": 2,
+ "ms": 13773,
+ "usage": {
+  "completion_tokens": 991,
+  "prompt_tokens": 5686,
+  "total_tokens": 6677,
+  "completion_tokens_details": {
+   "reasoning_tokens": 0
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 4192
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "skills/unit-lane/SKILL.md",
+   "line": 24,
+   "title": "Workflow: Turn contract box claims stop on missing input but code/flow does not enforce at lane level",
+   "detail": "The Turn contract box (line 24) states: 'if still blank the skill emits `→ Next: unit-lane requires manual input — cannot proceed` and stops.' However, the 'Needs-input guard' section (lines 47-63) only describes the *behavior* (re-ask, then emit message and stop) but does not provide the *implementation logic* or gate mechanism within the SKILL.md itself. The SKILL.md is a prompt/instruction file; the actual enforcement must happen in the agent's execution loop or a script. The defect is that the Turn contract asserts a hard stop behavior that is not verifiable by the text provided, creating a spec-drift between the 'gate' claim and the 'instruction' reality. More critically, the 'Needs-input guard' section lists 'Unit kind / scope classification' as required, but the 'Process' section (Step 1) says 'Acceptance criteria are induced from user scenarios — ask-don't-infer; if the request is too vague, STOP and ask the user'. This contradicts the guard's claim that the *skill* stops. The guard is a policy, not a code gate. The Turn Contract box is a 'verdict' claim that cannot be satisfied by the text alone, violating the workflow contract of 'gate/verdict/ledger' where gates must be explicit.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "skills/unit-lane/references/DESIGN.md",
+   "line": 6,
+   "title": "Spec-drift: Needs-input guard message format inconsistent with SKILL.md",
+   "detail": "The DESIGN.md guard (line 6) specifies the stop message as `→ Next: unit-lane (design step) requires manual input — cannot proceed`. The SKILL.md guard (line 24) specifies the stop message as `→ Next: unit-lane requires manual input — cannot proceed`. The inclusion of '(design step)' in the DESIGN.md message contradicts the unified 'unit-lane' prefix in the SKILL.md. If the lane orchestrates these steps, the message format should be consistent or the SKILL.md should reference the specific step's message. The SKILL.md is the conductor; its contract should be the source of truth for the lane's output. The DESIGN.md deviates.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "skills/unit-lane/references/RESEARCH.md",
+   "line": 6,
+   "title": "Spec-drift: Needs-input guard message format inconsistent with SKILL.md",
+   "detail": "The RESEARCH.md guard (line 6) specifies the stop message as `→ Next: unit-lane (research step) requires manual input — cannot proceed`. This contradicts the SKILL.md's unified message format `→ Next: unit-lane requires manual input — cannot proceed` (line 24). Consistency in the 'Next:' block is critical for the lane's parsing and user experience.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "skills/unit-lane/SKILL.md",
+   "line": 52,
+   "title": "Usage-docs: 'Unit kind / scope classification' required input is not a direct argument",
+   "detail": "The 'Needs-input guard' section lists 'Unit kind / scope classification' as a required input. However, the `argument-hint` (line 4) and the invocation examples do not show a direct argument for 'unit kind'. It is inferred from the slug or issue. The doc claims it is a 'required input' that must be 'answered concretely by the user', but the code/prompt flow (Step 1) says 'Acceptance criteria are induced... if the request is too vague, STOP and ask'. This creates a contradiction: is 'unit kind' a direct input (like --fix) or a derived state? The guard treats it as a direct input, but the process treats it as a derived state that triggers a re-ask. This ambiguity breaks the 'required input' contract.",
+   "severity": "med",
+   "axis": "usage-docs"
+  }
+ ],
+ "raw": "[\n  {\n    \"file\": \"skills/unit-lane/SKILL.md\",\n    \"line\": 24,\n    \"title\": \"Workflow: Turn contract box claims stop on missing input but code/flow does not enforce at lane level\",\n    \"detail\": \"The Turn contract box (line 24) states: 'if still blank the skill emits `→ Next: unit-lane requires manual input — cannot proceed` and stops.' However, the 'Needs-input guard' section (lines 47-63) only describes the *behavior* (re-ask, then emit message and stop) but does not provide the *implementation logic* or gate mechanism within the SKILL.md itself. The SKILL.md is a prompt/instruction file; the actual enforcement must happen in the agent's execution loop or a script. The defect is that the Turn contract asserts a hard stop behavior that is not verifiable by the text provided, creating a spec-drift between the 'gate' claim and the 'instruction' reality. More critically, the 'Needs-input guard' section lists 'Unit kind / scope classification' as required, but the 'Process' section (Step 1) says 'Acceptance criteria are induced from user scenarios — ask-don't-infer; if the request is too vague, STOP and ask the user'. This contradicts the guard's claim that the *skill* stops. The guard is a policy, not a code gate. The Turn Contract box is a 'verdict' claim that cannot be satisfied by the text alone, violating the workflow contract of 'gate/verdict/ledger' where gates must be explicit.\",\n    \"severity\": \"med\",\n    \"axis\": \"workflow\"\n  },\n  {\n    \"file\": \"skills/unit-lane/references/DESIGN.md\",\n    \"line\": 6,\n    \"title\": \"Spec-drift: Needs-input guard message format inconsistent with SKILL.md\",\n    \"detail\": \"The DESIGN.md guard (line 6) specifies the stop message as `→ Next: unit-lane (design step) requires manual input — cannot proceed`. The SKILL.md guard (line 24) specifies the stop message as `→ Next: unit-lane requires manual input — cannot proceed`. The inclusion of '(design step)' in the DESIGN.md message contradicts the unified 'unit-lane' prefix in the SKILL.md. If the lane orchestrates these steps, the message format should be consistent or the SKILL.md should reference the specific step's message. The SKILL.md is the conductor; its contract should be the source of truth for the lane's output. The DESIGN.md deviates.\",\n    \"severity\": \"low\",\n    \"axis\": \"spec-drift\"\n  },\n  {\n    \"file\": \"skills/unit-lane/references/RESEARCH.md\",\n    \"line\": 6,\n    \"title\": \"Spec-drift: Needs-input guard message format inconsistent with SKILL.md\",\n    \"detail\": \"The RESEARCH.md guard (line 6) specifies the stop message as `→ Next: unit-lane (research step) requires manual input — cannot proceed`. This contradicts the SKILL.md's unified message format `→ Next: unit-lane requires manual input — cannot proceed` (line 24). Consistency in the 'Next:' block is critical for the lane's parsing and user experience.\",\n    \"severity\": \"low\",\n    \"axis\": \"spec-drift\"\n  },\n  {\n    \"file\": \"skills/unit-lane/SKILL.md\",\n    \"line\": 52,\n    \"title\": \"Usage-docs: 'Unit kind / scope classification' required input is not a direct argument\",\n    \"detail\": \"The 'Needs-input guard' section lists 'Unit kind / scope classification' as a required input. However, the `argument-hint` (line 4) and the invocation examples do not show a direct argument for 'unit kind'. It is inferred from the slug or issue. The doc claims it is a 'required input' that must be 'answered concretely by the user', but the code/prompt flow (Step 1) says 'Acceptance criteria are induced... if the request is too vague, STOP and ask'. This creates a contradiction: is 'unit kind' a direct input (like --fix) or a derived state? The guard treats it as a direct input, but the process treats it as a derived state that triggers a re-ask. This ambiguity breaks the 'required input' contract.\",\n    \"severity\": \"med\",\n    \"axis\": \"usage-docs\"\n  }\n]"
+}

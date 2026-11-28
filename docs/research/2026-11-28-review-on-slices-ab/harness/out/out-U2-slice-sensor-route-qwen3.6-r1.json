@@ -1,0 +1,40 @@
+{
+ "id": "U2__slice__sensor-route__qwen3.6__r1",
+ "unit": "U2",
+ "job": "slice__sensor-route",
+ "model": "qwen3.6",
+ "run": 1,
+ "ms": 7997,
+ "usage": {
+  "completion_tokens": 759,
+  "prompt_tokens": 19812,
+  "total_tokens": 20571,
+  "completion_tokens_details": {
+   "reasoning_tokens": 0
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 18864
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "scripts/workflow-status.mjs",
+   "line": 763,
+   "title": "Workflow contract violation: next.suggested overwrites recommended/alternatives",
+   "detail": "The code at line 1183 sets `next.suggested = nextSuggested`. The test `scripts/workflow-status-sensor.test.mjs` (line 574+) asserts that `next.suggested` contains the replan/fold triggers. However, the envelope schema (implied by `validateEnvelope` and the `next` object structure in `workflow-status-sensor.test.mjs` line 100+) defines `recommended` and `alternatives` as the primary decision fields. The comment at line 1181 claims this is 'additive advisory' and 'never reordering recommended/alternatives', but assigning to `next.suggested` directly on the `next` object likely conflicts with the schema's required structure for `next` which expects `recommended` and `alternatives` (see test line 100: `assert.ok('recommended' in envelope.next && 'alternatives' in envelope.next)`). If `suggested` is not a valid key in the `next` object schema, this causes a validation failure or silent data loss. Even if valid, the test `workflow-status-sensor.test.mjs` line 574+ checks `next.suggested`, but the main sensor test `workflow-status-sensor.test.mjs` line 100 checks for `recommended`/`alternatives`. The defect is that the code populates `suggested` but the schema/contract likely expects `recommended`/`alternatives` to be populated by the sensor for the driver to act, or `suggested` is an undocumented field. More critically, the test `workflow-status-sensor.test.mjs` line 574+ asserts `next.suggested` exists, but the base test `workflow-status-sensor.test.mjs` line 100 asserts `recommended` and `alternatives` exist. The code does NOT populate `recommended` or `alternatives` in the diff provided (it only adds `suggested`). This breaks the contract that `next` must have `recommended`/`alternatives`.",
+   "severity": "high",
+   "axis": "workflow"
+  },
+  {
+   "file": "scripts/workflow-status.mjs",
+   "line": 763,
+   "title": "Spec drift: `next.suggested` not in schema validation",
+   "detail": "The test `workflow-status-sensor.test.mjs` line 100 asserts that `envelope.next` must contain `recommended` and `alternatives`. The code in `workflow-status.mjs` line 1183 sets `next.suggested`. It does NOT set `next.recommended` or `next.alternatives` in the diff. If the schema validation (line 100 in test) is strict, this change will cause `validateEnvelope` to fail because `recommended` and `alternatives` are missing from `next`. The test `workflow-status-sensor.test.mjs` line 574+ only checks `next.suggested` in the new test, but the existing test at line 100 (which is part of the same file and likely runs) will fail if `recommended`/`alternatives` are not present.",
+   "severity": "high",
+   "axis": "spec-drift"
+  }
+ ],
+ "raw": "[\n  {\n    \"file\": \"scripts/workflow-status.mjs\",\n    \"line\": 763,\n    \"title\": \"Workflow contract violation: next.suggested overwrites recommended/alternatives\",\n    \"detail\": \"The code at line 1183 sets `next.suggested = nextSuggested`. The test `scripts/workflow-status-sensor.test.mjs` (line 574+) asserts that `next.suggested` contains the replan/fold triggers. However, the envelope schema (implied by `validateEnvelope` and the `next` object structure in `workflow-status-sensor.test.mjs` line 100+) defines `recommended` and `alternatives` as the primary decision fields. The comment at line 1181 claims this is 'additive advisory' and 'never reordering recommended/alternatives', but assigning to `next.suggested` directly on the `next` object likely conflicts with the schema's required structure for `next` which expects `recommended` and `alternatives` (see test line 100: `assert.ok('recommended' in envelope.next && 'alternatives' in envelope.next)`). If `suggested` is not a valid key in the `next` object schema, this causes a validation failure or silent data loss. Even if valid, the test `workflow-status-sensor.test.mjs` line 574+ checks `next.suggested`, but the main sensor test `workflow-status-sensor.test.mjs` line 100 checks for `recommended`/`alternatives`. The defect is that the code populates `suggested` but the schema/contract likely expects `recommended`/`alternatives` to be populated by the sensor for the driver to act, or `suggested` is an undocumented field. More critically, the test `workflow-status-sensor.test.mjs` line 574+ asserts `next.suggested` exists, but the base test `workflow-status-sensor.test.mjs` line 100 asserts `recommended` and `alternatives` exist. The code does NOT populate `recommended` or `alternatives` in the diff provided (it only adds `suggested`). This breaks the contract that `next` must have `recommended`/`alternatives`.\",\n    \"severity\": \"high\",\n    \"axis\": \"workflow\"\n  },\n  {\n    \"file\": \"scripts/workflow-status.mjs\",\n    \"line\": 763,\n    \"title\": \"Spec drift: `next.suggested` not in schema validation\",\n    \"detail\": \"The test `workflow-status-sensor.test.mjs` line 100 asserts that `envelope.next` must contain `recommended` and `alternatives`. The code in `workflow-status.mjs` line 1183 sets `next.suggested`. It does NOT set `next.recommended` or `next.alternatives` in the diff. If the schema validation (line 100 in test) is strict, this change will cause `validateEnvelope` to fail because `recommended` and `alternatives` are missing from `next`. The test `workflow-status-sensor.test.mjs` line 574+ only checks `next.suggested` in the new test, but the existing test at line 100 (which is part of the same file and likely runs) will fail if `recommended`/`alternatives` are not present.\",\n    \"severity\": \"high\",\n    \"axis\": \"spec-drift\"\n  }\n]"
+}

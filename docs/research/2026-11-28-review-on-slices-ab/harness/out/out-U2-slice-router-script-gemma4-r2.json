@@ -1,0 +1,40 @@
+{
+ "id": "U2__slice__router-script__gemma4__r2",
+ "unit": "U2",
+ "job": "slice__router-script",
+ "model": "gemma4",
+ "run": 2,
+ "ms": 4118,
+ "usage": {
+  "completion_tokens": 356,
+  "prompt_tokens": 4819,
+  "total_tokens": 5175,
+  "completion_tokens_details": {
+   "reasoning_tokens": 0
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "scripts/unit-route.mjs",
+   "line": 241,
+   "title": "Incorrect read-set for plan-from-issue",
+   "detail": "When a unit is routed via `plan-from-issue`, the `readSetFor` call uses `docs/fix` as the directory and an empty array for `selected` rows, but passes `['README.md']` as the `base`. The `readSetFor` function attempts to join `docs/fix` with `README.md` resulting in `docs/fix/README.md`. However, `readSetFor` also calls `citedPaths(rows)`, and since `rows` is empty, it only returns the base files. If the intention was to include the fix index, the logic is correct, but the `unit` property in the printed output is `clean` (the number), while the `unit.slug` is used elsewhere, creating a potential mismatch in how the unit is identified in the printed record vs the command.",
+   "severity": "low",
+   "axis": "code"
+  },
+  {
+   "file": "scripts/unit-route.mjs",
+   "line": 258,
+   "title": "Inconsistent unit identification in output",
+   "detail": "In the `plan-from-issue` branch (line 258), the `print` function is called with `unit: clean`. In all other branches (line 278), `unit: unit.slug` is used. This means for issues, the `unit` field in the stdout will be the numeric ID, whereas for folders, it is the slug. This contradicts the expectation that the `unit` field identifies the unit consistently across all routes.",
+   "severity": "med",
+   "axis": "code"
+  }
+ ],
+ "raw": "[{\"file\":\"scripts/unit-route.mjs\",\"line\":241,\"title\":\"Incorrect read-set for plan-from-issue\",\"detail\":\"When a unit is routed via `plan-from-issue`, the `readSetFor` call uses `docs/fix` as the directory and an empty array for `selected` rows, but passes `['README.md']` as the `base`. The `readSetFor` function attempts to join `docs/fix` with `README.md` resulting in `docs/fix/README.md`. However, `readSetFor` also calls `citedPaths(rows)`, and since `rows` is empty, it only returns the base files. If the intention was to include the fix index, the logic is correct, but the `unit` property in the printed output is `clean` (the number), while the `unit.slug` is used elsewhere, creating a potential mismatch in how the unit is identified in the printed record vs the command.\",\"severity\":\"low\",\"axis\":\"code\"},{\"file\":\"scripts/unit-route.mjs\",\"line\":258,\"title\":\"Inconsistent unit identification in output\",\"detail\":\"In the `plan-from-issue` branch (line 258), the `print` function is called with `unit: clean`. In all other branches (line 278), `unit: unit.slug` is used. This means for issues, the `unit` field in the stdout will be the numeric ID, whereas for folders, it is the slug. This contradicts the expectation that the `unit` field identifies the unit consistently across all routes.\",\"severity\":\"med\",\"axis\":\"code\"}]"
+}

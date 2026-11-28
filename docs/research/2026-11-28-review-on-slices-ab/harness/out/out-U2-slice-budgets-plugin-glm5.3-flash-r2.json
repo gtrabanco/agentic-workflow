@@ -1,0 +1,32 @@
+{
+ "id": "U2__slice__budgets-plugin__glm5.3-flash__r2",
+ "unit": "U2",
+ "job": "slice__budgets-plugin",
+ "model": "glm5.3-flash",
+ "run": 2,
+ "ms": 15377,
+ "usage": {
+  "completion_tokens": 1265,
+  "prompt_tokens": 5244,
+  "total_tokens": 6509,
+  "completion_tokens_details": {
+   "reasoning_tokens": 1045
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": ".claude-plugin/plugin.json",
+   "line": 12,
+   "title": "New replan-findings skill missing from plugin registry",
+   "detail": "The unit adds a replan-findings skill (SKILL_CONTEXT_BUDGETS.json gains a \"replan-findings\" entry: \"conditional replan entry; PHASE_APPEND.md holds the append contract...\"), but the plugin manifest's skills array — provided as this slice's anchor file at tip — lists 38 skills and does not include \"./skills/replan-findings\" (it jumps from \"./skills/review-verify\" ... actually from \"./skills/plan-fix\" through \"./skills/review-a11y\" with no replan-findings entry anywhere in the array). An unregistered skill is not discoverable/loadable via the plugin, so the conditional replan entry the unit claims to ship cannot be routed to. This contradicts the unit's own declared scope (\"the replan-findings skill declares a conditional replan entry\").",
+   "severity": "high",
+   "axis": "workflow"
+  }
+ ],
+ "raw": "[{\"file\":\".claude-plugin/plugin.json\",\"line\":12,\"title\":\"New replan-findings skill missing from plugin registry\",\"detail\":\"The unit adds a replan-findings skill (SKILL_CONTEXT_BUDGETS.json gains a \\\"replan-findings\\\" entry: \\\"conditional replan entry; PHASE_APPEND.md holds the append contract...\\\"), but the plugin manifest's skills array — provided as this slice's anchor file at tip — lists 38 skills and does not include \\\"./skills/replan-findings\\\" (it jumps from \\\"./skills/review-verify\\\" ... actually from \\\"./skills/plan-fix\\\" through \\\"./skills/review-a11y\\\" with no replan-findings entry anywhere in the array). An unregistered skill is not discoverable/loadable via the plugin, so the conditional replan entry the unit claims to ship cannot be routed to. This contradicts the unit's own declared scope (\\\"the replan-findings skill declares a conditional replan entry\\\").\",\"severity\":\"high\",\"axis\":\"workflow\"}]"
+}

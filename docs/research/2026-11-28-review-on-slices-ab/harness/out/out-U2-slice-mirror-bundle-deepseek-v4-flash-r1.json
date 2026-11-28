@@ -1,0 +1,96 @@
+{
+ "id": "U2__slice__mirror-bundle__deepseek-v4-flash__r1",
+ "unit": "U2",
+ "job": "slice__mirror-bundle",
+ "model": "deepseek-v4-flash",
+ "run": 1,
+ "ms": 6975,
+ "usage": {
+  "completion_tokens": 1823,
+  "prompt_tokens": 26797,
+  "total_tokens": 28620,
+  "completion_tokens_details": {
+   "reasoning_tokens": 0
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "packages/pi-agentic-workflow/skills/plan-feature/SKILL.md",
+   "line": null,
+   "title": "Allowlist count/description now contradicts itself",
+   "detail": "The section header still says 'The allowlist:' and the closing sentence still reads 'Both resources are normative, one hop from this file, and fail closed when missing' — but the list now has four numbered items (ROUTING, planning-preflight, phase-contract, replan-findings). 'Both' names two; the list has four. The prior text said 'exactly the two paths below' and was consistent; the edit removed the count but left 'Both'.",
+   "severity": "med",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "packages/pi-agentic-workflow/skills/plan-feature/references/ROUTING.md",
+   "line": null,
+   "title": "Replan exemption runs router before target resolution, contradicting its own precondition",
+   "detail": "The new paragraph says 'Before the status gate, run `node scripts/unit-route.mjs <NN>`' and is inserted immediately after the paragraph that says 'Before any other step, resolve the target slug/issue.' The router takes `<NN>`/`<unit>`, which only exists after resolution; the text also says 'For other inputs, read the roadmap status' — but the router invocation is placed before that branch, so for `--from-issue`/raw-idea inputs with no unit folder the router is run with no resolvable unit. The replan-findings SKILL itself says the router answers from the ledger 'the caller cannot otherwise see' and that a missing script is BLOCKED — running it unconditionally before resolution makes every non-unit invocation BLOCKED.",
+   "severity": "med",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "packages/pi-agentic-workflow/skills/plan-fix/references/PLANNING_PROCESS.md",
+   "line": null,
+   "title": "Router invocation contradicts plan-fix's own input contract",
+   "detail": "The new 'Replan detection' block says 'When the target resolves to an existing unit folder, run `node scripts/unit-route.mjs <unit>` first' and that a missing run is never inferred around. But plan-fix's declared input (SKILL.md '## Input') is 'One or more GitHub issue numbers from this repo, space-separated' — there is no unit-folder argument, and the SPEC is drafted fresh at `docs/fix/<primary>-<topic>/`. The router is keyed on an existing unit; the doc gives no way to obtain `<unit>` from issue numbers, so the mandated 'run first' step is unexecutable on the skill's documented invocation.",
+   "severity": "med",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "packages/pi-agentic-workflow/skills/replan-findings/SKILL.md",
+   "line": null,
+   "title": "Replan contract claims router emits read-set/rows lines the router is not shown to emit",
+   "detail": "The contract's 'Bounded intake' instructs: 'read **only** the paths on its `read-set` line' and 'The `rows:` line names the findings'. The unit's router (`scripts/unit-route.mjs`) is described elsewhere in this material only as emitting a `route: replan` line (e.g. fold-findings: 'whose `route: replan` line names the planner'). No file in this slice documents a `read-set` or `rows:` output line, and the router script itself is not in this slice. The contract's entire bounded-intake mechanism depends on output lines that are not evidenced anywhere in the reviewed material.",
+   "severity": "med",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "packages/pi-agentic-workflow/skills/replan-findings/references/PHASE_APPEND.md",
+   "line": null,
+   "title": "Hand-off block routes to /design-feature <unit> for a product-owned finding, contradicting the product route",
+   "detail": "The fixed hand-off prints '· a finding owned by product → /design-feature <unit>, then /review-spec, then replan'. But CLASSIFY.md's owning-stage table routes product findings to '/design-feature <unit> repairs the half, then /review-spec <unit> re-judges it' — and design-feature takes a slug, not a unit path. More importantly, the replan contract is only loaded on `route: replan` (plan-owned); a product-owned finding is `decision-required`, which per fold-findings/CLASSIFY is a STOP, not a replan. Printing a product branch inside the replan hand-off conflates the two frozen routes.",
+   "severity": "low",
+   "axis": "workflow"
+  },
+  {
+   "file": "packages/pi-agentic-workflow/skills/fold-findings/SKILL.md",
+   "line": null,
+   "title": "Freeze-batch now routes to a planner but the receipt contract still says 'routes to planning'",
+   "detail": "The edited prose says the loop 'stops and routes to `node scripts/unit-route.mjs <unit>`, whose `route: replan` line names the planner'. The batch-state table row was updated to the same. But the REPAIR-RECEIPT fixed block (referenced as 'verbatim copy' in FOLD_PROCESS.md) and the turn-contract box 5 still describe the closing block as `Folded: n/m · Disputed: k · Blocked: j[ · Replan: r]` with no router line, and the receipt is declared 'immutable once printed'. The receipt therefore cannot carry the router invocation the new prose mandates, leaving the printed receipt and the routing instruction inconsistent.",
+   "severity": "low",
+   "axis": "workflow"
+  },
+  {
+   "file": "packages/pi-agentic-workflow/skills/workflow-status/references/SENSOR_SIGNALS.md",
+   "line": null,
+   "title": "New plan-owner signal duplicates the fold-findings signal for the same rows",
+   "detail": "The added bullet fires `/plan-feature <unit>` | `/plan-fix <issue>` for 'an open row whose frozen route is the plan owner', and the immediately following bullet fires `/fold-findings` for 'any other `folded: no` row'. But fold-findings' own freeze-batch rule (SKILL.md) says a batch containing ANY `replan-in-unit`/`decision-required` row freezes the WHOLE batch — nothing folds. So a unit with one plan-owned row plus other fix-now rows will emit both a replan suggestion and a `/fold-findings` suggestion, and the fold suggestion is guaranteed to freeze and do nothing. The two signals are not mutually exclusive as written.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "packages/pi-agentic-workflow/skills/triage-issue/references/REVIEW_FINDING_PROCESS.md",
+   "line": null,
+   "title": "Action-taken vocabulary omits the router step the new prose mandates",
+   "detail": "The fixed output block still reads 'Action taken: <current-unit fold/phase | plan-feature | plan-fix | user decision>' and step 4 says 'ask the user to continue manually with `/execute-phase <unit> P<n>`'. The new step 3 requires running `node scripts/unit-route.mjs <unit>` and a fresh `/review-plan <unit>` before execution, but neither the action vocabulary nor step 4's manual continuation mentions the router or the review-plan gate — the printed block can claim 'plan-feature' without the router run the same file now requires.",
+   "severity": "low",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "packages/pi-agentic-workflow/skills/review-change/references/PERSIST_AND_DECIDE.md",
+   "line": null,
+   "title": "Next-block line merges two distinct routes into one router call",
+   "detail": "The edited line reads 'any finding routed replan-in-unit or owned by plan? → `node scripts/unit-route.mjs <unit>` prints `route: replan` and names the planner'. But CLASSIFY.md distinguishes `replan-in-unit` (a fix-now too large to fold) from a plan-owned finding (owning stage `plan`); the router's `route: replan` is documented as answering for the plan-owner case. Collapsing both into one router invocation means a `replan-in-unit` row that is not plan-owned is told to expect `route: replan`, which the router may not emit for it.",
+   "severity": "low",
+   "axis": "workflow"
+  }
+ ],
+ "raw": "[{\"file\":\"packages/pi-agentic-workflow/skills/plan-feature/SKILL.md\",\"line\":null,\"title\":\"Allowlist count/description now contradicts itself\",\"detail\":\"The section header still says 'The allowlist:' and the closing sentence still reads 'Both resources are normative, one hop from this file, and fail closed when missing' — but the list now has four numbered items (ROUTING, planning-preflight, phase-contract, replan-findings). 'Both' names two; the list has four. The prior text said 'exactly the two paths below' and was consistent; the edit removed the count but left 'Both'.\",\"severity\":\"med\",\"axis\":\"usage-docs\"},{\"file\":\"packages/pi-agentic-workflow/skills/plan-feature/references/ROUTING.md\",\"line\":null,\"title\":\"Replan exemption runs router before target resolution, contradicting its own precondition\",\"detail\":\"The new paragraph says 'Before the status gate, run `node scripts/unit-route.mjs <NN>`' and is inserted immediately after the paragraph that says 'Before any other step, resolve the target slug/issue.' The router takes `<NN>`/`<unit>`, which only exists after resolution; the text also says 'For other inputs, read the roadmap status' — but the router invocation is placed before that branch, so for `--from-issue`/raw-idea inputs with no unit folder the router is run with no resolvable unit. The replan-findings SKILL itself says the router answers from the ledger 'the caller cannot otherwise see' and that a missing script is BLOCKED — running it unconditionally before resolution makes every non-unit invocation BLOCKED.\",\"severity\":\"med\",\"axis\":\"usage-docs\"},{\"file\":\"packages/pi-agentic-workflow/skills/plan-fix/references/PLANNING_PROCESS.md\",\"line\":null,\"title\":\"Router invocation contradicts plan-fix's own input contract\",\"detail\":\"The new 'Replan detection' block says 'When the target resolves to an existing unit folder, run `node scripts/unit-route.mjs <unit>` first' and that a missing run is never inferred around. But plan-fix's declared input (SKILL.md '## Input') is 'One or more GitHub issue numbers from this repo, space-separated' — there is no unit-folder argument, and the SPEC is drafted fresh at `docs/fix/<primary>-<topic>/`. The router is keyed on an existing unit; the doc gives no way to obtain `<unit>` from issue numbers, so the mandated 'run first' step is unexecutable on the skill's documented invocation.\",\"severity\":\"med\",\"axis\":\"usage-docs\"},{\"file\":\"packages/pi-agentic-workflow/skills/replan-findings/SKILL.md\",\"line\":null,\"title\":\"Replan contract claims router emits read-set/rows lines the router is not shown to emit\",\"detail\":\"The contract's 'Bounded intake' instructs: 'read **only** the paths on its `read-set` line' and 'The `rows:` line names the findings'. The unit's router (`scripts/unit-route.mjs`) is described elsewhere in this material only as emitting a `route: replan` line (e.g. fold-findings: 'whose `route: replan` line names the planner'). No file in this slice documents a `read-set` or `rows:` output line, and the router script itself is not in this slice. The contract's entire bounded-intake mechanism depends on output lines that are not evidenced anywhere in the reviewed material.\",\"severity\":\"med\",\"axis\":\"spec-drift\"},{\"file\":\"packages/pi-agentic-workflow/skills/replan-findings/references/PHASE_APPEND.md\",\"line\":null,\"title\":\"Hand-off block routes to /design-feature <unit> for a product-owned finding, contradicting the product route\",\"detail\":\"The fixed hand-off prints '· a finding owned by product → /design-feature <unit>, then /review-spec, then replan'. But CLASSIFY.md's owning-stage table routes product findings to '/design-feature <unit> repairs the half, then /review-spec <unit> re-judges it' — and design-feature takes a slug, not a unit path. More importantly, the replan contract is only loaded on `route: replan` (plan-owned); a product-owned finding is `decision-required`, which per fold-findings/CLASSIFY is a STOP, not a replan. Printing a product branch inside the replan hand-off conflates the two frozen routes.\",\"severity\":\"low\",\"axis\":\"workflow\"},{\"file\":\"packages/pi-agentic-workflow/skills/fold-findings/SKILL.md\",\"line\":null,\"title\":\"Freeze-batch now routes to a planner but the receipt contract still says 'routes to planning'\",\"detail\":\"The edited prose says the loop 'stops and routes to `node scripts/unit-route.mjs <unit>`, whose `route: replan` line names the planner'. The batch-state table row was updated to the same. But the REPAIR-RECEIPT fixed block (referenced as 'verbatim copy' in FOLD_PROCESS.md) and the turn-contract box 5 still describe the closing block as `Folded: n/m · Disputed: k · Blocked: j[ · Replan: r]` with no router line, and the receipt is declared 'immutable once printed'. The receipt therefore cannot carry the router invocation the new prose mandates, leaving the printed receipt and the routing instruction inconsistent.\",\"severity\":\"low\",\"axis\":\"workflow\"},{\"file\":\"packages/pi-agentic-workflow/skills/workflow-status/references/SENSOR_SIGNALS.md\",\"line\":null,\"title\":\"New plan-owner signal duplicates the fold-findings signal for the same rows\",\"detail\":\"The added bullet fires `/plan-feature <unit>` | `/plan-fix <issue>` for 'an open row whose frozen route is the plan owner', and the immediately following bullet fires `/fold-findings` for 'any other `folded: no` row'. But fold-findings' own freeze-batch rule (SKILL.md) says a batch containing ANY `replan-in-unit`/`decision-required` row freezes the WHOLE batch — nothing folds. So a unit with one plan-owned row plus other fix-now rows will emit both a replan suggestion and a `/fold-findings` suggestion, and the fold suggestion is guaranteed to freeze and do nothing. The two signals are not mutually exclusive as written.\",\"severity\":\"med\",\"axis\":\"workflow\"},{\"file\":\"packages/pi-agentic-workflow/skills/triage-issue/references/REVIEW_FINDING_PROCESS.md\",\"line\":null,\"title\":\"Action-taken vocabulary omits the router step the new prose mandates\",\"detail\":\"The fixed output block still reads 'Action taken: <current-unit fold/phase | plan-feature | plan-fix | user decision>' and step 4 says 'ask the user to continue manually with `/execute-phase <unit> P<n>`'. The new step 3 requires running `node scripts/unit-route.mjs <unit>` and a fresh `/review-plan <unit>` before execution, but neither the action vocabulary nor step 4's manual continuation mentions the router or the review-plan gate — the printed block can claim 'plan-feature' without the router run the same file now requires.\",\"severity\":\"low\",\"axis\":\"usage-docs\"},{\"file\":\"packages/pi-agentic-workflow/skills/review-change/references/PERSIST_AND_DECIDE.md\",\"line\":null,\"title\":\"Next-block line merges two distinct routes into one router call\",\"detail\":\"The edited line reads 'any finding routed replan-in-unit or owned by plan? → `node scripts/unit-route.mjs <unit>` prints `route: replan` and names the planner'. But CLASSIFY.md distinguishes `replan-in-unit` (a fix-now too large to fold) from a plan-owned finding (owning stage `plan`); the router's `route: replan` is documented as answering for the plan-owner case. Collapsing both into one router invocation means a `replan-in-unit` row that is not plan-owned is told to expect `route: replan`, which the router may not emit for it.\",\"severity\":\"low\",\"axis\":\"workflow\"}]"
+}

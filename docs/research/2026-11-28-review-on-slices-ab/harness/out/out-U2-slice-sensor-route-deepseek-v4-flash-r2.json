@@ -1,0 +1,81 @@
+{
+ "id": "U2__slice__sensor-route__deepseek-v4-flash__r2",
+ "unit": "U2",
+ "job": "slice__sensor-route",
+ "model": "deepseek-v4-flash",
+ "run": 2,
+ "ms": 6536,
+ "usage": {
+  "completion_tokens": 1978,
+  "prompt_tokens": 19476,
+  "total_tokens": 21454,
+  "completion_tokens_details": {
+   "reasoning_tokens": 0
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 19456
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "scripts/workflow-status.mjs",
+   "line": null,
+   "title": "Sensor re-implements the router's class\u2192route decision instead of projecting it",
+   "detail": "The new `readSuggestions` in workflow-status.mjs decides plan-vs-fold itself via `PLAN_ROUTE = /replan[- ]in[- ]unit|owned by plan|plan owner|plan-owner/i` tested against `row.route` and `row.klass`. The unit's own test (scripts/normative-drift.test.mjs, new #224 test) asserts the router is the single owner of the class\u2192destination mapping and that the sensor 'projects the router's class\u2192destination mapping; neither may invent a fourth destination for the same class'. The sensor never imports or invokes `scripts/unit-route.mjs`; it re-derives the route with a regex, so the two surfaces can drift (e.g. a route cell spelled `replan` without `-in-unit` routes to fold in the sensor but replan in the router). This contradicts the unit's own declared contract.",
+   "severity": "high",
+   "axis": "workflow"
+  },
+  {
+   "file": "scripts/workflow-status.mjs",
+   "line": null,
+   "title": "readSuggestions ignores the router's first-match precedence and emits a plan suggestion even when a fold row also exists",
+   "detail": "The router's closed route table is first-match-wins (unit-route.test.mjs AC1: 'replan wins over a co-resident fold and decision row'). `readSuggestions` instead returns a plan suggestion whenever ANY open row matches PLAN_ROUTE, and otherwise a fold suggestion whenever ANY open row exists \u2014 it never consults the router's precedence and never distinguishes a `decision` route. A unit whose only open row is a `decision-required` row (no plan route, no fold route) will be told `/fold-findings` by the sensor, while the router would emit `decision`. The sensor's suggestion set is therefore not the router's route.",
+   "severity": "high",
+   "axis": "workflow"
+  },
+  {
+   "file": "scripts/workflow-status.mjs",
+   "line": null,
+   "title": "readOpenRows drops VF- rows but readFixNow's severity/route handling is now split, and the plan-route regex matches the class cell too",
+   "detail": "`readSuggestions` tests `PLAN_ROUTE` against BOTH `row.route` and `row.klass`. The ledger's `class` column is the CLASSIFY vocabulary (`fix-now`, `replan-in-unit`, etc. per the fold skill), but the regex also matches the literal phrase `plan owner`/`plan-owner`/`owned by plan` \u2014 so a row whose *class* cell is e.g. `fix-now` but whose *route* prose happens to contain 'plan owner' routes to plan, while a row whose class is `replan-in-unit` but whose route cell is empty also routes to plan. The router (per unit-route.test.mjs) keys on the frozen route cell only. The two surfaces disagree on which column is authoritative.",
+   "severity": "med",
+   "axis": "code"
+  },
+  {
+   "file": "scripts/workflow-status.mjs",
+   "line": null,
+   "title": "next.suggested is appended after resolveNext without schema validation of the new field",
+   "detail": "`next.suggested = nextSuggested;` is assigned after `resolveNext(...)` returns. The sensor's own P1 test asserts the envelope validates against the schema (`validateEnvelope(envelope).ok === true`), and the new P3/AC6 test also asserts `validateEnvelope(parseEnvelope(replan.stdout)).ok === true`. If the schema's `next` object does not declare `suggested`, the assignment either fails validation (breaking the P1/P3 tests) or the schema was extended in a slice not shown here \u2014 in which case the sensor is writing a field the schema must already know about, and the sensor's own `next` shape test (`'recommended' in envelope.next && 'alternatives' in envelope.next && 'tier' in envelope.next`) does not pin `suggested`. Either way the sensor's contract with the schema is not demonstrated in this slice.",
+   "severity": "med",
+   "axis": "code"
+  },
+  {
+   "file": "scripts/normative-drift.test.mjs",
+   "line": null,
+   "title": "New #224 test asserts the router names `/plan-feature`, `/plan-fix`, `/fold-findings` but the router's route table is `replan|decision|fold|execute|plan-from-issue`",
+   "detail": "The test asserts `router.includes('/plan-feature')`, `router.includes('/plan-fix')`, `router.includes('/fold-findings')`. The router's closed route set (per the same test's `names` assertion) is `['replan','decision','fold','execute','plan-from-issue']` \u2014 none of those are the slash-command strings. The router must therefore contain those slash strings somewhere else (e.g. a `next:` mapping). If it does not, the test fails; if it does, the test is asserting a mapping the router's own route table does not name, which is exactly the 'three contradictory sentences' defect the test claims to prevent. The slice does not show the router source, so the assertion's satisfiability is unverified.",
+   "severity": "med",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "scripts/unit-route.test.mjs",
+   "line": null,
+   "title": "AC12 hostile-fixture test asserts `rows: F9-AA.* F10` but the sanitizer's truncation length is not pinned",
+   "detail": "The test writes a 400-char id `F9-AAAA...` and asserts `assert.match(result.stdout, /F9-AAAA/)` and `assert.match(result.stdout, /^rows: F9-AA.* F10$/m)`. The regex `F9-AA.*` requires at least two A's after `F9-`, but the sanitizer's truncation cap is not shown in this slice. If the cap is e.g. 8 chars the id becomes `F9-AAAAA` (passes); if the cap is 4 it becomes `F9-A` (fails). The test pins a behavior whose bound is not declared in the material, so the test is either over- or under-specified relative to the router's actual sanitizer.",
+   "severity": "low",
+   "axis": "code"
+  },
+  {
+   "file": "scripts/review-loop-discipline.test.mjs",
+   "line": null,
+   "title": "Version pin bumped 1.4.0 \u2192 1.5.0 but the comment claims 'the assertion unchanged in strength'",
+   "detail": "The diff changes `assert.match(foldSkill, /version: 1\\.4\\.0/)` to `assert.match(foldSkill, /version: 1\\.5\\.0/)` and the comment says 'the assertion unchanged in strength'. The assertion is a literal version pin \u2014 it is exactly as strong as before, but the comment's framing ('maintained on every later bump') means the test will need editing on every future bump, which is the opposite of a stable contract. This is a note, not a defect in behavior.",
+   "severity": "low",
+   "axis": "workflow"
+  }
+ ],
+ "raw": "[\n  {\n    \"file\": \"scripts/workflow-status.mjs\",\n    \"line\": null,\n    \"title\": \"Sensor re-implements the router's class\u2192route decision instead of projecting it\",\n    \"detail\": \"The new `readSuggestions` in workflow-status.mjs decides plan-vs-fold itself via `PLAN_ROUTE = /replan[- ]in[- ]unit|owned by plan|plan owner|plan-owner/i` tested against `row.route` and `row.klass`. The unit's own test (scripts/normative-drift.test.mjs, new #224 test) asserts the router is the single owner of the class\u2192destination mapping and that the sensor 'projects the router's class\u2192destination mapping; neither may invent a fourth destination for the same class'. The sensor never imports or invokes `scripts/unit-route.mjs`; it re-derives the route with a regex, so the two surfaces can drift (e.g. a route cell spelled `replan` without `-in-unit` routes to fold in the sensor but replan in the router). This contradicts the unit's own declared contract.\",\n    \"severity\": \"high\",\n    \"axis\": \"workflow\"\n  },\n  {\n    \"file\": \"scripts/workflow-status.mjs\",\n    \"line\": null,\n    \"title\": \"readSuggestions ignores the router's first-match precedence and emits a plan suggestion even when a fold row also exists\",\n    \"detail\": \"The router's closed route table is first-match-wins (unit-route.test.mjs AC1: 'replan wins over a co-resident fold and decision row'). `readSuggestions` instead returns a plan suggestion whenever ANY open row matches PLAN_ROUTE, and otherwise a fold suggestion whenever ANY open row exists \u2014 it never consults the router's precedence and never distinguishes a `decision` route. A unit whose only open row is a `decision-required` row (no plan route, no fold route) will be told `/fold-findings` by the sensor, while the router would emit `decision`. The sensor's suggestion set is therefore not the router's route.\",\n    \"severity\": \"high\",\n    \"axis\": \"workflow\"\n  },\n  {\n    \"file\": \"scripts/workflow-status.mjs\",\n    \"line\": null,\n    \"title\": \"readOpenRows drops VF- rows but readFixNow's severity/route handling is now split, and the plan-route regex matches the class cell too\",\n    \"detail\": \"`readSuggestions` tests `PLAN_ROUTE` against BOTH `row.route` and `row.klass`. The ledger's `class` column is the CLASSIFY vocabulary (`fix-now`, `replan-in-unit`, etc. per the fold skill), but the regex also matches the literal phrase `plan owner`/`plan-owner`/`owned by plan` \u2014 so a row whose *class* cell is e.g. `fix-now` but whose *route* prose happens to contain 'plan owner' routes to plan, while a row whose class is `replan-in-unit` but whose route cell is empty also routes to plan. The router (per unit-route.test.mjs) keys on the frozen route cell only. The two surfaces disagree on which column is authoritative.\",\n    \"severity\": \"med\",\n    \"axis\": \"code\"\n  },\n  {\n    \"file\": \"scripts/workflow-status.mjs\",\n    \"line\": null,\n    \"title\": \"next.suggested is appended after resolveNext without schema validation of the new field\",\n    \"detail\": \"`next.suggested = nextSuggested;` is assigned after `resolveNext(...)` returns. The sensor's own P1 test asserts the envelope validates against the schema (`validateEnvelope(envelope).ok === true`), and the new P3/AC6 test also asserts `validateEnvelope(parseEnvelope(replan.stdout)).ok === true`. If the schema's `next` object does not declare `suggested`, the assignment either fails validation (breaking the P1/P3 tests) or the schema was extended in a slice not shown here \u2014 in which case the sensor is writing a field the schema must already know about, and the sensor's own `next` shape test (`'recommended' in envelope.next && 'alternatives' in envelope.next && 'tier' in envelope.next`) does not pin `suggested`. Either way the sensor's contract with the schema is not demonstrated in this slice.\",\n    \"severity\": \"med\",\n    \"axis\": \"code\"\n  },\n  {\n    \"file\": \"scripts/workflow-status.mjs\",\n    \"line\": null,\n    \"title\": \"readSuggestions emits a plan suggestion for a fix unit using `unit.issue`, but the fix-unit path is not exercised by the sensor's own fixture builder\",\n    \"detail\": \"The new P3/AC6 test builds a fix fixture via `extraFiles: { 'docs/fix/README.md': ..., 'docs/fix/91-alpha/review-findings.md': ... }` and asserts `next.suggested[0].command === '/plan-fix 91'`. But `readSuggestions` computes `unit.kind === 'fix' ? '/plan-fix ' + unit.issue : '/plan-feature ' + unit.id`. The fixture's fix index row is `| [#91](https://example.invalid/issues/91) | \\`alpha\\` | in-progress | x |` \u2014 the sensor must parse `unit.issue` from that markdown link. If the fix-index parser (not shown) yields `unit.issue` as the full URL or the bracketed text rather than `91`, the command becomes `/plan-fix [#91](...)` and the test fails. The slice does not show the fix-index parser or a pin that `unit.issue` is the bare number, so the fix-unit branch is unverified in this material.\",\n    \"severity\": \"med\",\n    \"axis\": \"code\"\n  },\n  {\n    \"file\": \"scripts/normative-drift.test.mjs\",\n    \"line\": null,\n    \"title\": \"New #224 test asserts the router names `/plan-feature`, `/plan-fix`, `/fold-findings` but the router's route table is `replan|decision|fold|execute|plan-from-issue`\",\n    \"detail\": \"The test asserts `router.includes('/plan-feature')`, `router.includes('/plan-fix')`, `router.includes('/fold-findings')`. The router's closed route set (per the same test's `names` assertion) is `['replan','decision','fold','execute','plan-from-issue']` \u2014 none of those are the slash-command strings. The router must therefore contain those slash strings somewhere else (e.g. a `next:` mapping). If it does not, the test fails; if it does, the test is asserting a mapping the router's own route table does not name, which is exactly the 'three contradictory sentences' defect the test claims to prevent. The slice does not show the router source, so the assertion's satisfiability is unverified.\",\n    \"severity\": \"med\",\n    \"axis\": \"spec-drift\"\n  },\n  {\n    \"file\": \"scripts/unit-route.test.mjs\",\n    \"line\": null,\n    \"title\": \"AC12 hostile-fixture test asserts `rows: F9-AA.* F10` but the sanitizer's truncation length is not pinned\",\n    \"detail\": \"The test writes a 400-char id `F9-AAAA...` and asserts `assert.match(result.stdout, /F9-AAAA/)` and `assert.match(result.stdout, /^rows: F9-AA.* F10$/m)`. The regex `F9-AA.*` requires at least two A's after `F9-`, but the sanitizer's truncation cap is not shown in this slice. If the cap is e.g. 8 chars the id becomes `F9-AAAAA` (passes); if the cap is 4 it becomes `F9-A` (fails). The test pins a behavior whose bound is not declared in the material, so the test is either over- or under-specified relative to the router's actual sanitizer.\",\n    \"severity\": \"low\",\n    \"axis\": \"code\"\n  },\n  {\n    \"file\": \"scripts/review-loop-discipline.test.mjs\",\n    \"line\": null,\n    \"title\": \"Version pin bumped 1.4.0 \u2192 1.5.0 but the comment claims 'the assertion unchanged in strength'\",\n    \"detail\": \"The diff changes `assert.match(foldSkill, /version: 1\\\\.4\\\\.0/)` to `assert.match(foldSkill, /version: 1\\\\.5\\\\.0/)` and the comment says 'the assertion unchanged in strength'. The assertion is a literal version pin \u2014 it is exactly as strong as before, but the comment's framing ('maintained on every later bump') means the test will need editing on every future bump, which is the opposite of a stable contract. This is a note, not a defect in behavior.\",\n    \"severity\": \"low\",\n    \"axis\": \"workflow\"\n  }\n]",
+ "truncated": true
+}

@@ -1,0 +1,72 @@
+{
+ "id": "U1__mono__qwen3.6__r2",
+ "unit": "U1",
+ "job": "mono",
+ "model": "qwen3.6",
+ "run": 2,
+ "ms": 13315,
+ "usage": {
+  "completion_tokens": 879,
+  "prompt_tokens": 34210,
+  "total_tokens": 35089,
+  "completion_tokens_details": {
+   "reasoning_tokens": 0
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "docs/fix/258-harden-needs-input-contracts/SPEC.md",
+   "line": 173,
+   "title": "Unverified claim in Planning evidence",
+   "detail": "PE-003 claims the fix follows the same defect-class pattern as review-change's commit 29b52c63, but explicitly marks it as ASSUMPTION-UNVERIFIED because git cat-file fails. The SPEC states 'Known pre-existing issues: none recorded', but this unverified dependency on a non-existent commit object is a pre-existing integrity issue in the unit's own evidence.",
+   "severity": "med",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/258-harden-needs-input-contracts/SPEC.md",
+   "line": 185,
+   "title": "Obligation O4 missing from Obligations table",
+   "detail": "The Progress log at line 206 states 'O1–O6 minus O4 folded into O1–O3', implying O4 was removed. However, the Obligations table (lines 185-204) only lists O1, O2, O3, O5, O6. O4 is completely absent, creating a gap in the obligation ledger. The validator for O4 is not present, and no other obligation references it.",
+   "severity": "med",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/258-harden-needs-input-contracts/SPEC.md",
+   "line": 206,
+   "title": "Progress log contradicts SPEC structure",
+   "detail": "The Progress log claims 'O1–O6 minus O4 folded into O1–O3', but the Obligations table has O5 and O6 separate. The numbering is non-sequential (O1, O2, O3, O5, O6) without explanation in the table or notes, violating the implicit contract of sequential obligation IDs in the ledger.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "skills/unit-lane/SKILL.md",
+   "line": 47,
+   "title": "Needs-input guard duplicates Turn contract logic",
+   "detail": "The 'Needs-input guard' section (lines 47-60) repeats the exact same re-ask/halt logic already stated in the Turn contract box (lines 21-24). While not a defect in behavior, it violates the 'no duplicated code' axis by repeating the contract enforcement prose in two places, increasing maintenance risk.",
+   "severity": "low",
+   "axis": "code"
+  },
+  {
+   "file": "skills/execute-phase/SKILL.md",
+   "line": 34,
+   "title": "Needs-input guard duplicates Turn contract logic",
+   "detail": "The 'Needs-input guard' section (lines 34-45) repeats the exact same re-ask/halt logic already stated in the Turn contract box (lines 34-37). This duplication increases maintenance risk and violates the 'no duplicated code' axis.",
+   "severity": "low",
+   "axis": "code"
+  },
+  {
+   "file": "skills/init-workspace/SKILL.md",
+   "line": 34,
+   "title": "Needs-input guard duplicates Turn contract logic",
+   "detail": "The 'Needs-input guard' section (lines 34-47) repeats the exact same re-ask/halt logic already stated in the Turn contract box (lines 21-24). This duplication increases maintenance risk and violates the 'no duplicated code' axis.",
+   "severity": "low",
+   "axis": "code"
+  }
+ ],
+ "raw": "[\n  {\n    \"file\": \"docs/fix/258-harden-needs-input-contracts/SPEC.md\",\n    \"line\": 173,\n    \"title\": \"Unverified claim in Planning evidence\",\n    \"detail\": \"PE-003 claims the fix follows the same defect-class pattern as review-change's commit 29b52c63, but explicitly marks it as ASSUMPTION-UNVERIFIED because git cat-file fails. The SPEC states 'Known pre-existing issues: none recorded', but this unverified dependency on a non-existent commit object is a pre-existing integrity issue in the unit's own evidence.\",\n    \"severity\": \"med\",\n    \"axis\": \"spec-drift\"\n  },\n  {\n    \"file\": \"docs/fix/258-harden-needs-input-contracts/SPEC.md\",\n    \"line\": 185,\n    \"title\": \"Obligation O4 missing from Obligations table\",\n    \"detail\": \"The Progress log at line 206 states 'O1–O6 minus O4 folded into O1–O3', implying O4 was removed. However, the Obligations table (lines 185-204) only lists O1, O2, O3, O5, O6. O4 is completely absent, creating a gap in the obligation ledger. The validator for O4 is not present, and no other obligation references it.\",\n    \"severity\": \"med\",\n    \"axis\": \"spec-drift\"\n  },\n  {\n    \"file\": \"docs/fix/258-harden-needs-input-contracts/SPEC.md\",\n    \"line\": 206,\n    \"title\": \"Progress log contradicts SPEC structure\",\n    \"detail\": \"The Progress log claims 'O1–O6 minus O4 folded into O1–O3', but the Obligations table has O5 and O6 separate. The numbering is non-sequential (O1, O2, O3, O5, O6) without explanation in the table or notes, violating the implicit contract of sequential obligation IDs in the ledger.\",\n    \"severity\": \"low\",\n    \"axis\": \"spec-drift\"\n  },\n  {\n    \"file\": \"skills/unit-lane/SKILL.md\",\n    \"line\": 47,\n    \"title\": \"Needs-input guard duplicates Turn contract logic\",\n    \"detail\": \"The 'Needs-input guard' section (lines 47-60) repeats the exact same re-ask/halt logic already stated in the Turn contract box (lines 21-24). While not a defect in behavior, it violates the 'no duplicated code' axis by repeating the contract enforcement prose in two places, increasing maintenance risk.\",\n    \"severity\": \"low\",\n    \"axis\": \"code\"\n  },\n  {\n    \"file\": \"skills/execute-phase/SKILL.md\",\n    \"line\": 34,\n    \"title\": \"Needs-input guard duplicates Turn contract logic\",\n    \"detail\": \"The 'Needs-input guard' section (lines 34-45) repeats the exact same re-ask/halt logic already stated in the Turn contract box (lines 34-37). This duplication increases maintenance risk and violates the 'no duplicated code' axis.\",\n    \"severity\": \"low\",\n    \"axis\": \"code\"\n  },\n  {\n    \"file\": \"skills/init-workspace/SKILL.md\",\n    \"line\": 34,\n    \"title\": \"Needs-input guard duplicates Turn contract logic\",\n    \"detail\": \"The 'Needs-input guard' section (lines 34-47) repeats the exact same re-ask/halt logic already stated in the Turn contract box (lines 21-24). This duplication increases maintenance risk and violates the 'no duplicated code' axis.\",\n    \"severity\": \"low\",\n    \"axis\": \"code\"\n  }\n]"
+}

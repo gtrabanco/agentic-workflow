@@ -1,0 +1,80 @@
+{
+ "id": "U2__slice__mirror-bundle__glm5.3-flash__r2",
+ "unit": "U2",
+ "job": "slice__mirror-bundle",
+ "model": "glm5.3-flash",
+ "run": 2,
+ "ms": 48099,
+ "usage": {
+  "completion_tokens": 4194,
+  "prompt_tokens": 25751,
+  "total_tokens": 29945,
+  "completion_tokens_details": {
+   "reasoning_tokens": 3028
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 18432
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "packages/pi-agentic-workflow/skills/fold-findings/SKILL.md",
+   "line": 124,
+   "title": "freeze-batch routes decision-required rows to a replan the router won't emit",
+   "detail": "Freeze-batch triggers on 'any row whose frozen class is `replan-in-unit` or `decision-required`' and says the loop 'routes to `node scripts/unit-route.mjs <unit>`, whose `route: replan` line names the planner'. But CLASSIFY.md defines `decision-required` as 'stop and surface the decision to the user; the unit blocks until decided' — not a replan — so a batch frozen only by a decision-required row has no replan-class row and the router's `route: replan` line need not exist. The documented hand-off fails for half the freeze-batch trigger set.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "packages/pi-agentic-workflow/skills/plan-fix/SKILL.md",
+   "line": 14,
+   "title": "turn contract unsatisfiable on the replan route",
+   "detail": "The turn contract unconditionally requires 'The fix SPEC is committed on its `fix/<n>-<topic>` branch', 'Both ledgers are frozen in the SPEC, `stage: plan` readiness printed `READY-FOR-REVIEW`', and 'never straight to `/execute-phase`'. But new step 7 says on `route: replan` the skill appends phases 'to the unit's existing SPEC ledger on the same branch instead of a new fix SPEC' — no new fix SPEC, no new frozen ledgers, and the hand-off per replan-findings is `/review-plan`, not the fix-SPEC hand-off. A replan-route turn can never tick the contract boxes, so by the skill's own rule ('Any unchecked box means the turn is not done') the turn can never end.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "packages/pi-agentic-workflow/skills/plan-fix/SKILL.md",
+   "line": 110,
+   "title": "replan check ordered after drafting, contradicting its own reference",
+   "detail": "SKILL.md progressive loading places the router check as item 7, after items covering drafting and the hand-off. PLANNING_PROCESS.md says 'run `node scripts/unit-route.mjs <unit>` first … before ingest … do not draft a new fix SPEC'. Following SKILL.md's order, the new fix SPEC is already drafted and committed before the replan contract loads — exactly the outcome PLANNING_PROCESS forbids.",
+   "severity": "med",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "packages/pi-agentic-workflow/skills/plan-feature/SKILL.md",
+   "line": 17,
+   "title": "turn contract requires gates the replan exemption skips",
+   "detail": "Turn contract box 1-2 require unconditionally: 'The redirect gate ran FIRST … undesigned input → STOP' and 'Then the Product-review gate ran: no current `spec-review-pass` receipt … → STOP'. ROUTING.md's new exemption says on `route: replan` 'skip the STOP and load the replan contract', and SKILL.md item 4 says the replan contract 'owns the exemption'. On the replan route the contract boxes and the exemption cannot both hold; the docs never state which contract boxes are waived.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "packages/pi-agentic-workflow/skills/workflow-status/references/SENSOR_SIGNALS.md",
+   "line": 74,
+   "title": "sensor bypasses the router it declares the decision owner",
+   "detail": "The new signal emits `{command: \"/plan-feature <unit>\" | \"/plan-fix <issue>\" …}` directly from the sensor's own ledger read, while the same entry states 'the same class→destination decision `scripts/unit-route.mjs` owns'. Every other replan path in this change (fold-findings, CLASSIFY, triage-issue, review-change) mandates running the router first; the sensor's suggested command skips it, so the driver acts on a duplicated, non-single-sourced decision the material says the router owns.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "packages/pi-agentic-workflow/skills/fold-findings/SKILL.md",
+   "line": 100,
+   "title": "per-finding REPLAN line still points straight to /execute-phase",
+   "detail": "The fixed output contract defines `REPLAN <proposed phase(s) → /execute-phase>`, but the same change re-routes replan through the router and a mandatory fresh `/review-plan` before execution (FOLD_PROCESS step 9: 'After the user confirms and a fresh `/review-plan <unit>` passes, `/execute-phase <unit>` completes them'). The printed finding line directs the user to execute unreviewed phases, contradicting the new gate.",
+   "severity": "med",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "packages/pi-agentic-workflow/skills/replan-findings/references/PHASE_APPEND.md",
+   "line": 20,
+   "title": "append numbering contradicts placement rule",
+   "detail": "'The ledger's own numbering continues: `P9`, `P10`, … after the highest phase already present' combined with 'insert the new phase(s) **before** [the final Hardening & PR phase]' yields a ledger where P9 sits before P5 in text, while the same file asserts 'the ledger's phase order is the execution order'. Phase numbers then do not match execution order, and `execute-phase <unit> P<n>` style addressing (used by triage-issue/fold-findings) becomes ambiguous.",
+   "severity": "low",
+   "axis": "code"
+  }
+ ],
+ "raw": "[\n  {\"file\":\"packages/pi-agentic-workflow/skills/fold-findings/SKILL.md\",\"line\":124,\"title\":\"freeze-batch routes decision-required rows to a replan the router won't emit\",\"detail\":\"Freeze-batch triggers on 'any row whose frozen class is `replan-in-unit` or `decision-required`' and says the loop 'routes to `node scripts/unit-route.mjs <unit>`, whose `route: replan` line names the planner'. But CLASSIFY.md defines `decision-required` as 'stop and surface the decision to the user; the unit blocks until decided' — not a replan — so a batch frozen only by a decision-required row has no replan-class row and the router's `route: replan` line need not exist. The documented hand-off fails for half the freeze-batch trigger set.\",\"severity\":\"med\",\"axis\":\"workflow\"},\n  {\"file\":\"packages/pi-agentic-workflow/skills/plan-fix/SKILL.md\",\"line\":14,\"title\":\"turn contract unsatisfiable on the replan route\",\"detail\":\"The turn contract unconditionally requires 'The fix SPEC is committed on its `fix/<n>-<topic>` branch', 'Both ledgers are frozen in the SPEC, `stage: plan` readiness printed `READY-FOR-REVIEW`', and 'never straight to `/execute-phase`'. But new step 7 says on `route: replan` the skill appends phases 'to the unit's existing SPEC ledger on the same branch instead of a new fix SPEC' — no new fix SPEC, no new frozen ledgers, and the hand-off per replan-findings is `/review-plan`, not the fix-SPEC hand-off. A replan-route turn can never tick the contract boxes, so by the skill's own rule ('Any unchecked box means the turn is not done') the turn can never end.\",\"severity\":\"med\",\"axis\":\"workflow\"},\n  {\"file\":\"packages/pi-agentic-workflow/skills/plan-fix/SKILL.md\",\"line\":110,\"title\":\"replan check ordered after drafting, contradicting its own reference\",\"detail\":\"SKILL.md progressive loading places the router check as item 7, after items covering drafting and the hand-off. PLANNING_PROCESS.md says 'run `node scripts/unit-route.mjs <unit>` first … before ingest … do not draft a new fix SPEC'. Following SKILL.md's order, the new fix SPEC is already drafted and committed before the replan contract loads — exactly the outcome PLANNING_PROCESS forbids.\",\"severity\":\"med\",\"axis\":\"usage-docs\"},\n  {\"file\":\"packages/pi-agentic-workflow/skills/plan-feature/SKILL.md\",\"line\":17,\"title\":\"turn contract requires gates the replan exemption skips\",\"detail\":\"Turn contract box 1-2 require unconditionally: 'The redirect gate ran FIRST … undesigned input → STOP' and 'Then the Product-review gate ran: no current `spec-review-pass` receipt … → STOP'. ROUTING.md's new exemption says on `route: replan` 'skip the STOP and load the replan contract', and SKILL.md item 4 says the replan contract 'owns the exemption'. On the replan route the contract boxes and the exemption cannot both hold; the docs never state which contract boxes are waived.\",\"severity\":\"med\",\"axis\":\"workflow\"},\n  {\"file\":\"packages/pi-agentic-workflow/skills/workflow-status/references/SENSOR_SIGNALS.md\",\"line\":74,\"title\":\"sensor bypasses the router it declares the decision owner\",\"detail\":\"The new signal emits `{command: \\\"/plan-feature <unit>\\\" | \\\"/plan-fix <issue>\\\" …}` directly from the sensor's own ledger read, while the same entry states 'the same class→destination decision `scripts/unit-route.mjs` owns'. Every other replan path in this change (fold-findings, CLASSIFY, triage-issue, review-change) mandates running the router first; the sensor's suggested command skips it, so the driver acts on a duplicated, non-single-sourced decision the material says the router owns.\",\"severity\":\"med\",\"axis\":\"workflow\"},\n  {\"file\":\"packages/pi-agentic-workflow/skills/fold-findings/SKILL.md\",\"line\":100,\"title\":\"per-finding REPLAN line still points straight to /execute-phase\",\"detail\":\"The fixed output contract defines `REPLAN <proposed phase(s) → /execute-phase>`, but the same change re-routes replan through the router and a mandatory fresh `/review-plan` before execution (FOLD_PROCESS step 9: 'After the user confirms and a fresh `/review-plan <unit>` passes, `/execute-phase <unit>` completes them'). The printed finding line directs the user to execute unreviewed phases, contradicting the new gate.\",\"severity\":\"med\",\"axis\":\"usage-docs\"},\n  {\"file\":\"packages/pi-agentic-workflow/skills/replan-findings/references/PHASE_APPEND.md\",\"line\":20,\"title\":\"append numbering contradicts placement rule\",\"detail\":\"'The ledger's own numbering continues: `P9`, `P10`, … after the highest phase already present' combined with 'insert the new phase(s) **before** [the final Hardening & PR phase]' yields a ledger where P9 sits before P5 in text, while the same file asserts 'the ledger's phase order is the execution order'. Phase numbers then do not match execution order, and `execute-phase <unit> P<n>` style addressing (used by triage-issue/fold-findings) becomes ambiguous.\",\"severity\":\"low\",\"axis\":\"code\"}\n]"
+}

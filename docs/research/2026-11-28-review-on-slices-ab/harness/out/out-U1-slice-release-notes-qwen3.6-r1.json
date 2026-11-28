@@ -1,0 +1,40 @@
+{
+ "id": "U1__slice__release-notes__qwen3.6__r1",
+ "unit": "U1",
+ "job": "slice__release-notes",
+ "model": "qwen3.6",
+ "run": 1,
+ "ms": 2949,
+ "usage": {
+  "completion_tokens": 414,
+  "prompt_tokens": 6076,
+  "total_tokens": 6490,
+  "completion_tokens_details": {
+   "reasoning_tokens": 0
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "CHANGELOG.md",
+   "line": 699,
+   "title": "Trailing pipe in table cell breaks markdown table parsing",
+   "detail": "The row for `init-workspace` 3.3.0 contains a trailing pipe character `|` at the end of the 'What changed' column content: `...always exit 0) install only after an explicit yes; without consent nothing is installed and the residual is recorded. The entry point still builds its index on first query — the hooks are only a freshness fast path. |`. This extra pipe likely causes the markdown table to render incorrectly or fail to parse, as it introduces an extra column or malformed cell structure relative to the header.",
+   "severity": "med",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "CHANGELOG.md",
+   "line": 99,
+   "title": "CHANGELOG entry claims 'No package code change' but unit is 'harden-needs-input-contracts'",
+   "detail": "The `@gtrabanco/pi-agentic-workflow` 0.22.0 entry states: 'No package code change — the bump exists because the shipped skill content changed'. However, the unit title is 'fix/258-harden-needs-input-contracts' and the description says 'adds a guard that stops execution when a required interactive input is missing'. A guard that stops execution is a behavioral change in the skill content (logic), not just a documentation/content update. If the skills are bundled into the package, this claim is misleading or factually incorrect regarding the nature of the change (logic vs doc). Even if strictly 'content', the phrasing 'No package code change' is ambiguous and potentially contradictory if the skills are considered code.",
+   "severity": "low",
+   "axis": "brand"
+  }
+ ],
+ "raw": "[\n  {\n    \"file\": \"CHANGELOG.md\",\n    \"line\": 699,\n    \"title\": \"Trailing pipe in table cell breaks markdown table parsing\",\n    \"detail\": \"The row for `init-workspace` 3.3.0 contains a trailing pipe character `|` at the end of the 'What changed' column content: `...always exit 0) install only after an explicit yes; without consent nothing is installed and the residual is recorded. The entry point still builds its index on first query — the hooks are only a freshness fast path. |`. This extra pipe likely causes the markdown table to render incorrectly or fail to parse, as it introduces an extra column or malformed cell structure relative to the header.\",\n    \"severity\": \"med\",\n    \"axis\": \"usage-docs\"\n  },\n  {\n    \"file\": \"CHANGELOG.md\",\n    \"line\": 99,\n    \"title\": \"CHANGELOG entry claims 'No package code change' but unit is 'harden-needs-input-contracts'\",\n    \"detail\": \"The `@gtrabanco/pi-agentic-workflow` 0.22.0 entry states: 'No package code change — the bump exists because the shipped skill content changed'. However, the unit title is 'fix/258-harden-needs-input-contracts' and the description says 'adds a guard that stops execution when a required interactive input is missing'. A guard that stops execution is a behavioral change in the skill content (logic), not just a documentation/content update. If the skills are bundled into the package, this claim is misleading or factually incorrect regarding the nature of the change (logic vs doc). Even if strictly 'content', the phrasing 'No package code change' is ambiguous and potentially contradictory if the skills are considered code.\",\n    \"severity\": \"low\",\n    \"axis\": \"brand\"\n  }\n]"
+}

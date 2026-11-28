@@ -1,0 +1,88 @@
+{
+ "id": "U2__slice__mirror-bundle__glm5.3-flash__r1",
+ "unit": "U2",
+ "job": "slice__mirror-bundle",
+ "model": "glm5.3-flash",
+ "run": 1,
+ "ms": 58391,
+ "usage": {
+  "completion_tokens": 4320,
+  "prompt_tokens": 25751,
+  "total_tokens": 30071,
+  "completion_tokens_details": {
+   "reasoning_tokens": 3026
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "packages/pi-agentic-workflow/skills/plan-feature/SKILL.md",
+   "line": null,
+   "title": "Turn contract still requires Product-review gate on replan route",
+   "detail": "The turn contract box reads unconditionally: \"Then the Product-review gate ran: no current `spec-review-pass` receipt bound to the recomputed snapshot → STOP with its fixed block\". ROUTING.md's new replan exemption says a `route: replan` line means \"skip the STOP and load the replan contract\". A unit with an open replan finding has by definition just had its plan invalidated, so no current spec-review-pass receipt exists — the turn contract would force the STOP the exemption forbids. The contract was not updated to carve out the replan route.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "packages/pi-agentic-workflow/skills/plan-feature/SKILL.md",
+   "line": null,
+   "title": "\"Both resources\" stale after allowlist grew to four",
+   "detail": "The same hunk rewrites the progressive-loading list from two entries to four (adding planning-preflight consumption and the replan contract), yet the following unchanged sentence still reads \"Do not load planning gates after a redirect stop. Both resources are normative, one hop from this file\" — 'Both' no longer matches the list it governs.",
+   "severity": "low",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "packages/pi-agentic-workflow/skills/plan-feature/references/ROUTING.md",
+   "line": null,
+   "title": "Replan exemption contradicts the done-state 'never a replan' guard",
+   "detail": "The exemption says \"A `route: replan` line means ... skip the STOP\" with no state restriction, but step 4 of the same file states for roadmap status `done`: \"replanning stays forbidden — the feature is fully built\" and its STOP block ends \"no PR is open → the row is mislabeled or execution stopped → /execute-phase <NN> (never a replan)\". A done unit with an open finding whose frozen route is plan-owner would print `route: replan` and, per the exemption, bypass the STOP the file declares absolute.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "packages/pi-agentic-workflow/skills/plan-fix/SKILL.md",
+   "line": null,
+   "title": "Replan contract loaded as step 7, after drafting and hand-off",
+   "detail": "Allowlist item 7 (\"Only when `node scripts/unit-route.mjs <N>` prints `route: replan` ... load the replan contract ... instead of a new fix SPEC\") is numbered after item 6, the review-plan hand-off step. PLANNING_PROCESS.md mandates the opposite order: \"run `node scripts/unit-route.mjs <unit>` first ... do not draft a new fix SPEC\" — before ingest (step 1). Following the SKILL's numbered order, the new fix SPEC and ledgers are already drafted before the replan contract loads.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "packages/pi-agentic-workflow/skills/fold-findings/SKILL.md",
+   "line": null,
+   "title": "Freeze-batch routes decision-required rows to a replan planner",
+   "detail": "The freeze-batch condition is \"any row whose frozen class is `replan-in-unit` or `decision-required`\" and the new Next routes to `node scripts/unit-route.mjs <unit>` \"whose `route: replan` line names the planner that re-cuts the plan\". But CLASSIFY.md defines `decision-required` as \"a new product/architecture decision is unavoidable. Stop and surface it; the unit blocks until the user decides\" — no plan is re-cut. For a batch containing only a decision-required row, the docs promise the router prints `route: replan` and names a planner, contradicting the class's own blocking contract.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "packages/pi-agentic-workflow/skills/triage-issue/references/REVIEW_FINDING_PROCESS.md",
+   "line": null,
+   "title": "Fixed verdict block not updated for the router step",
+   "detail": "The prose now says a `replan-in-unit` correction means \"Run `node scripts/unit-route.mjs <unit>`\", but the fixed per-finding output block still reads \"Action taken: <current-unit fold/phase | plan-feature | plan-fix | user decision>\" — the router run (the newly mandated action) has no slot in the fixed format, and the block still names the planners directly as actions.",
+   "severity": "low",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "packages/pi-agentic-workflow/skills/workflow-status/references/SENSOR_SIGNALS.md",
+   "line": null,
+   "title": "Sensor duplicates the router's class→destination decision",
+   "detail": "Step 13 is declared the \"single-sourced trigger surface\", and the new entry itself admits \"the same class→destination decision `scripts/unit-route.mjs` owns\" — yet it hardcodes `{command: \"/plan-feature <unit>\" | \"/plan-fix <issue>\", ...}` in the sensor instead of delegating to the router, re-deriving in a second place the very decision unit 224 centralizes. It also emits the planner directly, so the `route: replan` gate the rest of the unit makes mandatory is never run on this path.",
+   "severity": "low",
+   "axis": "workflow"
+  },
+  {
+   "file": "packages/pi-agentic-workflow/skills/review-change/references/PERSIST_AND_DECIDE.md",
+   "line": null,
+   "title": "Closing block asserts the router prints replan unconditionally",
+   "detail": "The rewritten line: \"any finding routed replan-in-unit or owned by plan? → `node scripts/unit-route.mjs <unit>` prints `route: replan` and names the planner\". It states the router's output as a guaranteed fact for any plan-owned finding, but the router's route is derived from the ledger's frozen rows; a plan-owned finding that is not carried as a `replan-in-unit` row (e.g. persisted before this feature, or classified otherwise) need not produce `route: replan`, and the instruction gives no fallback for any other router output.",
+   "severity": "low",
+   "axis": "usage-docs"
+  }
+ ],
+ "raw": "[{\"file\":\"packages/pi-agentic-workflow/skills/plan-feature/SKILL.md\",\"line\":null,\"title\":\"Turn contract still requires Product-review gate on replan route\",\"detail\":\"The turn contract box reads unconditionally: \\\"Then the Product-review gate ran: no current `spec-review-pass` receipt bound to the recomputed snapshot → STOP with its fixed block\\\". ROUTING.md's new replan exemption says a `route: replan` line means \\\"skip the STOP and load the replan contract\\\". A unit with an open replan finding has by definition just had its plan invalidated, so no current spec-review-pass receipt exists — the turn contract would force the STOP the exemption forbids. The contract was not updated to carve out the replan route.\",\"severity\":\"med\",\"axis\":\"workflow\"},{\"file\":\"packages/pi-agentic-workflow/skills/plan-feature/SKILL.md\",\"line\":null,\"title\":\"\\\"Both resources\\\" stale after allowlist grew to four\",\"detail\":\"The same hunk rewrites the progressive-loading list from two entries to four (adding planning-preflight consumption and the replan contract), yet the following unchanged sentence still reads \\\"Do not load planning gates after a redirect stop. Both resources are normative, one hop from this file\\\" — 'Both' no longer matches the list it governs.\",\"severity\":\"low\",\"axis\":\"usage-docs\"},{\"file\":\"packages/pi-agentic-workflow/skills/plan-feature/references/ROUTING.md\",\"line\":null,\"title\":\"Replan exemption contradicts the done-state 'never a replan' guard\",\"detail\":\"The exemption says \\\"A `route: replan` line means ... skip the STOP\\\" with no state restriction, but step 4 of the same file states for roadmap status `done`: \\\"replanning stays forbidden — the feature is fully built\\\" and its STOP block ends \\\"no PR is open → the row is mislabeled or execution stopped → /execute-phase <NN> (never a replan)\\\". A done unit with an open finding whose frozen route is plan-owner would print `route: replan` and, per the exemption, bypass the STOP the file declares absolute.\",\"severity\":\"med\",\"axis\":\"workflow\"},{\"file\":\"packages/pi-agentic-workflow/skills/plan-fix/SKILL.md\",\"line\":null,\"title\":\"Replan contract loaded as step 7, after drafting and hand-off\",\"detail\":\"Allowlist item 7 (\\\"Only when `node scripts/unit-route.mjs <N>` prints `route: replan` ... load the replan contract ... instead of a new fix SPEC\\\") is numbered after item 6, the review-plan hand-off step. PLANNING_PROCESS.md mandates the opposite order: \\\"run `node scripts/unit-route.mjs <unit>` first ... do not draft a new fix SPEC\\\" — before ingest (step 1). Following the SKILL's numbered order, the new fix SPEC and ledgers are already drafted before the replan contract loads.\",\"severity\":\"med\",\"axis\":\"workflow\"},{\"file\":\"packages/pi-agentic-workflow/skills/fold-findings/SKILL.md\",\"line\":null,\"title\":\"Freeze-batch routes decision-required rows to a replan planner\",\"detail\":\"The freeze-batch condition is \\\"any row whose frozen class is `replan-in-unit` or `decision-required`\\\" and the new Next routes to `node scripts/unit-route.mjs <unit>` \\\"whose `route: replan` line names the planner that re-cuts the plan\\\". But CLASSIFY.md defines `decision-required` as \\\"a new product/architecture decision is unavoidable. Stop and surface it; the unit blocks until the user decides\\\" — no plan is re-cut. For a batch containing only a decision-required row, the docs promise the router prints `route: replan` and names a planner, contradicting the class's own blocking contract.\",\"severity\":\"med\",\"axis\":\"workflow\"},{\"file\":\"packages/pi-agentic-workflow/skills/triage-issue/references/REVIEW_FINDING_PROCESS.md\",\"line\":null,\"title\":\"Fixed verdict block not updated for the router step\",\"detail\":\"The prose now says a `replan-in-unit` correction means \\\"Run `node scripts/unit-route.mjs <unit>`\\\", but the fixed per-finding output block still reads \\\"Action taken: <current-unit fold/phase | plan-feature | plan-fix | user decision>\\\" — the router run (the newly mandated action) has no slot in the fixed format, and the block still names the planners directly as actions.\",\"severity\":\"low\",\"axis\":\"usage-docs\"},{\"file\":\"packages/pi-agentic-workflow/skills/workflow-status/references/SENSOR_SIGNALS.md\",\"line\":null,\"title\":\"Sensor duplicates the router's class→destination decision\",\"detail\":\"Step 13 is declared the \\\"single-sourced trigger surface\\\", and the new entry itself admits \\\"the same class→destination decision `scripts/unit-route.mjs` owns\\\" — yet it hardcodes `{command: \\\"/plan-feature <unit>\\\" | \\\"/plan-fix <issue>\\\", ...}` in the sensor instead of delegating to the router, re-deriving in a second place the very decision unit 224 centralizes. It also emits the planner directly, so the `route: replan` gate the rest of the unit makes mandatory is never run on this path.\",\"severity\":\"low\",\"axis\":\"workflow\"},{\"file\":\"packages/pi-agentic-workflow/skills/review-change/references/PERSIST_AND_DECIDE.md\",\"line\":null,\"title\":\"Closing block asserts the router prints replan unconditionally\",\"detail\":\"The rewritten line: \\\"any finding routed replan-in-unit or owned by plan? → `node scripts/unit-route.mjs <unit>` prints `route: replan` and names the planner\\\". It states the router's output as a guaranteed fact for any plan-owned finding, but the router's route is derived from the ledger's frozen rows; a plan-owned finding that is not carried as a `replan-in-unit` row (e.g. persisted before this feature, or classified otherwise) need not produce `route: replan`, and the instruction gives no fallback for any other router output.\",\"severity\":\"low\",\"axis\":\"usage-docs\"}]"
+}

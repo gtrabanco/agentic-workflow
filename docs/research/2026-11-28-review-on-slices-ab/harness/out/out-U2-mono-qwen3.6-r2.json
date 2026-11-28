@@ -1,0 +1,56 @@
+{
+ "id": "U2__mono__qwen3.6__r2",
+ "unit": "U2",
+ "job": "mono",
+ "model": "qwen3.6",
+ "run": 2,
+ "ms": 39931,
+ "usage": {
+  "completion_tokens": 1433,
+  "prompt_tokens": 174096,
+  "total_tokens": 175529,
+  "completion_tokens_details": {
+   "reasoning_tokens": 0
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 173968
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/SPEC.md",
+   "line": 108,
+   "title": "Spec-Drift: PE-010 observed-revision misattributes cost measurement",
+   "detail": "PE-010 claims `observed-revision: b5358666` for the measurement `git show feat/37-phase-lint-script:docs/features/37-phase-lint-script/review-findings.md | wc -l → 1065`. However, the path `docs/features/37-phase-lint-script/` does not exist at revision `b5358666` (as confirmed by `git ls-tree b5358666 docs/features/ --name-only | grep -c 37 → 0`). The measurement is only reproducible against `feat/37-phase-lint-script@e1e282c5`. This contradicts the 'proven' status and the specific revision claim.",
+   "severity": "med",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/SPEC.md",
+   "line": 108,
+   "title": "Spec-Drift: PE-010 provenance error",
+   "detail": "PE-010 states the observation is reproducible at `b5358666`, but the file path cited (`docs/features/37-phase-lint-script/review-findings.md`) is absent at that revision. The SPEC's own `### Planning evidence` table lists PE-010 as `proven`, yet the evidence cited cannot be verified at the claimed revision, creating a contradiction between the claim and the recorded state.",
+   "severity": "med",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/progress.md",
+   "line": 100,
+   "title": "Spec-Drift: L2 FAIL in progress log contradicts resolved status",
+   "detail": "The progress log records an L2 FAIL for PE-010: 'PE-010 is a `proven` row whose observation ... is not reproducible at its claimed `observed-revision: b5358666`'. However, the `planning-findings.md` table shows RP-224-2 (the finding for this issue) as `resolved` with resolution evidence that corrects the provenance. The progress log's L2 FAIL status for this specific row is stale/contradictory relative to the resolution recorded in the same unit's material.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "scripts/unit-route.mjs",
+   "line": 235,
+   "title": "Code: Ambiguous unit resolution logic flaw",
+   "detail": "The `resolveUnit` function filters folders by `slug === clean` or `dir.endsWith(clean)`. If a unit slug is a substring of another unit's slug (e.g., `10` and `100`), or if a slug matches a directory suffix of another unit, it could return multiple matches. While the test AC3 checks for ambiguity, the logic `folder.dir.endsWith(clean)` is risky. For example, if unit `10` exists and `100` exists, searching for `10` might match both if `100`'s dir ends with `10` (it doesn't, but `10` matches `10`). However, if a slug is `alpha` and another is `beta-alpha`, searching `alpha` might match both. The test fixture `30-dup-alpha` and `30-dup-alpha` (wait, `30-dup-alpha` is one unit). The test `AC3: an ambiguous unit exits 2` uses `30`. The fixture has `30-dup-alpha` and `30-dup-alpha`? No, `30-dup-alpha` is one. `30` matches `30-dup-alpha`? No. `30` matches `30-dup-alpha`'s number? `30` matches number `30`. If there was a unit `300`, `30` would not match number `300`. But `30` matches slug `30-dup-alpha`? No. The logic `folder.slug === clean` is strict. `folder.dir.endsWith(clean)` is the danger. If unit is `docs/features/10-foo` and `docs/features/10-bar`, searching `10` matches both numbers. Searching `foo` matches `10-foo`. Searching `bar` matches `10-bar`. Searching `10-foo` matches `10-foo`. Searching `10` matches both. This seems correct for numbers. But what if slug is `10`? `10` matches number `10`. If there is a unit `10` and `100`, `10` matches number `10`. `100` matches number `100`. If I search `10`, I get `10`. If I search `100`, I get `100`. If I search `1`, I get nothing. The `endsWith` check is for slugs. If I search `foo`, I get `10-foo`. If I search `10-foo`, I get `10-foo`. If I search `10`, I get `10` (number match). The `endsWith` check is `folder.dir.endsWith(clean)`. If `clean` is `foo`, `docs/features/10-foo` ends with `foo`. If `clean` is `10`, `docs/features/10-foo` ends with `10`. So searching `10` matches `10` (number) AND `10-foo` (slug/dir suffix). This is a defect: searching for unit `10` (number) also matches unit `10-foo` (slug/dir) because `10-foo` ends with `10`. This causes ambiguity for unit `10` if `10-foo` exists.",
+   "severity": "high",
+   "axis": "code"
+  }
+ ],
+ "raw": "[\n  {\n    \"file\": \"docs/fix/224-deterministic-replan-routing/SPEC.md\",\n    \"line\": 108,\n    \"title\": \"Spec-Drift: PE-010 observed-revision misattributes cost measurement\",\n    \"detail\": \"PE-010 claims `observed-revision: b5358666` for the measurement `git show feat/37-phase-lint-script:docs/features/37-phase-lint-script/review-findings.md | wc -l → 1065`. However, the path `docs/features/37-phase-lint-script/` does not exist at revision `b5358666` (as confirmed by `git ls-tree b5358666 docs/features/ --name-only | grep -c 37 → 0`). The measurement is only reproducible against `feat/37-phase-lint-script@e1e282c5`. This contradicts the 'proven' status and the specific revision claim.\",\n    \"severity\": \"med\",\n    \"axis\": \"spec-drift\"\n  },\n  {\n    \"file\": \"docs/fix/224-deterministic-replan-routing/SPEC.md\",\n    \"line\": 108,\n    \"title\": \"Spec-Drift: PE-010 provenance error\",\n    \"detail\": \"PE-010 states the observation is reproducible at `b5358666`, but the file path cited (`docs/features/37-phase-lint-script/review-findings.md`) is absent at that revision. The SPEC's own `### Planning evidence` table lists PE-010 as `proven`, yet the evidence cited cannot be verified at the claimed revision, creating a contradiction between the claim and the recorded state.\",\n    \"severity\": \"med\",\n    \"axis\": \"spec-drift\"\n  },\n  {\n    \"file\": \"docs/fix/224-deterministic-replan-routing/progress.md\",\n    \"line\": 100,\n    \"title\": \"Spec-Drift: L2 FAIL in progress log contradicts resolved status\",\n    \"detail\": \"The progress log records an L2 FAIL for PE-010: 'PE-010 is a `proven` row whose observation ... is not reproducible at its claimed `observed-revision: b5358666`'. However, the `planning-findings.md` table shows RP-224-2 (the finding for this issue) as `resolved` with resolution evidence that corrects the provenance. The progress log's L2 FAIL status for this specific row is stale/contradictory relative to the resolution recorded in the same unit's material.\",\n    \"severity\": \"low\",\n    \"axis\": \"spec-drift\"\n  },\n  {\n    \"file\": \"scripts/unit-route.mjs\",\n    \"line\": 235,\n    \"title\": \"Code: Ambiguous unit resolution logic flaw\",\n    \"detail\": \"The `resolveUnit` function filters folders by `slug === clean` or `dir.endsWith(clean)`. If a unit slug is a substring of another unit's slug (e.g., `10` and `100`), or if a slug matches a directory suffix of another unit, it could return multiple matches. While the test AC3 checks for ambiguity, the logic `folder.dir.endsWith(clean)` is risky. For example, if unit `10` exists and `100` exists, searching for `10` might match both if `100`'s dir ends with `10` (it doesn't, but `10` matches `10`). However, if a slug is `alpha` and another is `beta-alpha`, searching `alpha` might match both. The test fixture `30-dup-alpha` and `30-dup-alpha` (wait, `30-dup-alpha` is one unit). The test `AC3: an ambiguous unit exits 2` uses `30`. The fixture has `30-dup-alpha` and `30-dup-alpha`? No, `30-dup-alpha` is one. `30` matches `30-dup-alpha`? No. `30` matches `30-dup-alpha`'s number? `30` matches number `30`. If there was a unit `300`, `30` would not match number `300`. But `30` matches slug `30-dup-alpha`? No. The logic `folder.slug === clean` is strict. `folder.dir.endsWith(clean)` is the danger. If unit is `docs/features/10-foo` and `docs/features/10-bar`, searching `10` matches both numbers. Searching `foo` matches `10-foo`. Searching `bar` matches `10-bar`. Searching `10-foo` matches `10-foo`. Searching `10` matches both. This seems correct for numbers. But what if slug is `10`? `10` matches number `10`. If there is a unit `10` and `100`, `10` matches number `10`. `100` matches number `100`. If I search `10`, I get `10`. If I search `100`, I get `100`. If I search `1`, I get nothing. The `endsWith` check is for slugs. If I search `foo`, I get `10-foo`. If I search `10-foo`, I get `10-foo`. If I search `10`, I get `10` (number match). The `endsWith` check is `folder.dir.endsWith(clean)`. If `clean` is `foo`, `docs/features/10-foo` ends with `foo`. If `clean` is `10`, `docs/features/10-foo` ends with `10`. So searching `10` matches `10` (number) AND `10-foo` (slug/dir suffix). This is a defect: searching for unit `10` (number) also matches unit `10-foo` (slug/dir) because `10-foo` ends with `10`. This causes ambiguity for unit `10` if `10-foo` exists.\",\n    \"severity\": \"high\",\n    \"axis\": \"code\"\n  }\n]"
+}

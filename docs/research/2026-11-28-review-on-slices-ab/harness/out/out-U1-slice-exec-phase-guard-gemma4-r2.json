@@ -1,0 +1,32 @@
+{
+ "id": "U1__slice__exec-phase-guard__gemma4__r2",
+ "unit": "U1",
+ "job": "slice__exec-phase-guard",
+ "model": "gemma4",
+ "run": 2,
+ "ms": 2938,
+ "usage": {
+  "completion_tokens": 195,
+  "prompt_tokens": 3691,
+  "total_tokens": 3886,
+  "completion_tokens_details": {
+   "reasoning_tokens": 0
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "skills/execute-phase/SKILL.md",
+   "line": 37,
+   "title": "Inconsistent guard behavior",
+   "detail": "The 'Turn contract' section states: 'Any blank required input was re-asked once; if still blank the skill emits `→ Next: execute-phase requires manual input — cannot proceed` and stops.' However, the 'Needs-input guard' section (line 68) defines the required input `<NN-slug>` and says: 'If blank or missing: re-ask once... If still blank, emit `→ Next: execute-phase requires manual input — cannot proceed` and stop.' This creates a conflict in the 'Turn contract' checklist which implies the guard is a single check, whereas the guard section defines a specific multi-turn retry logic for a specific parameter that isn't explicitly listed as a 'turn contract' item.",
+   "severity": "low",
+   "axis": "spec-drift"
+  }
+ ],
+ "raw": "[{\"file\":\"skills/execute-phase/SKILL.md\",\"line\":37,\"title\":\"Inconsistent guard behavior\",\"detail\":\"The 'Turn contract' section states: 'Any blank required input was re-asked once; if still blank the skill emits `→ Next: execute-phase requires manual input — cannot proceed` and stops.' However, the 'Needs-input guard' section (line 68) defines the required input `<NN-slug>` and says: 'If blank or missing: re-ask once... If still blank, emit `→ Next: execute-phase requires manual input — cannot proceed` and stop.' This creates a conflict in the 'Turn contract' checklist which implies the guard is a single check, whereas the guard section defines a specific multi-turn retry logic for a specific parameter that isn't explicitly listed as a 'turn contract' item.\",\"severity\":\"low\",\"axis\":\"spec-drift\"}]"
+}

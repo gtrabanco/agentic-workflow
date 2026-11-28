@@ -1,0 +1,56 @@
+{
+ "id": "U2__slice__tutorial-crossrefs__gemma4__r2",
+ "unit": "U2",
+ "job": "slice__tutorial-crossrefs",
+ "model": "gemma4",
+ "run": 2,
+ "ms": 6197,
+ "usage": {
+  "completion_tokens": 404,
+  "prompt_tokens": 26768,
+  "total_tokens": 27172,
+  "completion_tokens_details": {
+   "reasoning_tokens": 0
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "docs/workflow/FEATURE_WORKFLOW.es.md",
+   "line": 316,
+   "title": "Inconsistent replan-in-unit description",
+   "detail": "The Spanish version claims `replan-in-unit` executes `node scripts/unit-route.mjs <unit>`, but the English version (FEATURE_WORKFLOW.md) does not mention the script, creating a documentation mismatch between language versions regarding the mechanism.",
+   "severity": "low",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "docs/workflow/PORTABLE_PROMPT.es.md",
+   "line": 144,
+   "title": "Broken replan-in-unit sentence structure",
+   "detail": "The text `replan-in-unit runs node scripts/unit-route.mjs <unit> so the planner its route: replan line names appends...` is grammatically broken and nonsensical in both English and Spanish, likely due to a failed merge or copy-paste error of the diff.",
+   "severity": "med",
+   "axis": "code"
+  },
+  {
+   "file": "docs/workflow/PORTABLE_PROMPT.md",
+   "line": 138,
+   "title": "Broken replan-in-unit sentence structure",
+   "detail": "The text `replan-in-unit runs node scripts/unit-route.mjs <unit> so the planner its route: replan line names appends...` is grammatically broken and nonsensical, failing to provide a coherent instruction to the agent.",
+   "severity": "med",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "docs/workflow/PORTABLE_PROMPT.es.md",
+   "line": 144,
+   "title": "Broken replan-in-unit sentence structure",
+   "detail": "The text `replan-in-unit runs node scripts/unit-route.mjs <unit> so the planner its route: replan line names appends...` is grammatically broken and nonsensical.",
+   "severity": "med",
+   "axis": "usage-docs"
+  }
+ ],
+ "raw": "[{\"file\":\"docs/workflow/FEATURE_WORKFLOW.es.md\",\"line\":316,\"title\":\"Inconsistent replan-in-unit description\",\"detail\":\"The Spanish version claims `replan-in-unit` executes `node scripts/unit-route.mjs <unit>`, but the English version (FEATURE_WORKFLOW.md) does not mention the script, creating a documentation mismatch between language versions regarding the mechanism.\",\"severity\":\"low\",\"axis\":\"usage-docs\"},{\"file\":\"docs/workflow/PORTABLE_PROMPT.es.md\",\"line\":144,\"title\":\"Broken replan-in-unit sentence structure\",\"detail\":\"The text `replan-in-unit runs node scripts/unit-route.mjs <unit> so the planner its route: replan line names appends...` is grammatically broken and nonsensical in both English and Spanish, likely due to a failed merge or copy-paste error of the diff.\",\"severity\":\"med\",\"axis\":\"code\"},{\"file\":\"docs/workflow/PORTABLE_PROMPT.md\",\"line\":138,\"title\":\"Broken replan-in-unit sentence structure\",\"detail\":\"The text `replan-in-unit runs node scripts/unit-route.mjs <unit> so the planner its route: replan line names appends...` is grammatically broken and nonsensical, failing to provide a coherent instruction to the agent.\",\"severity\":\"med\",\"axis\":\"usage-docs\"},{\"file\":\"docs/workflow/PORTABLE_PROMPT.es.md\",\"line\":144,\"title\":\"Broken replan-in-unit sentence structure\",\"detail\":\"The text `replan-in-unit runs node scripts/unit-route.mjs <unit> so the planner its route: replan line names appends...` is grammatically broken and nonsensical.\",\"severity\":\"med\",\"axis\":\"usage-docs\"}]"
+}

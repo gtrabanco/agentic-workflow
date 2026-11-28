@@ -1,0 +1,56 @@
+{
+ "id": "U2__slice__release-notes__deepseek-v4-flash__r1",
+ "unit": "U2",
+ "job": "slice__release-notes",
+ "model": "deepseek-v4-flash",
+ "run": 1,
+ "ms": 3244,
+ "usage": {
+  "completion_tokens": 853,
+  "prompt_tokens": 12997,
+  "total_tokens": 13850,
+  "completion_tokens_details": {
+   "reasoning_tokens": 0
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "CHANGELOG.md",
+   "line": null,
+   "title": "Malformed table rows: trailing `|---|` appended to new changelog entries",
+   "detail": "Every newly added row in CHANGELOG.md ends with a literal `|---|` glued to the end of the description cell, e.g. `... the bump exists to publish the re-bundle. |---|` and `... The class→destination decision is the router's (`scripts/unit-route.mjs`). |---|`. The same defect appears in all 8 added rows (package 0.10.0, workflow-status 3.5.0, plan-feature 5.2.0, plan-fix 3.2.0, review-change 3.5.1, fold-findings 1.5.0, triage-issue 2.8.0, review-implementation 1.8.0, replan-findings 1.0.0). The rows now have one more cell than the 4-column header, so the rendered table is broken and the changelog's own claim to be 'the source of truth for what changed between each version' is corrupted for exactly the versions this unit ships.",
+   "severity": "med",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "CHANGELOG.es.md",
+   "line": null,
+   "title": "Malformed table rows: trailing `|---|` appended to new changelog entries",
+   "detail": "Same defect in the Spanish changelog: every added row ends with a literal `|---|` inside the description cell, e.g. `... el bump existe para publicar el re-empaquetado. |---|` and `... La decisión clase→destino es del router (`scripts/unit-route.mjs`). |---|`. All 8 added rows (0.10.0, workflow-status 3.5.0, plan-feature 5.2.0, plan-fix 3.2.0, review-change 3.5.1, fold-findings 1.5.0, triage-issue 2.8.0, review-implementation 1.8.0, replan-findings 1.0.0) carry the extra cell, breaking the 4-column table.",
+   "severity": "med",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "CHANGELOG.md",
+   "line": null,
+   "title": "replan-findings row uses `—` for Type, outside the declared bump vocabulary",
+   "detail": "The versioning policy table at the top of the file declares exactly three bump types: `major`, `minor`, `patch`. The new `replan-findings` 1.0.0 row sets Type to `—` (em dash), which is not one of the declared values, while the same row describes a new contract (a minor-class change). The Spanish file has the identical `—` in its `replan-findings` row. This contradicts the file's own stated vocabulary.",
+   "severity": "low",
+   "axis": "workflow"
+  },
+  {
+   "file": "CHANGELOG.md",
+   "line": null,
+   "title": "Package 0.10.0 row claims a re-bundle but omits the new skill from the bundle list ordering / claims 'No package code change' while adding a skill",
+   "detail": "The 0.10.0 row says 'No package code change — the bump exists to publish the re-bundle', yet the same row lists `replan-findings` 1.0.0 as a *new internal* skill being re-bundled. Adding a new skill to the published package is a content change to the package (new files under the bundled skills), so 'No package code change' is at best misleading; the prior re-bundle rows (0.9.1, 0.9.2) did not introduce new skills. The Spanish row repeats the same 'Sin cambios de código del paquete' claim.",
+   "severity": "low",
+   "axis": "brand"
+  }
+ ],
+ "raw": "[{\"file\":\"CHANGELOG.md\",\"line\":null,\"title\":\"Malformed table rows: trailing `|---|` appended to new changelog entries\",\"detail\":\"Every newly added row in CHANGELOG.md ends with a literal `|---|` glued to the end of the description cell, e.g. `... the bump exists to publish the re-bundle. |---|` and `... The class→destination decision is the router's (`scripts/unit-route.mjs`). |---|`. The same defect appears in all 8 added rows (package 0.10.0, workflow-status 3.5.0, plan-feature 5.2.0, plan-fix 3.2.0, review-change 3.5.1, fold-findings 1.5.0, triage-issue 2.8.0, review-implementation 1.8.0, replan-findings 1.0.0). The rows now have one more cell than the 4-column header, so the rendered table is broken and the changelog's own claim to be 'the source of truth for what changed between each version' is corrupted for exactly the versions this unit ships.\",\"severity\":\"med\",\"axis\":\"usage-docs\"},{\"file\":\"CHANGELOG.es.md\",\"line\":null,\"title\":\"Malformed table rows: trailing `|---|` appended to new changelog entries\",\"detail\":\"Same defect in the Spanish changelog: every added row ends with a literal `|---|` inside the description cell, e.g. `... el bump existe para publicar el re-empaquetado. |---|` and `... La decisión clase→destino es del router (`scripts/unit-route.mjs`). |---|`. All 8 added rows (0.10.0, workflow-status 3.5.0, plan-feature 5.2.0, plan-fix 3.2.0, review-change 3.5.1, fold-findings 1.5.0, triage-issue 2.8.0, review-implementation 1.8.0, replan-findings 1.0.0) carry the extra cell, breaking the 4-column table.\",\"severity\":\"med\",\"axis\":\"usage-docs\"},{\"file\":\"CHANGELOG.md\",\"line\":null,\"title\":\"replan-findings row uses `—` for Type, outside the declared bump vocabulary\",\"detail\":\"The versioning policy table at the top of the file declares exactly three bump types: `major`, `minor`, `patch`. The new `replan-findings` 1.0.0 row sets Type to `—` (em dash), which is not one of the declared values, while the same row describes a new contract (a minor-class change). The Spanish file has the identical `—` in its `replan-findings` row. This contradicts the file's own stated vocabulary.\",\"severity\":\"low\",\"axis\":\"workflow\"},{\"file\":\"CHANGELOG.md\",\"line\":null,\"title\":\"Package 0.10.0 row claims a re-bundle but omits the new skill from the bundle list ordering / claims 'No package code change' while adding a skill\",\"detail\":\"The 0.10.0 row says 'No package code change — the bump exists to publish the re-bundle', yet the same row lists `replan-findings` 1.0.0 as a *new internal* skill being re-bundled. Adding a new skill to the published package is a content change to the package (new files under the bundled skills), so 'No package code change' is at best misleading; the prior re-bundle rows (0.9.1, 0.9.2) did not introduce new skills. The Spanish row repeats the same 'Sin cambios de código del paquete' claim.\",\"severity\":\"low\",\"axis\":\"brand\"}]"
+}

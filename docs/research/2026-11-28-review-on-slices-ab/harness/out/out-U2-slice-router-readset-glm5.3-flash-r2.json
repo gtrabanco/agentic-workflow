@@ -1,0 +1,40 @@
+{
+ "id": "U2__slice__router-readset__glm5.3-flash__r2",
+ "unit": "U2",
+ "job": "slice__router-readset",
+ "model": "glm5.3-flash",
+ "run": 2,
+ "ms": 108635,
+ "usage": {
+  "completion_tokens": 1238,
+  "prompt_tokens": 7645,
+  "total_tokens": 8883,
+  "completion_tokens_details": {
+   "reasoning_tokens": 953
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 21,
+   "title": "F92 ledger row swaps class/route columns",
+   "detail": "Every other row puts a class enum in the class column (fix-now, decision-required) and a route in the route column. F92 reads `| F92 | … | code | med | replan-in-unit | regression of F80 — plan owner re-cuts … | no |` — 'replan-in-unit' (a route value) sits in the class column and free prose sits in the route column, so the row is unparseable against the schema declared by the header and all sibling rows.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 15,
+   "title": "F87 marked folded=yes but routed replan-in-unit",
+   "detail": "F87's route is `replan-in-unit: plan owner re-cuts SPEC.md:588 …` yet its folded column is `yes`. In this fixture every folded=yes row (F80, F84, F89) carries a `fold: …` route; a replan-routed finding cannot simultaneously be folded, so the row contradicts the ledger vocabulary the fixture itself establishes.",
+   "severity": "med",
+   "axis": "workflow"
+  }
+ ],
+ "raw": "[{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":21,\"title\":\"F92 ledger row swaps class/route columns\",\"detail\":\"Every other row puts a class enum in the class column (fix-now, decision-required) and a route in the route column. F92 reads `| F92 | … | code | med | replan-in-unit | regression of F80 — plan owner re-cuts … | no |` — 'replan-in-unit' (a route value) sits in the class column and free prose sits in the route column, so the row is unparseable against the schema declared by the header and all sibling rows.\",\"severity\":\"med\",\"axis\":\"workflow\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":15,\"title\":\"F87 marked folded=yes but routed replan-in-unit\",\"detail\":\"F87's route is `replan-in-unit: plan owner re-cuts SPEC.md:588 …` yet its folded column is `yes`. In this fixture every folded=yes row (F80, F84, F89) carries a `fold: …` route; a replan-routed finding cannot simultaneously be folded, so the row contradicts the ledger vocabulary the fixture itself establishes.\",\"severity\":\"med\",\"axis\":\"workflow\"}]"
+}

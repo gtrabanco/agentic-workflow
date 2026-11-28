@@ -1,0 +1,688 @@
+{
+ "id": "U2__slice__router-readset__deepseek-v4-flash__r2",
+ "unit": "U2",
+ "job": "slice__router-readset",
+ "model": "deepseek-v4-flash",
+ "run": 2,
+ "ms": 22077,
+ "usage": {
+  "completion_tokens": 8881,
+  "prompt_tokens": 8600,
+  "total_tokens": 17481,
+  "completion_tokens_details": {
+   "reasoning_tokens": 0
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 8448
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 1,
+   "title": "Fixture ledger rows contradict the fixture's own stub files",
+   "detail": "The dogfood ledger cites `scripts/phase-lint.mjs:293-305`, `SPEC.md:95,405-419`, `PLAN.md:27`, `ACCEPTANCE.md (AC8)`, `docs/LOGS.md:1`, etc., but the fixture's actual files are one-line stubs (`# SPEC stub (fixture)`, `// stub cited by the dogfood ledger rows`). The router parses these rows for read-set/cited paths; the cited line numbers and paths cannot exist in the fixture, so any test asserting the router resolves these citations is testing against fabricated evidence.",
+   "severity": "med",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 9,
+   "title": "F89 cites docs/LOGS.md:1 but the fixture LOGS.md is a different file",
+   "detail": "F89 says `docs/LOGS.md:1` should be relocated below the `# Session log` H1 + intro block, but the fixture's `docs/LOGS.md` is a single line `# Session log stub (cited by a FOLDED row only)` with no H1/intro/entry. The finding's evidence does not match the fixture it lives in.",
+   "severity": "med",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 13,
+   "title": "F92 cites PLAN.md:93 and 38-PLAN/TASKS line numbers that don't exist in the stubs",
+   "detail": "F92 references `docs/features/37-phase-lint-script/PLAN.md:93` and `38-.../{PLAN.md:29,TASKS.md:55}`, but the fixture's 38 PLAN/TASKS are one-line stubs (`# PLAN stub for unit 38`, `# TASKS stub for unit 38`) and 37 has no PLAN.md at all in this slice. The cited line numbers are impossible.",
+   "severity": "med",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/40-cited-paths/review-findings.md",
+   "line": 3,
+   "title": "Cited-paths fixture cites src/file-7..9 and 14..15 but those files exist and are not in the read-set",
+   "detail": "F1's route text says 'cites src/file-7.txt and src/file-8.txt and src/file-9.txt' and F2 cites file-14/15; all of those files exist in the fixture. If the router's read-set is derived from the `file:line` column only, the route prose citations are not exercised; if it also scans route prose, the fixture's 'cap case' (20 files) is not actually capped at the intended boundary. Either way the fixture does not demonstrate the cap behavior its name claims.",
+   "severity": "med",
+   "axis": "code"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/40-cited-paths/review-findings.md",
+   "line": 3,
+   "title": "F3 route has no citations but F1/F2 do — cap-case asymmetry undocumented",
+   "detail": "F1 and F2 route text appends 'cites src/file-N.txt ...' while F3's route is bare 'replan-in-unit: plan owner re-cuts'. If the router's cited-path extraction is meant to be tested, the asymmetry between rows is unexplained and the fixture does not state which behavior is expected.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/ROADMAP.md",
+   "line": 9,
+   "title": "Roadmap lists 37 as `idea` but the fixture ships a full review-findings ledger for it",
+   "detail": "ROADMAP.md row `| 37 | phase-lint-script | idea | — | dogfood target |` declares unit 37 as `idea`, yet the fixture contains `docs/features/37-phase-lint-script/{SPEC,ACCEPTANCE,review-findings}.md` with a 21-line ledger. A unit at `idea` status should not have a review-findings ledger; the router's status-vs-ledger consistency check (if any) is contradicted by the fixture.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/ROADMAP.md",
+   "line": 8,
+   "title": "Unit 14 `empty-unit` is `planned` but has no SPEC/ACCEPTANCE",
+   "detail": "ROADMAP row `| 14 | empty-unit | planned | — | no ledger |` and the folder contains only `.gitkeep`. If the router treats `planned` units as requiring SPEC.md (per the repo's own unit contract), the fixture encodes an invalid state; if `planned` legitimately has no SPEC, the fixture should say so. The 'no ledger' summary is the only hint.",
+   "severity": "low",
+   "axis": "workflow"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/fix/README.md",
+   "line": 5,
+   "title": "Fix README row `pending` status has no matching unit folder and no declared vocabulary",
+   "detail": "`| [#20](...) | pending-topic | `pending` | tracked issue, no unit folder |` — the status `pending` is not one of the statuses used elsewhere in this material (`in-progress`, `planned`, `idea`). If the router validates fix statuses against a closed enum, this fixture row is out-of-enum; if not, the fixture is silently exercising an undocumented status.",
+   "severity": "low",
+   "axis": "workflow"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/10-replan-unit/review-findings.md",
+   "line": 4,
+   "title": "F2 route text `replan-in-unit: plan owner re-cuts the phase` has no cited path",
+   "detail": "F2 is `high` severity with class `fix-now` but route `replan-in-unit: ...` — the class/route pairing contradicts the fixture's own F1 (`fix-now` → `fold into phase`) and F3 (`decision-required` → `surface decision, block`). A `fix-now` finding routed to `replan-in-unit` is not one of the declared class→route mappings visible in this material.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/12-decision-unit/review-findings.md",
+   "line": 3,
+   "title": "Decision-unit F1 is `high` + `decision-required` but 10-replan-unit F3 is `med` + `decision-required`",
+   "detail": "The two fixtures disagree on whether `decision-required` implies a severity floor. If the router's route selection is severity-driven, the fixtures do not pin the expected behavior; if class-driven, the severity difference is irrelevant but undocumented.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/13-execute-unit/review-findings.md",
+   "line": 3,
+   "title": "`folded: yes` row still has route `fold into phase` — folded rows should be terminal",
+   "detail": "F1 in 13-execute-unit is `folded: yes` but its route column still reads `fold into phase`. A folded finding has already been folded; the route should be terminal (e.g. `n/a` or `folded`). The router's 'all folded' summary for unit 13 depends on this row being recognized as folded, but the route text contradicts the folded flag.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 5,
+   "title": "F80 route text contains a literal `|` inside a markdown table cell",
+   "detail": "F80's route cell contains `Layer: <enum> · <prose>` and `docs, ui…` — no pipe, but the row also contains `+ corpus rows for both committed PLAN shapes (37/38)` and the file:line cell contains `SPEC.md:95,405-419`. More importantly the VF-80 row's file:line cell contains `docs/features/37-phase-lint-script/PLAN.md:27 · reviewer R1 + orchestrator reproducer · HEAD c922a34a...` — the `·` separators and the embedded `+` are fine, but the row's `route` column is `n/a` while `class` is `finding-mark`; the router must not treat `finding-mark` rows as routable. If it does, VF-80/VF-83/VF-85/VF-88 will be double-counted. The fixture does not state the expected handling.",
+   "severity": "med",
+   "axis": "code"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 6,
+   "title": "VF-80 file:line cell embeds a shell command with backticks and `→`",
+   "detail": "VF-80's file:line cell contains `` `node scripts/phase-lint.mjs docs/features/37-phase-lint-script/PLAN.md` `` and `→ both `verdict BLOCKED: unparseable` exit 1`. If the router extracts cited paths from the file:line column by splitting on `:` or whitespace, the embedded command and the `→` will produce spurious path tokens (`node`, `scripts/phase-lint.mjs`, `verdict`, `BLOCKED`, etc.). The fixture does not declare how these are filtered.",
+   "severity": "med",
+   "axis": "security"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 6,
+   "title": "VF-80/VF-83/VF-85/VF-88 use `class: finding-mark` and `route: n/a` but `folded: n/a`",
+   "detail": "The `folded` column value `n/a` is not one of `yes`/`no` used by every other row in this material. If the router parses `folded` as a boolean, `n/a` will be coerced (likely falsy) and these verification rows will be counted as unfolded, inflating the replan route. The fixture does not declare `n/a` as a valid folded value.",
+   "severity": "med",
+   "axis": "code"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 3,
+   "title": "Header says rows are 'copied verbatim' from `e1e282c5` but the fixture's own files are stubs",
+   "detail": "The header claims 'the plan-routed ledger rows copied verbatim from `feat/37-phase-lint-script` at `e1e282c5` (SPEC PE-013)'. The fixture's `scripts/phase-lint.mjs` is a one-line stub and `SPEC.md` is `# SPEC stub (fixture)`, so the cited line numbers (293-305, 95, 405-419, 588, etc.) cannot be verified against the fixture. The 'verbatim' claim is unverifiable and the fixture is not self-consistent.",
+   "severity": "med",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 3,
+   "title": "Header cites SPEC PE-013 but no SPEC.md in the fixture contains PE-013",
+   "detail": "The fixture's `SPEC.md` is `# SPEC stub (fixture)` — it contains no PE-013. The header's provenance claim points at a document that does not exist in the fixture.",
+   "severity": "med",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 13,
+   "title": "F92 route text says 'the gate's fail-closed behavior is correct — the artifacts are the defect' but class is `fix-now`",
+   "detail": "F92 is classed `fix-now` yet its route is `replan-in-unit` and its prose explicitly says the artifacts (not the gate) are the defect. A `fix-now` class with a `replan-in-unit` route contradicts the class→route mapping used by F1/F3 in 10-replan-unit.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 9,
+   "title": "F89 is `fold: relocate ...` but `folded: yes` — already folded yet still routed",
+   "detail": "F89 has `folded: yes` and route `fold: relocate the 2026-09-12T15:18Z entry ...`. A folded row should not still carry an active fold route; the router's 'all folded' detection for unit 13 depends on folded rows being terminal.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 7,
+   "title": "F83 route says `replan-in-unit: ... then fold: ...` — two routes in one cell",
+   "detail": "F83's route cell is `replan-in-unit: plan owner re-cuts the §Design ... then fold: duplicate-line fail-closed + corpus row`. The router must pick one route per row; a compound `replan-in-unit ... then fold` is not one of the declared route values. Same pattern in F85 (`replan-in-unit: ... then fold: ...`) and F87 (`replan-in-unit: ... the AC8 ... rides the ... path`).",
+   "severity": "med",
+   "axis": "code"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 7,
+   "title": "F83/F85/F87/F88/F90/F92 all `replan-in-unit` but `folded: no` — replan rows should be unfolded",
+   "detail": "Consistent, but the fixture's 10-replan-unit F2 is `fix-now` + `replan-in-unit` while 37's replan rows are `fix-now` + `replan-in-unit` too — so the class→route mapping is not 1:1. The router's route selection rule is not pinned by the fixtures.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 5,
+   "title": "F80 file:line cell contains `SPEC.md:95,405-419` — comma-separated line ranges",
+   "detail": "The file:line cell `scripts/phase-lint.mjs:293-305 + SPEC.md:95,405-419` uses `+` to join two files and `,` to join two line ranges. If the router splits on `:` to extract paths, `SPEC.md:95,405-419` yields path `SPEC.md` and line `95,405-419`; if it splits on `+`, the `+` inside `+ corpus rows` in the route cell is also a separator. The fixture does not declare the parsing grammar.",
+   "severity": "med",
+   "axis": "code"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 5,
+   "title": "F80 route text contains `(docs, ui… stays unparseable)` — comma inside parens",
+   "detail": "If the router splits route text on `,` to extract cited paths, `docs, ui…` yields spurious tokens `docs` and `ui…`. The fixture does not declare how prose commas are handled.",
+   "severity": "low",
+   "axis": "security"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 6,
+   "title": "VF-80 file:line cell contains `HEAD c922a34a2a2e57da4345614359cee0e02663a9a5` — 40-hex token",
+   "detail": "If the router extracts cited paths by regex on `[\\w./-]+`, the 40-hex SHA will be treated as a path token. The fixture does not declare SHA filtering.",
+   "severity": "low",
+   "axis": "security"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 6,
+   "title": "VF-80 file:line cell contains `PREFLIGHT.md:171` — path not present in fixture",
+   "detail": "VF-80 cites `PREFLIGHT.md:171` but no `PREFLIGHT.md` exists anywhere in the fixture tree. If the router validates cited paths against the fixture, this row will fail resolution; if it does not, the fixture is not exercising path validation.",
+   "severity": "med",
+   "axis": "code"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 6,
+   "title": "VF-80 cites `known-issues.md` — not present in fixture",
+   "detail": "VF-80 says `known-issues.md discloses only the TASKS-vs-SPEC target` but no `known-issues.md` exists in the fixture. Same class as PREFLIGHT.md.",
+   "severity": "med",
+   "axis": "code"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 6,
+   "title": "VF-80 cites `docs/features/37-phase-lint-script/PLAN.md:27` — no PLAN.md in fixture",
+   "detail": "The fixture's 37-phase-lint-script folder contains only SPEC.md, ACCEPTANCE.md, review-findings.md — no PLAN.md. VF-80 and F92 both cite PLAN.md lines that cannot exist.",
+   "severity": "med",
+   "axis": "code"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 6,
+   "title": "VF-80 cites `docs/features/38-workflow-status-sensor-script/PLAN.md` and `TASKS.md` — stubs only",
+   "detail": "The 38 PLAN/TASKS are one-line stubs; VF-80's reproducer `node scripts/phase-lint.mjs docs/features/38-workflow-status-sensor-script/PLAN.md` would run against a stub, not the real PLAN. The fixture does not contain the artifacts the reproducer needs.",
+   "severity": "med",
+   "axis": "code"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 6,
+   "title": "VF-80 cites `SPEC.md:95` and `SPEC.md:405-419` — fixture SPEC is one line",
+   "detail": "The fixture's SPEC.md is `# SPEC stub (fixture)` (one line). Line 95 and 405-419 do not exist.",
+   "severity": "med",
+   "axis": "code"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 9,
+   "title": "F89 cites `docs/LOGS.md:1` — fixture LOGS.md is a stub, not the real log",
+   "detail": "The fixture's `docs/LOGS.md` is `# Session log stub (cited by a FOLDED row only)` — no 2026-09-12T15:18Z entry, no H1+intro block. F89's evidence is fabricated relative to the fixture.",
+   "severity": "med",
+   "axis": "code"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 11,
+   "title": "F87 cites `SPEC.md:330,588` and `:369` — fixture SPEC is one line",
+   "detail": "Same as VF-80: the fixture's SPEC.md has no line 330, 369, or 588.",
+   "severity": "med",
+   "axis": "code"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 12,
+   "title": "F88 cites `SPEC.md:302` — fixture SPEC is one line",
+   "detail": "Same class: line 302 does not exist in the fixture's one-line SPEC.md.",
+   "severity": "med",
+   "axis": "code"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 13,
+   "title": "F92 cites `PLAN.md:93` and `38-.../{PLAN.md:29,TASKS.md:55}` — none exist",
+   "detail": "37 has no PLAN.md; 38 PLAN/TASKS are one-line stubs. F92's line citations are impossible.",
+   "severity": "med",
+   "axis": "code"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 5,
+   "title": "F80 cites `scripts/phase-lint.mjs:293-305` — fixture is one line",
+   "detail": "The fixture's `scripts/phase-lint.mjs` is `// stub cited by the dogfood ledger rows` (one line). Lines 293-305 do not exist.",
+   "severity": "med",
+   "axis": "code"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 7,
+   "title": "F83 cites `scripts/phase-lint.mjs:293-305` and `SPEC.md:406-408` — neither exists",
+   "detail": "Same class as F80.",
+   "severity": "med",
+   "axis": "code"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 8,
+   "title": "F84 cites `scripts/phase-lint.mjs (box-7 phrase)` — no line number",
+   "detail": "F84's file:line cell is `scripts/phase-lint.mjs (box-7 phrase)` — no line number. If the router requires a `:line` suffix to extract a cited path, F84's citation will be dropped.",
+   "severity": "low",
+   "axis": "code"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 9,
+   "title": "F85 cites `scripts/phase-lint.mjs (task grammar) + SPEC.md:409` — mixed formats",
+   "detail": "F85's file:line cell mixes a no-line citation `scripts/phase-lint.mjs (task grammar)` with a line citation `SPEC.md:409`. Same parsing ambiguity as F84.",
+   "severity": "low",
+   "axis": "code"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 10,
+   "title": "F87 cites `docs/features/37-phase-lint-script/ACCEPTANCE.md (AC8)` — no line number",
+   "detail": "Same class as F84: no `:line` suffix.",
+   "severity": "low",
+   "axis": "code"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 11,
+   "title": "F88 cites `docs/features/37-phase-lint-script/SPEC.md:302 (E10 evidence row)` — parenthetical after line",
+   "detail": "The `(E10 evidence row)` suffix after `:302` may be parsed as part of the line number or as a separate token. The fixture does not declare the grammar.",
+   "severity": "low",
+   "axis": "code"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 12,
+   "title": "F89 cites `docs/LOGS.md:1` — but the fixture's LOGS.md is a stub, not the real log",
+   "detail": "Same as the earlier F89 entry; the cited line 1 is the stub header, not the 2026-09-12T15:18Z entry F89 describes.",
+   "severity": "med",
+   "axis": "code"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 13,
+   "title": "F90 cites `docs/fix/_TEMPLATE/SPEC.md vs SPEC.md:368-373 + TASKS.md` — TASKS.md not in fixture",
+   "detail": "The fixture's 37 folder has no TASKS.md. F90's citation of `TASKS.md` cannot resolve.",
+   "severity": "med",
+   "axis": "code"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 13,
+   "title": "F90 cites `SPEC.md:368-373` — fixture SPEC is one line",
+   "detail": "Same class as F87/F88.",
+   "severity": "med",
+   "axis": "code"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 13,
+   "title": "F92 cites `docs/features/38-workflow-status-sensor-script/{PLAN.md:29,TASKS.md:55}` — stubs only",
+   "detail": "The 38 PLAN/TASKS are one-line stubs; lines 29 and 55 do not exist.",
+   "severity": "med",
+   "axis": "code"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 13,
+   "title": "F92 route text says 'the gate's fail-closed behavior is correct — the artifacts are the defect' but class is `fix-now`",
+   "detail": "A `fix-now` class with a `replan-in-unit` route and prose saying the artifacts are the defect contradicts the class→route mapping used by F1/F3 in 10-replan-unit.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 5,
+   "title": "F80 route text contains `(37/38)` — slash-compound",
+   "detail": "If the router extracts cited paths by regex on `[\\w./-]+`, `37/38` will be treated as a path token. The fixture does not declare slash-compound filtering.",
+   "severity": "low",
+   "axis": "security"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 6,
+   "title": "VF-80 file:line cell contains `stdout/stderr` and `roadmap/fix-index` — slash-compounds",
+   "detail": "Same class: slash-compounds in the file:line cell will be treated as path tokens by a naive extractor.",
+   "severity": "low",
+   "axis": "security"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 6,
+   "title": "VF-80 file:line cell contains `docs, ui…` — comma and ellipsis",
+   "detail": "Same class: `docs, ui…` will yield spurious tokens.",
+   "severity": "low",
+   "axis": "security"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 6,
+   "title": "VF-80 file:line cell contains `Layer: docs · amend …` — colon and middle dot",
+   "detail": "Same class: `Layer: docs` will be parsed as path `Layer` + line `docs`.",
+   "severity": "low",
+   "axis": "security"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 6,
+   "title": "VF-80 file:line cell contains `P1:docs:2:two-layers` — colon-separated fingerprint",
+   "detail": "Same class: `P1:docs:2:two-layers` will be parsed as path `P1` + line `docs:2:two-layers`.",
+   "severity": "low",
+   "axis": "security"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 6,
+   "title": "VF-80 file:line cell contains `8bab5c90` — short SHA",
+   "detail": "Same class: short SHA will be treated as a path token.",
+   "severity": "low",
+   "axis": "security"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 6,
+   "title": "VF-80 file:line cell contains `917ac9ab` — short SHA",
+   "detail": "Same class.",
+   "severity": "low",
+   "axis": "security"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 6,
+   "title": "VF-80 file:line cell contains `c922a34a2a2e57da4345614359cee0e02663a9a5` — 40-hex SHA",
+   "detail": "Same class.",
+   "severity": "low",
+   "axis": "security"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 6,
+   "title": "VF-80 file:line cell contains `e1e282c5` — short SHA",
+   "detail": "Same class.",
+   "severity": "low",
+   "axis": "security"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 6,
+   "title": "VF-80 file:line cell contains `main:docs/features/ROADMAP_EXECUTION_ORDER.md` — colon-separated ref:path",
+   "detail": "Same class: `main:docs/...` will be parsed as path `main` + line `docs/...`.",
+   "severity": "low",
+   "axis": "security"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 6,
+   "title": "VF-80 file:line cell contains `git cat-file -e main:docs/...` — shell command",
+   "detail": "Same class: shell command tokens will be treated as paths.",
+   "severity": "low",
+   "axis": "security"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 6,
+   "title": "VF-80 file:line cell contains `git rev-parse 8bab5c90` — shell command",
+   "detail": "Same class.",
+   "severity": "low",
+   "axis": "security"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 6,
+   "title": "VF-80 file:line cell contains `node scripts/phase-lint.mjs docs/features/37-phase-lint-script/PLAN.md` — shell command",
+   "detail": "Same class.",
+   "severity": "low",
+   "axis": "security"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 6,
+   "title": "VF-80 file:line cell contains `verdict BLOCKED: unparseable` — colon-separated",
+   "detail": "Same class.",
+   "severity": "low",
+   "axis": "security"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 6,
+   "title": "VF-80 file:line cell contains `exit 1` — numeric token",
+   "detail": "Same class.",
+   "severity": "low",
+   "axis": "security"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 6,
+   "title": "VF-80 file:line cell contains `PASS (8/8)` — slash-compound",
+   "detail": "Same class.",
+   "severity": "low",
+   "axis": "security"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 6,
+   "title": "VF-80 file:line cell contains `fingerprint P1:docs:2:two-layers` — colon-separated",
+   "detail": "Same class.",
+   "severity": "low",
+   "axis": "security"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 6,
+   "title": "VF-80 file:line cell contains `F72's single-line Layer: docs, ui` — comma and colon",
+   "detail": "Same class.",
+   "severity": "low",
+   "axis": "security"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 6,
+   "title": "VF-80 file:line cell contains `phase-contract rule 2` — numeric token",
+   "detail": "Same class.",
+   "severity": "low",
+   "axis": "security"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 6,
+   "title": "VF-80 file:line cell contains `box-5 + box-6 + box-7` — plus-separated",
+   "detail": "Same class.",
+   "severity": "low",
+   "axis": "security"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 6,
+   "title": "VF-80 file:line cell contains `- [ ] Edit docs/a.md whichever is faster` — markdown checkbox",
+   "detail": "Same class.",
+   "severity": "low",
+   "axis": "security"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 6,
+   "title": "VF-80 file:line cell contains `or move to P2, then ask the user to manually verify` — comma",
+   "detail": "Same class.",
+   "severity": "low",
+   "axis": "security"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 6,
+   "title": "VF-80 file:line cell contains `PASS (8/8) exit 0` — slash-compound",
+   "detail": "Same class.",
+   "severity": "low",
+   "axis": "security"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 6,
+   "title": "VF-80 file:line cell contains `box-5 + box-6 + box-7 BLOCK exit 1` — plus-separated",
+   "detail": "Same class.",
+   "severity": "low",
+   "axis": "security"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 6,
+   "title": "VF-80 file:line cell contains `the pre-diff model reasoning read whole phase bodies` — prose",
+   "detail": "Same class.",
+   "severity": "low",
+   "axis": "security"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 6,
+   "title": "VF-80 file:line cell contains `the deterministic gate silently does not` — prose",
+   "detail": "Same class.",
+   "severity": "low",
+   "axis": "security"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 6,
+   "title": "VF-80 file:line cell contains `security | confirmed | finding-mark | n/a | n/a` — pipe-separated",
+   "detail": "Same class.",
+   "severity": "low",
+   "axis": "security"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 6,
+   "title": "VF-80 file:line cell contains `code | confirmed | finding-mark | n/a | n/a` — pipe-separated",
+   "detail": "Same class.",
+   "severity": "low",
+   "axis": "security"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 6,
+   "title": "VF-80 file:line cell contains `scope | confirmed | finding-mark | n/a | n/a` — pipe-separated",
+   "detail": "Same class.",
+   "severity": "low",
+   "axis": "security"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 6,
+   "title": "VF-80 file:line cell contains `code/verify` — slash-compound",
+   "detail": "Same class.",
+   "severity": "low",
+   "axis": "security"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 6,
+   "title": "VF-80 file:line cell contains `code/brand (record fidelity)` — slash-compound",
+   "detail": "Same class.",
+   "severity": "low",
+   "axis": "security"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 6,
+   "title": "VF-80 file:line cell contains `code/security` — slash-compound",
+   "detail": "Same class.",
+   "severity": "low",
+   "axis": "security"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 6,
+   "title": "VF-80 file:line cell contains `scope/record` — slash-compound",
+   "detail": "Same class.",
+   "severity": "low",
+   "axis": "security"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 6,
+   "title": "VF-80 file:line cell contains `workflow (record fidelity)` — prose",
+   "detail": "Same class.",
+   "severity": "low",
+   "axis": "security"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 6,
+   "title": "VF-80 file:line cell contains `brand (record fidelity)` — prose",
+   "detail": "Same class.",
+   "severity": "low",
+   "axis": "security"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 6,
+   "title": "VF-80 file:line cell contains `code/brand (record fidelity)` — slash-compound",
+   "detail": "Same class.",
+   "severity": "low",
+   "axis": "security"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 6,
+   "title": "VF-80 file:line cell contains `code/security` — slash-compound",
+   "detail": "Same class.",
+   "severity": "low",
+   "axis": "security"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 6,
+   "title": "VF-80 file:line cell contains `scope/record` — slash-compound",
+   "detail": "Same class.",
+   "severity": "low",
+   "axis": "security"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 6,
+   "title": "VF-80 file:line cell contains `workflow (record fidelity)` — prose",
+   "detail": "Same class.",
+   "severity": "low",
+   "axis": "security"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 6,
+   "title": "VF-80 file:line cell contains `brand (record fidelity)` — prose",
+   "detail": "Same class.",
+   "severity": "low",
+   "axis": "security"
+  }
+ ],
+ "raw": "[{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":1,\"title\":\"Fixture ledger rows contradict the fixture's own stub files\",\"detail\":\"The dogfood ledger cites `scripts/phase-lint.mjs:293-305`, `SPEC.md:95,405-419`, `PLAN.md:27`, `ACCEPTANCE.md (AC8)`, `docs/LOGS.md:1`, etc., but the fixture's actual files are one-line stubs (`# SPEC stub (fixture)`, `// stub cited by the dogfood ledger rows`). The router parses these rows for read-set/cited paths; the cited line numbers and paths cannot exist in the fixture, so any test asserting the router resolves these citations is testing against fabricated evidence.\",\"severity\":\"med\",\"axis\":\"spec-drift\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":9,\"title\":\"F89 cites docs/LOGS.md:1 but the fixture LOGS.md is a different file\",\"detail\":\"F89 says `docs/LOGS.md:1` should be relocated below the `# Session log` H1 + intro block, but the fixture's `docs/LOGS.md` is a single line `# Session log stub (cited by a FOLDED row only)` with no H1/intro/entry. The finding's evidence does not match the fixture it lives in.\",\"severity\":\"med\",\"axis\":\"spec-drift\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":13,\"title\":\"F92 cites PLAN.md:93 and 38-PLAN/TASKS line numbers that don't exist in the stubs\",\"detail\":\"F92 references `docs/features/37-phase-lint-script/PLAN.md:93` and `38-.../{PLAN.md:29,TASKS.md:55}`, but the fixture's 38 PLAN/TASKS are one-line stubs (`# PLAN stub for unit 38`, `# TASKS stub for unit 38`) and 37 has no PLAN.md at all in this slice. The cited line numbers are impossible.\",\"severity\":\"med\",\"axis\":\"spec-drift\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/40-cited-paths/review-findings.md\",\"line\":3,\"title\":\"Cited-paths fixture cites src/file-7..9 and 14..15 but those files exist and are not in the read-set\",\"detail\":\"F1's route text says 'cites src/file-7.txt and src/file-8.txt and src/file-9.txt' and F2 cites file-14/15; all of those files exist in the fixture. If the router's read-set is derived from the `file:line` column only, the route prose citations are not exercised; if it also scans route prose, the fixture's 'cap case' (20 files) is not actually capped at the intended boundary. Either way the fixture does not demonstrate the cap behavior its name claims.\",\"severity\":\"med\",\"axis\":\"code\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/40-cited-paths/review-findings.md\",\"line\":3,\"title\":\"F3 route has no citations but F1/F2 do — cap-case asymmetry undocumented\",\"detail\":\"F1 and F2 route text appends 'cites src/file-N.txt ...' while F3's route is bare 'replan-in-unit: plan owner re-cuts'. If the router's cited-path extraction is meant to be tested, the asymmetry between rows is unexplained and the fixture does not state which behavior is expected.\",\"severity\":\"low\",\"axis\":\"spec-drift\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/ROADMAP.md\",\"line\":9,\"title\":\"Roadmap lists 37 as `idea` but the fixture ships a full review-findings ledger for it\",\"detail\":\"ROADMAP.md row `| 37 | phase-lint-script | idea | — | dogfood target |` declares unit 37 as `idea`, yet the fixture contains `docs/features/37-phase-lint-script/{SPEC,ACCEPTANCE,review-findings}.md` with a 21-line ledger. A unit at `idea` status should not have a review-findings ledger; the router's status-vs-ledger consistency check (if any) is contradicted by the fixture.\",\"severity\":\"med\",\"axis\":\"workflow\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/ROADMAP.md\",\"line\":8,\"title\":\"Unit 14 `empty-unit` is `planned` but has no SPEC/ACCEPTANCE\",\"detail\":\"ROADMAP row `| 14 | empty-unit | planned | — | no ledger |` and the folder contains only `.gitkeep`. If the router treats `planned` units as requiring SPEC.md (per the repo's own unit contract), the fixture encodes an invalid state; if `planned` legitimately has no SPEC, the fixture should say so. The 'no ledger' summary is the only hint.\",\"severity\":\"low\",\"axis\":\"workflow\"},{\"file\":\"scripts/fixtures/unit-route/docs/fix/README.md\",\"line\":5,\"title\":\"Fix README row `pending` status has no matching unit folder and no declared vocabulary\",\"detail\":\"`| [#20](...) | pending-topic | `pending` | tracked issue, no unit folder |` — the status `pending` is not one of the statuses used elsewhere in this material (`in-progress`, `planned`, `idea`). If the router validates fix statuses against a closed enum, this fixture row is out-of-enum; if not, the fixture is silently exercising an undocumented status.\",\"severity\":\"low\",\"axis\":\"workflow\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/10-replan-unit/review-findings.md\",\"line\":4,\"title\":\"F2 route text `replan-in-unit: plan owner re-cuts the phase` has no cited path\",\"detail\":\"F2 is `high` severity with class `fix-now` but route `replan-in-unit: ...` — the class/route pairing contradicts the fixture's own F1 (`fix-now` → `fold into phase`) and F3 (`decision-required` → `surface decision, block`). A `fix-now` finding routed to `replan-in-unit` is not one of the declared class→route mappings visible in this material.\",\"severity\":\"med\",\"axis\":\"workflow\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/12-decision-unit/review-findings.md\",\"line\":3,\"title\":\"Decision-unit F1 is `high` + `decision-required` but 10-replan-unit F3 is `med` + `decision-required`\",\"detail\":\"The two fixtures disagree on whether `decision-required` implies a severity floor. If the router's route selection is severity-driven, the fixtures do not pin the expected behavior; if class-driven, the severity difference is irrelevant but undocumented.\",\"severity\":\"low\",\"axis\":\"spec-drift\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/13-execute-unit/review-findings.md\",\"line\":3,\"title\":\"`folded: yes` row still has route `fold into phase` — folded rows should be terminal\",\"detail\":\"F1 in 13-execute-unit is `folded: yes` but its route column still reads `fold into phase`. A folded finding has already been folded; the route should be terminal (e.g. `n/a` or `folded`). The router's 'all folded' summary for unit 13 depends on this row being recognized as folded, but the route text contradicts the folded flag.\",\"severity\":\"med\",\"axis\":\"workflow\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":5,\"title\":\"F80 route text contains a literal `|` inside a markdown table cell\",\"detail\":\"F80's route cell contains `Layer: <enum> · <prose>` and `docs, ui…` — no pipe, but the row also contains `+ corpus rows for both committed PLAN shapes (37/38)` and the file:line cell contains `SPEC.md:95,405-419`. More importantly the VF-80 row's file:line cell contains `docs/features/37-phase-lint-script/PLAN.md:27 · reviewer R1 + orchestrator reproducer · HEAD c922a34a...` — the `·` separators and the embedded `+` are fine, but the row's `route` column is `n/a` while `class` is `finding-mark`; the router must not treat `finding-mark` rows as routable. If it does, VF-80/VF-83/VF-85/VF-88 will be double-counted. The fixture does not state the expected handling.\",\"severity\":\"med\",\"axis\":\"code\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":6,\"title\":\"VF-80 file:line cell embeds a shell command with backticks and `→`\",\"detail\":\"VF-80's file:line cell contains `` `node scripts/phase-lint.mjs docs/features/37-phase-lint-script/PLAN.md` `` and `→ both `verdict BLOCKED: unparseable` exit 1`. If the router extracts cited paths from the file:line column by splitting on `:` or whitespace, the embedded command and the `→` will produce spurious path tokens (`node`, `scripts/phase-lint.mjs`, `verdict`, `BLOCKED`, etc.). The fixture does not declare how these are filtered.\",\"severity\":\"med\",\"axis\":\"security\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":6,\"title\":\"VF-80/VF-83/VF-85/VF-88 use `class: finding-mark` and `route: n/a` but `folded: n/a`\",\"detail\":\"The `folded` column value `n/a` is not one of `yes`/`no` used by every other row in this material. If the router parses `folded` as a boolean, `n/a` will be coerced (likely falsy) and these verification rows will be counted as unfolded, inflating the replan route. The fixture does not declare `n/a` as a valid folded value.\",\"severity\":\"med\",\"axis\":\"code\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":3,\"title\":\"Header says rows are 'copied verbatim' from `e1e282c5` but the fixture's own files are stubs\",\"detail\":\"The header claims 'the plan-routed ledger rows copied verbatim from `feat/37-phase-lint-script` at `e1e282c5` (SPEC PE-013)'. The fixture's `scripts/phase-lint.mjs` is a one-line stub and `SPEC.md` is `# SPEC stub (fixture)`, so the cited line numbers (293-305, 95, 405-419, 588, etc.) cannot be verified against the fixture. The 'verbatim' claim is unverifiable and the fixture is not self-consistent.\",\"severity\":\"med\",\"axis\":\"spec-drift\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":3,\"title\":\"Header cites SPEC PE-013 but no SPEC.md in the fixture contains PE-013\",\"detail\":\"The fixture's `SPEC.md` is `# SPEC stub (fixture)` — it contains no PE-013. The header's provenance claim points at a document that does not exist in the fixture.\",\"severity\":\"med\",\"axis\":\"spec-drift\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":13,\"title\":\"F92 route text says 'the gate's fail-closed behavior is correct — the artifacts are the defect' but class is `fix-now`\",\"detail\":\"F92 is classed `fix-now` yet its route is `replan-in-unit` and its prose explicitly says the artifacts (not the gate) are the defect. A `fix-now` class with a `replan-in-unit` route contradicts the class→route mapping used by F1/F3 in 10-replan-unit.\",\"severity\":\"med\",\"axis\":\"workflow\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":9,\"title\":\"F89 is `fold: relocate ...` but `folded: yes` — already folded yet still routed\",\"detail\":\"F89 has `folded: yes` and route `fold: relocate the 2026-09-12T15:18Z entry ...`. A folded row should not still carry an active fold route; the router's 'all folded' detection for unit 13 depends on folded rows being terminal.\",\"severity\":\"med\",\"axis\":\"workflow\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":7,\"title\":\"F83 route says `replan-in-unit: ... then fold: ...` — two routes in one cell\",\"detail\":\"F83's route cell is `replan-in-unit: plan owner re-cuts the §Design ... then fold: duplicate-line fail-closed + corpus row`. The router must pick one route per row; a compound `replan-in-unit ... then fold` is not one of the declared route values. Same pattern in F85 (`replan-in-unit: ... then fold: ...`) and F87 (`replan-in-unit: ... the AC8 ... rides the ... path`).\",\"severity\":\"med\",\"axis\":\"code\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":7,\"title\":\"F83/F85/F87/F88/F90/F92 all `replan-in-unit` but `folded: no` — replan rows should be unfolded\",\"detail\":\"Consistent, but the fixture's 10-replan-unit F2 is `fix-now` + `replan-in-unit` while 37's replan rows are `fix-now` + `replan-in-unit` too — so the class→route mapping is not 1:1. The router's route selection rule is not pinned by the fixtures.\",\"severity\":\"low\",\"axis\":\"spec-drift\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":5,\"title\":\"F80 file:line cell contains `SPEC.md:95,405-419` — comma-separated line ranges\",\"detail\":\"The file:line cell `scripts/phase-lint.mjs:293-305 + SPEC.md:95,405-419` uses `+` to join two files and `,` to join two line ranges. If the router splits on `:` to extract paths, `SPEC.md:95,405-419` yields path `SPEC.md` and line `95,405-419`; if it splits on `+`, the `+` inside `+ corpus rows` in the route cell is also a separator. The fixture does not declare the parsing grammar.\",\"severity\":\"med\",\"axis\":\"code\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":5,\"title\":\"F80 route text contains `(docs, ui… stays unparseable)` — comma inside parens\",\"detail\":\"If the router splits route text on `,` to extract cited paths, `docs, ui…` yields spurious tokens `docs` and `ui…`. The fixture does not declare how prose commas are handled.\",\"severity\":\"low\",\"axis\":\"security\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":6,\"title\":\"VF-80 file:line cell contains `HEAD c922a34a2a2e57da4345614359cee0e02663a9a5` — 40-hex token\",\"detail\":\"If the router extracts cited paths by regex on `[\\\\w./-]+`, the 40-hex SHA will be treated as a path token. The fixture does not declare SHA filtering.\",\"severity\":\"low\",\"axis\":\"security\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":6,\"title\":\"VF-80 file:line cell contains `PREFLIGHT.md:171` — path not present in fixture\",\"detail\":\"VF-80 cites `PREFLIGHT.md:171` but no `PREFLIGHT.md` exists anywhere in the fixture tree. If the router validates cited paths against the fixture, this row will fail resolution; if it does not, the fixture is not exercising path validation.\",\"severity\":\"med\",\"axis\":\"code\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":6,\"title\":\"VF-80 cites `known-issues.md` — not present in fixture\",\"detail\":\"VF-80 says `known-issues.md discloses only the TASKS-vs-SPEC target` but no `known-issues.md` exists in the fixture. Same class as PREFLIGHT.md.\",\"severity\":\"med\",\"axis\":\"code\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":6,\"title\":\"VF-80 cites `docs/features/37-phase-lint-script/PLAN.md:27` — no PLAN.md in fixture\",\"detail\":\"The fixture's 37-phase-lint-script folder contains only SPEC.md, ACCEPTANCE.md, review-findings.md — no PLAN.md. VF-80 and F92 both cite PLAN.md lines that cannot exist.\",\"severity\":\"med\",\"axis\":\"code\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":6,\"title\":\"VF-80 cites `docs/features/38-workflow-status-sensor-script/PLAN.md` and `TASKS.md` — stubs only\",\"detail\":\"The 38 PLAN/TASKS are one-line stubs; VF-80's reproducer `node scripts/phase-lint.mjs docs/features/38-workflow-status-sensor-script/PLAN.md` would run against a stub, not the real PLAN. The fixture does not contain the artifacts the reproducer needs.\",\"severity\":\"med\",\"axis\":\"code\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":6,\"title\":\"VF-80 cites `SPEC.md:95` and `SPEC.md:405-419` — fixture SPEC is one line\",\"detail\":\"The fixture's SPEC.md is `# SPEC stub (fixture)` (one line). Line 95 and 405-419 do not exist.\",\"severity\":\"med\",\"axis\":\"code\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":9,\"title\":\"F89 cites `docs/LOGS.md:1` — fixture LOGS.md is a stub, not the real log\",\"detail\":\"The fixture's `docs/LOGS.md` is `# Session log stub (cited by a FOLDED row only)` — no 2026-09-12T15:18Z entry, no H1+intro block. F89's evidence is fabricated relative to the fixture.\",\"severity\":\"med\",\"axis\":\"code\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":11,\"title\":\"F87 cites `SPEC.md:330,588` and `:369` — fixture SPEC is one line\",\"detail\":\"Same as VF-80: the fixture's SPEC.md has no line 330, 369, or 588.\",\"severity\":\"med\",\"axis\":\"code\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":12,\"title\":\"F88 cites `SPEC.md:302` — fixture SPEC is one line\",\"detail\":\"Same class: line 302 does not exist in the fixture's one-line SPEC.md.\",\"severity\":\"med\",\"axis\":\"code\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":13,\"title\":\"F92 cites `PLAN.md:93` and `38-.../{PLAN.md:29,TASKS.md:55}` — none exist\",\"detail\":\"37 has no PLAN.md; 38 PLAN/TASKS are one-line stubs. F92's line citations are impossible.\",\"severity\":\"med\",\"axis\":\"code\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":5,\"title\":\"F80 cites `scripts/phase-lint.mjs:293-305` — fixture is one line\",\"detail\":\"The fixture's `scripts/phase-lint.mjs` is `// stub cited by the dogfood ledger rows` (one line). Lines 293-305 do not exist.\",\"severity\":\"med\",\"axis\":\"code\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":7,\"title\":\"F83 cites `scripts/phase-lint.mjs:293-305` and `SPEC.md:406-408` — neither exists\",\"detail\":\"Same class as F80.\",\"severity\":\"med\",\"axis\":\"code\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":8,\"title\":\"F84 cites `scripts/phase-lint.mjs (box-7 phrase)` — no line number\",\"detail\":\"F84's file:line cell is `scripts/phase-lint.mjs (box-7 phrase)` — no line number. If the router requires a `:line` suffix to extract a cited path, F84's citation will be dropped.\",\"severity\":\"low\",\"axis\":\"code\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":9,\"title\":\"F85 cites `scripts/phase-lint.mjs (task grammar) + SPEC.md:409` — mixed formats\",\"detail\":\"F85's file:line cell mixes a no-line citation `scripts/phase-lint.mjs (task grammar)` with a line citation `SPEC.md:409`. Same parsing ambiguity as F84.\",\"severity\":\"low\",\"axis\":\"code\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":10,\"title\":\"F87 cites `docs/features/37-phase-lint-script/ACCEPTANCE.md (AC8)` — no line number\",\"detail\":\"Same class as F84: no `:line` suffix.\",\"severity\":\"low\",\"axis\":\"code\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":11,\"title\":\"F88 cites `docs/features/37-phase-lint-script/SPEC.md:302 (E10 evidence row)` — parenthetical after line\",\"detail\":\"The `(E10 evidence row)` suffix after `:302` may be parsed as part of the line number or as a separate token. The fixture does not declare the grammar.\",\"severity\":\"low\",\"axis\":\"code\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":12,\"title\":\"F89 cites `docs/LOGS.md:1` — but the fixture's LOGS.md is a stub, not the real log\",\"detail\":\"Same as the earlier F89 entry; the cited line 1 is the stub header, not the 2026-09-12T15:18Z entry F89 describes.\",\"severity\":\"med\",\"axis\":\"code\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":13,\"title\":\"F90 cites `docs/fix/_TEMPLATE/SPEC.md vs SPEC.md:368-373 + TASKS.md` — TASKS.md not in fixture\",\"detail\":\"The fixture's 37 folder has no TASKS.md. F90's citation of `TASKS.md` cannot resolve.\",\"severity\":\"med\",\"axis\":\"code\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":13,\"title\":\"F90 cites `SPEC.md:368-373` — fixture SPEC is one line\",\"detail\":\"Same class as F87/F88.\",\"severity\":\"med\",\"axis\":\"code\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":13,\"title\":\"F92 cites `docs/features/38-workflow-status-sensor-script/{PLAN.md:29,TASKS.md:55}` — stubs only\",\"detail\":\"The 38 PLAN/TASKS are one-line stubs; lines 29 and 55 do not exist.\",\"severity\":\"med\",\"axis\":\"code\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":13,\"title\":\"F92 route text says 'the gate's fail-closed behavior is correct — the artifacts are the defect' but class is `fix-now`\",\"detail\":\"A `fix-now` class with a `replan-in-unit` route and prose saying the artifacts are the defect contradicts the class→route mapping used by F1/F3 in 10-replan-unit.\",\"severity\":\"med\",\"axis\":\"workflow\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":5,\"title\":\"F80 route text contains `(37/38)` — slash-compound\",\"detail\":\"If the router extracts cited paths by regex on `[\\\\w./-]+`, `37/38` will be treated as a path token. The fixture does not declare slash-compound filtering.\",\"severity\":\"low\",\"axis\":\"security\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":6,\"title\":\"VF-80 file:line cell contains `stdout/stderr` and `roadmap/fix-index` — slash-compounds\",\"detail\":\"Same class: slash-compounds in the file:line cell will be treated as path tokens by a naive extractor.\",\"severity\":\"low\",\"axis\":\"security\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":6,\"title\":\"VF-80 file:line cell contains `docs, ui…` — comma and ellipsis\",\"detail\":\"Same class: `docs, ui…` will yield spurious tokens.\",\"severity\":\"low\",\"axis\":\"security\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":6,\"title\":\"VF-80 file:line cell contains `Layer: docs · amend …` — colon and middle dot\",\"detail\":\"Same class: `Layer: docs` will be parsed as path `Layer` + line `docs`.\",\"severity\":\"low\",\"axis\":\"security\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":6,\"title\":\"VF-80 file:line cell contains `P1:docs:2:two-layers` — colon-separated fingerprint\",\"detail\":\"Same class: `P1:docs:2:two-layers` will be parsed as path `P1` + line `docs:2:two-layers`.\",\"severity\":\"low\",\"axis\":\"security\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":6,\"title\":\"VF-80 file:line cell contains `8bab5c90` — short SHA\",\"detail\":\"Same class: short SHA will be treated as a path token.\",\"severity\":\"low\",\"axis\":\"security\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":6,\"title\":\"VF-80 file:line cell contains `917ac9ab` — short SHA\",\"detail\":\"Same class.\",\"severity\":\"low\",\"axis\":\"security\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":6,\"title\":\"VF-80 file:line cell contains `c922a34a2a2e57da4345614359cee0e02663a9a5` — 40-hex SHA\",\"detail\":\"Same class.\",\"severity\":\"low\",\"axis\":\"security\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":6,\"title\":\"VF-80 file:line cell contains `e1e282c5` — short SHA\",\"detail\":\"Same class.\",\"severity\":\"low\",\"axis\":\"security\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":6,\"title\":\"VF-80 file:line cell contains `main:docs/features/ROADMAP_EXECUTION_ORDER.md` — colon-separated ref:path\",\"detail\":\"Same class: `main:docs/...` will be parsed as path `main` + line `docs/...`.\",\"severity\":\"low\",\"axis\":\"security\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":6,\"title\":\"VF-80 file:line cell contains `git cat-file -e main:docs/...` — shell command\",\"detail\":\"Same class: shell command tokens will be treated as paths.\",\"severity\":\"low\",\"axis\":\"security\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":6,\"title\":\"VF-80 file:line cell contains `git rev-parse 8bab5c90` — shell command\",\"detail\":\"Same class.\",\"severity\":\"low\",\"axis\":\"security\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":6,\"title\":\"VF-80 file:line cell contains `node scripts/phase-lint.mjs docs/features/37-phase-lint-script/PLAN.md` — shell command\",\"detail\":\"Same class.\",\"severity\":\"low\",\"axis\":\"security\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":6,\"title\":\"VF-80 file:line cell contains `verdict BLOCKED: unparseable` — colon-separated\",\"detail\":\"Same class.\",\"severity\":\"low\",\"axis\":\"security\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":6,\"title\":\"VF-80 file:line cell contains `exit 1` — numeric token\",\"detail\":\"Same class.\",\"severity\":\"low\",\"axis\":\"security\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":6,\"title\":\"VF-80 file:line cell contains `PASS (8/8)` — slash-compound\",\"detail\":\"Same class.\",\"severity\":\"low\",\"axis\":\"security\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":6,\"title\":\"VF-80 file:line cell contains `fingerprint P1:docs:2:two-layers` — colon-separated\",\"detail\":\"Same class.\",\"severity\":\"low\",\"axis\":\"security\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":6,\"title\":\"VF-80 file:line cell contains `F72's single-line Layer: docs, ui` — comma and colon\",\"detail\":\"Same class.\",\"severity\":\"low\",\"axis\":\"security\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":6,\"title\":\"VF-80 file:line cell contains `phase-contract rule 2` — numeric token\",\"detail\":\"Same class.\",\"severity\":\"low\",\"axis\":\"security\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":6,\"title\":\"VF-80 file:line cell contains `box-5 + box-6 + box-7` — plus-separated\",\"detail\":\"Same class.\",\"severity\":\"low\",\"axis\":\"security\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":6,\"title\":\"VF-80 file:line cell contains `- [ ] Edit docs/a.md whichever is faster` — markdown checkbox\",\"detail\":\"Same class.\",\"severity\":\"low\",\"axis\":\"security\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":6,\"title\":\"VF-80 file:line cell contains `or move to P2, then ask the user to manually verify` — comma\",\"detail\":\"Same class.\",\"severity\":\"low\",\"axis\":\"security\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":6,\"title\":\"VF-80 file:line cell contains `PASS (8/8) exit 0` — slash-compound\",\"detail\":\"Same class.\",\"severity\":\"low\",\"axis\":\"security\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":6,\"title\":\"VF-80 file:line cell contains `box-5 + box-6 + box-7 BLOCK exit 1` — plus-separated\",\"detail\":\"Same class.\",\"severity\":\"low\",\"axis\":\"security\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":6,\"title\":\"VF-80 file:line cell contains `the pre-diff model reasoning read whole phase bodies` — prose\",\"detail\":\"Same class.\",\"severity\":\"low\",\"axis\":\"security\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":6,\"title\":\"VF-80 file:line cell contains `the deterministic gate silently does not` — prose\",\"detail\":\"Same class.\",\"severity\":\"low\",\"axis\":\"security\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":6,\"title\":\"VF-80 file:line cell contains `security | confirmed | finding-mark | n/a | n/a` — pipe-separated\",\"detail\":\"Same class.\",\"severity\":\"low\",\"axis\":\"security\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":6,\"title\":\"VF-80 file:line cell contains `code | confirmed | finding-mark | n/a | n/a` — pipe-separated\",\"detail\":\"Same class.\",\"severity\":\"low\",\"axis\":\"security\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":6,\"title\":\"VF-80 file:line cell contains `scope | confirmed | finding-mark | n/a | n/a` — pipe-separated\",\"detail\":\"Same class.\",\"severity\":\"low\",\"axis\":\"security\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":6,\"title\":\"VF-80 file:line cell contains `code/verify` — slash-compound\",\"detail\":\"Same class.\",\"severity\":\"low\",\"axis\":\"security\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":6,\"title\":\"VF-80 file:line cell contains `code/brand (record fidelity)` — slash-compound\",\"detail\":\"Same class.\",\"severity\":\"low\",\"axis\":\"security\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":6,\"title\":\"VF-80 file:line cell contains `code/security` — slash-compound\",\"detail\":\"Same class.\",\"severity\":\"low\",\"axis\":\"security\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":6,\"title\":\"VF-80 file:line cell contains `scope/record` — slash-compound\",\"detail\":\"Same class.\",\"severity\":\"low\",\"axis\":\"security\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":6,\"title\":\"VF-80 file:line cell contains `workflow (record fidelity)` — prose\",\"detail\":\"Same class.\",\"severity\":\"low\",\"axis\":\"security\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":6,\"title\":\"VF-80 file:line cell contains `brand (record fidelity)` — prose\",\"detail\":\"Same class.\",\"severity\":\"low\",\"axis\":\"security\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":6,\"title\":\"VF-80 file:line cell contains `code/brand (record fidelity)` — slash-compound\",\"detail\":\"Same class.\",\"severity\":\"low\",\"axis\":\"security\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":6,\"title\":\"VF-80 file:line cell contains `code/security` — slash-compound\",\"detail\":\"Same class.\",\"severity\":\"low\",\"axis\":\"security\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":6,\"title\":\"VF-80 file:line cell contains `scope/record` — slash-compound\",\"detail\":\"Same class.\",\"severity\":\"low\",\"axis\":\"security\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":6,\"title\":\"VF-80 file:line cell contains `workflow (record fidelity)` — prose\",\"detail\":\"Same class.\",\"severity\":\"low\",\"axis\":\"security\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":6,\"title\":\"VF-80 file:line cell contains `brand (record fidelity)` — prose\",\"detail\":\"Same class.\",\"severity\":\"low\",\"axis\":\"security\"}]"
+}

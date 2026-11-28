@@ -1,0 +1,40 @@
+{
+ "id": "U1__slice__init-consent__qwen3.6__r1",
+ "unit": "U1",
+ "job": "slice__init-consent",
+ "model": "qwen3.6",
+ "run": 1,
+ "ms": 4444,
+ "usage": {
+  "completion_tokens": 726,
+  "prompt_tokens": 3356,
+  "total_tokens": 4082,
+  "completion_tokens_details": {
+   "reasoning_tokens": 0
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "skills/init-workspace/SKILL.md",
+   "line": 24,
+   "title": "Spec-Drift: Turn Contract Box Incomplete",
+   "detail": "The diff adds a new check to the 'Turn contract' box regarding required user inputs, but the current content at tip shows the box is missing the final required check: 'The closing `→ Next:` block is printed as the ABSOLUTE last output'. The diff only shows the addition of the input guard check, but the provided 'current content' (which represents the state after the diff is applied) includes this line. However, looking at the diff context, the base file did NOT have this line. The diff adds the input guard check. The 'current content' shows the box has 5 checks. The base had 4. The diff shows adding the input guard check. But wait, the 'current content' shows 'The closing `→ Next:` block...' as the 5th check. The diff only shows the addition of the input guard check (lines 24-26 in the diff). It does NOT show the addition of the 'Next:' block check. This implies the 'current content' provided in the prompt might be from a later slice or the diff is incomplete relative to the 'current content' shown. Let's re-read carefully. The diff shows adding the input guard check. The 'current content' shows the input guard check AND the 'Next:' block check. The base did not have either. If this is the ONLY slice, the 'Next:' block check is missing from the diff but present in the 'current content'. This is a contradiction between the diff (what is being changed) and the current content (the result). If the diff is the only change, the 'current content' is wrong. If the 'current content' is the target, the diff is incomplete. Given the prompt says '1 files rendered below (diff + current content)', and the diff is the change, the 'current content' should reflect the diff. The diff adds the input guard check. The 'current content' has the input guard check AND the 'Next:' block check. The base had neither. Therefore, the 'Next:' block check is an un-diffed change in the 'current content' or the diff is missing it. This is a spec-drift between the diff and the current content.",
+   "severity": "med",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "skills/init-workspace/SKILL.md",
+   "line": 24,
+   "title": "Workflow: Guard Message Mismatch",
+   "detail": "The 'Needs-input guard' section states: 'halt with `requires manual input`'. The 'Turn contract' box and the guard section for `<target-dir>` state the emitted message is `` `→ Next: init-workspace requires manual input — cannot proceed` ``. The guard section for consent says 'halt with `requires manual input`', which is a substring/abbreviation of the full message. This is ambiguous: does the code emit the short string or the long string? The contract box and the specific `<target-dir>` rule specify the long string. The general consent rule specifies a short string. This inconsistency creates a defect in the declared behavior.",
+   "severity": "med",
+   "axis": "workflow"
+  }
+ ],
+ "raw": "[\n  {\n    \"file\": \"skills/init-workspace/SKILL.md\",\n    \"line\": 24,\n    \"title\": \"Spec-Drift: Turn Contract Box Incomplete\",\n    \"detail\": \"The diff adds a new check to the 'Turn contract' box regarding required user inputs, but the current content at tip shows the box is missing the final required check: 'The closing `→ Next:` block is printed as the ABSOLUTE last output'. The diff only shows the addition of the input guard check, but the provided 'current content' (which represents the state after the diff is applied) includes this line. However, looking at the diff context, the base file did NOT have this line. The diff adds the input guard check. The 'current content' shows the box has 5 checks. The base had 4. The diff shows adding the input guard check. But wait, the 'current content' shows 'The closing `→ Next:` block...' as the 5th check. The diff only shows the addition of the input guard check (lines 24-26 in the diff). It does NOT show the addition of the 'Next:' block check. This implies the 'current content' provided in the prompt might be from a later slice or the diff is incomplete relative to the 'current content' shown. Let's re-read carefully. The diff shows adding the input guard check. The 'current content' shows the input guard check AND the 'Next:' block check. The base did not have either. If this is the ONLY slice, the 'Next:' block check is missing from the diff but present in the 'current content'. This is a contradiction between the diff (what is being changed) and the current content (the result). If the diff is the only change, the 'current content' is wrong. If the 'current content' is the target, the diff is incomplete. Given the prompt says '1 files rendered below (diff + current content)', and the diff is the change, the 'current content' should reflect the diff. The diff adds the input guard check. The 'current content' has the input guard check AND the 'Next:' block check. The base had neither. Therefore, the 'Next:' block check is an un-diffed change in the 'current content' or the diff is missing it. This is a spec-drift between the diff and the current content.\",\n    \"severity\": \"med\",\n    \"axis\": \"spec-drift\"\n  },\n  {\n    \"file\": \"skills/init-workspace/SKILL.md\",\n    \"line\": 24,\n    \"title\": \"Workflow: Guard Message Mismatch\",\n    \"detail\": \"The 'Needs-input guard' section states: 'halt with `requires manual input`'. The 'Turn contract' box and the guard section for `<target-dir>` state the emitted message is `` `→ Next: init-workspace requires manual input — cannot proceed` ``. The guard section for consent says 'halt with `requires manual input`', which is a substring/abbreviation of the full message. This is ambiguous: does the code emit the short string or the long string? The contract box and the specific `<target-dir>` rule specify the long string. The general consent rule specifies a short string. This inconsistency creates a defect in the declared behavior.\",\n    \"severity\": \"med\",\n    \"axis\": \"workflow\"\n  }\n]"
+}

@@ -1,0 +1,32 @@
+{
+ "id": "U1__slice__init-consent__gemma4__r2",
+ "unit": "U1",
+ "job": "slice__init-consent",
+ "model": "gemma4",
+ "run": 2,
+ "ms": 1595,
+ "usage": {
+  "completion_tokens": 110,
+  "prompt_tokens": 3455,
+  "total_tokens": 3565,
+  "completion_tokens_details": {
+   "reasoning_tokens": 0
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "skills/init-workspace/SKILL.md",
+   "line": 46,
+   "title": "Contradictory fallback behavior",
+   "detail": "The 'Needs-input guard' section states 'Cwd is used as a fallback only' for `<target-dir>`, but the 'Step 0' section defines the target dir as `[target-dir], default cwd`, which describes a standard default behavior rather than a fallback used only when a required input is missing.",
+   "severity": "low",
+   "axis": "spec-drift"
+  }
+ ],
+ "raw": "[{\"file\":\"skills/init-workspace/SKILL.md\",\"line\":46,\"title\":\"Contradictory fallback behavior\",\"detail\":\"The 'Needs-input guard' section states 'Cwd is used as a fallback only' for `<target-dir>`, but the 'Step 0' section defines the target dir as `[target-dir], default cwd`, which describes a standard default behavior rather than a fallback used only when a required input is missing.\",\"severity\":\"low\",\"axis\":\"spec-drift\"}]"
+}

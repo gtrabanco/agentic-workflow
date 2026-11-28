@@ -1,0 +1,40 @@
+{
+ "id": "U2__slice__review-pack-docs__gemma4__r1",
+ "unit": "U2",
+ "job": "slice__review-pack-docs",
+ "model": "gemma4",
+ "run": 1,
+ "ms": 5053,
+ "usage": {
+  "completion_tokens": 212,
+  "prompt_tokens": 36936,
+  "total_tokens": 37148,
+  "completion_tokens_details": {
+   "reasoning_tokens": 0
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "skills/fold-findings/SKILL.md",
+   "line": 181,
+   "title": "Inconsistent replan routing instruction",
+   "detail": "The table for `freeze-batch` claims the consumer should run `node scripts/unit-route.mjs <unit>` and then `/review-plan` before `/execute-phase`, but the text description in the 'Freeze-batch (replan present)' section (lines 121-125) does not mention the required `/review-plan` step, creating a discrepancy in the documented workflow.",
+   "severity": "med",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "skills/plan-feature/SKILL.md",
+   "line": 115,
+   "title": "Incomplete 'Done when' block",
+   "detail": "The 'Done when' section is truncated mid-sentence: '...and the roadmap row was re-r'. This prevents the agent from knowing the full completion criteria for the roadmap registration check.",
+   "severity": "high",
+   "axis": "usage-docs"
+  }
+ ],
+ "raw": "[{\"file\":\"skills/fold-findings/SKILL.md\",\"line\":181,\"title\":\"Inconsistent replan routing instruction\",\"detail\":\"The table for `freeze-batch` claims the consumer should run `node scripts/unit-route.mjs <unit>` and then `/review-plan` before `/execute-phase`, but the text description in the 'Freeze-batch (replan present)' section (lines 121-125) does not mention the required `/review-plan` step, creating a discrepancy in the documented workflow.\",\"severity\":\"med\",\"axis\":\"usage-docs\"},{\"file\":\"skills/plan-feature/SKILL.md\",\"line\":115,\"title\":\"Incomplete 'Done when' block\",\"detail\":\"The 'Done when' section is truncated mid-sentence: '...and the roadmap row was re-r'. This prevents the agent from knowing the full completion criteria for the roadmap registration check.\",\"severity\":\"high\",\"axis\":\"usage-docs\"}]"
+}

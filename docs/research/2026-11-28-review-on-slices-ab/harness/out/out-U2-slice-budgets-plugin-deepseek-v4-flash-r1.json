@@ -1,0 +1,64 @@
+{
+ "id": "U2__slice__budgets-plugin__deepseek-v4-flash__r1",
+ "unit": "U2",
+ "job": "slice__budgets-plugin",
+ "model": "deepseek-v4-flash",
+ "run": 1,
+ "ms": 4022,
+ "usage": {
+  "completion_tokens": 1063,
+  "prompt_tokens": 5432,
+  "total_tokens": 6495,
+  "completion_tokens_details": {
+   "reasoning_tokens": 0
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "docs/workflow/SKILL_CONTEXT_BUDGETS.json",
+   "line": null,
+   "title": "plan-feature:scaffold ceiling raised without a sources entry, contradicting the sibling pattern",
+   "detail": "The diff raises plan-feature:scaffold routeEstimateMax 8934→9077 and routeLinesMax 729→739, but the tip content shows plan-feature:scaffold has NO \"sources\" block, while every other route touched by this unit (plan-feature:issue, plan-feature:scoped, plan-fix:issue, review-change:*) gained a \"sources\": {\"fix 224 / #224\": \"... ceiling = ceil(measured x 1.10)\"} entry. The declared rule visible in this material is that a ceiling change is accompanied by a sources receipt; scaffold's bump is unreceipted.",
+   "severity": "med",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/workflow/SKILL_CONTEXT_BUDGETS.json",
+   "line": null,
+   "title": "plan-feature:scaffold ceiling math does not match the stated ceil(measured x 1.10) rule",
+   "detail": "The unit's own sources text states \"ceiling = ceil(measured x 1.10)\". For plan-feature:scaffold the new ceiling is 9077; 9077/1.10 = 8251.8, so the implied measured value is ~8252. But the base ceiling was 8934, which under the same rule implies a prior measured ~8122. The delta 8934→9077 is +143 (+1.6%), not the ~10% headroom the rule describes, and no measured value is recorded for scaffold to justify 9077. Same pattern for plan-feature:issue (11430→11572, +1.2%) and plan-fix:issue (26825→27091, +1.0%) — the ceilings were nudged by the measured growth, not recomputed as ceil(measured x 1.10), so the stated formula contradicts the numbers.",
+   "severity": "med",
+   "axis": "perf"
+  },
+  {
+   "file": "docs/workflow/SKILL_CONTEXT_BUDGETS.json",
+   "line": null,
+   "title": "replan-findings budget entry has no ceiling, only a sources note",
+   "detail": "The new replan-findings block adds only \"referenceSources\" with prose \"measured within the default reference budget\" but declares no referenceEstimateMax/referenceLinesMax. Every other skill entry that carries a referenceSources also carries an explicit referenceEstimateMax (review-change 2800, workflow-status 2300, pre-execution-review 3557). The claim \"measured within the default reference budget\" is unverifiable from this file because no measured number is recorded, and the default referenceEstimateMax is 2200 while the note gives no figure to check against it.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/workflow/SKILL_CONTEXT_BUDGETS.json",
+   "line": null,
+   "title": "workflow-status referenceSources claims measured 2297 but ceiling 2300 leaves <0.2% headroom, contradicting the x1.10 rule used elsewhere",
+   "detail": "workflow-status referenceEstimateMax was raised 2200→2300 with source text \"measured 2297 est\". 2297 x 1.10 = 2526.7, so under the unit's own \"ceiling = ceil(measured x 1.10)\" rule the ceiling should be ~2527, not 2300. The 2300 ceiling is only 3 est above the measured 2297, so any future edit to SENSOR_SIGNALS.md step 13 immediately breaches the budget. The two rules (x1.10 headroom vs. this 3-unit margin) contradict each other within the same file.",
+   "severity": "med",
+   "axis": "perf"
+  },
+  {
+   "file": "docs/workflow/SKILL_CONTEXT_BUDGETS.json",
+   "line": null,
+   "title": "plan-feature:scaffold routeLinesMax 739 vs routeEstimateMax 9077 implies ~12.3 bytes/line, inconsistent with sibling routes",
+   "detail": "Sibling routes in this file run ~12.6 est/line (plan-feature:issue 11572/917=12.6, plan-fix:issue 27091/1946=13.9, review-change:adversarial 18676/1338=14.0). plan-feature:scaffold 9077/739=12.3 is plausible, but the base 8934/729=12.25 and the bump +143 est / +10 lines = 14.3 est/line for the delta — the added lines are costed at a different rate than the route average, suggesting the two ceilings were bumped independently rather than recomputed from a single measurement. No measured value is recorded to reconcile them.",
+   "severity": "low",
+   "axis": "perf"
+  }
+ ],
+ "raw": "[{\"file\":\"docs/workflow/SKILL_CONTEXT_BUDGETS.json\",\"line\":null,\"title\":\"plan-feature:scaffold ceiling raised without a sources entry, contradicting the sibling pattern\",\"detail\":\"The diff raises plan-feature:scaffold routeEstimateMax 8934→9077 and routeLinesMax 729→739, but the tip content shows plan-feature:scaffold has NO \\\"sources\\\" block, while every other route touched by this unit (plan-feature:issue, plan-feature:scoped, plan-fix:issue, review-change:*) gained a \\\"sources\\\": {\\\"fix 224 / #224\\\": \\\"... ceiling = ceil(measured x 1.10)\\\"} entry. The declared rule visible in this material is that a ceiling change is accompanied by a sources receipt; scaffold's bump is unreceipted.\",\"severity\":\"med\",\"axis\":\"spec-drift\"},{\"file\":\"docs/workflow/SKILL_CONTEXT_BUDGETS.json\",\"line\":null,\"title\":\"plan-feature:scaffold ceiling math does not match the stated ceil(measured x 1.10) rule\",\"detail\":\"The unit's own sources text states \\\"ceiling = ceil(measured x 1.10)\\\". For plan-feature:scaffold the new ceiling is 9077; 9077/1.10 = 8251.8, so the implied measured value is ~8252. But the base ceiling was 8934, which under the same rule implies a prior measured ~8122. The delta 8934→9077 is +143 (+1.6%), not the ~10% headroom the rule describes, and no measured value is recorded for scaffold to justify 9077. Same pattern for plan-feature:issue (11430→11572, +1.2%) and plan-fix:issue (26825→27091, +1.0%) — the ceilings were nudged by the measured growth, not recomputed as ceil(measured x 1.10), so the stated formula contradicts the numbers.\",\"severity\":\"med\",\"axis\":\"perf\"},{\"file\":\"docs/workflow/SKILL_CONTEXT_BUDGETS.json\",\"line\":null,\"title\":\"replan-findings budget entry has no ceiling, only a sources note\",\"detail\":\"The new replan-findings block adds only \\\"referenceSources\\\" with prose \\\"measured within the default reference budget\\\" but declares no referenceEstimateMax/referenceLinesMax. Every other skill entry that carries a referenceSources also carries an explicit referenceEstimateMax (review-change 2800, workflow-status 2300, pre-execution-review 3557). The claim \\\"measured within the default reference budget\\\" is unverifiable from this file because no measured number is recorded, and the default referenceEstimateMax is 2200 while the note gives no figure to check against it.\",\"severity\":\"low\",\"axis\":\"spec-drift\"},{\"file\":\"docs/workflow/SKILL_CONTEXT_BUDGETS.json\",\"line\":null,\"title\":\"workflow-status referenceSources claims measured 2297 but ceiling 2300 leaves <0.2% headroom, contradicting the x1.10 rule used elsewhere\",\"detail\":\"workflow-status referenceEstimateMax was raised 2200→2300 with source text \\\"measured 2297 est\\\". 2297 x 1.10 = 2526.7, so under the unit's own \\\"ceiling = ceil(measured x 1.10)\\\" rule the ceiling should be ~2527, not 2300. The 2300 ceiling is only 3 est above the measured 2297, so any future edit to SENSOR_SIGNALS.md step 13 immediately breaches the budget. The two rules (x1.10 headroom vs. this 3-unit margin) contradict each other within the same file.\",\"severity\":\"med\",\"axis\":\"perf\"},{\"file\":\"docs/workflow/SKILL_CONTEXT_BUDGETS.json\",\"line\":null,\"title\":\"plan-feature:scaffold routeLinesMax 739 vs routeEstimateMax 9077 implies ~12.3 bytes/line, inconsistent with sibling routes\",\"detail\":\"Sibling routes in this file run ~12.6 est/line (plan-feature:issue 11572/917=12.6, plan-fix:issue 27091/1946=13.9, review-change:adversarial 18676/1338=14.0). plan-feature:scaffold 9077/739=12.3 is plausible, but the base 8934/729=12.25 and the bump +143 est / +10 lines = 14.3 est/line for the delta — the added lines are costed at a different rate than the route average, suggesting the two ceilings were bumped independently rather than recomputed from a single measurement. No measured value is recorded to reconcile them.\",\"severity\":\"low\",\"axis\":\"perf\"}]"
+}

@@ -1,0 +1,80 @@
+{
+ "id": "U2__slice__tutorial-crossrefs__deepseek-v4-flash__r1",
+ "unit": "U2",
+ "job": "slice__tutorial-crossrefs",
+ "model": "deepseek-v4-flash",
+ "run": 1,
+ "ms": 5677,
+ "usage": {
+  "completion_tokens": 1567,
+  "prompt_tokens": 26392,
+  "total_tokens": 27959,
+  "completion_tokens_details": {
+   "reasoning_tokens": 0
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "docs/workflow/SKILLS.md",
+   "line": 7,
+   "title": "Internal-step count bumped to 19 but the enumerated list still totals 18",
+   "detail": "The header now says \"**19 internal steps**\" and the parenthetical enumerates: 2 planning steps + 2 evidence owners + review-implementation + planning-preflight + phase-contract + verification-contract + 9-skill review pack = 2+2+1+1+1+1+9 = 17, plus the newly added `replan-findings` row = 18. The `replan-findings` row was added to the table but the count arithmetic in the intro paragraph was not reconciled with the enumerated set; the same mismatch appears in SKILLS.es.md (\"19 pasos internos\").",
+   "severity": "med",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/workflow/REVIEW_AND_CLASSIFY.md",
+   "line": 79,
+   "title": "`fix-now / replan-in-unit` bullet conflates two distinct classes and routes fix-now through the replan router",
+   "detail": "The bullet is headed \"**fix-now / replan-in-unit** → run `node scripts/unit-route.mjs <unit>`\" but the immediately preceding bullet already says fix-now \"folds directly into the current unit's open phase. Never a tracked issue, never `plan-fix` (AC 12).\" Routing fix-now through the replan router (which names `/plan-feature` or `/plan-fix`) directly contradicts AC 12's \"never `plan-fix`\" and the fix-now fold contract. The same conflation is in REVIEW_AND_CLASSIFY.es.md line 88.",
+   "severity": "high",
+   "axis": "workflow"
+  },
+  {
+   "file": "docs/workflow/REVIEW_AND_CLASSIFY.md",
+   "line": 80,
+   "title": "Router invocation documented as `node scripts/unit-route.mjs <unit>` but the router is described elsewhere as a script that emits a typed route from ledger/read-set",
+   "detail": "The doc claims the router's `route: replan` line \"names the planner (`/plan-feature` for a feature, `/plan-fix` for a fix)\". The unit's own fix-index row (docs/fix/README.md #224) describes the router as emitting \"a typed route\" and \"a bounded read set\" — not a planner name. If the router emits a route token (e.g. `replan`) rather than a planner name, the doc's claim that the line \"names the planner\" is unsupported by the described contract; the reader is told to read a planner name out of a line the router is not documented to produce.",
+   "severity": "med",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "docs/workflow/FEATURE_WORKFLOW.md",
+   "line": 285,
+   "title": "`replan-in-unit` now requires running a script and a fresh `/review-plan` but the surrounding prose still frames it as a direct SPEC append",
+   "detail": "The diff replaces \"`replan-in-unit` appends new user-confirmed phases to the unit's SPEC\" with \"`replan-in-unit` runs `node scripts/unit-route.mjs <unit>`, whose `route: replan` line names the planner that appends new user-confirmed phases to the unit's SPEC (fresh `/review-plan` first)\". The same paragraph's other classes (fix-now, decision-required, proposals) remain single-step prose; only replan-in-unit now requires a script invocation plus a review gate. The doc does not state what happens when the router prints a non-`replan` route (e.g. `fix-now` or `decision-required`) for a finding classified replan-in-unit — the reader is left with an invocation that may not produce the named line. Same gap in FEATURE_WORKFLOW.es.md line 319.",
+   "severity": "med",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "docs/workflow/PORTABLE_PROMPT.md",
+   "line": 141,
+   "title": "Portable prompt hardcodes `node scripts/unit-route.mjs` into a project-agnostic bootstrap prompt",
+   "detail": "The portable prompt's stated contract is to \"regenerate the agentic workflow ... **adapted to that project's** architecture, documentation, and conventions, rather than copying this repo's specifics verbatim\" and to \"degrade gracefully and say so at runtime rather than assuming a path\" when something doesn't exist. The new text hardcodes `node scripts/unit-route.mjs <unit>` — a path that exists only in this repo — into the prompt that is pasted into arbitrary target repositories. A target repo without that script gets a documented invocation that fails. Same issue in PORTABLE_PROMPT.es.md line 147.",
+   "severity": "med",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "docs/workflow/SKILLS.md",
+   "line": 109,
+   "title": "`replan-findings` row claims it is \"composed by `plan-feature` / `plan-fix`\" but the router is invoked from review, not from the planners",
+   "detail": "The new row says `replan-findings` is \"`user-invocable: false` — composed by `plan-feature` / `plan-fix` on that route\". But the router `node scripts/unit-route.mjs <unit>` is documented in REVIEW_AND_CLASSIFY.md and FEATURE_WORKFLOW.md as being run by the reviewer/fold path (the `replan-in-unit` destination), not by `plan-feature`/`plan-fix`. The planner is the destination the router names, not the caller that composes `replan-findings`. The composition claim contradicts the invocation path documented in the same slice. Same in SKILLS.es.md line 111.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "docs/fix/README.md",
+   "line": 30,
+   "title": "Fix #224 row marked `done` while the unit's own slice is still under review",
+   "detail": "The row status is `done · [#225](...)` and the legend says `done` means \"built, PR open, awaiting merge\". The unit being reviewed is `fix/224-deterministic-replan-routing` with a pending change slice (\"tutorial-crossrefs\") still under review — the row is being added in the same slice that is not yet merged. Per the legend the row is removed only after merge, but marking `done` before the review passes contradicts the unit's own recorded state (the slice is pending review, not built-and-awaiting-merge).",
+   "severity": "low",
+   "axis": "spec-drift"
+  }
+ ],
+ "raw": "[\n  {\n    \"file\": \"docs/workflow/SKILLS.md\",\n    \"line\": 7,\n    \"title\": \"Internal-step count bumped to 19 but the enumerated list still totals 18\",\n    \"detail\": \"The header now says \\\"**19 internal steps**\\\" and the parenthetical enumerates: 2 planning steps + 2 evidence owners + review-implementation + planning-preflight + phase-contract + verification-contract + 9-skill review pack = 2+2+1+1+1+1+9 = 17, plus the newly added `replan-findings` row = 18. The `replan-findings` row was added to the table but the count arithmetic in the intro paragraph was not reconciled with the enumerated set; the same mismatch appears in SKILLS.es.md (\\\"19 pasos internos\\\").\",\n    \"severity\": \"med\",\n    \"axis\": \"spec-drift\"\n  },\n  {\n    \"file\": \"docs/workflow/REVIEW_AND_CLASSIFY.md\",\n    \"line\": 79,\n    \"title\": \"`fix-now / replan-in-unit` bullet conflates two distinct classes and routes fix-now through the replan router\",\n    \"detail\": \"The bullet is headed \\\"**fix-now / replan-in-unit** → run `node scripts/unit-route.mjs <unit>`\\\" but the immediately preceding bullet already says fix-now \\\"folds directly into the current unit's open phase. Never a tracked issue, never `plan-fix` (AC 12).\\\" Routing fix-now through the replan router (which names `/plan-feature` or `/plan-fix`) directly contradicts AC 12's \\\"never `plan-fix`\\\" and the fix-now fold contract. The same conflation is in REVIEW_AND_CLASSIFY.es.md line 88.\",\n    \"severity\": \"high\",\n    \"axis\": \"workflow\"\n  },\n  {\n    \"file\": \"docs/workflow/REVIEW_AND_CLASSIFY.md\",\n    \"line\": 80,\n    \"title\": \"Router invocation documented as `node scripts/unit-route.mjs <unit>` but the router is described elsewhere as a script that emits a typed route from ledger/read-set\",\n    \"detail\": \"The doc claims the router's `route: replan` line \\\"names the planner (`/plan-feature` for a feature, `/plan-fix` for a fix)\\\". The unit's own fix-index row (docs/fix/README.md #224) describes the router as emitting \\\"a typed route\\\" and \\\"a bounded read set\\\" — not a planner name. If the router emits a route token (e.g. `replan`) rather than a planner name, the doc's claim that the line \\\"names the planner\\\" is unsupported by the described contract; the reader is told to read a planner name out of a line the router is not documented to produce.\",\n    \"severity\": \"med\",\n    \"axis\": \"usage-docs\"\n  },\n  {\n    \"file\": \"docs/workflow/FEATURE_WORKFLOW.md\",\n    \"line\": 285,\n    \"title\": \"`replan-in-unit` now requires running a script and a fresh `/review-plan` but the surrounding prose still frames it as a direct SPEC append\",\n    \"detail\": \"The diff replaces \\\"`replan-in-unit` appends new user-confirmed phases to the unit's SPEC\\\" with \\\"`replan-in-unit` runs `node scripts/unit-route.mjs <unit>`, whose `route: replan` line names the planner that appends new user-confirmed phases to the unit's SPEC (fresh `/review-plan` first)\\\". The same paragraph's other classes (fix-now, decision-required, proposals) remain single-step prose; only replan-in-unit now requires a script invocation plus a review gate. The doc does not state what happens when the router prints a non-`replan` route (e.g. `fix-now` or `decision-required`) for a finding classified replan-in-unit — the reader is left with an invocation that may not produce the named line. Same gap in FEATURE_WORKFLOW.es.md line 319.\",\n    \"severity\": \"med\",\n    \"axis\": \"usage-docs\"\n  },\n  {\n    \"file\": \"docs/workflow/PORTABLE_PROMPT.md\",\n    \"line\": 141,\n    \"title\": \"Portable prompt hardcodes `node scripts/unit-route.mjs` into a project-agnostic bootstrap prompt\",\n    \"detail\": \"The portable prompt's stated contract is to \\\"regenerate the agentic workflow ... **adapted to that project's** architecture, documentation, and conventions, rather than copying this repo's specifics verbatim\\\" and to \\\"degrade gracefully and say so at runtime rather than assuming a path\\\" when something doesn't exist. The new text hardcodes `node scripts/unit-route.mjs <unit>` — a path that exists only in this repo — into the prompt that is pasted into arbitrary target repositories. A target repo without that script gets a documented invocation that fails. Same issue in PORTABLE_PROMPT.es.md line 147.\",\n    \"severity\": \"med\",\n    \"axis\": \"usage-docs\"\n  },\n  {\n    \"file\": \"docs/workflow/SKILLS.md\",\n    \"line\": 109,\n    \"title\": \"`replan-findings` row claims it is \\\"composed by `plan-feature` / `plan-fix`\\\" but the router is invoked from review, not from the planners\",\n    \"detail\": \"The new row says `replan-findings` is \\\"`user-invocable: false` — composed by `plan-feature` / `plan-fix` on that route\\\". But the router `node scripts/unit-route.mjs <unit>` is documented in REVIEW_AND_CLASSIFY.md and FEATURE_WORKFLOW.md as being run by the reviewer/fold path (the `replan-in-unit` destination), not by `plan-feature`/`plan-fix`. The planner is the destination the router names, not the caller that composes `replan-findings`. The composition claim contradicts the invocation path documented in the same slice. Same in SKILLS.es.md line 111.\",\n    \"severity\": \"med\",\n    \"axis\": \"workflow\"\n  },\n  {\n    \"file\": \"docs/fix/README.md\",\n    \"line\": 30,\n    \"title\": \"Fix #224 row marked `done` while the unit's own slice is still under review\",\n    \"detail\": \"The row status is `done · [#225](...)` and the legend says `done` means \\\"built, PR open, awaiting merge\\\". The unit being reviewed is `fix/224-deterministic-replan-routing` with a pending change slice (\\\"tutorial-crossrefs\\\") still under review — the row is being added in the same slice that is not yet merged. Per the legend the row is removed only after merge, but marking `done` before the review passes contradicts the unit's own recorded state (the slice is pending review, not built-and-awaiting-merge).\",\n    \"severity\": \"low\",\n    \"axis\": \"spec-drift\"\n  }\n]"
+}

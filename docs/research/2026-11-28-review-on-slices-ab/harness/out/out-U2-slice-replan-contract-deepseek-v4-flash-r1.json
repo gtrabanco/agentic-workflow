@@ -1,0 +1,96 @@
+{
+ "id": "U2__slice__replan-contract__deepseek-v4-flash__r1",
+ "unit": "U2",
+ "job": "slice__replan-contract",
+ "model": "deepseek-v4-flash",
+ "run": 1,
+ "ms": 5052,
+ "usage": {
+  "completion_tokens": 1493,
+  "prompt_tokens": 3128,
+  "total_tokens": 4621,
+  "completion_tokens_details": {
+   "reasoning_tokens": 0
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "skills/replan-findings/SKILL.md",
+   "line": null,
+   "title": "Router invocation path inconsistent with repo layout",
+   "detail": "SKILL.md instructs `node scripts/unit-route.mjs <unit>` (lines in 'When to use', 'Load condition', 'Bounded intake'), but the unit description says the router lives at `scripts/unit-route.mjs` — consistent. However the skill is under `skills/replan-findings/` and references `pre-execution-review/references/POLICY.md` §7 and `../planning-preflight/SKILL.md`; the relative link `<../planning-preflight/SKILL.md>` from `skills/replan-findings/SKILL.md` resolves to `skills/planning-preflight/SKILL.md` which is plausible. No concrete contradiction found here.",
+   "severity": "low",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "skills/replan-findings/SKILL.md",
+   "line": null,
+   "title": "Router path not qualified relative to skill root",
+   "detail": "The skill says `node scripts/unit-route.mjs <unit>` but the skill is loaded from `skills/replan-findings/`; if the caller's cwd is the skill dir the path fails. The unit description places the script at repo-root `scripts/unit-route.mjs`, so the invocation only works from repo root — undocumented. A documented invocation can fail depending on cwd.",
+   "severity": "low",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "skills/replan-findings/references/PHASE_APPEND.md",
+   "line": null,
+   "title": "Hand-off template uses `pid:` but SKILL.md says `artifactRevisionId`",
+   "detail": "PHASE_APPEND.md hand-off prints `Phases: P<n> (+ P<n+1> …) · pid: <artifactRevisionId>`, while SKILL.md 'Done when' says 'the new `artifactRevisionId` is named in the hand-off'. The template abbreviates it to `pid:` — a downstream consumer binding the id from the hand-off has no declared key. Two pieces of the same contract disagree on the field name.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "skills/replan-findings/references/PHASE_APPEND.md",
+   "line": null,
+   "title": "Placement rule contradicts 'ledger must always end with unexecuted hardening'",
+   "detail": "Placement says: if final `Hardening & PR` not yet executed, insert new phases **before** it, and 'The existing close-out stays last and covers the new work.' But the next bullet states 'the ledger must always end with an unexecuted hardening close-out covering every phase.' Inserting before an unexecuted hardening satisfies that; but the first bullet's claim that the existing close-out 'covers the new work' is only true if the hardening phase's scope is re-read — the rule never says to update the hardening phase's done-when to include the new phases. A hardening phase written before the new phases existed cannot 'cover' them without amendment, yet no amendment step is given.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "skills/replan-findings/references/PHASE_APPEND.md",
+   "line": null,
+   "title": "Phase-lint fingerprint format not defined here; 'exactly as the planners do' is unverifiable",
+   "detail": "Step 3 requires recording `Phase-lint: PASS (8/8) · fingerprint P<n>:<layer>:<n-tasks>:<slug>` 'exactly as the planners do', but this material contains no planner definition of that fingerprint format. If the planners' format differs (e.g. different separators or field order), the appended block will not match and downstream lint parsers will reject it. The contract defers to an external format it does not pin.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "skills/replan-findings/SKILL.md",
+   "line": null,
+   "title": "'Never edit a ledger row' vs append contract's 'carries the finding ids it closes in its task text'",
+   "detail": "SKILL.md guardrail: 'Never re-classify, re-severity, or edit a ledger row.' PHASE_APPEND.md: appended phase 'carries the finding ids it closes in its task text, so the fold can prove the row's work landed.' The phase text is not the ledger row, so no direct contradiction — but the fold proof requires the finding row to be marked `folded` later by fold-findings, and the append contract never states that the appended phase's finding-id list must match the router's `rows:` selection exactly. A phase could cite a superset/subset and the fold proof would be ambiguous.",
+   "severity": "low",
+   "axis": "workflow"
+  },
+  {
+   "file": "skills/replan-findings/SKILL.md",
+   "line": null,
+   "title": "'No planning preflight' but append step 4 requires ACCEPTANCE amendment proposal",
+   "detail": "SKILL.md says planning-preflight is skipped on this route 'by design' and loaded only when frozen evidence leaves a gap. PHASE_APPEND.md step 4 requires proposing an ACCEPTANCE amendment to the user 'when a phase changes an acceptance surface' — but determining whether an acceptance surface changed requires reading the acceptance manifest, which is part of the normalized-repository-state read that planning-preflight owns. The route forbids that read yet requires a decision that depends on it.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "skills/replan-findings/references/PHASE_APPEND.md",
+   "line": null,
+   "title": "Hand-off says 'PLAN-REVIEW-FAIL → repair here as one batch' but SKILL.md forbids re-review by this contract",
+   "detail": "PHASE_APPEND.md hand-off: 'PLAN-REVIEW-FAIL → repair here as one batch, rotate the artifact revision, re-review.' SKILL.md 'Relationship' says this contract 'never reviews the plan it produced' and 'Done when' ends at `/review-plan`. The hand-off instructs the same contract to repair after a FAIL, which is a second write cycle not described in SKILL.md's append contract (which says 'one write, one new opaque id'). The two files disagree on whether this contract loops on FAIL.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "skills/replan-findings/SKILL.md",
+   "line": null,
+   "title": "Version 1.0.0 new skill but no SKILL_CONTEXT_BUDGETS entry shown",
+   "detail": "The unit description says the change adds 'SKILL_CONTEXT_BUDGETS ceilings', but this slice's SKILL.md declares `version: 1.0.0` and a new skill with no visible budget entry in the material. If the budgets file is in another slice this is not a defect here; flagging only because the skill is new and the ceiling is not in this material to verify.",
+   "severity": "low",
+   "axis": "perf"
+  }
+ ],
+ "raw": "[{\"file\":\"skills/replan-findings/SKILL.md\",\"line\":null,\"title\":\"Router invocation path inconsistent with repo layout\",\"detail\":\"SKILL.md instructs `node scripts/unit-route.mjs <unit>` (lines in 'When to use', 'Load condition', 'Bounded intake'), but the unit description says the router lives at `scripts/unit-route.mjs` — consistent. However the skill is under `skills/replan-findings/` and references `pre-execution-review/references/POLICY.md` §7 and `../planning-preflight/SKILL.md`; the relative link `<../planning-preflight/SKILL.md>` from `skills/replan-findings/SKILL.md` resolves to `skills/planning-preflight/SKILL.md` which is plausible. No concrete contradiction found here.\",\"severity\":\"low\",\"axis\":\"usage-docs\"},{\"file\":\"skills/replan-findings/SKILL.md\",\"line\":null,\"title\":\"Router path not qualified relative to skill root\",\"detail\":\"The skill says `node scripts/unit-route.mjs <unit>` but the skill is loaded from `skills/replan-findings/`; if the caller's cwd is the skill dir the path fails. The unit description places the script at repo-root `scripts/unit-route.mjs`, so the invocation only works from repo root — undocumented. A documented invocation can fail depending on cwd.\",\"severity\":\"low\",\"axis\":\"usage-docs\"},{\"file\":\"skills/replan-findings/references/PHASE_APPEND.md\",\"line\":null,\"title\":\"Hand-off template uses `pid:` but SKILL.md says `artifactRevisionId`\",\"detail\":\"PHASE_APPEND.md hand-off prints `Phases: P<n> (+ P<n+1> …) · pid: <artifactRevisionId>`, while SKILL.md 'Done when' says 'the new `artifactRevisionId` is named in the hand-off'. The template abbreviates it to `pid:` — a downstream consumer binding the id from the hand-off has no declared key. Two pieces of the same contract disagree on the field name.\",\"severity\":\"med\",\"axis\":\"workflow\"},{\"file\":\"skills/replan-findings/references/PHASE_APPEND.md\",\"line\":null,\"title\":\"Placement rule contradicts 'ledger must always end with unexecuted hardening'\",\"detail\":\"Placement says: if final `Hardening & PR` not yet executed, insert new phases **before** it, and 'The existing close-out stays last and covers the new work.' But the next bullet states 'the ledger must always end with an unexecuted hardening close-out covering every phase.' Inserting before an unexecuted hardening satisfies that; but the first bullet's claim that the existing close-out 'covers the new work' is only true if the hardening phase's scope is re-read — the rule never says to update the hardening phase's done-when to include the new phases. A hardening phase written before the new phases existed cannot 'cover' them without amendment, yet no amendment step is given.\",\"severity\":\"med\",\"axis\":\"workflow\"},{\"file\":\"skills/replan-findings/references/PHASE_APPEND.md\",\"line\":null,\"title\":\"Phase-lint fingerprint format not defined here; 'exactly as the planners do' is unverifiable\",\"detail\":\"Step 3 requires recording `Phase-lint: PASS (8/8) · fingerprint P<n>:<layer>:<n-tasks>:<slug>` 'exactly as the planners do', but this material contains no planner definition of that fingerprint format. If the planners' format differs (e.g. different separators or field order), the appended block will not match and downstream lint parsers will reject it. The contract defers to an external format it does not pin.\",\"severity\":\"low\",\"axis\":\"spec-drift\"},{\"file\":\"skills/replan-findings/SKILL.md\",\"line\":null,\"title\":\"'Never edit a ledger row' vs append contract's 'carries the finding ids it closes in its task text'\",\"detail\":\"SKILL.md guardrail: 'Never re-classify, re-severity, or edit a ledger row.' PHASE_APPEND.md: appended phase 'carries the finding ids it closes in its task text, so the fold can prove the row's work landed.' The phase text is not the ledger row, so no direct contradiction — but the fold proof requires the finding row to be marked `folded` later by fold-findings, and the append contract never states that the appended phase's finding-id list must match the router's `rows:` selection exactly. A phase could cite a superset/subset and the fold proof would be ambiguous.\",\"severity\":\"low\",\"axis\":\"workflow\"},{\"file\":\"skills/replan-findings/SKILL.md\",\"line\":null,\"title\":\"'No planning preflight' but append step 4 requires ACCEPTANCE amendment proposal\",\"detail\":\"SKILL.md says planning-preflight is skipped on this route 'by design' and loaded only when frozen evidence leaves a gap. PHASE_APPEND.md step 4 requires proposing an ACCEPTANCE amendment to the user 'when a phase changes an acceptance surface' — but determining whether an acceptance surface changed requires reading the acceptance manifest, which is part of the normalized-repository-state read that planning-preflight owns. The route forbids that read yet requires a decision that depends on it.\",\"severity\":\"med\",\"axis\":\"workflow\"},{\"file\":\"skills/replan-findings/references/PHASE_APPEND.md\",\"line\":null,\"title\":\"Hand-off says 'PLAN-REVIEW-FAIL → repair here as one batch' but SKILL.md forbids re-review by this contract\",\"detail\":\"PHASE_APPEND.md hand-off: 'PLAN-REVIEW-FAIL → repair here as one batch, rotate the artifact revision, re-review.' SKILL.md 'Relationship' says this contract 'never reviews the plan it produced' and 'Done when' ends at `/review-plan`. The hand-off instructs the same contract to repair after a FAIL, which is a second write cycle not described in SKILL.md's append contract (which says 'one write, one new opaque id'). The two files disagree on whether this contract loops on FAIL.\",\"severity\":\"med\",\"axis\":\"workflow\"},{\"file\":\"skills/replan-findings/SKILL.md\",\"line\":null,\"title\":\"Version 1.0.0 new skill but no SKILL_CONTEXT_BUDGETS entry shown\",\"detail\":\"The unit description says the change adds 'SKILL_CONTEXT_BUDGETS ceilings', but this slice's SKILL.md declares `version: 1.0.0` and a new skill with no visible budget entry in the material. If the budgets file is in another slice this is not a defect here; flagging only because the skill is new and the ceiling is not in this material to verify.\",\"severity\":\"low\",\"axis\":\"perf\"}]"
+}
