@@ -59,6 +59,7 @@ import { main as runDocsGeneratedMerge } from "../docs-generated-merge/index.mjs
 import { main as runDocsGenerate } from "../docs-generate/index.mjs";
 import { main as runRoadmapSettle } from "../roadmap-settle/index.mjs";
 import { main as runWorkflowDoctor } from "../workflow-doctor/index.mjs";
+import { main as runSingleRepoLeaks } from "../single-repo-leaks/index.mjs";
 import { main as runRelevantFiles } from "../relevant-files/index.mjs";
 import { run as runScaffoldContract } from "./sensors/scaffold-contract.mjs";
 
@@ -116,6 +117,7 @@ export const RUNNER_COMMANDS = Object.freeze({
   "scaffold-contract": runScaffoldContract,
   "delivery-conditions": runDeliveryConditions,
   "workflow-doctor": runWorkflowDoctor,
+  "single-repo-leaks": runSingleRepoLeaks,
 });
 
 /**

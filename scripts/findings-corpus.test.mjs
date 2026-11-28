@@ -183,32 +183,36 @@ test("reader reconciliation: a settled carrier keeps its one-line marks and open
 
 test("harvest: the real tree yields the counts the planning ledger froze", () => {
   const corpus = buildCorpus(ROOT, { resolveFold: () => null });
-  // 1179 findings, 56 legacy ledgers, 229 fold-annotated rows and 184 review
+  // 1179 findings, 56 legacy ledgers, 229 fold-annotated rows and 185 review
   // marks were measured on the tree this merge produces, not on either parent:
   // main's lineage carries feature 719's `F9`-`F13` rows and its `R3` line, fix/729
   // adds its own `R1` and `R2` lines, feat/727 (brought in by main) records its own
   // `R1` line on top of main's 179 marks, and unit 728 contributes its `R1` line for
-  // this branch's review cycle. Four later reviews move the counters, each for its
-  // own reason: fix/718's cycle-1 review raised both with its `F1` row and `R1` mark
-  // and its fold closed `F1` again; fix/722's review opened seven rows and its fold
-  // closed all seven, leaving only its `R1` mark; fix/726 ran two cycles — its `R1`
-  // cycle opened `F4`-`F6` and its fold closed those three rows, and its `R2` marks
-  // the closure; fix/734's cycle-1 review adds its `F1` row, still open, and records
-  // the review as a `V1` line rather than a `review-mark@1`. The corpus counts what
-  // the tree actually carries —
+  // this branch's review cycle. Five reviews move the counters, each for its
+  // own reason: fix/718's cycle-1 review
+  // raised both with its `F1` row and `R1` mark and its fold closed `F1` again;
+  // fix/722's review opened seven rows and its fold closed all seven, leaving only
+  // its `R1` mark; fix/726 ran two cycles — its `R1` cycle opened `F4`-`F6` and its
+  // fold closed those three rows, and its `R2` marks the closure; fix/734's
+  // cycle-1 review adds its `F1` row, still open, and records the review as a `V1`
+  // line rather than a `review-mark@1`; fix/717's cycle-1 review opened `F1`-`F5`
+  // and records the review itself as an `R1` line with five `V` marks, which are
+  // not `review-mark@1`s. That fold closed all five rows again, so the finding
+  // count returns to what it was before the review while the `R1` mark stays.
+  // The corpus counts what the tree actually carries —
   // the mechanism issue #651 introduced — so a unit that records a finding or a
   // review mark raises it and a folded row lowers it; the assertions stay exact,
   // nothing is relaxed.
-  // This merge adds one finding row and no review mark: unit 734 writes its
-  // `review-change` cycle-1 disposition into `## Findings` as `F1` (issue #722's
-  // schema half riding the branch, `docs/fix/734-…/SPEC.md:387`) and records the
-  // review itself as a `## Log` `V1` line, which is not a `review-mark@1`. So
-  // `findings` reads 1179, while `reviewMarks` reads 184.
+  // Unit 717's review added five finding rows and one review mark, and its fold
+  // closed all five rows: the review is `REVIEW-FAIL` with `F1`-`F5` riding open
+  // in `## Findings` (`docs/fix/717-audit-single-repo-leaks/SPEC.md`), the fold
+  // path deletes each closed row and appends its `F` line, so `findings` reads
+  // 1179 again while the `R1` mark keeps `reviewMarks` at 185.
 
   assert.equal(corpus.findings.length, 1179, "every finding row in either carrier is in the corpus");
   assert.equal(corpus.legacyLedgers, 56);
   assert.equal(corpus.foldAnnotated, 229);
-  assert.equal(corpus.reviewMarks, 184);
+  assert.equal(corpus.reviewMarks, 185);
   assert.ok(corpus.units.length >= 171);
   assert.deepEqual(corpus.unparsable, []);
   assert.ok(corpus.findings.every((row) => row.provenance.includes(":") && row.digest.length === 12));
