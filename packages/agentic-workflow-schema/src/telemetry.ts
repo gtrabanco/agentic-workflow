@@ -29,7 +29,7 @@
  * Every command that can name a telemetry phase, in workflow order.
  *
  * Sixteen user-invocable skills (`skills/<name>/SKILL.md` with
- * `user-invocable: true`) plus the four native command names the Pi package
+ * `user-invocable: true`) plus the six native command names the Pi package
  * registers in code. A label is a command's own name, because a sample names
  * what the operator dispatched.
  */
@@ -58,6 +58,8 @@ export const PHASE_LABELS = Object.freeze([
   "advance",
   "workflow-status",
   // Native commands registered by the package in code.
+  "flow",
+  "draft",
   "aw-index",
   "agentic-workflow-settings",
   "aw-settings",

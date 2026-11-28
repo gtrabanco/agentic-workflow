@@ -208,11 +208,15 @@ test("harvest: the real tree yields the counts the planning ledger froze", () =>
   // in `## Findings` (`docs/fix/717-audit-single-repo-leaks/SPEC.md`), the fold
   // path deletes each closed row and appends its `F` line, so `findings` reads
   // 1179 again while the `R1` mark keeps `reviewMarks` at 185.
+  // This merge (PR #749 into main, 2026-11-28) adds exactly one mark of its own:
+  // #669's review pass records its `R1` REVIEW-PASS mark (the branch's own review
+  // cycle), so reviewMarks reads 186; findings (1179), legacy ledgers (56) and
+  // fold-annotated rows (229) are the union of both parents and do not move.
 
   assert.equal(corpus.findings.length, 1179, "every finding row in either carrier is in the corpus");
   assert.equal(corpus.legacyLedgers, 56);
   assert.equal(corpus.foldAnnotated, 229);
-  assert.equal(corpus.reviewMarks, 185);
+  assert.equal(corpus.reviewMarks, 186);
   assert.ok(corpus.units.length >= 171);
   assert.deepEqual(corpus.unparsable, []);
   assert.ok(corpus.findings.every((row) => row.provenance.includes(":") && row.digest.length === 12));

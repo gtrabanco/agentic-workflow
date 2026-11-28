@@ -412,15 +412,15 @@ function resolvedLiterals(expression, bindings, depth = 0) {
 // release is its only writer — same shape as the SKILL.md version line, same
 // narrow exemption (the map's annotator still owns every entry-shaped ledger).
 const DECISION_BACKED_WRITERS = new Map([
-  ["SKILL.md", "scripts/release.mjs"],
-  ["skills/runner-contract/references/RUNNER.md", "scripts/release.mjs"],
+  ["SKILL.md", new Set(["scripts/release.mjs"])],
+  ["skills/runner-contract/references/RUNNER.md", new Set(["scripts/release.mjs"])],
   // Issue #590: the coverage-gap fixture materializes throwaway unit docs into a
   // caller-supplied directory (its `seeded/` and `clean/` twins, always outside
   // this repository) so the corpus admission the join depends on can be
   // demonstrated instead of assumed. It never writes the live record: the pair
   // is pinned by script AND ledger name, so every other script writing SPEC.md
   // still fails, and the block list stays intact for the repository within.
-  ["SPEC.md", "scripts/product-audit-gap-fixture.mjs"],
+  ["SPEC.md", new Set(["scripts/product-audit-gap-fixture.mjs"])],
   // Issue #650: the promotion sweep's fixture materializes a throwaway tree — a
   // guide, the two owner docs and one unit ledger — into a caller-supplied
   // directory (`seeded/` and `clean/`, always outside this repository), because
@@ -428,10 +428,18 @@ const DECISION_BACKED_WRITERS = new Map([
   // that carries the owner docs a promotion cites. It never writes the live
   // record: every pair is pinned by script AND ledger name, so any other script
   // writing these four still fails and the block list stays intact within.
-  ["AGENTS.md", "scripts/product-audit-promotion-fixture.mjs"],
-  ["ARCHITECTURE.md", "scripts/product-audit-promotion-fixture.mjs"],
-  ["ARCHITECTURAL_INVARIANTS.md", "scripts/product-audit-promotion-fixture.mjs"],
-  ["decisions.md", "scripts/product-audit-promotion-fixture.mjs"],
+  ["AGENTS.md", new Set(["scripts/product-audit-promotion-fixture.mjs"])],
+  ["ARCHITECTURE.md", new Set(["scripts/product-audit-promotion-fixture.mjs"])],
+  ["ARCHITECTURAL_INVARIANTS.md", new Set(["scripts/product-audit-promotion-fixture.mjs"])],
+  ["decisions.md", new Set(["scripts/product-audit-promotion-fixture.mjs", "packages/agentic-workflow/src/runner/flow.mjs"])],
+  // Issue #669: the lane driver is the one process that writes the unit's
+  // decision ledger while staying off `SPEC.md` — the map forbids any script
+  // from writing the unit doc, so the `--yes` override and the composed session
+  // mode land as `decisions.md` rows (unit 669 D10). Each pair is pinned by
+  // script AND ledger name, so every other script writing a ledger still fails
+  // and the block list keeps `SPEC.md` closed to scripts; two scripts may be
+  // sanctioned for one ledger, which is why a ledger maps to a SET of pairs.
+
 ]);
 
 function writePathScan({ patterns, blocked, sources, label }) {
@@ -457,7 +465,7 @@ function writePathScan({ patterns, blocked, sources, label }) {
     for (const target of writtenLedgers(source)) {
       // A decision-backed writer answers before the block list: it is a
       // (script, ledger) pair, never a narrowing of the list itself.
-      if (DECISION_BACKED_WRITERS.get(target) === rel) {
+      if (DECISION_BACKED_WRITERS.get(target)?.has(rel) === true) {
         writers.add(`${rel} → ${basename(target)}`);
         continue;
       }
@@ -467,7 +475,7 @@ function writePathScan({ patterns, blocked, sources, label }) {
       }
       const entry = matchLedger(target);
       if (!entry) {
-        if (DECISION_BACKED_WRITERS.get(target) === rel) {
+        if (DECISION_BACKED_WRITERS.get(target)?.has(rel) === true) {
           writers.add(`${rel} → ${basename(target)}`);
           continue;
         }
@@ -767,6 +775,7 @@ test("scan 2 passes the real tree and still recognises its declared annotator", 
   assert.deepEqual(
     written.writers,
     [
+      "packages/agentic-workflow/src/runner/flow.mjs → decisions.md",
       `${PROVENANCE_REL} → review-findings.md`,
       "scripts/product-audit-gap-fixture.mjs → SPEC.md",
       "scripts/product-audit-promotion-fixture.mjs → AGENTS.md",
@@ -776,7 +785,7 @@ test("scan 2 passes the real tree and still recognises its declared annotator", 
       "scripts/release.mjs → RUNNER.md",
       "scripts/release.mjs → SKILL.md",
     ],
-    "eight non-test script writes are sanctioned today, each a (script, ledger) pair: the map's annotator, issue #590's throwaway-tree generator, issue #650's throwaway-tree generator (the guide and the two owner docs a promotion cites, plus the unit ledger) and the two D-40-14 stamps",
+    "nine non-test script writes are sanctioned today, each a (script, ledger) pair: the map's annotator, issue #590's throwaway-tree generator, issue #650's throwaway-tree generator (the guide and the two owner docs a promotion cites, plus the unit ledger), the two D-40-14 stamps and issue #669's lane driver (the override and composition rows, on the decision ledger only)",
   );
 });
 

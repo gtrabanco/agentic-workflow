@@ -9,6 +9,7 @@ import { ADVANCE_COMMAND, SETTINGS_COMMAND, SETTINGS_COMMAND_ALIAS } from "../ro
 import { registerAwIndexCommand } from "./aw-index-command.js";
 import type { AwIndexCommandDeps } from "./aw-index-command.js";
 import { registerAdvanceCommand } from "./conductor-command.js";
+import { DRAFT_COMMAND, FLOW_COMMAND, registerFlowCommands } from "./flow-command.js";
 import { LOG_SESSION_COMMAND, registerLogSessionCommand } from "./log-session-command.js";
 import type { PlanInvocation } from "./log-session-command.js";
 import { createWorkflowTools } from "./workflow-tools.js";
@@ -108,6 +109,13 @@ export interface ExtensionDeps<M extends ModelRef = ModelRef> {
    * by the suite that owns argv, cwd and exit status.
    */
   awIndex?: AwIndexCommandDeps;
+  /**
+   * Issue #669: the two lane entries' runner seams (`/flow` and `/draft`). The
+   * dispatch seam is this factory's own router, so it is not injectable: a
+   * suite that wants to observe the hand-off injects `run` and reads the block
+   * the handler received.
+   */
+  flow?: Omit<import("./flow-command.js").FlowCommandDeps<M>, "dispatch">;
 }
 
 export interface ExtensionHandle<M extends ModelRef = ModelRef> {
@@ -149,6 +157,8 @@ export function createExtension<M extends ModelRef = ModelRef>(deps: ExtensionDe
     ADVANCE_COMMAND,
     SETTINGS_COMMAND,
     SETTINGS_COMMAND_ALIAS,
+    FLOW_COMMAND,
+    DRAFT_COMMAND,
   ]);
   // P4: build the profile state store when not provided.
   const profileState = deps.profileState ?? createProfileStateStore({ path: stateFilePath(agentDir) });
@@ -213,6 +223,23 @@ export function createExtension<M extends ModelRef = ModelRef>(deps: ExtensionDe
   // The native doc-index command (issue #443 S5): one code door beside the
   // conductor, with no skill dir behind it and no catalogue entry to keep.
   registerAwIndexCommand<M>(registrar, deps.awIndex ?? {});
+
+  // The two lane entries (issue #669): `/flow` drives a unit through the closed
+  // catalog and `/draft` stops after the plan. Both hand their step over through
+  // the same dispatch every catalogue command uses, so the handed step is an
+  // ordinary invocation and no second routing path exists.
+  registerFlowCommands<M>(registrar, {
+    dispatch: async (command, ctx) => {
+      const body = command.replace(/^\//u, "").trim();
+      const at = body.indexOf(" ");
+      const name = at === -1 ? body : body.slice(0, at);
+      const forwarded = at === -1 ? "" : body.slice(at + 1).trim();
+      reportCatalogueIssues(ctx);
+      reportSerenaReadiness(ctx);
+      await router.dispatch({ name, skill: name }, forwarded, ctx);
+    },
+    ...(deps.flow ?? {}),
+  });
 
   registrar.registerCommand(SETTINGS_COMMAND, {
     description: "Show and configure per-command model routing",

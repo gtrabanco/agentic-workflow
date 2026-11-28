@@ -11,6 +11,7 @@ This is the versioned, in-repo copy.
 | Doc | What it covers |
 |---|---|
 | [LANE_FLOW.md](LANE_FLOW.md) | How a unit flows through the adaptive lane: lifecycle, triage rules, guards, evidence, review, deterministic next-step, command cheat-sheet, and programmatic contract |
+| [LIFECYCLE.md](LIFECYCLE.md) | The three entries and the one program behind them: `/draft` (plan, then always stop), `/flow` (drive the unit to done) and `/unit-lane` (the portable conductor) — the driver's sense/decide/hand-off, the post-plan stop rules and their seam, the approval block, the derived session mode, the feature and issue lifecycles, the review ladder to `MERGE-READY`, and the command decision tree |
 | [FEATURE_WORKFLOW.md](FEATURE_WORKFLOW.md) | Idea/issue → SPEC + artifacts → phase execution → hardening → review → audit → PR |
 | [ISSUE_WORKFLOW.md](ISSUE_WORKFLOW.md) | Triage → classify (one-shot / fix-now / fix-in-unit / promote / postpone / wontfix / remove) → route → report |
 | [SKILLS.md](SKILLS.md) | Every skill in the system, what it does, and how they compose |

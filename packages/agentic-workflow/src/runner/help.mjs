@@ -69,6 +69,13 @@ export const HELP_REGISTRY = Object.freeze({
     summary: "prints the route one delivery unit takes now, from its own ledger",
     usage: "<unit|issue> | --triage <unit> [--json]",
   },
+  flow: {
+    ownHelp: true,
+    family: "lane",
+    resolution: "project",
+    summary: "the deterministic lane driver: sense the unit, decide the next closed-catalog step, hand it over (`/flow` and `/draft` run it)",
+    usage: "<unit> [--stop-after plan] [--yes] [--retriage] [--record] [--json]",
+  },
   "phase-lint": {
     family: "lane",
     resolution: "project",

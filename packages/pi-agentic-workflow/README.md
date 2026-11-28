@@ -61,13 +61,15 @@ their own — they are composed by the ones above:
 Arguments are forwarded verbatim: `/execute-phase P3 --fix` reaches the skill as
 `P3 --fix`.
 
-Three names are **code doors** rather than skill doors — they have no `SKILL.md`,
+Five names are **code doors** rather than skill doors — they have no `SKILL.md`,
 no argument hint and no catalogue entry, and each does its work in code before
 any model turn starts:
 
 | Command | Use it for |
 | --- | --- |
 | `/advance` | The deterministic conductor: sensor → decide → invoke the next stage (feature 62). |
+| `/draft` | Plan a unit and always stop after the plan with the approval block; continuing is `/flow` (issue #669). |
+| `/flow` | Drive a unit to done: the closed catalog decides the next step from machine state, the model executes only that step (`--yes` overrides a tier stop, `--retriage` re-plans) (issue #669). |
 | `/aw-index` | Index the project docs now: a progressive, resumable sync that reports pending chunks, the pinned embedding model, the last sync and any degradation ([#443](#the-aw-index-command-issue-443)). |
 | `/log-session` | Log the session: the invocation is recorded and the entry target resolved by code ([#429](#the-log-session-code-door-issued-429)). |
 

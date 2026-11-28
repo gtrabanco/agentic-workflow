@@ -84,6 +84,7 @@ while doing one kind of work is one hop away and read on demand:
 | [`docs/workflow/GATE_INVENTORY.md`](docs/workflow/GATE_INVENTORY.md) | asking whether a gate survives a compaction, and where its carrier lives |
 | [`docs/workflow/LOADING.md`](docs/workflow/LOADING.md) | asking which tier a document belongs to, what a session loads always, or where the volatile machine regions must sit inside a file |
 | [`docs/workflow/SKILLS.md`](docs/workflow/SKILLS.md) | looking up what a skill does, or where it runs in the flow |
+| [`docs/workflow/LIFECYCLE.md`](docs/workflow/LIFECYCLE.md) | choosing an entry (`/draft`, `/flow`, `/unit-lane`), or asking what the driver does next: the lifecycles, the review ladder to `MERGE-READY`, the command decision tree and the driver's four declared grammars |
 | [`docs/workflow/REPLICATE.md`](docs/workflow/REPLICATE.md) | replicating the workflow into another project |
 | [`docs/workflow/MIGRATION.md`](docs/workflow/MIGRATION.md) | landing a breaking surface, and needing the migration note beside it |
 | [`docs/workflow/SETUP.md`](docs/workflow/SETUP.md) | provisioning this repo's own authoring toolchain |
@@ -648,6 +649,10 @@ workflow-doctor-mine-grammar | packages/agentic-workflow/README.md | block:workf
 workflow-doctor-bundle-grammar | packages/agentic-workflow/README.md | block:workflow-doctor-bundle@1 | n/a | no
 workflow-doctor-route-grammar | packages/agentic-workflow/README.md | block:workflow-doctor-route@1 | n/a | no
 doctor-triage-rubric | skills/agentic-workflow-doctor/references/RUBRIC.md | block:doctor-triage-rubric@1 | n/a | no
+flow-step-references | docs/workflow/LIFECYCLE.md | block:flow-step-references@1 | n/a | no
+flow-stop-rules | docs/workflow/LIFECYCLE.md | block:flow-stop-rules@1 | n/a | no
+flow-approval | docs/workflow/LIFECYCLE.md | block:flow-approval@1 | n/a | no
+flow-session-modes | docs/workflow/LIFECYCLE.md | block:flow-session-modes@1 | n/a | no
 ```
 
 ### Rendered facts (prose that restates a machine value)

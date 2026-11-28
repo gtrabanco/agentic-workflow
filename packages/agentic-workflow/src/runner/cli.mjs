@@ -13,6 +13,7 @@
  */
 
 import { run as runUnitRoute } from "./unit-route.mjs";
+import { run as runFlow } from "./flow.mjs";
 import { run as runPhaseLint } from "./sensors/phase-lint.mjs";
 import { run as runDiffGuard } from "./sensors/diff-guard.mjs";
 import { run as runWorkflowStatus } from "./sensors/workflow-status.mjs";
@@ -69,6 +70,7 @@ import { run as runScaffoldContract } from "./sensors/scaffold-contract.mjs";
  */
 export const RUNNER_COMMANDS = Object.freeze({
   "unit-route": runUnitRoute,
+  flow: runFlow,
   "phase-lint": runPhaseLint,
   "diff-guard": runDiffGuard,
   "workflow-status": runWorkflowStatus,
