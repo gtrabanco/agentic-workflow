@@ -1138,7 +1138,8 @@ policy is deliberately undecided until a real case decides it (the unit's `D2`).
 unit-folder record, so the ledger-ownership map's `no-script-writer` directive
 keeps every script off it — the same rule that keeps a script away from the unit
 doc — and `--emit` prints the projected ledger on stdout for the caller that owns
-the ledger to land (the envelope's summary goes to stderr). The projection is
+the ledger to land; stderr carries only the `emitted … mark(s); this command
+writes no file` notice, never the ledger nor an envelope. The projection is
 idempotent: feeding the emitted bytes back in produces them again byte for byte,
 because the column is detected rather than appended twice. Only the CLAIM/INV
 tables and only the rows the projection answered are rewritten; prose, other
