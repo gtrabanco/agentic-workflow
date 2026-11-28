@@ -1405,11 +1405,11 @@ dialog.
   pre-telemetry surface was verified behaviourally at Pi 0.99.1 (2026-09-29)
   (`pi install`, package skills, friendly command registration, routed set/clear,
   settings console round-trip, `sendUserMessage` with prompt template expansion).
-  Also verified against Pi 1.6.1 (2026-11-27) with a `tsc --noEmit` run pinned at
-  that release (peer-floor 1.1.0, the range's 1.6.0 leg and today's `latest` leg
-  at 1.7.0 all clean), release notes read from the installed package's own
-  `CHANGELOG.md` (the pi.dev page lags); continuously against `latest` by the
-  `pi-compat-guard` gate — a moving tripwire, never a pin.
+  Also verified against Pi 1.7.0 (2026-11-28) with a two-leg `tsc --noEmit` run
+  (peer-floor 1.1.0 and `latest` 1.7.0 both clean), release notes from the
+  installed package's own `CHANGELOG.md` (the pi.dev changelog lags), and a
+  malformed `models.json` now surfaces as a host `diagnostics` warning in
+  print/JSON/RPC runs. The `pi-compat-guard` gate tracks `latest` continuously, never a pin.
 - The package declares Pi as a peer dependency; it bundles no copy of Pi.
 - Skills can instruct the model to run commands. Review them as you would any
   third-party package.

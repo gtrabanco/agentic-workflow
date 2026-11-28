@@ -52,11 +52,28 @@ export interface PickerOptions {
   multiple?: boolean;
 }
 
+/**
+ * What a dialog waits for, reported as blocked program status (OSC 7501) so a
+ * program-status terminal renders it as the right kind of request. Pi's closed
+ * set is `permission | question | auth`; this package opens no login prompt, so
+ * it never states `auth` (issue #752 S3).
+ */
+export type DialogBlockedKind = "question" | "permission";
+
 /** The interactive slice of `ctx.ui` the settings console uses (AC10). */
 export interface SettingsUi {
-  select(title: string, options: readonly string[]): Promise<string | undefined> | string | undefined;
-  input(title: string, placeholder?: string): Promise<string | undefined> | string | undefined;
-  confirm(title: string, message: string): Promise<boolean> | boolean;
+  /** `blockedKind` is forwarded to the host's dialog options (Pi 1.6.1+). */
+  select(
+    title: string,
+    options: readonly string[],
+    blockedKind?: DialogBlockedKind,
+  ): Promise<string | undefined> | string | undefined;
+  input(
+    title: string,
+    placeholder?: string,
+    blockedKind?: DialogBlockedKind,
+  ): Promise<string | undefined> | string | undefined;
+  confirm(title: string, message: string, blockedKind?: DialogBlockedKind): Promise<boolean> | boolean;
   notify(message: string, kind?: "info" | "warning" | "error"): void;
   /**
    * Optional rich picker: filterable, windowed, with a position indicator and a

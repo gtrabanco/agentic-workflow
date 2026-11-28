@@ -23,7 +23,7 @@ import type { EffectiveConfig, GuardMode } from "../config/types.js";
 import { createExtension } from "./factory.js";
 import type { CommandRegistrar } from "./factory.js";
 import { readGitStatusBounded } from "./receipt-guard.js";
-import type { InvocationContext, SettingsUi } from "../routing/types.js";
+import type { DialogBlockedKind, InvocationContext, SettingsUi } from "../routing/types.js";
 import { createPickerComponent, PICKER_MAX_VISIBLE, pagedSelect } from "../settings/picker.js";
 import { createHintStore, createSerenaReadinessStore, stateFilePath } from "../routing/state.js";
 import { createSerenaReadinessGate, readInitWorkspaceRevision } from "../routing/serena-readiness.js";
@@ -93,6 +93,27 @@ type CustomOpenOptions = NonNullable<Parameters<ExtensionContext["ui"]["custom"]
 };
 
 /**
+ * The dialog options this package passes: the host's own `ExtensionUIDialogOptions`
+ * plus the 1.6.1 `blockedKind`, which the peer floor's typings (1.1.0) and the
+ * workspace pin (1.4.0) predate. The intersection keeps this package's shape
+ * checked on every leg, and the object is structurally assignable to the host's
+ * option type — no cast at the call sites.
+ */
+type DialogOptions = NonNullable<Parameters<ExtensionContext["ui"]["select"]>[2]> & {
+  blockedKind?: DialogBlockedKind;
+};
+
+/**
+ * The option object for a declared blocked kind, or `undefined` when the caller
+ * declares none: then the host's own default stands (`permission` for
+ * `confirm()`, `question` for `select()`/`input()`), and a host older than 1.6.1
+ * sees exactly the two-argument call it always saw.
+ */
+function dialogOptions(blockedKind: DialogBlockedKind | undefined): DialogOptions | undefined {
+  return blockedKind === undefined ? undefined : { blockedKind };
+}
+
+/**
  * The interactive slice the settings console sees: Pi's own `ui` plus the rich
  * picker (P4). The picker is terminal-only, so a non-TUI mode (headless/RPC)
  * gets the plain `select` path — the console never dead-ends (OB-12, PE-004).
@@ -102,9 +123,9 @@ type CustomOpenOptions = NonNullable<Parameters<ExtensionContext["ui"]["custom"]
 export function richUi(ctx: ExtensionContext): SettingsUi {
   const base = ctx.ui;
   return {
-    select: (title, options) => base.select(title, [...options]),
-    input: (title, placeholder) => base.input(title, placeholder),
-    confirm: (title, message) => base.confirm(title, message),
+    select: (title, options, blockedKind) => base.select(title, [...options], dialogOptions(blockedKind)),
+    input: (title, placeholder, blockedKind) => base.input(title, placeholder, dialogOptions(blockedKind)),
+    confirm: (title, message, blockedKind) => base.confirm(title, message, dialogOptions(blockedKind)),
     notify: (message, kind) => base.notify(message, kind),
     pick: async (title, options, opts = {}) => {
       if (ctx.mode !== "tui") {
@@ -700,7 +721,8 @@ export default function extension(pi: ExtensionAPI): void {
           interactive: ctx.hasUI === true,
           approved: (key) => gitIdentityConsent.approved(ctx.cwd, key),
           remember: (key) => gitIdentityConsent.remember(ctx.cwd, key),
-          confirm: (question) => ctx.ui.confirm("git identity guard", question),
+          confirm: (question) =>
+            ctx.ui.confirm("git identity guard", question, dialogOptions("permission")),
           notify: (message, kind) => ctx.ui.notify(message, kind),
         },
       );

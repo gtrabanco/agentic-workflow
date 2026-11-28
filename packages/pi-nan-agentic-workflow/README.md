@@ -664,6 +664,14 @@ which APIs they touch) is in Pi's own
 [models configuration reference](https://pi.dev/docs/latest/models-configuration),
 which ships with the installed host as `docs/models-configuration.md`.
 
+**A typo is reported, not swallowed.** Since Pi 1.7.0 a schema error in
+`models.json` comes back as a warning in the host's `diagnostics`, so print,
+JSON and RPC runs name the offending field —
+`Warning: models.json error: Invalid models.json schema: providers.nan.models.0.contextWindow: must be number`
+— instead of only the misleading `Model "…" not found` / `No API key found`
+a failed lookup produced before that release. A headless run that fails on a
+model now tells the two causes apart.
+
 **When a compatibility key is not enough.** A request the gateway rejects at the
 protocol level is not a config problem, and the recorded
 `max_completion_tokens` workaround — no `token` parameter on the request, the
