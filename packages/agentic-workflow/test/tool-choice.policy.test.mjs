@@ -229,6 +229,12 @@ test("F19 — each type projection declares exactly its module's exports", async
     const runtime = Object.keys(module).filter((key) => key !== "default");
     assert.deepEqual(declared.sort(), runtime.sort(), `${name}.d.mts and ${name}.mjs export different names`);
   }
+  // The dependency advisory pass's comparison (issue #553) is imported by the pi
+  // package's durable-subagents shim (issue #755), so its projection is pinned here too.
+  const declared = [...readFileSync(new URL("../src/dependency/versions.d.mts", import.meta.url), "utf8")
+    .matchAll(/export declare (?:const|function|interface) (\w+)/gu)].map((match) => match[1]);
+  const module = await import("../src/dependency/versions.mjs");
+  assert.deepEqual(declared.sort(), Object.keys(module).sort(), "versions.d.mts and versions.mjs export different names");
 });
 
 test("F20 — availability comes from the doctor's resolver and an unresolvable answer is absent", () => {
