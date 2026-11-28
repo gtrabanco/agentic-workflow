@@ -183,7 +183,7 @@ this document's own tier.
 
 ## Future
 
-- open — 2026-12-23: `/draft --yes` as a deliberate "draft and keep going" spelling (rejected here: continuing is `/flow`; revisit only if operators ask for one command).
+- open — 2026-11-27: `/draft --yes` as a deliberate "draft and keep going" spelling (rejected here: continuing is `/flow`; revisit only if operators ask for one command).
 
 ## Future cost
 
@@ -209,8 +209,12 @@ suites the change re-runs unchanged.
   driver reads the catalog through that same loader, so it inherits the check
   rather than duplicating it.
 - `unit-route.mjs`'s `main()` exits the process on a refusal — affects this unit:
-  the driver's own refusals must be its own exit path, so `flow.mjs` never calls
-  a printer that exits without naming `flow`. Recorded as PE-004.
+  the driver's own refusals (unknown flag, unknown unit, ambiguous token, absent
+  or unreadable doc, unknown step, unsupported stop point) take `flow.mjs`'s own
+  exit path (`FLOW REFUSAL — `), while a doc the triage reader rejects and a
+  malformed ceremony profile surface through `runTriage`'s own `TRIAGE ERROR —`
+  exit — exit 2, stderr, no `next:` line either, re-branded by the pi door as
+  `/flow: …`. Recorded as PE-004.
 
 ## Tasks
 
@@ -286,7 +290,7 @@ Budget: strong
 
 ## Log
 
-- **L1** — 2026-12-23, the issue, verbatim:
+- **L1** — 2026-11-27, the issue, verbatim:
   ```
   ## Goal
 
@@ -306,7 +310,7 @@ Budget: strong
 
   The `sensor → decide → invoke` shape is the one #284's spike validated; this issue is the non-durable, in-session adoption surface. pi-durable adoption itself stays #284's flip-condition decision, not this unit's.
   ```
-- **L2** — 2026-12-23, the operator's order for this session, verbatim:
+- **L2** — 2026-11-27, the operator's order for this session, verbatim:
   ```
   Apply to this repository: issue #669
   ```
@@ -314,33 +318,39 @@ Budget: strong
   agentic-workflow itself: the §5 ledgers are frozen before code, the work is
   applied inline (no `review-change`, no `audit-pr`, no fold cycle, no
   self-granted gate exception), and the operator is the external verifier.
-- **D1** — 2026-12-23, applied inline; the operator is the external verifier (see `decisions.md` D1).
-- **P1** — 2026-12-23, the planning ledgers are frozen before the first line of code (this document, `planning-evidence.md`, `planning-obligations.md`, `decisions.md`) · 363db1f6f.
-- **P2** — 2026-12-23, the driver's suite lands alone and is observed failing on the missing `flow` subcommand · 62a82bb2b.
-- **E1** — 2026-12-23, `bun test packages/agentic-workflow/test/flow.test.mjs` · exit 1 · `0 pass / 14 fail` (observed red: `flow` is not in the dispatch table).
-- **P3** — 2026-12-23, `flow.mjs` implements the sense → decide → hand-off loop and the crate's dispatch, help, usage and README surfaces name it · cdcfe653b.
-- **E2** — 2026-12-23, `bun test packages/agentic-workflow/test/flow.test.mjs` · exit 0 · `14 pass / 0 fail`.
-- **E3** — 2026-12-23, `bun test packages/agentic-workflow/test/runner.dispatch.test.mjs packages/agentic-workflow/test/cli.surface.test.mjs packages/agentic-workflow/test/cli.help.test.mjs` · exit 0 · `37 pass / 0 fail`.
-- **E4** — 2026-12-23, `bun test scripts/unit-route.test.mjs` · exit 0 · `64 pass / 0 fail` (the router's refactor is behaviour-preserving).
-- **E5** — 2026-12-23, `bun test scripts/catalog.test.mjs` · exit 0 · `16 pass / 0 fail`.
-- **E6** — 2026-12-23, `bun test scripts/normative-drift.test.mjs` · exit 0 · `24 pass / 0 fail` (the four new rows resolve).
-- **P4** — 2026-12-23, `/flow` and `/draft` registered as code doors over the driver, the two command names published from `routing/types.ts` · c40fe65ca.
-- **E7** — 2026-12-23, `bun test packages/pi-agentic-workflow/test/flow-command.test.mjs` · exit 0 · `8 pass / 0 fail`.
-- **E8** — 2026-12-23, `bun test --timeout=10000 test/*.test.mjs` in `packages/pi-agentic-workflow` · exit 1 · `1161 pass / 6 fail`; the same six fail on a `git archive main` copy with an identical build (the embedding-provider suites, no `NAN_API_KEY` in this environment) — pre-existing, recorded in `## Known pre-existing issues`.
-- **P5** — 2026-12-23, the lifecycle page, its four declared grammars, the budgets re-pin, the cross-links, the changeset and the roadmap status · fad3e87da.
-- **E9** — 2026-12-23, `bun scripts/check-skill-context.mjs --documents` · exit 0 · `PASS context documents: 8 budgeted documents`; `bun scripts/check-skill-context.mjs` · exit 0 · `PASS context budgets: 33 skills`.
-- **E10** — 2026-12-23, `bun scripts/docs-generate.mjs --check` · exit 0 · `Files: 3 checked · 0 missing · 0 stale · 0 orphaned` · `verdict: PASS`.
-- **E11** — 2026-12-23, `rg -l 'LIFECYCLE\.md' docs/workflow/README.md docs/workflow/LANE_FLOW.md docs/workflow/SKILLS.md AGENTS.md` · exit 0 · four files (the pages index, the lane cheat-sheet, the skills reference and the guide's deep-references index).
-- **E12** — 2026-12-23, `bun test scripts/ledger-ownership.test.mjs` · exit 0 · `15 pass / 0 fail` (the driver's one sanctioned write is the unit's decision ledger; `SPEC.md` stays closed to scripts).
-- **E13** — 2026-12-23, `bun test scripts/guide-split.test.mjs scripts/reading-coverage.test.mjs scripts/runner-launcher-drift.test.mjs scripts/telemetry-coverage.test.mjs scripts/workflow-docs-index.test.mjs scripts/prose-gate-inventory.test.mjs` · exit 0 · `66 pass / 0 fail`.
-- **E14** — 2026-12-23, `bun scripts/version-parity-gate.mjs --content` · exit 0 · `VERDICT: PASS` (the changeset declares all three touched packages).
-- **E15** — 2026-12-23, `bun test scripts/structural-sibling-pins.test.mjs scripts/test-obligation-tags.test.mjs scripts/cli-coverage.test.mjs` · exit 0 · `38 pass / 0 fail`.
-- **E16** — 2026-12-23, the differential check against a `git archive main` copy: `unit-route <unit>`, `unit-route --triage <unit>`, `help unit-route` and `unit-route --help` are byte-identical on the same fixture tree, stdout, stderr and exit code; `help` differs only by the new `flow` row, which is the change itself.
-- **D2** — 2026-12-23, `--record` writes the composition into the unit's `decisions.md` instead of the unit doc's `## Log`: the ledger-ownership map forbids any script from writing `SPEC.md`, and the decision ledger is the one place a process records its own decision (`decisions.md` D11). The pair list moved from one script per ledger to a set so two scripts can be sanctioned for one ledger without losing either pin.
-- **E17** — 2026-12-23, `bun test scripts/telemetry-coverage.test.mjs` and `bun run --cwd packages/agentic-workflow-schema build && bun test test/telemetry.test.mjs` · exit 0 · the two new commands join `PHASE_LABELS` and the mirror suite agrees.
-- **G1** — 2026-12-23, HEAD `fad3e87da`, `bun scripts/local-gate.mjs --jobs auto --no-bail` · exit 1 · every step `PASS` except `crate-suite-bun`, whose only red suites are `doc.query` and `doc.hybrid` — measured failing identically on a `git archive main` copy (the embedding provider is absent in this environment). The four steps depending on it were skipped, not failed.
-- **E18** — 2026-12-23, `bun packages/agentic-workflow/bin/agentic-workflow.mjs verify docs/features/669-deterministic-lane-driver/SPEC.md` · exit 0 · `verify@1` receipt, obligations ledger closed.
-- **P6** — 2026-12-23, verification ran in the foreground (`E9`–`E18`, `G1`), the obligations ledger closed and the PR opened as [#749](https://github.com/gtrabanco/agentic-workflow/pull/749) · 1eb65d180.
+- **D1** — 2026-11-27, applied inline; the operator is the external verifier (see `decisions.md` D1).
+- **P1** — 2026-11-27, the planning ledgers are frozen before the first line of code (this document, `planning-evidence.md`, `planning-obligations.md`, `decisions.md`) · 363db1f6f.
+- **P2** — 2026-11-27, the driver's suite lands alone and is observed failing on the missing `flow` subcommand · 62a82bb2b.
+- **E1** — 2026-11-27, `bun test packages/agentic-workflow/test/flow.test.mjs` · exit 1 · `0 pass / 14 fail` (observed red: `flow` is not in the dispatch table).
+- **P3** — 2026-11-27, `flow.mjs` implements the sense → decide → hand-off loop and the crate's dispatch, help, usage and README surfaces name it · cdcfe653b.
+- **E2** — 2026-11-27, `bun test packages/agentic-workflow/test/flow.test.mjs` · exit 0 · `14 pass / 0 fail`.
+- **E3** — 2026-11-27, `bun test packages/agentic-workflow/test/runner.dispatch.test.mjs packages/agentic-workflow/test/cli.surface.test.mjs packages/agentic-workflow/test/cli.help.test.mjs` · exit 0 · `37 pass / 0 fail`.
+- **E4** — 2026-11-27, `bun test scripts/unit-route.test.mjs` · exit 0 · `64 pass / 0 fail` (the router's refactor is behaviour-preserving).
+- **E5** — 2026-11-27, `bun test scripts/catalog.test.mjs` · exit 0 · `16 pass / 0 fail`.
+- **E6** — 2026-11-27, `bun test scripts/normative-drift.test.mjs` · exit 0 · `24 pass / 0 fail` (the four new rows resolve).
+- **P4** — 2026-11-27, `/flow` and `/draft` registered as code doors over the driver, the two command names published from `routing/types.ts` · c40fe65ca.
+- **E7** — 2026-11-27, `bun test packages/pi-agentic-workflow/test/flow-command.test.mjs` · exit 0 · `8 pass / 0 fail`.
+- **E8** — 2026-11-27, `bun test --timeout=10000 test/*.test.mjs` in `packages/pi-agentic-workflow` · exit 1 · `1161 pass / 6 fail`; the same six fail on a `git archive main` copy with an identical build (the embedding-provider suites, no `NAN_API_KEY` in this environment) — pre-existing, recorded in `## Known pre-existing issues`.
+- **P5** — 2026-11-27, the lifecycle page, its four declared grammars, the budgets re-pin, the cross-links, the changeset and the roadmap status · fad3e87da.
+- **E9** — 2026-11-27, `bun scripts/check-skill-context.mjs --documents` · exit 0 · `PASS context documents: 8 budgeted documents`; `bun scripts/check-skill-context.mjs` · exit 0 · `PASS context budgets: 33 skills`.
+- **E10** — 2026-11-27, `bun scripts/docs-generate.mjs --check` · exit 0 · `Files: 3 checked · 0 missing · 0 stale · 0 orphaned` · `verdict: PASS`.
+- **E11** — 2026-11-27, `rg -l 'LIFECYCLE\.md' docs/workflow/README.md docs/workflow/LANE_FLOW.md docs/workflow/SKILLS.md AGENTS.md` · exit 0 · four files (the pages index, the lane cheat-sheet, the skills reference and the guide's deep-references index).
+- **E12** — 2026-11-27, `bun test scripts/ledger-ownership.test.mjs` · exit 0 · `15 pass / 0 fail` (the driver's one sanctioned write is the unit's decision ledger; `SPEC.md` stays closed to scripts).
+- **E13** — 2026-11-27, `bun test scripts/guide-split.test.mjs scripts/reading-coverage.test.mjs scripts/runner-launcher-drift.test.mjs scripts/telemetry-coverage.test.mjs scripts/workflow-docs-index.test.mjs scripts/prose-gate-inventory.test.mjs` · exit 0 · `66 pass / 0 fail`.
+- **E14** — 2026-11-27, `bun scripts/version-parity-gate.mjs --content` · exit 0 · `VERDICT: PASS` (the changeset declares all three touched packages).
+- **E15** — 2026-11-27, `bun test scripts/structural-sibling-pins.test.mjs scripts/test-obligation-tags.test.mjs scripts/cli-coverage.test.mjs` · exit 0 · `38 pass / 0 fail`.
+- **E16** — 2026-11-27, the differential check against a `git archive main` copy: `unit-route <unit>`, `unit-route --triage <unit>`, `help unit-route` and `unit-route --help` are byte-identical on the same fixture tree, stdout, stderr and exit code; `help` differs only by the new `flow` row, which is the change itself.
+- **D2** — 2026-11-27, `--record` writes the composition into the unit's `decisions.md` instead of the unit doc's `## Log`: the ledger-ownership map forbids any script from writing `SPEC.md`, and the decision ledger is the one place a process records its own decision (`decisions.md` D11). The pair list moved from one script per ledger to a set so two scripts can be sanctioned for one ledger without losing either pin.
+- **E17** — 2026-11-27, `bun test scripts/telemetry-coverage.test.mjs` and `bun run --cwd packages/agentic-workflow-schema build && bun test test/telemetry.test.mjs` · exit 0 · the two new commands join `PHASE_LABELS` and the mirror suite agrees.
+- **G1** — 2026-11-27, HEAD `fad3e87da`, `bun scripts/local-gate.mjs --jobs auto --no-bail` · exit 1 · every step `PASS` except `crate-suite-bun`, whose only red suites are `doc.query` and `doc.hybrid` — measured failing identically on a `git archive main` copy (the embedding provider is absent in this environment). The four steps depending on it were skipped, not failed.
+- **E18** — 2026-11-27, `bun packages/agentic-workflow/bin/agentic-workflow.mjs verify docs/features/669-deterministic-lane-driver/SPEC.md` · exit 0 · `verify@1` receipt, obligations ledger closed.
+- **P6** — 2026-11-28, verification ran in the foreground (`E9`–`E18`, `G1`), the obligations ledger closed and the PR opened as [#749](https://github.com/gtrabanco/agentic-workflow/pull/749) · 1eb65d180.
+- **P7** — 2026-11-28, the external-verify correction batch, code half: ledgers frozen first (tasks P7/P8, AC8's unsupported stop point, obligations O17–O22, PE-015, decisions D12/D13), red corpus observed, then the fix · f19bb183c, 1dbee3557.
+- **E19** — 2026-11-28, `bun test packages/agentic-workflow/test/flow.test.mjs` and `bun test packages/pi-agentic-workflow/test/flow-command.test.mjs` at f19bb183c · exit 1 each · observed red on the two new corpus cases (`14 pass / 1 fail`; `8 pass / 1 fail`).
+- **E20** — 2026-11-28, the same two suites at 1dbee3557 · exit 0 · `15 pass / 0 fail` and `9 pass / 0 fail`; `bunx tsc` in `packages/pi-agentic-workflow` exits 0.
+- **E21** — 2026-11-28, the differential against the pre-change baseline: twelve `flow`/`unit-route`/`help` cases replayed in order on the same fixture tree — ten byte-identical, every exit code identical, and `help`/`helpflow` differ only by B1's synopsis move (`[--stop-after <step>]` → `[--stop-after plan]` and its flag paragraph), the asked-for difference; a non-plan stop answers `FLOW REFUSAL — unsupported stop point '…'` · exit 2 · empty stdout.
+- **D3** — 2026-11-28, the batch's triage: B1 closes `--stop-after` to `plan` with named refusals (decisions.md D12, PE-015); A1/A3/A4/A6 are text-truth corrections with per-line re-dating (decisions.md D13); A5 stays a base-proven environmental disposition already carried by E8/G1.
+- **E22** — 2026-11-28, the batch's prose receipts, every exit as required by O17/O19/O20/O21/O22: the changeset's stale-target pattern exits 1 and its `writes it into the unit's \`decisions.md\`` phrase exits 0; `rg -n 'TRIAGE ERROR' SPEC.md` exit 0; `rg -n 'line carries the same command' planning-obligations.md` exit 0; the five-surface `--stop-after <step>` sweep exits 1; the O22 void-date sweep over SPEC + decisions exits 1 (36 dated rows re-dated per line to the commit that landed them) with `2026-11-2[78]` present; `bun packages/agentic-workflow/bin/agentic-workflow.mjs residual-classify --inventory --base main` · exit 0 · 28 `used` (the new `operatorTokens` among them) and 5 `no-plan-claim` file/symbol orphans, all five surfaces present before this batch — `orphan` is an exit-0 classification, not a failure.
 
 ## Next
 

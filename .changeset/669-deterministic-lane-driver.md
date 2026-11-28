@@ -30,8 +30,9 @@ stop — and every run that carries it appends one human-owner row to the unit's
 `decisions.md`.
 
 Session composition is derived from the recorded verdict (a live Relay packet,
-then the recorded tier, then the size), and `--record` writes it into the unit
-doc's `## Log` before execution starts. The four tables — the step references,
+then the recorded tier, then the size), and `--record`
+writes it into the unit's `decisions.md` before execution
+starts. The four tables — the step references,
 the stop rules, the approval block and the session modes — are declared in
 `docs/workflow/LIFECYCLE.md` and registered in `AGENTS.md`'s
 `normative-surfaces@1`, so the driver's text and its code are one surface.
