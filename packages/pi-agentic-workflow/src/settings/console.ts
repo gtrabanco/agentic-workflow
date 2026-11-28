@@ -66,6 +66,22 @@ export interface SettingsDeps {
   materializeDefaults?: (options: { projectDir: string; globalDir: string; scope: "both"; backup: true }) => MaterializeReceipt;
 }
 
+/**
+ * The console's dialog seam with its own intent stated (issue #752 S3): every
+ * dialog reports `question` — what a settings prompt actually waits for —
+ * unless the call says otherwise, and the calls that authorize a write or
+ * destroy a draft pass `permission` explicitly. Nothing is left to the host's
+ * default, so a future default change cannot silently reclassify a prompt.
+ */
+function questionFirst(ui: SettingsUi): SettingsUi {
+  return {
+    ...ui,
+    select: (title, options, blockedKind = "question") => ui.select(title, options, blockedKind),
+    input: (title, placeholder, blockedKind = "question") => ui.input(title, placeholder, blockedKind),
+    confirm: (title, message, blockedKind = "question") => ui.confirm(title, message, blockedKind),
+  };
+}
+
 interface MaterializeReceipt {
   contract: string;
   scope: string;
@@ -165,7 +181,10 @@ const PROJECT_LABEL = "Project";
 const TYPED = "Type another reference…";
 const INHERIT = "inherit";
 
-export async function runSettingsConsole(deps: SettingsDeps): Promise<ConsoleOutcome> {
+export async function runSettingsConsole(rawDeps: SettingsDeps): Promise<ConsoleOutcome> {
+  // The seam is wrapped once, here, so no dialog in this console can inherit a
+  // host default it did not declare (issue #752 S3).
+  const deps: SettingsDeps = { ...rawDeps, ui: questionFirst(rawDeps.ui) };
   const paths = configFilePaths(deps.agentDir, deps.cwd);
   const merged = loadConfig({ agentDir: deps.agentDir, cwd: deps.cwd, projectTrusted: deps.projectTrusted, readFile: deps.readFile });
   deps.ui.notify(
@@ -796,7 +815,7 @@ async function saveScope(
     deps.ui.notify(["Nothing saved — the draft is invalid:", ...describe(problems)].join("\n"), "error");
     return false;
   }
-  if (!(await deps.ui.confirm(prompts.saveTo(path), describeRouting(file)))) {
+  if (!(await deps.ui.confirm(prompts.saveTo(path), describeRouting(file), "permission"))) {
     deps.ui.notify("Nothing saved.", "info");
     return false;
   }
@@ -875,7 +894,7 @@ async function editStateFlow(deps: SettingsDeps, draft: ConfigFile, effective: S
 }
 
 async function discard(ui: SettingsUi): Promise<boolean> {
-  const dropped = await ui.confirm(prompts.discard, "Your edits are not in any config file yet.");
+  const dropped = await ui.confirm(prompts.discard, "Your edits are not in any config file yet.", "permission");
   if (!dropped) ui.notify("Draft kept — nothing was saved.", "info");
   return Boolean(dropped);
 }
@@ -901,7 +920,7 @@ async function materializeDefaults(deps: SettingsDeps): Promise<void> {
   }
   const paths = configFilePaths(deps.agentDir, deps.cwd);
   deps.ui.notify(prompts.materializeExplanation(dirname(paths.project), dirname(paths.global)), "info");
-  const confirmed = await deps.ui.confirm(prompts.materializeConfirm, prompts.materializeConfirmDetail);
+  const confirmed = await deps.ui.confirm(prompts.materializeConfirm, prompts.materializeConfirmDetail, "permission");
   if (!confirmed) {
     deps.ui.notify(prompts.materializeDeclined, "info");
     return;
@@ -973,6 +992,7 @@ async function editEmbedProfile(deps: SettingsDeps): Promise<void> {
   const accepted = await deps.ui.confirm(
     prompts.embedProfileConfirm,
     `${plan.path} — ${plan.fills.length} key(s) filled from the ${entry.provider} preset; values already written are kept.`,
+    "permission",
   );
   if (!accepted) {
     deps.ui.notify("Nothing was written — the project's index config is unchanged.", "info");

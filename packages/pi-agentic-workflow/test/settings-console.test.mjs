@@ -66,15 +66,15 @@ function scriptedUi(answers) {
     asked,
     notify,
     ui: {
-      select: async (title, options) => {
+      select: async (title, options, blockedKind) => {
         // The ordered chain builder asks "Model chain for <target>?" after every
         // model pick; default it to Done so a single-model route needs no extra
         // answer. A test that builds a chain provides an explicit chainAction slot.
         if (!Object.hasOwn(answers, title) && /^Model chain for .+\?$/u.test(title)) {
-          asked.push({ title, kind: "select", options });
+          asked.push({ title, kind: "select", options, blockedKind });
           return prompts.chainDone;
         }
-        return serve(title, "select", { title, kind: "select", options });
+        return serve(title, "select", { title, kind: "select", options, blockedKind });
       },
       pick: async (title, options, opts = {}) => {
         const value = serve(title, "pick", { title, kind: "pick", options, opts }, { whole: !!opts.multiple });
@@ -82,8 +82,8 @@ function scriptedUi(answers) {
         if (opts.multiple) return Array.isArray(value) ? value : [value];
         return value;
       },
-      input: async (title) => serve(title, "input"),
-      confirm: async (title) => serve(title, "confirm"),
+      input: async (title, placeholder, blockedKind) => serve(title, "input", { title, kind: "input", blockedKind }),
+      confirm: async (title, message, blockedKind) => serve(title, "confirm", { title, kind: "confirm", blockedKind }),
       notify: (message, kind) => notify.push({ message, kind }),
     },
     questions: () => asked.map((entry) => entry.title),
@@ -542,6 +542,52 @@ test("AC5/OB-4: one bulk clear removes several overrides in a single save", asyn
   assert.equal(outcome.status, "saved");
   const saved = JSON.parse(written.get(paths.project));
   assert.equal(saved.commands, undefined, "clearing the last overrides persists no empty map");
+});
+
+// --- Issue #752 S3: each dialog declares what it waits for ---
+
+/** The `blockedKind` a scripted dialog was asked with, by title. */
+const blockedKindOf = (scripted, title) => scripted.asked.find((entry) => entry.title === title)?.blockedKind;
+
+test("the console declares the blocked kind of every dialog that can wait (issue #752)", async () => {
+  // The non-rich path is the one that reaches "Add another?": without the picker
+  // the multi-select falls back to repeated single selects, and each round asks a
+  // confirmation that is a question, never a permission request.
+  const { outcome, scripted } = await run(
+    {},
+    {
+      rich: false,
+      models: ["a/m1", "b/m2"],
+      answers: {
+        [prompts.scope]: "Global",
+        [prompts.menu]: [prompts.bulkApply, prompts.save, prompts.cancel],
+        [prompts.command]: ["plan-feature", "execute-phase"],
+        [prompts.addAnother]: [true, false],
+        [prompts.fields]: prompts.fieldsBoth,
+        [prompts.modelPicked("plan-feature")]: "a/m1",
+        [prompts.thinking("plan-feature")]: "high",
+        [prompts.saveTo(paths.global)]: true,
+      },
+    },
+  );
+
+  assert.equal(outcome.status, "saved", "the scripted flow still saves");
+  assert.equal(
+    blockedKindOf(scripted, prompts.addAnother),
+    "question",
+    "`Add another?` waits for an answer, so it must not report a permission request",
+  );
+  assert.equal(
+    blockedKindOf(scripted, prompts.saveTo(paths.global)),
+    "permission",
+    "a save authorizes a write, so it declares the permission kind explicitly",
+  );
+  for (const entry of scripted.asked) {
+    assert.ok(
+      entry.blockedKind === "question" || entry.blockedKind === "permission",
+      `${entry.kind} dialog "${entry.title}" declares no blocked kind — the host default would decide for it`,
+    );
+  }
 });
 
 test("AC5/OB-4: a bulk route using a registry-missing reference warns per command but still writes", async () => {

@@ -439,6 +439,54 @@ test("the picker overlay reports blocked program status while it waits (issue #6
   );
 });
 
+// Issue #752 S3: 1.6.1 taught `select()`, `confirm()` and `input()` to report the
+// kind of blocked program status (OSC 7501) they wait for. The adapter is the one
+// place the seam meets the host, so the kind crosses here or nowhere.
+test("the dialog seam forwards the blocked kind the host renders (issue #752)", async () => {
+  const calls = [];
+  const ctx = {
+    mode: "non-tui",
+    ui: {
+      select: async (...args) => {
+        calls.push(["select", ...args]);
+        return "a";
+      },
+      input: async (...args) => {
+        calls.push(["input", ...args]);
+        return "typed";
+      },
+      confirm: async (...args) => {
+        calls.push(["confirm", ...args]);
+        return true;
+      },
+      notify: () => {},
+      custom: async () => {
+        throw new Error("the dialog seam never reaches the picker overlay");
+      },
+    },
+  };
+
+  const ui = richUi(ctx);
+  assert.equal(await ui.select("Pick one", ["a"], "question"), "a");
+  assert.equal(await ui.input("Name", "slug", "question"), "typed");
+  assert.equal(await ui.confirm("Write it?", "/fixture/path", "permission"), true);
+  assert.deepEqual(
+    calls,
+    [
+      ["select", "Pick one", ["a"], { blockedKind: "question" }],
+      ["input", "Name", "slug", { blockedKind: "question" }],
+      ["confirm", "Write it?", "/fixture/path", { blockedKind: "permission" }],
+    ],
+    "each dialog carries the kind its caller declared, as the host's own dialog options",
+  );
+
+  // A caller that declares nothing keeps the host default: no option object at
+  // all, so an older host sees exactly the two-argument call it always saw.
+  calls.length = 0;
+  await ui.select("Pick one", ["a"]);
+  assert.deepEqual(calls[0], ["select", "Pick one", ["a"], undefined], "an undeclared kind forwards no option object");
+});
+
 test("the adapter TUI pick keeps the first option when nothing is in force", async () => {
   const single = tuiContext(["\r"]);
   assert.equal(await richUi(single.ctx).pick("Pick a model", ["model-01", "model-02"]), "model-01");
