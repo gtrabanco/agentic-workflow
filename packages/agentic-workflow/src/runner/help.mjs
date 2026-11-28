@@ -214,8 +214,8 @@ export const HELP_REGISTRY = Object.freeze({
   "pre-execution-snapshot": {
     family: "sensor",
     resolution: "project",
-    summary: "builds and verifies the content-bound pre-execution snapshot a review freezes against",
-    ops: ["build", "verify", "contract"],
+    summary: "builds and verifies the content-bound pre-execution snapshot a review freezes against, and projects its changedPaths attribution onto a unit's claim ledger",
+    ops: ["build", "verify", "contract", "claims"],
   },
   "needs-input": {
     family: "sensor",
