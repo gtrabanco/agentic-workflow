@@ -58,19 +58,15 @@ new doc takes ownership of a task:
 
 | Task | Required docs |
 |---|---|
-| Any change to these skills, gates or templates | this guide, then the owner each line below names; [`docs/workflow/GATE_INVENTORY.md`](docs/workflow/GATE_INVENTORY.md) owns which carrier each gate has |
-| Authoring or editing a skill | [`docs/workflow/SKILL_AUTHORING.md`](docs/workflow/SKILL_AUTHORING.md) |
+| Any change to these skills, gates or templates — or authoring a skill | [`docs/workflow/SKILL_AUTHORING.md`](docs/workflow/SKILL_AUTHORING.md), then this guide; [`docs/workflow/GATE_INVENTORY.md`](docs/workflow/GATE_INVENTORY.md) owns which carrier each gate has |
 | Anything under `packages/` | [`docs/workflow/PACKAGES.md`](docs/workflow/PACKAGES.md) |
 | Picking up work, sequencing a unit | [`docs/ROADMAP.md`](docs/ROADMAP.md), [`docs/workflow/LANE_FLOW.md`](docs/workflow/LANE_FLOW.md) |
 | Writing a unit doc | [`docs/features/_TEMPLATE/SPEC.md`](docs/features/_TEMPLATE/SPEC.md), [`docs/fix/_TEMPLATE/SPEC.md`](docs/fix/_TEMPLATE/SPEC.md) |
-| An architecture change or a cross-cutting rule | [`docs/architecture/ARCHITECTURE.md`](docs/architecture/ARCHITECTURE.md), [`docs/architecture/ARCHITECTURAL_INVARIANTS.md`](docs/architecture/ARCHITECTURAL_INVARIANTS.md) |
+| An architecture change or a cross-cutting rule | [`docs/architecture/ARCHITECTURE.md`](docs/architecture/ARCHITECTURE.md), [`docs/architecture/ARCHITECTURAL_INVARIANTS.md`](docs/architecture/ARCHITECTURAL_INVARIANTS.md) — the charter's **Architectural boundaries** slot (below) routes each boundary; `docs/workflow/BOUNDARY_ENFORCEMENT.md` is the projection `runner materialize apply` writes when an outcome is declared, never hand-written |
 | A new capability or integration surface | [`docs/CAPABILITIES.md`](docs/CAPABILITIES.md) |
 | Resuming a session, or what happened last | [`docs/LOGS.md`](docs/LOGS.md), [`docs/workflow/REPOSITORY_STATE.md`](docs/workflow/REPOSITORY_STATE.md) — the domain-separation safeguard's detail is [`docs/workflow/DOMAIN_SEPARATION.md`](docs/workflow/DOMAIN_SEPARATION.md) |
 | The tutorial as a whole | [`docs/workflow/README.md`](docs/workflow/README.md) — it owns the pages index |
-| Project identity, deployment, license & policies | the **Project charter** section (below) — written by `/init-workspace`, read before any design or plan |
-| Acceptance criteria & review passes per surface | `docs/workflow/VERIFICATION_CRITERIA.md` *(the project’s criteria catalogue; extended only with a recorded decision)* |
-| User-facing flows, and what demonstrates each one | `docs/workflow/FEATURE_MAP.md` *(seeded at bootstrap, maintained by the lane’s docs step)* |
-| Declared boundaries and how each is enforced | `docs/workflow/BOUNDARY_ENFORCEMENT.md` *(written by `runner materialize apply`, never by hand)* |
+| The project's own contract — identity, policies, acceptance criteria, the flows each surface carries | the **Project charter** (below), [`docs/workflow/VERIFICATION_CRITERIA.md`](docs/workflow/VERIFICATION_CRITERIA.md), [`docs/workflow/FEATURE_MAP.md`](docs/workflow/FEATURE_MAP.md) — the charter is written by `/init-workspace` and read before any design or plan; the criteria catalogue extends only with a recorded decision; the feature map ships at bootstrap and is maintained by the lane's docs step |
 
 ## Deep references
 
