@@ -228,8 +228,14 @@ test("harvest: the real tree yields the counts the planning ledger froze", () =>
   // tree both produce carries all three, so `reviewMarks` reads 187. findings
   // (1179), legacy ledgers (56) and fold-annotated rows (229) are the union of
   // both parents and do not move.
+  // Unit 755's cycle-1 review (PR #761) then appends its own open `F1` row and
+  // its `R1` mark to `docs/fix/755-durable-subagents-layer-fails/SPEC.md` (`V2`
+  // is a finding mark, not a `review-mark@1`): `findings` reads 1180 while
+  // `reviewMarks` stays 187, because the tree at the reviewed head carried 186
+  // against this frozen 187 — the 755 `R1` is the one that closes the gap.
+  // Closing `F1` deletes its row and returns `findings` to 1179.
 
-  assert.equal(corpus.findings.length, 1179, "every finding row in either carrier is in the corpus");
+  assert.equal(corpus.findings.length, 1180, "every finding row in either carrier is in the corpus");
   assert.equal(corpus.legacyLedgers, 56);
   assert.equal(corpus.foldAnnotated, 229);
   assert.equal(corpus.reviewMarks, 187);
