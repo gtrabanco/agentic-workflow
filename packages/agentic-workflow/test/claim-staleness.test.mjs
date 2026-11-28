@@ -347,9 +347,15 @@ function toyRepo() {
   const dir = mkdtempSync(path.join(tmpdir(), "claim-staleness-"));
   const git = (...args) =>
     spawnSync("git", args, { cwd: dir, encoding: "utf8", env: { ...process.env, GIT_CONFIG_GLOBAL: "/dev/null" } });
+  // The fixture identity rides each commit as `-c`, never as a config write
+  // (issue #514's rule, enforced by scripts/git-config-writes.test.mjs).
+  const commit = (message) =>
+    spawnSync("git", ["-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "commit", "-q", "-m", message], {
+      cwd: dir,
+      encoding: "utf8",
+      env: { ...process.env, GIT_CONFIG_GLOBAL: "/dev/null" },
+    });
   git("init", "-q", "-b", "main");
-  git("config", "user.email", "fixture@example.invalid");
-  git("config", "user.name", "Fixture");
   mkdirSync(path.join(dir, "docs", "features", "toy"), { recursive: true });
   mkdirSync(path.join(dir, "scripts"), { recursive: true });
   writeFileSync(path.join(dir, "scripts", "reader.mjs"), "export const a = 1;\n");
@@ -362,7 +368,7 @@ function toyRepo() {
     unitDoc("- **P1** — the reader · `PHASE1`."),
   );
   git("add", "-A");
-  git("commit", "-q", "-m", "fixture: base");
+  commit("fixture: base");
   const phase1 = git("rev-parse", "HEAD").stdout.trim();
   // The phase line names the commit the phase produced; the sha is written after
   // the commit exists, exactly as a real unit doc records it.
@@ -371,7 +377,7 @@ function toyRepo() {
     unitDoc(`- **P1** — the reader · \`${phase1.slice(0, 7)}\`.`),
   );
   git("add", "-A");
-  git("commit", "-q", "-m", "fixture: record the phase");
+  commit("fixture: record the phase");
   // Now the cited bytes move.
   writeFileSync(path.join(dir, "scripts", "reader.mjs"), "export const a = 2;\n");
   return { dir, phase1, git };
@@ -416,7 +422,12 @@ test("`--check` exits 1 on a stale row and 0 when the ledger is clean", () => {
     writeFileSync(path.join(dir, "scripts", "reader.mjs"), "export const a = 2;\n");
     const committed = spawnSync("git", ["add", "-A"], { cwd: dir, encoding: "utf8" });
     assert.equal(committed.status, 0);
-    spawnSync("git", ["commit", "-q", "-m", "fixture: settle"], { cwd: dir, encoding: "utf8" });
+    const settled = spawnSync(
+      "git",
+      ["-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "commit", "-q", "-m", "fixture: settle"],
+      { cwd: dir, encoding: "utf8", env: { ...process.env, GIT_CONFIG_GLOBAL: "/dev/null" } },
+    );
+    assert.equal(settled.status, 0, settled.stderr);
     // Settling the working tree does not change the answer: the mark is against a
     // RECORDED phase revision, and that phase still predates the move.
     assert.equal(runBin(["claims", "--unit", "toy", "--root", dir, "--check"], dir).status, 1);
