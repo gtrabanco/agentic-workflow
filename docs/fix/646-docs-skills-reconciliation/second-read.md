@@ -177,6 +177,7 @@ docs/workflow/CONFIG.md | 2-rarely | scanned | structural scan: headings, owner 
 docs/workflow/CLI.md | 1-on-demand | full | written and read end-to-end by unit 553 (this page is that unit's own deliverable, so the read is the author's)
 docs/workflow/DOMAIN_SEPARATION.md | 2-rarely | scanned | structural scan: headings, owner pointers and the unit's patterns
 docs/workflow/FEATURE_WORKFLOW.md | 1-on-demand | full | read end-to-end this session
+docs/workflow/FEATURE_MAP.md | 2-rarely | full | written by this session's substrate upgrade and read end-to-end (the author's read)
 docs/workflow/FEEDBACK.md | 2-rarely | scanned | structural scan: headings, owner pointers and the unit's patterns
 docs/workflow/GATE_INVENTORY.md | 1-on-demand | full | read end-to-end this session
 docs/workflow/GIT_IDENTITY_HARDENING.md | 2-rarely | scanned | structural scan: headings, owner pointers and the unit's patterns
@@ -201,6 +202,7 @@ docs/workflow/SKILLS.md | 1-on-demand | full | read end-to-end this session
 docs/workflow/SKILL_AUTHORING.md | 2-rarely | scanned | structural scan: headings, owner pointers and the unit's patterns
 docs/workflow/SKILL_CONTEXT_BUDGETS.json | 1-on-demand | full | read end-to-end this session
 docs/workflow/TIER_COST.md | 2-rarely | scanned | structural scan: headings, owner pointers and the unit's patterns
+docs/workflow/VERIFICATION_CRITERIA.md | 2-rarely | full | written by this session's substrate upgrade and read end-to-end (the author's read)
 docs/workflow/WORKFLOW_INVARIANTS.md | 1-on-demand | full | read end-to-end this session
 docs/workflow/WORKTREES.md | 2-rarely | scanned | structural scan: headings, owner pointers and the unit's patterns
 skills/agentic-workflow-doctor/SKILL.md | 1-on-demand | full | read end-to-end (issue #703): the invocation chain over the five `workflow-doctor` ops, the read-only profile and the closing hand-off
