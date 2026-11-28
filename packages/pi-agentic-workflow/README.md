@@ -530,16 +530,20 @@ here:
   `@earendil-works/pi-coding-agent` through a *bare specifier*, so it binds
   whatever copy the sandbox hoists, and `pi update --all` never re-resolves a
   hoisted peer no extension asks for directly — a copy an old install left
-  behind keeps loading. Before loading the layer the shim resolves the host and
-  checks it against this package's declared `peerDependencies` range (read from
-  its own manifest, never restated in code): a host module that **satisfies** it
-  is preferred over one that does not and the layer loads silently; an
-  **unsatisfying or unreadable** one is a `session_start` warning naming the
-  resolved version, its path and the one-line repair —
-  `bun add @earendil-works/pi-coding-agent` in the sandbox's package manager
-  directory (`~/.pi/agent/npm`) — because reinstalling *this* package cannot
-  reach the hoisted copy. Nothing here writes to the sandbox: the repair is
-  reported, never performed. Since 6.4.0 the extension ships **no release notes** of its own (its
+  behind keeps loading. Before loading the layer the shim resolves the host
+  **where the dependency's own import will bind it** — resolution starts at the
+  dependency's entry, the same `node_modules` walk its bare specifier runs — and
+  checks that copy against this package's declared `peerDependencies` range
+  (read from its own manifest, never restated in code). Resolution knowledge
+  prefers the running host when `PI_PACKAGE_DIR` names it — that preference
+  decides what the warning can say, never what loads: a **satisfying** bound
+  copy loads the layer silently; an **unsatisfying or unreadable** one is a
+  `session_start` warning naming the resolved version, its path and the
+  one-line repair — `bun add @earendil-works/pi-coding-agent` in the sandbox's
+  package manager directory (`~/.pi/agent/npm`) — plus what the running host is
+  when it can be named, because reinstalling *this* package cannot reach the
+  hoisted copy. Nothing here writes to the sandbox: the repair is reported,
+  never performed. Since 6.4.0 the extension ships **no release notes** of its own (its
   startup notice is gone and `changelog-state.json` is no longer used), and
   because it is loaded **by path**, Pi's *Extension Updates* page — which reads
   npm- and git-installed packages — cannot show them for it: read

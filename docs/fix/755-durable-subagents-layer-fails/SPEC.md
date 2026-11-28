@@ -1,8 +1,8 @@
 ---
 type: fix
 scope: medium
-ac-hash: 7c5059be65eca88817be98ca1f83d9e1360cd54c963c0c7c9e698520bfa987f9
-roadmap_summary: The durable-subagents layer stops failing on a stale hoisted host copy — the diagnostic names the resolved copy's version and the repair, resolution binds the running host first, and the declared peer range is enforced at the sandbox
+ac-hash: a282842fc34d5ff2ace1d132568adee22d1fe552b141cb540045c3c2ae552ceb
+roadmap_summary: The durable-subagents layer stops failing on a stale hoisted host copy — the check judges the copy the dependency's own import binds, a mismatch becomes one warning naming the resolved version and its one-line repair instead of a reinstall, and a satisfying binding loads the layer silently
 ---
 
 # fix/755-durable-subagents-layer-fails
@@ -38,7 +38,7 @@ Requirements, each numbered `S#` and quoting the requester's own words verbatim.
 **S3 — Enforce peer range at the sandbox.**
 > Peer range is declared but unenforced at the sandbox. `pi-agentic-workflow` declares `peerDependencies: { \"@earendil-works/pi-coding-agent\": \">=1.1.0\" }`, yet the effective resolution in the sandbox violates it; nothing checks the resolved copy.
 
-**S4 — The reported failure must stop: the layer loads.**
+**S4 — The reported failure must stop naming the wrong repair.**
 > ## Symptom
 >
 > Every session prints:
@@ -50,7 +50,7 @@ Requirements, each numbered `S#` and quoting the requester's own words verbatim.
 > Reinstall the package, or remove the ./dist/extension/subagents-entry.js entry from this package's pi.extensions to disable the layer deliberately.
 > ```
 
-**S5 — The remediation the reporter verified must not be required by a user who never touches the sandbox.**
+**S5 — The remediation the reporter verified must be reported, never routed through a reinstall.**
 > Remediation that worked here: `cd ~/.pi/agent/npm && bun add @earendil-works/pi-coding-agent@1.7.0`, then restart sessions.
 
 ## Impact
@@ -105,6 +105,7 @@ Nothing is removed. Strictly additive inside `subagents.ts`: the shim gains a ho
 
 ## Future
 
+- `open`, 2026-11-28 — the running host is nameable only when the operator exports `PI_PACKAGE_DIR` (pi's `ExtensionAPI` exposes no `getPackageDir`), so the running-host preference is diagnostic knowledge, never a load gate; only the dependency-side binding change (below) or the operator's repair moves a stale binding. Recorded by the external-verify batch after blocker 2.
 - `open`, 2026-11-28 — S2's second half ("resolving against the running pi's own module … would remove the whole class of failure") is delivered for this package's provision path only. A host-side resolution change that makes `pi-extensible-workflows`'s own bare specifier bind the running pi is the dependency's file, and this unit does not patch it.
 
 ## Future cost
@@ -155,9 +156,9 @@ Nothing is removed. Strictly additive inside `subagents.ts`: the shim gains a ho
 ## Acceptance criteria
 
 - **AC1 (S1)** — When the resolved host copy's version does not satisfy the declared peer range, the session diagnostic names that resolved version and a repair that updates the sandbox copy. Proven by `bun test test/subagents-provision.test.mjs` (case: `an out-of-range resolved host reports its version and the repair`) in `packages/pi-agentic-workflow`.
-- **AC2 (S2)** — Resolution prefers a host module that satisfies the peer range over a sandbox copy that does not, and the layer loads through it. Proven by the same suite (case: `an in-range host module is preferred over an out-of-range sandbox copy`).
+- **AC2 (S2)** — Resolution names the best available host module (the running host when the caller can name it, else the sandbox's resolution), and the load gate is the copy the dependency's own import binds: the layer loads through a satisfying binding and refuses — one warning naming the bound version — when it does not, so a fresher copy beside this package or a nameable running host cannot mask a stale binding. Proven by the same suite (cases: `an in-range host module is preferred over an out-of-range sandbox copy`, `a fresh copy beside this package cannot mask the stale copy the dependency binds`, `a scratch install shaped like the reporter's sandbox loads the layer`).
 - **AC3 (S3)** — The check reads the range from this package's own `peerDependencies` rather than a literal, and a satisfied range produces no diagnostic. Proven by the same suite (case: `a satisfied peer range loads silently`).
-- **AC4 (S4)** — The reported failure no longer occurs when a satisfiable host is reachable: the resolved factory's tools register and the pre-existing five tools remain the registered set. Proven by the same suite (cases `the resolved factory registers its tools through the host API`, `a scratch install shaped like the reporter's sandbox loads the layer`).
+- **AC4 (S4)** — The reported failure — the missing-export text and its `Reinstall the package` advice — never occurs for a peer mismatch: a stale bound copy becomes exactly one warning naming the resolved version, the repair and what the running host is when it can be named (case: `a stale bound copy refuses even when a satisfying running host is nameable`), and a satisfying binding lets the resolved factory's tools register with the pre-existing five tools remaining the registered set (cases: `the resolved factory registers its tools through the host API`, `the entry hands the running host to the provision, so the stale copy is not the binding`).
 - **AC5 (S5)** — No repository surface requires a user to hand-edit `~/.pi/agent/npm`: the README states the resolution order and the one-line repair, and the package never writes to that directory. Proven by the same suite (README cases) plus `rg -n '\.pi/agent/npm' packages/pi-agentic-workflow/src` matching zero *writes*.
 
 ## Findings
@@ -253,4 +254,14 @@ None.
 - **P5** — 2026-11-28, the roadmap row was written by `ceremony roadmap row-upsert` (never hand-edited), the journal entry by `journal write`, and the generated projection by `docs-generate` · commit follows this log.
 - **G4** — 2026-11-28, `bun scripts/local-gate.mjs --no-bail` at `5222d99cb` · exit 1 at **two pre-existing** steps, nothing else: `worktree-guard` (G3's two stale worktrees of other branches) and `crate-suite-bun`. The crate failure was measured against the base: this tree fails 9 unique cases, base `1542fe8bd` fails 14, and `comm -23 mine base` is **empty** — every crate failure is pre-existing (doc/embedding query paths needing a provider and network, plus two `bin` cases), none introduced here.
 - **G5** — 2026-11-28, `bun scripts/run-root-suite.mjs` · exit 0 · the whole root suite green (the previous `check-skill-context` failure was the README budget, repaired in `5222d99cb` — the manifest's own `ceil(measured × 1.10)` arithmetic, recorded as a hand edit in the `documents` sources row because that section has no emitter).
+- **D4** — 2026-11-28, external-verify batch 1: the peer gate moved to the copy the dependency's bare specifier actually binds — resolution starts at its entry, the same `node_modules` walk its import runs — so a nameable running host or a fresher copy beside this package can never mask a stale binding and the load can no longer fail with the export error this unit replaces. The running host stays diagnostic knowledge (the warning says what it is when it can be named). D2's "reported as unenforceable" overstated: no path prints that word — an unenforceable spec answers `false` and the warning reports the range as unmet (`subagents.ts` comment corrected).
+- **D5** — 2026-11-28, external-verify batch 1 re-scoped what the verdict disproved: the S4/S5 titles, AC2, AC4 and `roadmap_summary` now state the delivered report-and-gate behaviour; O13's validator locator points at the string the Fixes row carries (`durable-subagents-layer-fails`, ROADMAP line 248) and O3's case name matches the shipped case — both cells corrected under the verdict's own smallest action. O2's prose half ("the dependency's factory loads through it") is superseded by AC2; its validator (the function-level preference) still reproduces.
+- **E8** — 2026-11-28, the RED run — `bun test test/subagents-provision.test.mjs` in `packages/pi-agentic-workflow` · exit 1 · 20 pass, 3 fail: `a stale bound copy refuses even when a satisfying running host is nameable`, `a fresh copy beside this package cannot mask the stale copy the dependency binds`, `a scratch install shaped like the reporter's sandbox loads the layer` — the external-verify reproducers, committed alone at `d848e1968`.
+- **E9** — 2026-11-28, GREEN after the gate moved — `bun run build` · exit 0; `bun test test/subagents-provision.test.mjs` · exit 0 · 23 pass (every base case name still present, 12 → 23) · `8626a5193`.
+- **E10** — 2026-11-28, O13 — `bun packages/agentic-workflow/bin/agentic-workflow.mjs verify docs/fix/755-durable-subagents-layer-fails/SPEC.md` · exit 0 (`VERIFY PASS`, 0 violations); `rg -n 'durable-subagents-layer-fails' docs/ROADMAP.md` · exit 0 · one match (line 248).
+- **G6** — 2026-11-28, `bun run test` in `packages/pi-agentic-workflow` with this session's ambient provider variables unset (`NAN_API_KEY`, `AGENTIC_WORKFLOW_DOC_EMBEDDINGS_*`, advisory-disclosed) · exit 0 · 1191 pass, 0 fail; `bun test test/serena-activation-check.test.mjs` · exit 0 · 3 pass.
+- **G7** — 2026-11-28, `bun scripts/docs-generate.mjs` · the roadmap row written by the emitter from the new `roadmap_summary` (never hand-edited), then `bun scripts/docs-generate.mjs --check` · exit 0 · `3 checked · 0 missing · 0 stale · 0 orphaned`, verdict PASS; `bun scripts/check-skill-context.mjs --documents` · exit 0 · PASS; `bun scripts/version-parity-gate.mjs --content --base origin/main` · exit 0 · `VERDICT: PASS`.
+- **G8** — 2026-11-28, `bun scripts/run-root-suite.mjs` · exit 0 · the whole root suite green.
+- **G9** — 2026-11-28, `bun packages/agentic-workflow/bin/agentic-workflow.mjs scaffold-contract authoring docs/fix/755-durable-subagents-layer-fails/SPEC.md` · exit 0 · `ACCEPTANCE MATCH` — `ac-hash` re-pinned to the amended section.
+- **P6** — 2026-11-28, external-verify batch 1: red reproducers `d848e1968`, the bound-copy gate `8626a5193`, this docs/ledger/claims commit — one correction batch, inline, no review cycle (§4).
 
