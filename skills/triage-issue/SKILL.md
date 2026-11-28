@@ -1,7 +1,7 @@
 ---
 name: triage-issue
 user-invocable: true
-version: 4.10.1
+version: 5.0.0-canary.20261128.1
 argument-hint: <issue-number> [more issue numbers…] | <audit-id> F<k> [F<j>…] | --prioritize-now <unit> F<k> [F<j>…]
 author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT

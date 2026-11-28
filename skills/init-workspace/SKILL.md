@@ -1,7 +1,7 @@
 ---
 name: init-workspace
 user-invocable: true
-version: 4.10.1
+version: 5.0.0-canary.20261128.1
 argument-hint: <target-dir>
 author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT

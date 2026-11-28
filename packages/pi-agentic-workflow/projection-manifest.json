@@ -6,9 +6,14 @@
       "id": "runner-invocation-not-shipped",
       "op": "pointerize",
       "source": "skills/runner-contract/references/RUNNER.md",
-      "selector": { "path": ["The runner — one invocation, one pin, one closed set", "The invocation"] },
+      "selector": {
+        "path": [
+          "The runner — one invocation, one pin, one closed set",
+          "The invocation"
+        ]
+      },
       "enforcingCommand": "runner resolve",
-      "contentHash": "sha256:25d83dba86326a9587b9c55a6bc9e11349aaafead20d2723c398adfafa495627"
+      "contentHash": "sha256:855ee218e5d09fb251073e62c4386dd5f9df98ca81701e8c4b1c01e4cea67bfe"
     }
   ]
 }

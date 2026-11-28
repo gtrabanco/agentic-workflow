@@ -1,7 +1,7 @@
 ---
 name: aw-doctor
 user-invocable: true
-version: 4.10.1
+version: 5.0.0-canary.20261128.1
 argument-hint: "[--unit <slug>] [--search \"<words>\"] [--candidate <n>]"
 description: >
   Short name for /agentic-workflow-doctor: one user-initiated pass over this

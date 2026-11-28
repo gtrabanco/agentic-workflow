@@ -1,6 +1,6 @@
 {
   "name": "@gtrabanco/pi-agentic-workflow",
-  "version": "4.10.1",
+  "version": "5.0.0-canary.20261128.1",
   "description": "Pi package: canonical agentic-workflow skills, friendly slash commands, and per-command model routing.",
   "keywords": [
     "pi-package",
@@ -62,8 +62,8 @@
     "@earendil-works/pi-tui": "*"
   },
   "dependencies": {
-    "@gtrabanco/agentic-workflow": "4.10.1",
-    "@gtrabanco/agentic-workflow-schema": "4.10.1",
+    "@gtrabanco/agentic-workflow": "5.0.0-canary.20261128.1",
+    "@gtrabanco/agentic-workflow-schema": "5.0.0-canary.20261128.1",
     "jsonc-parser": "3.3.1",
     "pi-extensible-workflows": "6.4.0"
   },

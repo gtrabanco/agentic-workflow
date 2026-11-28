@@ -1,7 +1,7 @@
 ---
 name: review-debt
 user-invocable: false
-version: 4.10.1
+version: 5.0.0-canary.20261128.1
 author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
