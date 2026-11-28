@@ -81,9 +81,13 @@ proves it. This section is the anchor the review's per-criterion coverage reads.
 **AC1 (S1).** A CLAIM/INV row whose cited repository path moved after a recorded
 phase is marked exactly `stale (P<n> · <sha>)` — the literal shape, with the
 newest recorded phase whose revision no longer contains the cited bytes — and
-the mark reaches the row's own `staleness` cell in `sources.md`.
+`claims --emit` prints the row's own `staleness` cell carrying it. The command
+emits those bytes and never writes them: `sources.md` is a durable unit-folder
+record, so the ledger-ownership map's `no-script-writer` directive keeps every
+script off it (`D5`).
 Proved by: `bun test packages/agentic-workflow/test/claim-staleness.test.mjs` exits 0
-and its `stale mark` cases assert the exact string (never a substring match).
+and its `stale mark` cases assert the exact string (never a substring match), and
+its `--emit` case proves the ledger file is byte-unchanged afterwards.
 
 **AC2 (S2, S2a).** The consumer contract is recorded as a decision (`D2`) and
 observable in behaviour: the projection writes the mark, `--check` exits 1 when a
@@ -197,11 +201,11 @@ P1…Pn with stable IDs, one line each, smallest first.
   (Implements: S1)
   - Relevant files: packages/agentic-workflow/test/claim-staleness.test.mjs
 
-- P3 — GREEN: the projection module — cited-path extraction, phase→revision reading, the mark grammar, the idempotent column write (validator: `bun test packages/agentic-workflow/test/claim-staleness.test.mjs` exits 0)
+- P3 — GREEN: the projection module — cited-path extraction, phase→revision reading, the mark grammar, and the idempotent column projection (validator: `bun test packages/agentic-workflow/test/claim-staleness.test.mjs` exits 0)
   (Implements: S1)
   - Relevant files: packages/agentic-workflow/src/runner/sensors/claim-staleness.mjs
 
-- P4 — The `claims` op on `pre-execution-snapshot`: `--write`, `--check`, the envelope, and the unchanged three ops (validator: `bun test packages/agentic-workflow/test/claim-staleness.test.mjs scripts/pre-execution-sensor.test.mjs scripts/pre-execution-attribution.test.mjs` exits 0)
+- P4 — The `claims` op on `pre-execution-snapshot`: `--emit`, `--check`, the envelope, and the unchanged three ops (validator: `bun test packages/agentic-workflow/test/claim-staleness.test.mjs scripts/pre-execution-sensor.test.mjs scripts/pre-execution-attribution.test.mjs` exits 0)
   (Implements: S1, S2)
   - Relevant files: packages/agentic-workflow/src/runner/sensors/pre-execution-snapshot.mjs, packages/agentic-workflow/src/runner/help.mjs
 
@@ -231,6 +235,7 @@ One row per Engineering claim the change rests on. `authority-kind` is the close
 | PE-006 | known | The mark vocabulary is a Class-3 runner-internal set — no published contract names it — so `vocabulary-residency@1` keeps it in its own module instead of the schema package, and no schema/version mirror enters this PR | `docs/architecture/ARCHITECTURAL_INVARIANTS.md:65` (`vocabulary-residency@1`, `runner-internal` row) | current | O1; O9 |
 | PE-007 | known | Adding an *op* to an existing subcommand needs no usage-line or README-token change: the surface suite pins only the top-level subcommand list, and the help index carries ops per subcommand | `packages/agentic-workflow/test/cli.surface.test.mjs:19-27`; `packages/agentic-workflow/src/runner/help.mjs:214-219` | current | O9 |
 | PE-008 | known | A `spec-by-reference` unit doc (this one) requires `Specs … Tasks … Log` and tolerates `## Acceptance criteria` as a shared section — the shape precedent feature 105 ships — so the criteria section goes in without a re-cut | `packages/agentic-workflow-schema/src/pre-execution.ts:253-305`; `docs/features/105-projection-manifest-vocabulary/SPEC.md:24,84`; `agentic-workflow unit-doc 105-projection-manifest-vocabulary validate` → `"ok": true` | current | O10 |
+| PE-009 | known | A script may not write a durable unit-folder ledger: the `ledger-ownership@1` map declares one owner per AC16 truth class and a `# no-script-writer:` directive for the records no script may touch, and its scan fails closed on a script writing a declared-or-durable ledger it is not declared for — feature 669 hit the same boundary writing `decisions.md` instead of `SPEC.md` | `skills/pre-execution-review/references/LEDGERS.md:180-191` (`ledger-ownership@1`, the directive line); `scripts/ledger-ownership.test.mjs:772` (scan 2 over the real tree) | current | O11; D5 |
 
 ### Obligations
 
@@ -243,11 +248,12 @@ One row per normative behaviour, compatibility invariant, affected use case, and
 | O3 | S1; AC1 | A row whose `source` cell cites no resolvable repository path is `no-citation` — never `stale`, and never silently dropped from the report | P3 | P3 | execute-phase | `bun test packages/agentic-workflow/test/claim-staleness.test.mjs` exits 0 | the `no-citation` case (an owner-answer row) passes | planned |
 | O4 | S1; AC1; PE-003 | Failure state: a unit recording no `P<n>` phase leaves every row `unverified: no-recorded-phase` — a false `fresh` is a defect | P3 | P3 | execute-phase | `bun test packages/agentic-workflow/test/claim-staleness.test.mjs` exits 0 | the `no phase` case asserts the exact unverified mark | planned |
 | O5 | S1; AC1 | Failure state: a recorded revision git cannot resolve leaves the row `unverified: unresolvable-revision (P<n>)`, never a silent `fresh` | P3 | P3 | execute-phase | `bun test packages/agentic-workflow/test/claim-staleness.test.mjs` exits 0 | the `unresolvable revision` case asserts the exact unverified mark | planned |
-| O6 | S1; AC1; PE-002; PE-004 | Compatibility: `--write` touches only the `staleness` column and is idempotent — every other cell, row, escape (`\|`) and byte outside the CLAIM/INV tables is preserved, and a second run is byte-identical | P3 | P3 | execute-phase | `bun test packages/agentic-workflow/test/claim-staleness.test.mjs` exits 0 | the `write` cases: byte-equal second run, escaped-pipe row preserved, prose outside the table untouched | planned |
+| O6 | S1; AC1; PE-002; PE-004; D5 | Compatibility: the projection touches only the `staleness` column and is idempotent — every other cell, row, escape (`\|`) and byte outside the CLAIM/INV tables is preserved, a second `--emit` is byte-identical, and the command writes no file | P3 | P3 | execute-phase | `bun test packages/agentic-workflow/test/claim-staleness.test.mjs` exits 0 | the projection cases: byte-equal second emit, escaped-pipe row preserved, prose outside the table untouched, and the ledger file byte-unchanged after `--emit` | planned |
 | O7 | S1; PE-001 | Compatibility: the existing `build`/`verify`/`contract` ops keep their behaviour and exit contracts; the op is additive | P4 | P4 | execute-phase | `bun test scripts/pre-execution-sensor.test.mjs scripts/pre-execution-attribution.test.mjs` exits 0 | both suites green at the change head | planned |
 | O8 | S2; S2a; AC2 | The consumer is mark-and-report, never a blocker: `--check` exits 1 when a stale row exists, 0 when none does, 2 on a usage error, and no gate in the tree consumes the op | P4 | P4 | execute-phase | `bun test packages/agentic-workflow/test/claim-staleness.test.mjs` exits 0 | the `--check` exit-code cases plus the no-consumer search recorded as `E` in `## Log` | planned |
 | O9 | S1; S2a; AC1; PE-005; PE-006; PE-007 | The new surface is declared where the machine reads it: the crate README's Commands row carries the op and publishes `claim-staleness@1`, and `AGENTS.md`'s `normative-surfaces@1` names the block | P5 | P5 | execute-phase | `node scripts/normative-drift.test.mjs` exits 0 and `bun test packages/agentic-workflow/test/cli.surface.test.mjs` exits 0 | both exit codes in `## Log` `E` lines | planned |
 | O10 | S2a; AC5; PE-008 | Documentation currency: this unit doc validates in its own shape and the projection runs on this unit's own claim ledger, printing one marked row per CLAIM/INV row | P1 | P1 | execute-phase | `agentic-workflow unit-doc 634-claim-staleness-projection validate` prints `"ok": true`; `agentic-workflow pre-execution-snapshot claims --unit 634-claim-staleness-projection` prints a mark for every row | the validator outputs recorded in `## Log` `E`/`G` lines | planned |
+| O11 | S1; AC1; PE-009 | The command is read-only under every flag: `--emit` and the envelope print, and no path opens `sources.md` for writing, because the ledger-ownership map forbids a script writing a durable unit-folder record | P4 | P4 | execute-phase | `bun test scripts/ledger-ownership.test.mjs` exits 0 | that suite's scan 2 green over the real tree, plus the same obligation pinned by the claim suite's byte-unchanged case | planned |
 
 ## Triaged steps
 

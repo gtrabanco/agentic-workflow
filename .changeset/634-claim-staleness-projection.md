@@ -10,10 +10,11 @@ own `changedPaths` attribution (`changedBoundPaths`, the reader `verify` already
 reports drift through) onto a unit folder's CLAIM/INV rows and marks a row
 `stale (P<n> · <sha>)` when the bytes it cites moved after a recorded phase. The
 phase map is the unit doc's `## Log` `P<n>` lines, read through the shared
-`parseLog`; the mark lands in an appended `staleness` column by `--write`, and a
-second run is byte-identical because the column is detected rather than appended
-twice. Only the CLAIM/INV tables and only the rows the projection answered are
-rewritten.
+`parseLog`. `--emit` prints the projected ledger with the mark in an appended
+`staleness` column and never writes it: `sources.md` is a durable unit-folder
+record, so the ledger-ownership map's `no-script-writer` directive keeps every
+script off it and the caller that owns the ledger lands the bytes. The projection
+is idempotent, and only the CLAIM/INV tables and only the rows it answered change.
 
 It reports and never gates: the default exit is 0 whatever the rows say, `--check`
 answers 1 when a row came back `stale`, and no surface consumes that code — the

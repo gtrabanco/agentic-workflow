@@ -398,17 +398,24 @@ test("the `claims` op reports a stale row and exits 0 (mark-and-report, never a 
   }
 });
 
-test("`--write` projects the mark into sources.md, and a second run changes no byte", () => {
+test("`--emit` prints the projected ledger with the mark, and writes no file", () => {
   const { dir } = toyRepo();
   const sources = path.join(dir, "docs", "features", "toy", "sources.md");
   try {
-    const first = runBin(["claims", "--unit", "toy", "--root", dir, "--write"], dir);
-    assert.equal(first.status, 0, first.stderr);
-    const once = readFileSync(sources, "utf8");
-    assert.match(once, /\| staleness \|$/mu);
-    const second = runBin(["claims", "--unit", "toy", "--root", dir, "--write"], dir);
-    assert.equal(second.status, 0, second.stderr);
-    assert.equal(readFileSync(sources, "utf8"), once, "idempotent");
+    const before = readFileSync(sources, "utf8");
+    const emitted = runBin(["claims", "--unit", "toy", "--root", dir, "--emit"], dir);
+    assert.equal(emitted.status, 0, emitted.stderr);
+    assert.match(emitted.stdout, /\| staleness \|$/mu, "the header gains the column");
+    assert.match(emitted.stdout, /\| stale \(P1 · [0-9a-f]{12}\) \|$/mu);
+    assert.equal(readFileSync(sources, "utf8"), before, "a script never writes a durable unit-folder record");
+    assert.match(emitted.stderr, /writes no file/u, "the hand-over says so out loud");
+
+    // Idempotence is a property of the projection, proved by feeding the emitted
+    // bytes back in — the fixture writes that file, never the command.
+    writeFileSync(sources, emitted.stdout);
+    const again = runBin(["claims", "--unit", "toy", "--root", dir, "--emit"], dir);
+    assert.equal(again.status, 0, again.stderr);
+    assert.equal(again.stdout, emitted.stdout, "a second projection is byte-identical");
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }

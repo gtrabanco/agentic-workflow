@@ -122,10 +122,13 @@ recipe owner stays this file; §8 owns the rule the recipe serves.
 
 The same attribution answers a second question: did the bytes a planning claim
 cites move after the phase that recorded it? `pre-execution-snapshot claims --unit
-<NN-slug|fix-N> [--write] [--check]` reads the unit's `sources.md` CLAIM/INV rows,
+<NN-slug|fix-N> [--emit] [--check]` reads the unit's `sources.md` CLAIM/INV rows,
 takes the phase map from the unit doc's `## Log` `P<n>` lines, and marks a row
 `stale (P<n> · <sha>)` when a cited path moved after that phase's revision.
-`--write` lands the mark in an appended `staleness` column, and it is idempotent.
+`--emit` prints the projected ledger with the mark in an appended `staleness`
+column; it never writes it — `sources.md` is a durable unit-folder record, so the
+ledger-ownership map's `no-script-writer` directive keeps every script off it, and
+the caller that owns the ledger lands the bytes. The projection is idempotent.
 
 The op reports and never gates: the default run exits 0 whatever the rows say, and
 `--check`'s exit 1 is a code a caller chooses to honour — the blocking policy is

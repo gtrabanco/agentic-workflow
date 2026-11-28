@@ -25,7 +25,7 @@
  *        [--parent <64-hex>] [--policy <version>] [--artifact-revision <id>]
  *        [--source-revision <sha>] [--root <repo-root>]
  *   agentic-workflow pre-execution-snapshot claims --unit <id> [--dir <artifact-dir>]
- *        [--write] [--check] [--root <repo-root>]
+ *        [--emit] [--check] [--root <repo-root>]
  *   agentic-workflow pre-execution-snapshot contract
  *
  * `--root` re-points the repository the two git-backed facts are read from (the
@@ -40,7 +40,8 @@
  * `claims` (issue #634) has its own contract: 0 when it reported, 1 only under
  * `--check` when a claim came back `stale`, 2 on a usage error or a unit with no
  * claim ledger. It is a report, never a gate — no surface in this repository
- * consumes its exit code (`D2`).
+ * consumes its exit code (`D2`) — and `--emit` prints the projected ledger instead
+ * of writing it, because a script never writes a durable unit-folder record.
  *
  * Two things this file owns and the package does not: which bytes of *this*
  * repository enter a snapshot (the stage tables and context list below), and the
@@ -463,14 +464,19 @@ async function main(argv = process.argv.slice(2)) {
     }
     // Dynamic on purpose: the projection imports this module's own
     // `changedBoundPaths`, so a static import back would close a cycle at load.
-    const { projectClaimStaleness, writeStalenessColumn, renderClaimStalenessEnvelope, hasStale } = await import("./claim-staleness.mjs");
+    const { projectClaimStaleness, renderClaimStalenessEnvelope, hasStale } = await import("./claim-staleness.mjs");
     const unitDocText = readRepo(normalize(path.join(dir, "SPEC.md"))) ?? "";
     const { rows } = projectClaimStaleness({ sourcesText, unitDocText, gitRun: git, unitDir: dir });
-    if (opts.write) {
-      const projected = writeStalenessColumn(sourcesText, rows);
-      // Writing identical bytes would touch the file for nothing; the projection
-      // is idempotent by construction, and its receipts stay comparable.
-      if (projected !== sourcesText) fs.writeFileSync(path.join(activeRoot, sourcesRel), projected);
+    if (opts.emit) {
+      // The projected ledger is EMITTED, never written: `sources.md` is a durable
+      // unit-folder record, so the ledger-ownership map's `no-script-writer`
+      // directive forbids a script from touching it (same rule feature 669 hit with
+      // the unit doc). The caller that owns the ledger lands these bytes.
+      const { writeStalenessColumn } = await import("./claim-staleness.mjs");
+      process.stdout.write(writeStalenessColumn(sourcesText, rows));
+      process.stderr.write(`pre-execution-snapshot: emitted ${sourcesRel} with ${rows.length} mark(s); this command writes no file\n`);
+      if (opts.check) process.exitCode = hasStale(rows) ? 1 : 0;
+      return;
     }
     process.stdout.write(renderClaimStalenessEnvelope({ unit: opts.unit, rows }));
     if (opts.check) process.exitCode = hasStale(rows) ? 1 : 0;
@@ -489,7 +495,7 @@ async function main(argv = process.argv.slice(2)) {
     return;
   }
   if (!action || !["build", "verify"].includes(action) || !opts.stage || !opts.unit) {
-    throw new Error("usage: pre-execution-snapshot.mjs build|verify --stage <spec|plan> --unit <id> [--dir <path>] [--receipt <id|digest>] [--root <repo>]; claims --unit <id> [--write] [--check] [--root <repo>]")
+    throw new Error("usage: pre-execution-snapshot.mjs build|verify --stage <spec|plan> --unit <id> [--dir <path>] [--receipt <id|digest>] [--root <repo>]; claims --unit <id> [--emit] [--check] [--root <repo>]");
   }
   const { snapshot, digest, artifactPaths, contextPaths } = await buildSnapshot(opts);
   const dir = unitDir(opts);
