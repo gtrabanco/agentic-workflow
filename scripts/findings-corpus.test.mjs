@@ -183,7 +183,7 @@ test("reader reconciliation: a settled carrier keeps its one-line marks and open
 
 test("harvest: the real tree yields the counts the planning ledger froze", () => {
   const corpus = buildCorpus(ROOT, { resolveFold: () => null });
-  // 1179 findings, 56 legacy ledgers, 229 fold-annotated rows and 185 review
+  // 1179 findings, 56 legacy ledgers, 229 fold-annotated rows and 187 review
   // marks were measured on the tree this merge produces, not on either parent:
   // main's lineage carries feature 719's `F9`-`F13` rows and its `R3` line, fix/729
   // adds its own `R1` and `R2` lines, feat/727 (brought in by main) records its own
@@ -203,20 +203,36 @@ test("harvest: the real tree yields the counts the planning ledger froze", () =>
   // the mechanism issue #651 introduced — so a unit that records a finding or a
   // review mark raises it and a folded row lowers it; the assertions stay exact,
   // nothing is relaxed.
+  // This merge adds one finding row and no review mark: unit 734 writes its
+  // `review-change` cycle-1 disposition into `## Findings` as `F1` (issue #722's
+  // schema half riding the branch, `docs/fix/734-…/SPEC.md:387`) and records the
+  // review itself as a `## Log` `V1` line, which is not a `review-mark@1`. So
+  // `findings` reads 1179, while `reviewMarks` reads 184.
+  // review-change's cycle-1 run over unit 694 itself then raises both exactly by
+  // its append: `docs/features/694-pi-delta-migration/SPEC.md` gains the open `F1`
+  // row and the `R1` review mark (`V1` is a finding mark, not a `review-mark@1`).
+  // So `findings` reads 1180, while `reviewMarks` reads 185.
+  // fold-findings then closes F1 in the same unit (the row is deleted, its `## Log`
+  // `F1` line is a fold record, not a finding row), so `findings` returns to 1179
+  // while the mark a fold does not touch keeps `reviewMarks` at 185.
   // Unit 717's review added five finding rows and one review mark, and its fold
   // closed all five rows: the review is `REVIEW-FAIL` with `F1`-`F5` riding open
   // in `## Findings` (`docs/fix/717-audit-single-repo-leaks/SPEC.md`), the fold
   // path deletes each closed row and appends its `F` line, so `findings` reads
-  // 1179 again while the `R1` mark keeps `reviewMarks` at 185.
+  // 1179 again while that `R1` mark stays.
   // This merge (PR #749 into main, 2026-11-28) adds exactly one mark of its own:
   // #669's review pass records its `R1` REVIEW-PASS mark (the branch's own review
-  // cycle), so reviewMarks reads 186; findings (1179), legacy ledgers (56) and
-  // fold-annotated rows (229) are the union of both parents and do not move.
+  // cycle). Because neither side saw the other's addition, neither parent's total
+  // is the merged total: the merge base carries 184 marks, this branch's review
+  // adds its own `R1` (185), main adds #669's and fix/717's `R1`s (186), and the
+  // tree both produce carries all three, so `reviewMarks` reads 187. findings
+  // (1179), legacy ledgers (56) and fold-annotated rows (229) are the union of
+  // both parents and do not move.
 
   assert.equal(corpus.findings.length, 1179, "every finding row in either carrier is in the corpus");
   assert.equal(corpus.legacyLedgers, 56);
   assert.equal(corpus.foldAnnotated, 229);
-  assert.equal(corpus.reviewMarks, 186);
+  assert.equal(corpus.reviewMarks, 187);
   assert.ok(corpus.units.length >= 171);
   assert.deepEqual(corpus.unparsable, []);
   assert.ok(corpus.findings.every((row) => row.provenance.includes(":") && row.digest.length === 12));

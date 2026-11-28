@@ -83,6 +83,16 @@ type ThinkingLevelsMirrorMatchesPi = [PiThinkingLevel] extends [(typeof THINKING
 const thinkingLevelsInSyncWithPi: ThinkingLevelsMirrorMatchesPi = true;
 
 /**
+ * The options `ctx.ui.custom()` receives here: the host's own parameter type
+ * plus the 1.5.1 `blocked` overlay-status option, which the peer floor's
+ * typings (1.1.0) predate. The intersection keeps this package's shape checked;
+ * the single cast at the call site is what lets the floor leg compile.
+ */
+type CustomOpenOptions = NonNullable<Parameters<ExtensionContext["ui"]["custom"]>[1]> & {
+  blocked?: { kind: "question"; message: string };
+};
+
+/**
  * The interactive slice the settings console sees: Pi's own `ui` plus the rich
  * picker (P4). The picker is terminal-only, so a non-TUI mode (headless/RPC)
  * gets the plain `select` path — the console never dead-ends (OB-12, PE-004).
@@ -110,6 +120,17 @@ export function richUi(ctx: ExtensionContext): SettingsUi {
         return picked;
       }
       const items = options.map((value) => ({ value, label: value }));
+      // The picker is an overlay, and since 1.5.1 an overlay that names what it
+      // waits for reports blocked program status (OSC 7501) until it calls
+      // `done()` (issue #694, verified against 1.6.1's typings: `blocked` is an
+      // object, never a boolean). The peer floor is 1.1.0, whose typings predate
+      // the option and whose hosts ignore the unknown key, so the options object
+      // crosses as a declared cast — never a second implementation, never an
+      // `any`.
+      const overlayOptions: CustomOpenOptions = {
+        overlay: true,
+        blocked: { kind: "question", message: title },
+      };
       const result = await base.custom<string | undefined>(
         (_tui, theme, _keybindings, done) => {
           const selectListTheme: SelectListTheme = {
@@ -128,7 +149,7 @@ export function richUi(ctx: ExtensionContext): SettingsUi {
             onCancel: () => done(undefined),
           });
         },
-        { overlay: true },
+        overlayOptions as Parameters<ExtensionContext["ui"]["custom"]>[1],
       );
       if (opts.multiple) return result === undefined ? undefined : [result];
       return result;

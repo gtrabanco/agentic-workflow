@@ -357,7 +357,7 @@ nobody sampled is an assumption wearing a heading.
 
 ```text
 pi-event-reliability@1
-source | pi.dev/docs/latest/extensions and the installed @earendil-works/pi-coding-agent@1.5.2 docs/extensions.md (identical 37-event catalogues), plus the installed pi-web session service, which branches on agent_settled on every run and names no session_shutdown
+source | pi.dev/docs/latest/extensions (stale at 1.5.2 — its catalogue is the same event set) and the installed @earendil-works/pi-coding-agent@1.6.1 docs/extensions.md, which is authoritative: both carry the same 41 events the installed `pi.on` overloads declare, an event set unchanged since 1.5.2, plus the installed pi-web session service, which branches on agent_settled on every run and names no session_shutdown
 column | meaning
 event | the Pi event, spelled exactly as pi.on() spells it
 listeners | the handlers this package registers, by file

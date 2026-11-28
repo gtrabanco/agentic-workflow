@@ -1368,9 +1368,11 @@ then lets you edit **one file at a time** and save to global or project scope. I
 touch the project file while the project is untrusted.
 
 The console's model and thinking pickers are searchable and windowed: typing
-narrows the list, the cursor stays on screen, a position indicator shows where
-you are, and the value currently in force is pre-selected and labelled
-`(current)` / `(default route)`. A route edit asks which field to change
+narrows the list through Pi's own fuzzy matching (case-insensitive, best match
+first, every term must match), the cursor stays on screen, a position indicator
+shows where you are, and the value in force is pre-selected and labelled
+`(current)` / `(default route)`. A term ending in `/` narrows to that provider,
+and a waiting picker reports **blocked** status (OSC 7501) to the terminal. A route edit asks which field to change
 (model, thinking), so a no-change save leaves the file byte-identical; the
 model field can build an ordered fallback chain (`a/m1 → b/m2`); and one pass
 can apply or clear a route across several commands, warning per command when a
@@ -1403,11 +1405,11 @@ dialog.
   pre-telemetry surface was verified behaviourally at Pi 0.99.1 (2026-09-29)
   (`pi install`, package skills, friendly command registration, routed set/clear,
   settings console round-trip, `sendUserMessage` with prompt template expansion).
-  Also verified against Pi 1.5.0 (2026-11-02) via a local two-leg `tsc --noEmit`
-  run (legs `0.99.1` + `latest`, the `latest` leg resolving to pi 1.5.0;
-  COMPAT-OK); continuously against the
-  `latest` dist-tag by the `pi-compat-guard` PR gate (the leg is a moving tripwire,
-  not a pinned version — a breaking release shows red here first).
+  Also verified against Pi 1.6.1 (2026-11-27) with a `tsc --noEmit` run pinned at
+  that release (peer-floor 1.1.0, the range's 1.6.0 leg and today's `latest` leg
+  at 1.7.0 all clean), release notes read from the installed package's own
+  `CHANGELOG.md` (the pi.dev page lags); continuously against `latest` by the
+  `pi-compat-guard` gate — a moving tripwire, never a pin.
 - The package declares Pi as a peer dependency; it bundles no copy of Pi.
 - Skills can instruct the model to run commands. Review them as you would any
   third-party package.

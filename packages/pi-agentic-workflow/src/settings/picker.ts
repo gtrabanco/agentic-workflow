@@ -1,9 +1,12 @@
 // src/settings/picker.ts
-// The searchable windowed picker primitive (OB-1, OB-2, OB-12, PE-004).
+// The searchable windowed picker primitive (OB-1, OB-2, OB-3, OB-12).
 //
 // Two concerns live here on purpose:
-//  - `filterReferences` is the pure, session-free subsequence/slash-aware filter
-//    (OB-2). It is unit-tested in `test/picker-filter.test.mjs`.
+//  - `narrowReferences` is the pure, session-free narrowing (OB-2): the host's
+//    `fuzzyFilter` (public from `@earendil-works/pi-tui` — verified exported
+//    since 1.1.0, against both the pinned 1.4.0 and the installed 1.6.1) plus
+//    the one constraint the host cannot express, a trailing `/` pinning the
+//    provider segment. It is unit-tested in `test/picker-filter.test.mjs`.
 //  - `createPickerComponent` wraps `@earendil-works/pi-tui`'s `SelectList` as a
 //    `Component` so the adapter (extension/index.ts) can drive it through
 //    `ctx.ui.custom()` — windowed rendering with a position indicator, typing
@@ -15,11 +18,11 @@
 //    without the rich seam still gets a bounded dialog, and an over-cap list
 //    pages instead of crashing.
 //
-// The filter is implemented in this package (not imported from Pi): PE-004
-// confirmed pi-coding-agent's `fuzzyFilter` is internal, so the same
-// token/subsequence, slash-aware semantics the acceptance criteria pin live here.
+// The matching is the host's, not ours (issue #694): pi-coding-agent keeps its
+// own fuzzy helper private, but the public fuzzy utilities live in pi-tui, the
+// peer this package already imports `SelectList` from.
 
-import { SelectList, type Component, type SelectItem, type SelectListTheme } from "@earendil-works/pi-tui";
+import { SelectList, fuzzyFilter, type Component, type SelectItem, type SelectListTheme } from "@earendil-works/pi-tui";
 
 /** Default window height for the SelectList (the built-in position indicator scales to the list). */
 export const PICKER_MAX_VISIBLE = 10;
@@ -132,48 +135,44 @@ export function providerOf(reference: string): string {
 }
 
 /**
- * Token/subsequence, slash-aware reference filter (OB-2).
+ * Narrow `refs` to the operator's query (OB-2).
  *
- * - An empty query returns every reference.
- * - The query is split on whitespace; every token must match for a reference to
- *   survive.
- * - A token matched as a *subsequence* (characters in order, not necessarily
- *   contiguous): `flash` matches any reference containing `flash`, `a/c`
- *   matches `anthropic/claude`.
- * - A token ending in `/` constrains to the provider: `acme/` matches provider
- *   `acme` only, never a model id that merely contains `acme`.
+ * The matching is the host's `fuzzyFilter`: the query is lowercased, split on
+ * whitespace and `/`, every token must match, and the survivors come back
+ * ordered by match quality. Two behaviours stay here because the host has no
+ * equivalent:
+ *
+ * - a token ending in `/` constrains the **provider segment** (the part
+ *   `providerOf` answers): `acme/` matches provider `acme` only, never the model
+ *   id of a reference that merely spells `acme`. The host treats `/` as a plain
+ *   separator, so `acme/` alone would match a model id that spells those
+ *   letters;
+ * - when the query carries no model token (only provider constraints, or
+ *   nothing), the offered order is kept: there is no fuzzy ranking to apply, and
+ *   the window the picker opens with must be the caller's own list (OB-3).
  */
-export function filterReferences(query: string, refs: readonly string[]): string[] {
+export function narrowReferences(query: string, refs: readonly string[]): string[] {
   const tokens = query.trim().split(/\s+/u).filter((token) => token !== "");
-  if (tokens.length === 0) return [...refs];
-  return refs.filter((ref) => tokens.every((token) => matchesToken(token, ref)));
-}
-
-function matchesToken(token: string, ref: string): boolean {
-  // Slash-aware: a trailing slash makes the token a provider prefix.
-  if (token.endsWith("/")) {
-    const provider = token.slice(0, -1);
-    if (provider === "") return true;
-    const refProvider = providerOf(ref);
-    return refProvider.startsWith(provider);
-  }
-  return isSubsequence(token, ref);
-}
-
-/** True when `needle` appears in `haystack` with its characters in order. */
-function isSubsequence(needle: string, haystack: string): boolean {
-  let i = 0;
-  for (let j = 0; j < haystack.length && i < needle.length; j += 1) {
-    if (haystack.charCodeAt(j) === needle.charCodeAt(i)) i += 1;
-  }
-  return i === needle.length;
+  const providerPrefixes = tokens
+    .filter((token) => token.endsWith("/"))
+    .map((token) => token.slice(0, -1).toLowerCase());
+  const constrained =
+    providerPrefixes.length === 0
+      ? [...refs]
+      : refs.filter((ref) => {
+          const provider = providerOf(ref).toLowerCase();
+          return providerPrefixes.every((prefix) => provider.startsWith(prefix));
+        });
+  const needle = tokens.filter((token) => !token.endsWith("/")).join(" ");
+  return needle === "" ? constrained : fuzzyFilter(constrained, needle, (ref) => ref);
 }
 
 /**
  * Wrap a `SelectList` as a pi-tui `Component`, rebuilding it client-side from
- * `filterReferences` as the operator types so the subsequence/slash-aware
- * filter (OB-2) — not `SelectList`'s own prefix `setFilter` — drives what the
- * window shows. Control keys (arrows, Enter, Escape) forward to the list.
+ * `narrowReferences` as the operator types so the host's fuzzy narrowing plus
+ * the provider-`/` constraint (OB-2) — not `SelectList`'s own prefix
+ * `setFilter` — drives what the window shows. Control keys (arrows, Enter,
+ * Escape) forward to the list.
  *
  * `initial` — the value in force — is selected in the window the picker opens
  * with, through the SelectList's own `setSelectedIndex` (OB-3).
@@ -193,7 +192,7 @@ export function createPickerComponent(options: {
 
   const byValue = new Map(items.map((item) => [item.value, item]));
   const buildList = (): SelectList => {
-    const visible = filterReferences(filterText, items.map((item) => item.value)).map(
+    const visible = narrowReferences(filterText, items.map((item) => item.value)).map(
       (value) => byValue.get(value) ?? { value, label: value },
     );
     const list = new SelectList(visible, maxVisible, theme);

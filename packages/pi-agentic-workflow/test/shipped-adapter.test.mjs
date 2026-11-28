@@ -426,6 +426,19 @@ test("the adapter TUI pick preselects the value in force", async () => {
   assert.equal(captured.result, "model-03", "the adapter forwarded `initial` into the component");
 });
 
+test("the picker overlay reports blocked program status while it waits (issue #694)", async () => {
+  const { ctx, captured } = tuiContext(["\r"]);
+
+  await richUi(ctx).pick("Pick a model", ["model-01", "model-02"]);
+
+  assert.equal(captured.customOpts?.overlay, true, "the picker is still an overlay");
+  assert.deepEqual(
+    captured.customOpts?.blocked,
+    { kind: "question", message: "Pick a model" },
+    "1.5.1 reports OSC 7501 blocked status for an overlay that names what it waits for",
+  );
+});
+
 test("the adapter TUI pick keeps the first option when nothing is in force", async () => {
   const single = tuiContext(["\r"]);
   assert.equal(await richUi(single.ctx).pick("Pick a model", ["model-01", "model-02"]), "model-01");

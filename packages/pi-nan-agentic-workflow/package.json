@@ -19,6 +19,7 @@
   "homepage": "https://github.com/gtrabanco/agentic-workflow/tree/main/packages/pi-nan-agentic-workflow#readme",
   "type": "module",
   "pi": {
+    "changelogPath": "./CHANGELOG.md",
     "extensions": [
       "./dist/extension.js"
     ]
@@ -27,6 +28,7 @@
     "dist",
     "package.json",
     "README.md",
+    "CHANGELOG.md",
     "LICENSE"
   ],
   "engines": {

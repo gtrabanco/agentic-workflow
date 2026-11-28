@@ -20,6 +20,7 @@
   "homepage": "https://github.com/gtrabanco/agentic-workflow/tree/main/packages/pi-agentic-workflow#readme",
   "type": "module",
   "pi": {
+    "changelogPath": "./CHANGELOG.md",
     "extensions": [
       "./dist/extension/index.js",
       "./dist/extension/subagents-entry.js"
@@ -33,6 +34,7 @@
     "skills",
     "package.json",
     "README.md",
+    "CHANGELOG.md",
     "LICENSE",
     "agentic-workflow.config.json"
   ],
