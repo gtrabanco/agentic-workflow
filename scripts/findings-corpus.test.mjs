@@ -204,11 +204,15 @@ test("harvest: the real tree yields the counts the planning ledger froze", () =>
   // schema half riding the branch, `docs/fix/734-…/SPEC.md:387`) and records the
   // review itself as a `## Log` `V1` line, which is not a `review-mark@1`. So
   // `findings` reads 1179, while `reviewMarks` reads 184.
+  // review-change's cycle-1 run over unit 694 itself then raises both exactly by
+  // its append: `docs/features/694-pi-delta-migration/SPEC.md` gains the open `F1`
+  // row and the `R1` review mark (`V1` is a finding mark, not a `review-mark@1`).
+  // So `findings` reads 1180, while `reviewMarks` reads 185.
 
-  assert.equal(corpus.findings.length, 1179, "every finding row in either carrier is in the corpus");
+  assert.equal(corpus.findings.length, 1180, "every finding row in either carrier is in the corpus");
   assert.equal(corpus.legacyLedgers, 56);
   assert.equal(corpus.foldAnnotated, 229);
-  assert.equal(corpus.reviewMarks, 184);
+  assert.equal(corpus.reviewMarks, 185);
   assert.ok(corpus.units.length >= 171);
   assert.deepEqual(corpus.unparsable, []);
   assert.ok(corpus.findings.every((row) => row.provenance.includes(":") && row.digest.length === 12));

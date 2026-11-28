@@ -331,6 +331,7 @@ Frozen at cut in `planning-obligations.md` (M/L shape) — never embedded here.
 
 | id | S# / file:line | axis | severity | impact | class | route |
 |---|---|---|---|---|---|---|
+| F1 | packages/pi-nan-agentic-workflow/CHANGELOG.md:10 | brand | WARNING | docs-only | source | fold |
 
 ## Log
 
@@ -525,6 +526,17 @@ Frozen at cut in `planning-obligations.md` (M/L shape) — never embedded here.
   · exit 0 · `local-gate: PASS — 16 step(s) in 588s` — root-suite green with
   `roadmap-settle` inside it, both crate suites, schema and pi compat steps,
   projection, budgets, secret scan and version parity.
+
+- **R1** — 2026-11-28, review at HEAD 90d163fb89f7b075ad6a82a4e5956c9d78281d84 · verdict REVIEW-FAIL · cycle 1 · gate exit 0 (G6) · axes run: review-code, review-security, review-verify, review-perf, review-brand; skipped design/a11y (no new UI/TUI surface — the picker change reuses the existing component) and review-seo (no web surface) · F1 open; SUGGESTION rows (perf bench, gate receipt, README:1409 parenthetical) carried in the report, never persisted.
+- **V1** — packages/pi-nan-agentic-workflow/CHANGELOG.md:10 · reviewer review-change · HEAD 90d163fb89f7b075ad6a82a4e5956c9d78281d84 · recheck direct read — the shipped sentence reads "…train; no content change its own post-4.10.0 changes ride the pending changesets at the next cut." with the em dash its sibling rows carry missing, and the garble seeded from the source companion row at `CHANGELOG.md:86` (sibling `CHANGELOG.md:92` reads "no content change — its own"); materializable reproducer: `rg -c 'no content change its own' packages/pi-nan-agentic-workflow/CHANGELOG.md CHANGELOG.md` exits 0 with 2 hits · confirmed
+- **G6** — 2026-11-28, review's own gate run produced by `runner gate-receipt run`
+  (`scripts/local-gate.mjs`, full 20-step gate) · HEAD 90d163fb89f7b075ad6a82a4e5956c9d78281d84 ·
+  exit 0 · `local-gate: PASS — 20 step(s) in 462s` · receipt `gate-receipt@1` verdict `pass`
+  (20 checks pass at `.agentic-workflow/gate/gate-receipt.json`; an identical-run RED
+  preceded — root-suite red at `scripts/findings-corpus.test.mjs:208` on the corpus pins
+  this append itself raises — its pins were raised +1/+1 with the delta documented in
+  the same file, the mechanism the corpus gate's own comment endorses, never relaxed)
+  · manifest f22f28fdf67a04836e1a42c9e2a8679eeaf4e2a4f9c5afb1ada44f5243cd8b6f
 
 ## Next
 
