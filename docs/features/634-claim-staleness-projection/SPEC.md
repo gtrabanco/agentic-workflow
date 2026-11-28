@@ -111,6 +111,14 @@ tree, not only a fixture — and its rows come back with a mark (`fresh`,
 `stale …`, `no-citation` or `unverified …`), never blank.
 Proved by: `bun packages/agentic-workflow/bin/agentic-workflow.mjs pre-execution-snapshot claims --unit 634-claim-staleness-projection` prints one row per CLAIM/INV row in `sources.md`.
 
+**AC6 (correction 2026-11-28, S1: "triage and fix those that deserve to fix").**
+The external-verify batch's findings close on their own surfaces: the runner
+contract's `pre-execution-snapshot` row enumerates the four ops the help
+registry declares, the crate README's `--emit` paragraph names the stderr notice
+the command actually prints, and this Log carries both the corrected `E13`
+count and the `unit-doc validate` output `O10`'s required-evidence names.
+Proved by: `bun test scripts/cli-coverage.test.mjs` exits 0 with its `op enumeration` case green; `rg -nF 'build\|verify\|contract\|claims' skills/runner-contract/references/RUNNER.md` → 1 hit; `## Log` carries `E16` and `E17`.
+
 ## Impact
 
 What the change touches beyond its own files: the pre-execution snapshot sensor
@@ -118,8 +126,10 @@ What the change touches beyond its own files: the pre-execution snapshot sensor
 than re-deriving git evidence), the unit folder's claim ledger (`sources.md`
 gains one appended column), the crate README's command row and its new
 `claim-staleness@1` grammar block, and the normative-surface inventory in
-`AGENTS.md`. It retires nothing: the `build|verify|contract` ops and their exit
-contracts are untouched.
+`AGENTS.md`. The 2026-11-28 external-verify correction batch adds two more
+surfaces: the runner contract's `pre-execution-snapshot` op enumeration and the
+crate README's `--emit` notice sentence. It retires nothing: the
+`build|verify|contract` ops and their exit contracts are untouched.
 
 ## Surfaces
 
@@ -128,6 +138,7 @@ The batch scheduler's lane keys this unit occupies, one per line.
 - `packages/agentic-workflow` — the sensor module, its suite, the help index and the crate README
 - `docs/features/634-claim-staleness-projection` — this unit doc, `sources.md`, `decisions.md`
 - `AGENTS.md` — one `normative-surfaces@1` row for the new grammar
+- `skills/runner-contract/references/RUNNER.md` — the `pre-execution-snapshot` row's op enumeration (correction batch `P8`)
 
 ## Retirements
 
@@ -236,6 +247,7 @@ One row per Engineering claim the change rests on. `authority-kind` is the close
 | PE-007 | known | Adding an *op* to an existing subcommand needs no usage-line or README-token change: the surface suite pins only the top-level subcommand list, and the help index carries ops per subcommand | `packages/agentic-workflow/test/cli.surface.test.mjs:19-27`; `packages/agentic-workflow/src/runner/help.mjs:214-219` | current | O9 |
 | PE-008 | known | A `spec-by-reference` unit doc (this one) requires `Specs … Tasks … Log` and tolerates `## Acceptance criteria` as a shared section — the shape precedent feature 105 ships — so the criteria section goes in without a re-cut | `packages/agentic-workflow-schema/src/pre-execution.ts:253-305`; `docs/features/105-projection-manifest-vocabulary/SPEC.md:24,84`; `agentic-workflow unit-doc 105-projection-manifest-vocabulary validate` → `"ok": true` | current | O10 |
 | PE-009 | known | A script may not write a durable unit-folder ledger: the `ledger-ownership@1` map declares one owner per AC16 truth class and a `# no-script-writer:` directive for the records no script may touch, and its scan fails closed on a script writing a declared-or-durable ledger it is not declared for — feature 669 hit the same boundary writing `decisions.md` instead of `SPEC.md` | `skills/pre-execution-review/references/LEDGERS.md:180-191` (`ledger-ownership@1`, the directive line); `scripts/ledger-ownership.test.mjs:772` (scan 2 over the real tree) | current | O11; D5 |
+| PE-010 | known | No shipped suite pins a `RUNNER.md` Subcommands row's op enumeration to `HELP_REGISTRY`: `runnerRows` reads only each row's first backticked token and `runner-launcher-drift` only the name set — and the applicability rule (some alternation token is a registry op ⇒ the enumeration must equal the registry) fires on exactly one row of the live tree, the blocked `pre-execution-snapshot` row, across 7 applicable rows with 0 collateral (an argument alternation like `<unit\|issue>` never applies) | `scripts/cli-coverage.test.mjs:161` (`runnerRows`); `scripts/runner-launcher-drift.mjs:87` (`ORDERED_SET`); the rule run over RUNNER.md `## Subcommands` → 7 applicable · 1 fire · 46 skipped | current | O12 |
 
 ### Obligations
 
@@ -254,6 +266,7 @@ One row per normative behaviour, compatibility invariant, affected use case, and
 | O9 | S1; S2a; AC1; PE-005; PE-006; PE-007 | The new surface is declared where the machine reads it: the crate README's Commands row carries the op and publishes `claim-staleness@1`, and `AGENTS.md`'s `normative-surfaces@1` names the block | P5 | P5 | execute-phase | `node scripts/normative-drift.test.mjs` exits 0 and `bun test packages/agentic-workflow/test/cli.surface.test.mjs` exits 0 | both exit codes in `## Log` `E` lines | verified |
 | O10 | S2a; AC5; PE-008 | Documentation currency: this unit doc validates in its own shape and the projection runs on this unit's own claim ledger, printing one marked row per CLAIM/INV row | P1 | P1 | execute-phase | `agentic-workflow unit-doc 634-claim-staleness-projection validate` prints `"ok": true`; `agentic-workflow pre-execution-snapshot claims --unit 634-claim-staleness-projection` prints a mark for every row | the validator outputs recorded in `## Log` `E`/`G` lines | verified |
 | O11 | S1; AC1; PE-009 | The command is read-only under every flag: `--emit` and the envelope print, and no path opens `sources.md` for writing, because the ledger-ownership map forbids a script writing a durable unit-folder record | P4 | P4 | execute-phase | `bun test scripts/ledger-ownership.test.mjs` exits 0 | that suite's scan 2 green over the real tree, plus the same obligation pinned by the claim suite's byte-unchanged case | verified |
+| O12 | correction S1 (external verify 2026-11-28, blocker at `RUNNER.md:167`); AC6 | The runner contract's `pre-execution-snapshot` row enumerates exactly the ops `HELP_REGISTRY` declares, so a new op lands on every sibling surface that lists the command's ops — never one surface updated while the contract row keeps the old set | P8 | P8 | execute-phase | `bun test scripts/cli-coverage.test.mjs` exits 0 with the `op enumeration` case green | the `E14` (red) and `E15` (green) lines in `## Log` naming both runs | planned |
 
 ## Triaged steps
 
@@ -337,6 +350,12 @@ V | V<n> | a finding's verification — the row it signs, the recheck and its re
 - **E13** — the consumer check behind `O8`/AC2: `rg -n "pre-execution-snapshot claims" --glob '!docs/**' --glob '!*.test.mjs' -l` → 2 hits, the crate README and the sensor itself (the skill reference joins them under `C1`). No gate, hook, script or skill invokes the op, so nothing in this repository gates on its exit code — `D2` is observable, not a claim in prose.
 - **E12** — the review-dimension evolution check for this range: `runner dimension-regression --base 5174715` → `21 dimensions` at base and at head, `changed review surfaces 1` (`skills/pre-execution-review/references/LEDGERS.md`, where `sources.md` joined the `no-script-writer` directive). No dimension was dropped or narrowed: the edit only *removes* a writer from a record, so the audit's dimension set is unchanged and nothing needs re-deriving. This line is the recorded run the gate asks for (`E12` carries the command it names).
 - **E11** — the live projection over this unit's own ledger (AC5), at head `78b35dbbb`: `agentic-workflow pre-execution-snapshot claims --unit 634-claim-staleness-projection` → 12 rows, `5 stale · 7 fresh · 0 no-citation · 0 unverified`, every row marked. The five stale rows are the honest answer, not a defect: `CLAIM-001` cites the sensor, `CLAIM-007` cites `decisions.md`, `INV-002`/`INV-003` cite this doc and `INV-005` cites `known-issues.md`, and all four files moved after `P5` — the phase the mark names. Each was re-read against the tree while writing this line and each still holds. `--check` over the same head → exit 1 (five stale rows), which is the report's only gate and nothing consumes it (`D2`).
+- **L3** — 2026-11-28, the correction request, verbatim:
+  ```
+  triage and fix those that deserve to fix but understand the context before fix and check you haven't broke another different thing, if you have done, start the loop again until you fixed full symbol/related stuff
+  ```
+  Raised against this unit's `external-verify.md` receipt (1 blocker, 3
+  advisories); the correction batch is phase `P8`.
 
 
 ## Next
