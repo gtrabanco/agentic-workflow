@@ -479,6 +479,13 @@ Frozen at cut in `planning-obligations.md` (M/L shape) — never embedded here.
   the option through one declared cast · `65774c59b`.
 - **P6** — 2026-11-27 22:4x, the baseline re-pin, the search-contract prose, the
   NaN `models.json` channel and the matrix citation · `9570b8260`.
+- **E18** — 2026-11-27, the branch pushed and the PR opened against `main`:
+  [PR #750](https://github.com/gtrabanco/agentic-workflow/pull/750) · the push's
+  pre-push gate ran the offline subset · `local-gate: PASS — 18 step(s) in 831s`.
+  The first push attempt failed in that same hook because this session exports
+  `AGENTIC_WORKFLOW_DOC_EMBEDDINGS_*`, which inverts the six embed-profile cases
+  recorded under `## Known pre-existing issues`; the hook was re-run with those
+  four variables unset and passed — the environment, not the change.
 - **P7** — 2026-11-27 22:5x, the roadmap row through the emitter plus the
   release intent · `22a106fcf`; the verification recorded above (E13, E14, G2)
   and this closing record land together.
@@ -494,7 +501,8 @@ does not earn another cycle.
 ## References
 
 - Issue [#694](https://github.com/gtrabanco/agentic-workflow/issues/694) — the
-  request (`S1`). This unit's PR closes it.
+  request (`S1`). [PR #750](https://github.com/gtrabanco/agentic-workflow/pull/750)
+  closes it via `Closes #694`.
 - `docs/fix/370-pi-150-compat-reverification/` — the previous re-verification
   unit; its `PE-004` recorded that 1.5.0 overlays ignored `blocked`, which 1.5.1
   changed (verified here as `PE-004`).
