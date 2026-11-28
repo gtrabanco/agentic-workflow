@@ -1409,7 +1409,7 @@ dialog.
   (peer-floor 1.1.0 and `latest` 1.7.0 both clean), release notes from the
   installed package's own `CHANGELOG.md` (the pi.dev changelog lags), and a
   malformed `models.json` now surfaces as a host `diagnostics` warning in
-  print/JSON/RPC runs. The `pi-compat-guard` gate tracks `latest`, never a pin.
+  print/JSON/RPC runs. The `pi-compat-guard` gate tracks `latest` continuously, never a pin.
 - The package declares Pi as a peer dependency; it bundles no copy of Pi.
 - Skills can instruct the model to run commands. Review them as you would any
   third-party package.
