@@ -26,6 +26,7 @@ decisions.md | kept
 known-issues.md | kept
 planning-obligations.md | kept
 planning-evidence.md | kept
+pr-body.md | trimmable
 external-verify.md | trimmable
 ```
 
