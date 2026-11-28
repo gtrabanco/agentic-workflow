@@ -119,11 +119,16 @@ naming the check that proves it.
 
 Four shipped surfaces, the CLI's own grammar, and the prose that documents them.
 
-- **`packages/agentic-workflow/src/runner/help.mjs`** — every one of the 77
+- **`packages/agentic-workflow/src/runner/help.mjs`** — every one of the 78
   `HELP_REGISTRY` entries gains a `resolution` cell (`project | product | host`)
   so adding a subcommand requires declaring which root it resolves against. This
   is the S10 standing criterion's declaration half, and it is the reason the
   class cannot regrow silently.
+- **`packages/agentic-workflow/bin/agentic-workflow.mjs`** — the usage banner's
+  pin cell and the unknown-service refusal stop naming a product path
+  (`skills/runner-contract/references/RUNNER.md`) and name the `runner-contract`
+  skill instead, and the banner lists the new subcommand: the C4 repair on the one
+  surface a consumer reads before any other command runs.
 - **`packages/agentic-workflow/src/single-repo-leaks/index.mjs`** (new) — the
   census producer: it reads the registry, runs the read-only `project` rows
   against `--root`, and reports the `single-repo-leaks@1` receipt.
@@ -266,7 +271,7 @@ command's own output, `## Log` E1).
   - Relevant files: scripts/single-repo-leaks.test.mjs
 - P3 — The declaration and the producer: every subcommand declares its `resolution`, and `runner single-repo-leaks` prints the receipt over `--root` (validator: `bun test scripts/single-repo-leaks.test.mjs` exits 0)
   (Implements: S2, S3, S10)
-  - Relevant files: packages/agentic-workflow/src/runner/help.mjs, packages/agentic-workflow/src/single-repo-leaks/index.mjs, scripts/single-repo-leaks.mjs, packages/agentic-workflow/src/runner/cli.mjs, packages/agentic-workflow/README.md
+  - Relevant files: packages/agentic-workflow/src/runner/help.mjs, packages/agentic-workflow/src/single-repo-leaks/index.mjs, scripts/single-repo-leaks.mjs, packages/agentic-workflow/src/runner/cli.mjs, packages/agentic-workflow/bin/agentic-workflow.mjs, packages/agentic-workflow/README.md
 - P4 — phase-lint fails closed by name on an unmapped target, citing the grammar scope (validator: `bun test scripts/phase-lint.test.mjs` exits 0)
   (Implements: S5)
   - Relevant files: packages/agentic-workflow/src/runner/sensors/phase-lint.mjs, scripts/phase-lint.test.mjs, skills/phase-contract/SKILL.md
@@ -308,11 +313,6 @@ relay-next: create .pi-web/relays/717-single-repo-leaks/ (charter → docs/fix/7
 
 | id | S# / file:line | axis | severity | impact | class | route |
 |---|---|---|---|---|---|---|
-| F1 | packages/agentic-workflow/src/single-repo-leaks/index.mjs:174-182 | correctness | WARNING | blocking | source | fold |
-| F2 | packages/agentic-workflow/src/single-repo-leaks/index.mjs:230 | security | WARNING | blocking | source | fold |
-| F3 | packages/agentic-workflow/src/single-repo-leaks/index.mjs:276 | correctness | WARNING | blocking | source | fold |
-| F4 | packages/agentic-workflow/src/test-obligation-tags/index.mjs:29 | spec-drift | WARNING | documents | source | fold |
-| F5 | S12 / docs/fix/717-audit-single-repo-leaks/SPEC.md (Surfaces+P3-P10 relevant files omit `packages/agentic-workflow/bin/agentic-workflow.mjs`) | spec-drift | WARNING | documents | plan | fold |
 
 ## Log
 
@@ -380,6 +380,12 @@ relay-next: create .pi-web/relays/717-single-repo-leaks/ (charter → docs/fix/7
 - **V3** — packages/agentic-workflow/src/single-repo-leaks/index.mjs:276 · reviewer review-change · HEAD 4e44054149fd6d7764c7098ac783928924698a5e · recheck behavioral reproducer: the two entry routes pass different `productRoot` (`main()` uses `context.root ?? PACKAGE_ROOT`, the scripts caller passes the repo root) — a leaky probe output yields 1 finding via the repo root, 0 via the crate root (PASS); and `packages/agentic-workflow/template` does not exist, so the shipped bin route silently builds its fixture without the template scaffold · confirmed
 - **V4** — packages/agentic-workflow/src/test-obligation-tags/index.mjs:29 · reviewer review-change · HEAD 4e44054149fd6d7764c7098ac783928924698a5e · recheck direct read: the module header still says the tag vocabulary is `TEST_OBLIGATION_KINDS`, read from committed source, while the same change makes the gate read it from the installed schema package (line 21) — one of the two header claims the unit's docs-currency step missed · confirmed
 - **V5** — docs/fix/717-audit-single-repo-leaks/SPEC.md §Surfaces/P3 · reviewer review-change · HEAD 4e44054149fd6d7764c7098ac783928924698a5e · recheck direct read: `git diff --name-only 67133da45...4e4405414` carries `packages/agentic-workflow/bin/agentic-workflow.mjs` (the usage-banner pin wording and the unknown-service refusal, P3's C4 work) and no `Relevant files`, `## Impact` row or `## Surfaces` entry declares it · confirmed
+- **F1** — 2026-11-27, folded `F1` in `e3989dee2`: a probe that cannot run is a `probe-failed` finding and never an executed row (`probeFailure` reads `error`, `signal` and a non-integer `status`; the row stays out of `probed`). Verified by the suite case `S3: a probe that cannot run is a finding, never an executed row` over all three non-answer shapes, and by the recorded recheck (`V1`).
+- **F2** — 2026-11-27, folded `F2` in `e3989dee2`: the measured root is validated as a directory and refuses `missing-root`, naming which shape it is (`does not exist` / `is not a directory the probes can run in`). Verified: `single-repo-leaks --root README.md` now prints `probe | 0 … executed` + `finding — missing-root` + `verdict REFUSED`, exit 1, and the suite case `S3: a root that is not a directory refuses instead of passing` pins it (`V2`).
+- **F3** — 2026-11-27, folded `F3` in `e3989dee2`: `resolveProductRoot` is the one resolver both entry routes use, `probeRows` consumes the census's resolved root instead of the run's echo, and a product tree with no `template/` scaffold refuses `product-root-missing`. Verified by the cases `S3: both entry routes resolve one product tree, and the fixture seeds it` and `S3: a product tree with no template scaffold is refused by name` (`V3`).
+- **F4** — 2026-11-27, folded `F4` in `39a672f50`: the tag-grammar header names the installed schema package, the source the gate reads. Verified by direct read of `test-obligation-tags/index.mjs:27-30` against the import at `:65`, and `runner test-obligation-tags --vocabulary` → `verdict: PASS` (`V4`).
+- **F5** — 2026-11-27, folded `F5` in this record commit: `## Impact` gains the `packages/agentic-workflow/bin/agentic-workflow.mjs` row (the C4 banner/refusal repair) and P3's `Relevant files` names the path, so the diff's every touched file is declared. Verified: `rg -n 'agentic-workflow\.mjs' docs/fix/717-audit-single-repo-leaks/SPEC.md` resolves the row and the phase list (`V5`).
+- **G4** — 2026-11-27, HEAD 39a672f507009be4817ecaf445a3411e3711b805 (the batch's code head), `bun scripts/local-gate.mjs --only workspace-install,schema-build,root-suite,version-parity-content,docs-generated-projection,skill-context-budgets,journal-carrier-check,log-immutability,secret-scan,temp-hygiene,tmp-gc,worktree-guard,rigidity-review,dimension-regression,schema-node-compat,pi-compat-guard,dependency-pin-gate,machine-ledger-commit,dependency-advisories --jobs 2`, run through the producer `runner gate-receipt run` · exit 0 · `local-gate: PASS — 17 step(s) in 430s` · the digest and the paths it read are the gate receipt's (`runner gate-receipt verify` reads them, never this line) — the same environment exclusions E14/G2 record (K6/K7); the run before it red on the corpus pin once more, because closing the five rows lowered the harvest count back (1184 → 1179), repaired by extending the pin as its own docstring prescribes.
 
 ## Next
 
