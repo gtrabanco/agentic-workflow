@@ -376,14 +376,37 @@ V | V<n> | a finding's verification — the row it signs, the recheck and its re
 - **P1** — 2026-11-28, the planning freeze: this unit doc cut with the frozen
   `## Acceptance criteria`, `planning-evidence.md` (11 rows) and
   `planning-obligations.md` (14 rows) beside it, since the unit is `medium`.
-- **P2** — 2026-11-28, P1 (event matrix re-read and re-pin), P2 (README
-  baseline), P3 (headless `diagnostics`), P4 (`blockedKind`), P5 (routed
-  capabilities) and P6 (repository state) applied; see the commits in the
-  handoff.
+- **P2** — 2026-11-28, the six planned phases applied, in five commits:
+  `36a878d94` (the frozen plan: acceptance criteria, planning evidence,
+  obligations, decisions), `ef73a8c3c` (the `blockedKind` corpus red-first, then
+  the seam, the adapter and the console kinds), `7d7fd5926` (baseline re-pin,
+  event-matrix citation, headless-diagnostics docs), `8929500cc` (roadmap row,
+  changeset, journal fragment), `03d198765` (the README paragraph fitted to the
+  1418-line budget).
+- **G2** — 2026-11-28, the full local gate at `03d198765`:
+  `bun scripts/local-gate.mjs --jobs 1` with the session's four
+  `AGENTIC_WORKFLOW_DOC_EMBEDDINGS_*` variables unset · exit 0 ·
+  `local-gate: PASS — 20 step(s) in 845s`. Disclosure — two earlier full runs of
+  the same gate failed, both on suite bounds rather than assertions: the first
+  on `check-skill-context` (the re-pinned README two lines over its 1418-line
+  budget — repaired in `03d198765`), the second on `doc.structure` (SUITE
+  TIMEOUT at its declared 240 s with 19/19 cases green inside) and the third on
+  `crate-suite-node`. `uptime` measured load 10.6–12.8 on 6 CPUs throughout;
+  `doc.structure` measures 237 s at this head and **200 s at `51747154e`**
+  standalone, both green against the same 240 s bound, and `crate-suite-node`
+  exits 0 standalone. The `AGENTIC_WORKFLOW_DOC_EMBEDDINGS_*` variables are the
+  pre-existing session artifact recorded above: with them exported the crate's
+  `doc.query`/`doc.hybrid` "no provider configured" cases invert (`53 pass`
+  unset, red set).
+- **P3** — 2026-11-28, verification closed: `O1`–`O11` by `E1`–`E8` and `G1`,
+  `O12` by this Log and the commit list, `O13` by the roadmap writer receipt,
+  the changeset and the journal fragment, `O14` by `G2`.
 
 ## Next
 
-Run P1: re-read the event matrix and re-pin its `source` citation to Pi 1.7.0.
+The change is applied and the obligations ledger is closed; the next action is the
+owner's review of the diff and this ledger. Nothing is merged, pushed or
+self-approved before that verdict.
 
 ## References
 
