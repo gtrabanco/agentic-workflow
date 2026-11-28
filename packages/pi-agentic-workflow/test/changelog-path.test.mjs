@@ -18,7 +18,12 @@ import { existsSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const PACKAGES_DIR = resolve(fileURLToPath(new URL(".", import.meta.url)), "../..");
+/** The repository root: this suite lives in `packages/<name>/test`. */
+const REPO_ROOT = resolve(fileURLToPath(new URL(".", import.meta.url)), "../../..");
+/** The directory that holds every package the workspace ships. */
+const PACKAGES_DIR = resolve(REPO_ROOT, "packages");
+/** The markdown code span the companion rows use around a package name. */
+const BACKTICK = String.fromCharCode(96);
 
 /** Every Pi package the workspace ships, by directory — read, never listed by hand. */
 const PI_PACKAGES = [
@@ -98,6 +103,34 @@ for (const pkg of PI_PACKAGES) {
     }
   });
 }
+
+test("a shipped section reads the root companion row the cut seeds it from (issue #694 F1)", () => {
+  // The package changelog is not authored: `scripts/release.mjs apply` seeds it
+  // from the package's root companion row, so the two must read alike. A note
+  // that exists as a separate edit drifts on the next cut — the garbled clause
+  // review-change's F1 found was seeded that way and survived because nothing
+  // compared the pair. This reads the newest section of each declared changelog
+  // against the cell the root CHANGELOG.md carries for that version.
+  const root = readFileSync(join(REPO_ROOT, "CHANGELOG.md"), "utf8");
+  for (const pkg of PI_PACKAGES) {
+    const declared = pkg.manifest.pi?.changelogPath;
+    if (declared === undefined) continue;
+    const newest = sections(readFileSync(resolve(pkg.at, declared), "utf8"))[0];
+    assert.ok(newest !== undefined, `${pkg.dir}: the declared changelog carries no section`);
+    // The row says which package the alignment held back; the cell's pipes are
+    // escaped by the cut's own `escapeCell`, so the comparison undoes that here.
+    const row = root
+      .split("\n")
+      .find((line) => line.startsWith(`| ${newest.version} |`) && line.includes(`leaving ${BACKTICK}${pkg.manifest.name}${BACKTICK}`));
+    assert.ok(row !== undefined, `${pkg.dir}: ${newest.version} has no root companion row naming ${pkg.manifest.name}`);
+    const cell = row.split(" | ").at(-1).replace(/\s*\|\s*$/u, "").trim();
+    assert.equal(
+      newest.body.replace(/\\`/gu, "`"),
+      cell.replace(/\\`/gu, "`").replace(/\\\\/gu, "\\"),
+      `${pkg.dir}: ${newest.version}'s shipped note is not the root row's text — the cut seeds one from the other`,
+    );
+  }
+});
 
 test("every package that declares a changelog is a Pi package the workspace ships", () => {
   // The reader walks the two directories this workspace publishes as Pi

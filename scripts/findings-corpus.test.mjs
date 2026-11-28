@@ -208,8 +208,11 @@ test("harvest: the real tree yields the counts the planning ledger froze", () =>
   // its append: `docs/features/694-pi-delta-migration/SPEC.md` gains the open `F1`
   // row and the `R1` review mark (`V1` is a finding mark, not a `review-mark@1`).
   // So `findings` reads 1180, while `reviewMarks` reads 185.
+  // fold-findings then closes F1 in the same unit (the row is deleted, its `## Log`
+  // `F1` line is a fold record, not a finding row), so `findings` returns to 1179
+  // while the mark a fold does not touch keeps `reviewMarks` at 185.
 
-  assert.equal(corpus.findings.length, 1180, "every finding row in either carrier is in the corpus");
+  assert.equal(corpus.findings.length, 1179, "every finding row in either carrier is in the corpus");
   assert.equal(corpus.legacyLedgers, 56);
   assert.equal(corpus.foldAnnotated, 229);
   assert.equal(corpus.reviewMarks, 185);

@@ -331,7 +331,6 @@ Frozen at cut in `planning-obligations.md` (M/L shape) — never embedded here.
 
 | id | S# / file:line | axis | severity | impact | class | route |
 |---|---|---|---|---|---|---|
-| F1 | packages/pi-nan-agentic-workflow/CHANGELOG.md:10 | brand | WARNING | docs-only | source | fold |
 
 ## Log
 
@@ -537,6 +536,14 @@ Frozen at cut in `planning-obligations.md` (M/L shape) — never embedded here.
   this append itself raises — its pins were raised +1/+1 with the delta documented in
   the same file, the mechanism the corpus gate's own comment endorses, never relaxed)
   · manifest f22f28fdf67a04836e1a42c9e2a8679eeaf4e2a4f9c5afb1ada44f5243cd8b6f
+- **F1** — 2026-11-28, F1 folded: the fold repaired the single writer and
+the seeded copy together: the source companion row (`CHANGELOG.md:86`) carries the em
+dash its sibling row (`:92`) always had, and the shipped copy
+(`packages/pi-nan-agentic-workflow/CHANGELOG.md:10`) — re-seeded from that row — reads
+coherently; the cut writer (`scripts/release.mjs` `escapeCell` + `summaryFor`) delivers
+the repaired summary from here on. Sweep: the stale form now survives only in this
+doc's `V1` quote and in `external-verify.md`'s A5 quote (both history, never a claim).
+  swept: /no content change its own post-4\.10\.0/ → expected 2 in docs/**/*.md
 
 ## Next
 
