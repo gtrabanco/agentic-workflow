@@ -1,0 +1,104 @@
+{
+ "id": "U2__slice__router-script__deepseek-v4-flash__r1",
+ "unit": "U2",
+ "job": "slice__router-script",
+ "model": "deepseek-v4-flash",
+ "run": 1,
+ "ms": 5155,
+ "usage": {
+  "completion_tokens": 1374,
+  "prompt_tokens": 4411,
+  "total_tokens": 5785,
+  "completion_tokens_details": {
+   "reasoning_tokens": 0
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "scripts/unit-route.mjs",
+   "line": null,
+   "title": "openRows drops rows with fewer than 7 cells, silently misrouting",
+   "detail": "openRows requires `cells.length < 7` to skip, but the ledger row shape destructured is `[id, file, axis, severity, klass, route, folded]` = 7 cells after slice(1,-1). A row with exactly 7 cells passes; however the header/separator detection and the `isOpen(folded)` gate mean any ledger whose table has a different column count (e.g. the review-findings tables referenced elsewhere) yields zero rows and the unit silently routes to `execute` instead of `fold`/`replan`. No diagnostic is emitted for a ledger that exists but parses to zero rows, so a malformed ledger is indistinguishable from a clean one.",
+   "severity": "med",
+   "axis": "code"
+  },
+  {
+   "file": "scripts/unit-route.mjs",
+   "line": null,
+   "title": "routeOfRow defaults every non-plan/non-decision open row to fold",
+   "detail": "`routeOfRow` returns \"fold\" for any open row that does not match PLAN_ROUTE or DECISION_ROUTE, including rows whose klass/route is empty or unrecognized. Combined with `rows.length > 0` → fold, an open row with a typo'd or unknown class silently becomes a fold instruction (`/fold-findings`) rather than surfacing an error. The header comment claims the router \"never guesses,\" but this is a guess.",
+   "severity": "med",
+   "axis": "code"
+  },
+  {
+   "file": "scripts/unit-route.mjs",
+   "line": null,
+   "title": "fixIndexIssues regex only inspects second cell; misses issue refs elsewhere",
+   "detail": "`fixIndexIssues` runs `/issues\\/(\\d+)|#(\\d+)/` only against `line.split(\"|\")[1]`. If the fix index table places the issue link in a different column (or the row has a leading empty cell from the leading pipe, making index 1 the first real cell only by luck), tracked issues are not collected and `plan-from-issue` never fires — the unit exits 1 `unknown unit` for a tracked issue. Same single-cell assumption in `fixIndexStatus`.",
+   "severity": "med",
+   "axis": "code"
+  },
+  {
+   "file": "scripts/unit-route.mjs",
+   "line": null,
+   "title": "roadmapStatus/fixIndexStatus split on raw pipe, ignoring escaped pipes",
+   "detail": "`roadmapStatus` and `fixIndexStatus` use `line.split(\"|\")` while `openRows` uses the escape-aware `cellsOf`. A status cell containing an escaped pipe (`\\|`) shifts columns and returns the wrong status, contradicting the sanitizer/escape handling used elsewhere in the same file.",
+   "severity": "low",
+   "axis": "code"
+  },
+  {
+   "file": "scripts/unit-route.mjs",
+   "line": null,
+   "title": "fingerprint omits command and openCount, so distinct routes can collide",
+   "detail": "`print` builds `record = { unit, status, route, rows, readSet }` and hashes it, but the emitted `next:` command and `open-rows:` count are not in the record. Two invocations differing only in command (e.g. fix vs feature replan command) or openCount produce the same fingerprint, so the \"deterministic decision fingerprint over the exact inputs the answer used\" claim in the comment is false.",
+   "severity": "low",
+   "axis": "code"
+  },
+  {
+   "file": "scripts/unit-route.mjs",
+   "line": null,
+   "title": "citedPaths PATH_RE can match absolute/URL fragments then filtered, but BARE_FILE_RE lacks path context",
+   "detail": "`BARE_FILE_RE` matches bare filenames like `SPEC.md` anywhere in the row text and pushes them as candidates; `exists(candidate)` then checks them relative to PROJECT root, not the unit dir, so a bare `SPEC.md` cited in a row resolves against repo root and is dropped even though the unit's own SPEC.md exists. The read-set therefore omits the very file the row cites.",
+   "severity": "med",
+   "axis": "code"
+  },
+  {
+   "file": "scripts/unit-route.mjs",
+   "line": null,
+   "title": "READ_SET_MAX truncation prints remainder but fingerprint hashes full set",
+   "detail": "`print` hashes `readSet` (full) but displays only `shown` plus a remainder line. The fingerprint is therefore not reproducible from the printed block alone — a reviewer cannot recompute it from what is shown, undermining the determinism/audit claim.",
+   "severity": "low",
+   "axis": "code"
+  },
+  {
+   "file": "scripts/unit-route.mjs",
+   "line": null,
+   "title": "sanitize truncation can split surrogate pairs / leave lone high surrogate",
+   "detail": "`flat.slice(0, CELL_MAX - 1)` slices by UTF-16 code unit; a cell ending in an astral character at the boundary yields a lone surrogate plus `…`, producing invalid UTF-8 on stdout. Minor but a real escape/encoding defect in the sanitizer that the comment presents as safe.",
+   "severity": "low",
+   "axis": "security"
+  },
+  {
+   "file": "scripts/unit-route.mjs",
+   "line": null,
+   "title": "UNIT_ROUTE_REPO env var is an undisclosed arbitrary-path read",
+   "detail": "The header documents `UNIT_ROUTE_REPO` re-points at a fixture tree, but the script will read any path the env var names, including outside the repo, and `citedPaths`/`exists` will stat arbitrary files. No confinement to a fixture dir is enforced. For a read-only router this is a low-severity but undisclosed capability.",
+   "severity": "low",
+   "axis": "security"
+  },
+  {
+   "file": "scripts/unit-route.mjs",
+   "line": null,
+   "title": "plan-from-issue readSet uses docs/fix base but unit is an issue number",
+   "detail": "In the `plan-from-issue` branch, `readSetFor(\"docs/fix\", [], [\"README.md\"])` is called, but `readSetFor` prefixes `unitDir` to each base name, yielding `docs/fix/README.md` — fine — yet the printed `unit` is the bare issue number and `status: \"pending\"` is hardcoded rather than read from the fix index, contradicting the `fixIndexStatus` helper that exists for exactly this. The route reports a status it did not derive.",
+   "severity": "med",
+   "axis": "spec-drift"
+  }
+ ],
+ "raw": "[{\"file\":\"scripts/unit-route.mjs\",\"line\":null,\"title\":\"openRows drops rows with fewer than 7 cells, silently misrouting\",\"detail\":\"openRows requires `cells.length < 7` to skip, but the ledger row shape destructured is `[id, file, axis, severity, klass, route, folded]` = 7 cells after slice(1,-1). A row with exactly 7 cells passes; however the header/separator detection and the `isOpen(folded)` gate mean any ledger whose table has a different column count (e.g. the review-findings tables referenced elsewhere) yields zero rows and the unit silently routes to `execute` instead of `fold`/`replan`. No diagnostic is emitted for a ledger that exists but parses to zero rows, so a malformed ledger is indistinguishable from a clean one.\",\"severity\":\"med\",\"axis\":\"code\"},{\"file\":\"scripts/unit-route.mjs\",\"line\":null,\"title\":\"routeOfRow defaults every non-plan/non-decision open row to fold\",\"detail\":\"`routeOfRow` returns \\\"fold\\\" for any open row that does not match PLAN_ROUTE or DECISION_ROUTE, including rows whose klass/route is empty or unrecognized. Combined with `rows.length > 0` → fold, an open row with a typo'd or unknown class silently becomes a fold instruction (`/fold-findings`) rather than surfacing an error. The header comment claims the router \\\"never guesses,\\\" but this is a guess.\",\"severity\":\"med\",\"axis\":\"code\"},{\"file\":\"scripts/unit-route.mjs\",\"line\":null,\"title\":\"fixIndexIssues regex only inspects second cell; misses issue refs elsewhere\",\"detail\":\"`fixIndexIssues` runs `/issues\\\\/(\\\\d+)|#(\\\\d+)/` only against `line.split(\\\"|\\\")[1]`. If the fix index table places the issue link in a different column (or the row has a leading empty cell from the leading pipe, making index 1 the first real cell only by luck), tracked issues are not collected and `plan-from-issue` never fires — the unit exits 1 `unknown unit` for a tracked issue. Same single-cell assumption in `fixIndexStatus`.\",\"severity\":\"med\",\"axis\":\"code\"},{\"file\":\"scripts/unit-route.mjs\",\"line\":null,\"title\":\"roadmapStatus/fixIndexStatus split on raw pipe, ignoring escaped pipes\",\"detail\":\"`roadmapStatus` and `fixIndexStatus` use `line.split(\\\"|\\\")` while `openRows` uses the escape-aware `cellsOf`. A status cell containing an escaped pipe (`\\\\|`) shifts columns and returns the wrong status, contradicting the sanitizer/escape handling used elsewhere in the same file.\",\"severity\":\"low\",\"axis\":\"code\"},{\"file\":\"scripts/unit-route.mjs\",\"line\":null,\"title\":\"fingerprint omits command and openCount, so distinct routes can collide\",\"detail\":\"`print` builds `record = { unit, status, route, rows, readSet }` and hashes it, but the emitted `next:` command and `open-rows:` count are not in the record. Two invocations differing only in command (e.g. fix vs feature replan command) or openCount produce the same fingerprint, so the \\\"deterministic decision fingerprint over the exact inputs the answer used\\\" claim in the comment is false.\",\"severity\":\"low\",\"axis\":\"code\"},{\"file\":\"scripts/unit-route.mjs\",\"line\":null,\"title\":\"citedPaths PATH_RE can match absolute/URL fragments then filtered, but BARE_FILE_RE lacks path context\",\"detail\":\"`BARE_FILE_RE` matches bare filenames like `SPEC.md` anywhere in the row text and pushes them as candidates; `exists(candidate)` then checks them relative to PROJECT root, not the unit dir, so a bare `SPEC.md` cited in a row resolves against repo root and is dropped even though the unit's own SPEC.md exists. The read-set therefore omits the very file the row cites.\",\"severity\":\"med\",\"axis\":\"code\"},{\"file\":\"scripts/unit-route.mjs\",\"line\":null,\"title\":\"READ_SET_MAX truncation prints remainder but fingerprint hashes full set\",\"detail\":\"`print` hashes `readSet` (full) but displays only `shown` plus a remainder line. The fingerprint is therefore not reproducible from the printed block alone — a reviewer cannot recompute it from what is shown, undermining the determinism/audit claim.\",\"severity\":\"low\",\"axis\":\"code\"},{\"file\":\"scripts/unit-route.mjs\",\"line\":null,\"title\":\"sanitize truncation can split surrogate pairs / leave lone high surrogate\",\"detail\":\"`flat.slice(0, CELL_MAX - 1)` slices by UTF-16 code unit; a cell ending in an astral character at the boundary yields a lone surrogate plus `…`, producing invalid UTF-8 on stdout. Minor but a real escape/encoding defect in the sanitizer that the comment presents as safe.\",\"severity\":\"low\",\"axis\":\"security\"},{\"file\":\"scripts/unit-route.mjs\",\"line\":null,\"title\":\"UNIT_ROUTE_REPO env var is an undisclosed arbitrary-path read\",\"detail\":\"The header documents `UNIT_ROUTE_REPO` re-points at a fixture tree, but the script will read any path the env var names, including outside the repo, and `citedPaths`/`exists` will stat arbitrary files. No confinement to a fixture dir is enforced. For a read-only router this is a low-severity but undisclosed capability.\",\"severity\":\"low\",\"axis\":\"security\"},{\"file\":\"scripts/unit-route.mjs\",\"line\":null,\"title\":\"plan-from-issue readSet uses docs/fix base but unit is an issue number\",\"detail\":\"In the `plan-from-issue` branch, `readSetFor(\\\"docs/fix\\\", [], [\\\"README.md\\\"])` is called, but `readSetFor` prefixes `unitDir` to each base name, yielding `docs/fix/README.md` — fine — yet the printed `unit` is the bare issue number and `status: \\\"pending\\\"` is hardcoded rather than read from the fix index, contradicting the `fixIndexStatus` helper that exists for exactly this. The route reports a status it did not derive.\",\"severity\":\"med\",\"axis\":\"spec-drift\"}]"
+}

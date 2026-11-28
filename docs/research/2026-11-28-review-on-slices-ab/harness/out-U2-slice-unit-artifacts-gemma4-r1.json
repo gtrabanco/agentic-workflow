@@ -1,0 +1,40 @@
+{
+ "id": "U2__slice__unit-artifacts__gemma4__r1",
+ "unit": "U2",
+ "job": "slice__unit-artifacts",
+ "model": "gemma4",
+ "run": 1,
+ "ms": 12620,
+ "usage": {
+  "completion_tokens": 314,
+  "prompt_tokens": 38160,
+  "total_tokens": 38474,
+  "completion_tokens_details": {
+   "reasoning_tokens": 0
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/SPEC.md",
+   "line": 118,
+   "title": "Inconsistent validator for AC7",
+   "detail": "The validator for AC7 uses `grep -c \"unit-route\"` on a specific list of 14 files, but the `Scope` section (lines 85-105) and the `Planning evidence` (PE-007) claim the census includes 'eight skill files and six tutorial files'. The validator in AC7 only checks 8 skill files and 6 tutorial files, which matches the count, but the `grep` command in the validator does not actually verify the 'no converged surface sends a replan row to the executor or the fold' part of the requirement, only the presence of the string.",
+   "severity": "low",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/progress.md",
+   "line": 145,
+   "title": "Inconsistent sensor line numbers",
+   "detail": "The progress log (cycle 1) claims `grep -n suggested scripts/workflow-status.mjs` returns only `:729`, but the actual code (as verified in cycle 2 and cycle 3) shows the line is `:735`. While cycle 2/3 correct this, the cycle 1 entry contains a discrepancy between its claim and the actual code state.",
+   "severity": "low",
+   "axis": "spec-drift"
+  }
+ ],
+ "raw": "[{\"file\":\"docs/fix/224-deterministic-replan-routing/SPEC.md\",\"line\":118,\"title\":\"Inconsistent validator for AC7\",\"detail\":\"The validator for AC7 uses `grep -c \\\"unit-route\\\"` on a specific list of 14 files, but the `Scope` section (lines 85-105) and the `Planning evidence` (PE-007) claim the census includes 'eight skill files and six tutorial files'. The validator in AC7 only checks 8 skill files and 6 tutorial files, which matches the count, but the `grep` command in the validator does not actually verify the 'no converged surface sends a replan row to the executor or the fold' part of the requirement, only the presence of the string.\",\"severity\":\"low\",\"axis\":\"usage-docs\"},{\"file\":\"docs/fix/224-deterministic-replan-routing/progress.md\",\"line\":145,\"title\":\"Inconsistent sensor line numbers\",\"detail\":\"The progress log (cycle 1) claims `grep -n suggested scripts/workflow-status.mjs` returns only `:729`, but the actual code (as verified in cycle 2 and cycle 3) shows the line is `:735`. While cycle 2/3 correct this, the cycle 1 entry contains a discrepancy between its claim and the actual code state.\",\"severity\":\"low\",\"axis\":\"spec-drift\"}]"
+}

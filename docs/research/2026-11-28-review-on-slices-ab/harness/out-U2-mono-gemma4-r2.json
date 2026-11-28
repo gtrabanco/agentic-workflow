@@ -1,0 +1,40 @@
+{
+ "id": "U2__mono__gemma4__r2",
+ "unit": "U2",
+ "job": "mono",
+ "model": "gemma4",
+ "run": 2,
+ "ms": 40128,
+ "usage": {
+  "completion_tokens": 271,
+  "prompt_tokens": 182998,
+  "total_tokens": 183269,
+  "completion_tokens_details": {
+   "reasoning_tokens": 0
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/ACCEPTANCE.md",
+   "line": null,
+   "title": "Validator mismatch for AC7",
+   "detail": "AC7 claims to verify that 'every surface the census shows routing the class' names the router and the same planner command, and that no surface sends a replan row to the executor or the fold. However, the validator only greps for 'unit-route' across 8 skill files and 6 tutorial files. It does not check if the destination is the executor or the fold, nor does it verify the planner command matches.",
+   "severity": "med",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/SPEC.md",
+   "line": null,
+   "title": "Incomplete destination census in Scope",
+   "detail": "The 'In scope' section enumerates 8 skill files and 3 tutorial pairs (total 14) as the destination census. However, the 'Impact' section and the 'Affected docs' table in the same SPEC include 'docs/workflow/SKILLS.md' and 'docs/workflow/SKILLS.es.md', which are not part of the 14 enumerated in the Scope census.",
+   "severity": "low",
+   "axis": "spec-drift"
+  }
+ ],
+ "raw": "[{\"file\":\"docs/fix/224-deterministic-replan-routing/ACCEPTANCE.md\",\"line\":null,\"title\":\"Validator mismatch for AC7\",\"detail\":\"AC7 claims to verify that 'every surface the census shows routing the class' names the router and the same planner command, and that no surface sends a replan row to the executor or the fold. However, the validator only greps for 'unit-route' across 8 skill files and 6 tutorial files. It does not check if the destination is the executor or the fold, nor does it verify the planner command matches.\",\"severity\":\"med\",\"axis\":\"usage-docs\"},{\"file\":\"docs/fix/224-deterministic-replan-routing/SPEC.md\",\"line\":null,\"title\":\"Incomplete destination census in Scope\",\"detail\":\"The 'In scope' section enumerates 8 skill files and 3 tutorial pairs (total 14) as the destination census. However, the 'Impact' section and the 'Affected docs' table in the same SPEC include 'docs/workflow/SKILLS.md' and 'docs/workflow/SKILLS.es.md', which are not part of the 14 enumerated in the Scope census.\",\"severity\":\"low\",\"axis\":\"spec-drift\"}]"
+}

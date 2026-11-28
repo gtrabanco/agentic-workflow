@@ -1,0 +1,48 @@
+{
+ "id": "U1__slice__exec-phase-guard__qwen3.6__r1",
+ "unit": "U1",
+ "job": "slice__exec-phase-guard",
+ "model": "qwen3.6",
+ "run": 1,
+ "ms": 5508,
+ "usage": {
+  "completion_tokens": 665,
+  "prompt_tokens": 3577,
+  "total_tokens": 4242,
+  "completion_tokens_details": {
+   "reasoning_tokens": 0
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 2096
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "skills/execute-phase/SKILL.md",
+   "line": 37,
+   "title": "Guard implementation missing in turn contract",
+   "detail": "The diff adds a checklist item to the 'Turn contract' section claiming: 'Required user inputs were answered concretely... if still blank the skill emits `→ Next: execute-phase requires manual input — cannot proceed` and stops.' However, the 'Needs-input guard' section (lines 67-75) only documents the *policy* (re-ask once, then emit message and stop). It does not provide the *implementation logic* or code snippet required to actually perform the re-ask and conditional stop. The turn contract asserts a behavioral guarantee that is not defined in the procedural steps, creating a workflow defect where the agent cannot verify the box without external/implicit knowledge.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "skills/execute-phase/SKILL.md",
+   "line": 70,
+   "title": "Contradiction on required input handling",
+   "detail": "The 'Needs-input guard' section states: 'If blank or missing: re-ask once... If still blank, emit `→ Next: execute-phase requires manual input — cannot proceed` and stop.' This contradicts the 'Turn contract' box which says 'Any blank required input was re-asked once'. The guard section implies a specific error message and stop condition, but the turn contract box is a post-condition checklist. If the code/agent fails to re-ask (e.g., due to a bug in the 're-ask once' logic), the turn contract box cannot be ticked, but the guard section doesn't specify *how* to re-ask, leaving the 're-ask once' behavior undefined in this slice. More critically, the guard section says 're-ask once' but doesn't specify the mechanism (e.g., does it loop? does it prompt again?). The turn contract asserts the result, but the guard section lacks the procedural definition to achieve it, creating a spec drift between the contract (what must be true) and the process (how to do it).",
+   "severity": "med",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "skills/execute-phase/SKILL.md",
+   "line": 72,
+   "title": "Ambiguous 're-ask' behavior in guard",
+   "detail": "The text 're-ask once with the expected format' is ambiguous. Does 're-ask' mean the agent prompts the user again in the same turn? If so, the 'Turn contract' box 'Required user inputs were answered concretely' must be verified *after* this re-ask. The guard section doesn't specify that the re-ask is part of the same turn's execution flow or if it terminates the turn early. If it terminates early, the turn contract box 'Required user inputs were answered...' might be false (if the user didn't answer the second time). The guard says 'stop', but the turn contract requires ticking the box. If the skill stops *before* ticking the box, the turn is incomplete. The guard section should clarify if the 'stop' action includes ticking the box or if the box is only ticked if the input is successfully obtained.",
+   "severity": "low",
+   "axis": "usage-docs"
+  }
+ ],
+ "raw": "[{\"file\":\"skills/execute-phase/SKILL.md\",\"line\":37,\"title\":\"Guard implementation missing in turn contract\",\"detail\":\"The diff adds a checklist item to the 'Turn contract' section claiming: 'Required user inputs were answered concretely... if still blank the skill emits `→ Next: execute-phase requires manual input — cannot proceed` and stops.' However, the 'Needs-input guard' section (lines 67-75) only documents the *policy* (re-ask once, then emit message and stop). It does not provide the *implementation logic* or code snippet required to actually perform the re-ask and conditional stop. The turn contract asserts a behavioral guarantee that is not defined in the procedural steps, creating a workflow defect where the agent cannot verify the box without external/implicit knowledge.\",\"severity\":\"med\",\"axis\":\"workflow\"},{\"file\":\"skills/execute-phase/SKILL.md\",\"line\":70,\"title\":\"Contradiction on required input handling\",\"detail\":\"The 'Needs-input guard' section states: 'If blank or missing: re-ask once... If still blank, emit `→ Next: execute-phase requires manual input — cannot proceed` and stop.' This contradicts the 'Turn contract' box which says 'Any blank required input was re-asked once'. The guard section implies a specific error message and stop condition, but the turn contract box is a post-condition checklist. If the code/agent fails to re-ask (e.g., due to a bug in the 're-ask once' logic), the turn contract box cannot be ticked, but the guard section doesn't specify *how* to re-ask, leaving the 're-ask once' behavior undefined in this slice. More critically, the guard section says 're-ask once' but doesn't specify the mechanism (e.g., does it loop? does it prompt again?). The turn contract asserts the result, but the guard section lacks the procedural definition to achieve it, creating a spec drift between the contract (what must be true) and the process (how to do it).\",\"severity\":\"med\",\"axis\":\"spec-drift\"},{\"file\":\"skills/execute-phase/SKILL.md\",\"line\":72,\"title\":\"Ambiguous 're-ask' behavior in guard\",\"detail\":\"The text 're-ask once with the expected format' is ambiguous. Does 're-ask' mean the agent prompts the user again in the same turn? If so, the 'Turn contract' box 'Required user inputs were answered concretely' must be verified *after* this re-ask. The guard section doesn't specify that the re-ask is part of the same turn's execution flow or if it terminates the turn early. If it terminates early, the turn contract box 'Required user inputs were answered...' might be false (if the user didn't answer the second time). The guard says 'stop', but the turn contract requires ticking the box. If the skill stops *before* ticking the box, the turn is incomplete. The guard section should clarify if the 'stop' action includes ticking the box or if the box is only ticked if the input is successfully obtained.\",\"severity\":\"low\",\"axis\":\"usage-docs\"}]"
+}

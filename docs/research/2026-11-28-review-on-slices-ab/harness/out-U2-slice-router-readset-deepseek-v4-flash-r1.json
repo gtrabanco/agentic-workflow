@@ -1,0 +1,128 @@
+{
+ "id": "U2__slice__router-readset__deepseek-v4-flash__r1",
+ "unit": "U2",
+ "job": "slice__router-readset",
+ "model": "deepseek-v4-flash",
+ "run": 1,
+ "ms": 9442,
+ "usage": {
+  "completion_tokens": 2686,
+  "prompt_tokens": 8600,
+  "total_tokens": 11286,
+  "completion_tokens_details": {
+   "reasoning_tokens": 0
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 1,
+   "title": "Fixture ledger rows cite paths that do not exist in the fixture repo",
+   "detail": "The dogfood ledger rows cite `scripts/phase-lint.mjs:293-305`, `docs/features/37-phase-lint-script/PLAN.md:27`, `docs/features/37-phase-lint-script/ACCEPTANCE.md (AC8)`, `docs/LOGS.md:1`, `docs/fix/_TEMPLATE/SPEC.md`, `docs/features/38-workflow-status-sensor-script/{PLAN.md:29,TASKS.md:55}`. In this fixture tree the only phase-lint file is `scripts/fixtures/unit-route/scripts/phase-lint.mjs` (a one-line stub), 37's PLAN.md is absent (only SPEC/ACCEPTANCE/review-findings stubs exist), 38's PLAN.md and TASKS.md are one-line stubs with no line 29/55, and `docs/LOGS.md` is a single H1 line with no 2026-09-12T15:18Z entry. If the router resolves read-set paths against the fixture root, these rows are unresolvable; if it does not, the fixture does not exercise the read-set parsing it claims to. Either way the fixture's own cited evidence contradicts the files shipped beside it.",
+   "severity": "med",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 9,
+   "title": "F89 route claims a LOGS.md entry that the fixture LOGS.md does not contain",
+   "detail": "F89 says `docs/LOGS.md:1` and instructs to \"relocate the 2026-09-12T15:18Z entry below the `# Session log` H1 + intro block\". The shipped `scripts/fixtures/unit-route/docs/LOGS.md` is exactly one line: `# Session log stub (cited by a FOLDED row only)` — no timestamp entry, no intro block. The finding's premise is false against the fixture it ships with.",
+   "severity": "med",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 3,
+   "title": "F80/VF-80/F83/VF-83/F84/F85/VF-85/F87/F88/F90/F92 all marked `no` (unfolded) but the file header says it is trimmed to replan-selected rows plus folded rows",
+   "detail": "Header: \"Trimmed to the rows the replan route selects plus the folded rows beside them.\" Yet F80, F84, F87, F89 are `folded=yes` while F83, F85, F88, F90, F92 are `folded=no` with `replan-in-unit` routes, and VF-* rows are `finding-mark`/`n/a`. If the router selects on `folded=no` + `replan-in-unit`, the fixture mixes both classes; if it selects on route text, the `folded=yes` rows (F80/F84/F87/F89) should not be present. The header's claim and the table's contents are inconsistent, so the fixture cannot be the \"rows the replan route selects plus the folded rows beside them\" it declares.",
+   "severity": "med",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/40-cited-paths/review-findings.md",
+   "line": 3,
+   "title": "Cited-paths fixture cites files 1-20 but the route text cites 7-15 which are also present; no cap is exercised",
+   "detail": "F1 cites src/file-1..6 and route cites file-7..9; F2 cites 10-13 and route cites 14-15; F3 cites 16-20. All 20 files exist in the fixture. The unit summary says this fixture is the \"cap case\" (ROADMAP: `40 | cited-paths | in-progress | — | cap case`), but nothing in the rows exceeds any visible cap and every cited path resolves — so the fixture does not demonstrate a cap/truncation behavior, contradicting the ROADMAP summary.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/ROADMAP.md",
+   "line": 9,
+   "title": "ROADMAP lists 37 as `idea` but 37 has a full review-findings ledger with confirmed findings",
+   "detail": "ROADMAP row: `| 37 | phase-lint-script | idea | — | dogfood target |`. The 37 folder ships SPEC.md, ACCEPTANCE.md, and a 21-line review-findings.md with `confirmed` VF rows and `fix-now` findings — a state inconsistent with `idea` (no plan/review yet). Either the status is stale or the ledger is fabricated for the fixture; the two contradict.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 5,
+   "title": "VF-80/VF-83/VF-85/VF-88 use `class=finding-mark` and `route=n/a`, which are not in the ledger vocabulary the other rows use",
+   "detail": "The table header declares columns `class | route | folded`. Every F-row uses class values `fix-now` / `decision-required` and route values `fold into phase` / `replan-in-unit: …` / `surface decision, block`. The VF-* rows use `class=finding-mark` and `route=n/a` — a different vocabulary. If the router parses `class`/`route` as a closed enum (as the unit's own summary says it emits a \"typed route\"), these rows are unparseable or silently skipped; the fixture does not state which.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 5,
+   "title": "VF-80/VF-83/VF-85/VF-88 `folded=n/a` violates the boolean folded column used everywhere else",
+   "detail": "All F-rows use `folded` ∈ {yes,no}. VF rows use `n/a`. A parser expecting a boolean folded flag will either error or coerce; the fixture provides no rule for `n/a`, and the unit's own summary says the router \"parses a unit's ledger/read-set and emits a typed route\" — an untyped `n/a` in a typed column is a contract gap.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 5,
+   "title": "VF-80/VF-83/VF-85/VF-88 `file:line` cells contain `·`-separated multi-field evidence, not a path:line",
+   "detail": "Column is `file:line`. VF-80 cell: `docs/features/37-phase-lint-script/PLAN.md:27 · reviewer R1 + orchestrator reproducer · HEAD c922a34a… · recheck failing reproducer: …`. That is not a `file:line`; it embeds reviewer, HEAD, and a shell command. If the router extracts read-set paths from this column, it will pick up `HEAD`, `reviewer`, and command fragments as paths. The fixture does not demonstrate that the router tolerates this shape.",
+   "severity": "med",
+   "axis": "code"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 5,
+   "title": "VF-80/VF-83/VF-85/VF-88 embed shell commands and revision hashes in a fixture ledger",
+   "detail": "Cells contain `node scripts/phase-lint.mjs docs/features/37-phase-lint-script/PLAN.md` and `git cat-file -e main:docs/features/ROADMAP_EXECUTION_ORDER.md`. If the router or any downstream consumer echoes/executes read-set content, this is an injection surface; at minimum it is unbounded free text in a column the router is supposed to parse deterministically. No escaping/quoting rule is shown.",
+   "severity": "low",
+   "axis": "security"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 3,
+   "title": "F80 route text contains a `|`-free but very long single cell; no length bound is declared",
+   "detail": "F80's route cell is ~500 chars of prose including backticks and `+`; F92's is similar. The unit summary mentions `SKILL_CONTEXT_BUDGETS` ceilings but no ledger-cell length bound is visible in this slice. If the router concatenates route text into a suggested-next entry, an unbounded cell can blow the context budget the unit itself declares.",
+   "severity": "low",
+   "axis": "perf"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 3,
+   "title": "F80/F83/F85/F87/F88/F90/F92 route text asserts facts about files not in this fixture (SPEC.md:95,405-419,588; phase-lint.mjs:293-305)",
+   "detail": "Routes reference `SPEC.md:95`, `SPEC.md:405-419`, `SPEC.md:588`, `SPEC.md:302`, `phase-lint.mjs:293-305`, `PLAN.md:93`, `TASKS.md:55`. The fixture's 37 SPEC.md is one line (`# SPEC stub (fixture)`), 37 has no PLAN.md, 38's PLAN/TASKS are one-line stubs, and phase-lint.mjs is one line. The routes are therefore unverifiable against the fixture and, if the router validates read-set paths, will fail resolution.",
+   "severity": "med",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 3,
+   "title": "F80 and F92 both claim to be the same regression (F80 vs F92 \"regression of F80\") but F80 is folded=yes and F92 folded=no",
+   "detail": "F80 route: \"fold: widen the layer-line parse … the PREFLIGHT gate must stop bricking on the unit's own PLAN.md\". F92 route: \"regression of F80 — plan owner re-cuts the unit's own planning artifacts so the gate stops blocking on them\". Same defect, two rows, opposite folded status. If the router dedupes by file:line, these collide; if not, the ledger double-counts one defect. The fixture does not state the dedupe rule.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 3,
+   "title": "F80/F83/F85/F87/F88/F90/F92 route text asserts facts about files not in this fixture (SPEC.md:95,405-419,588; phase-lint.mjs:293-305)",
+   "detail": "Routes reference `SPEC.md:95`, `SPEC.md:405-419`, `SPEC.md:588`, `SPEC.md:302`, `phase-lint.mjs:293-305`, `PLAN.md:93`, `TASKS.md:55`. The fixture's 37 SPEC.md is one line (`# SPEC stub (fixture)`), 37 has no PLAN.md, 38's PLAN/TASKS are one-line stubs, and phase-lint.mjs is one line. The routes are therefore unverifiable against the fixture and, if the router validates read-set paths, will fail resolution.",
+   "severity": "med",
+   "axis": "spec-drift"
+  }
+ ],
+ "raw": "[{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":1,\"title\":\"Fixture ledger rows cite paths that do not exist in the fixture repo\",\"detail\":\"The dogfood ledger rows cite `scripts/phase-lint.mjs:293-305`, `docs/features/37-phase-lint-script/PLAN.md:27`, `docs/features/37-phase-lint-script/ACCEPTANCE.md (AC8)`, `docs/LOGS.md:1`, `docs/fix/_TEMPLATE/SPEC.md`, `docs/features/38-workflow-status-sensor-script/{PLAN.md:29,TASKS.md:55}`. In this fixture tree the only phase-lint file is `scripts/fixtures/unit-route/scripts/phase-lint.mjs` (a one-line stub), 37's PLAN.md is absent (only SPEC/ACCEPTANCE/review-findings stubs exist), 38's PLAN.md and TASKS.md are one-line stubs with no line 29/55, and `docs/LOGS.md` is a single H1 line with no 2026-09-12T15:18Z entry. If the router resolves read-set paths against the fixture root, these rows are unresolvable; if it does not, the fixture does not exercise the read-set parsing it claims to. Either way the fixture's own cited evidence contradicts the files shipped beside it.\",\"severity\":\"med\",\"axis\":\"spec-drift\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":9,\"title\":\"F89 route claims a LOGS.md entry that the fixture LOGS.md does not contain\",\"detail\":\"F89 says `docs/LOGS.md:1` and instructs to \\\"relocate the 2026-09-12T15:18Z entry below the `# Session log` H1 + intro block\\\". The shipped `scripts/fixtures/unit-route/docs/LOGS.md` is exactly one line: `# Session log stub (cited by a FOLDED row only)` — no timestamp entry, no intro block. The finding's premise is false against the fixture it ships with.\",\"severity\":\"med\",\"axis\":\"spec-drift\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":3,\"title\":\"F80/VF-80/F83/VF-83/F84/F85/VF-85/F87/F88/F90/F92 all marked `no` (unfolded) but the file header says it is trimmed to replan-selected rows plus folded rows\",\"detail\":\"Header: \\\"Trimmed to the rows the replan route selects plus the folded rows beside them.\\\" Yet F80, F84, F87, F89 are `folded=yes` while F83, F85, F88, F90, F92 are `folded=no` with `replan-in-unit` routes, and VF-* rows are `finding-mark`/`n/a`. If the router selects on `folded=no` + `replan-in-unit`, the fixture mixes both classes; if it selects on route text, the `folded=yes` rows (F80/F84/F87/F89) should not be present. The header's claim and the table's contents are inconsistent, so the fixture cannot be the \\\"rows the replan route selects plus the folded rows beside them\\\" it declares.\",\"severity\":\"med\",\"axis\":\"spec-drift\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/40-cited-paths/review-findings.md\",\"line\":3,\"title\":\"Cited-paths fixture cites files 1-20 but the route text cites 7-15 which are also present; no cap is exercised\",\"detail\":\"F1 cites src/file-1..6 and route cites file-7..9; F2 cites 10-13 and route cites 14-15; F3 cites 16-20. All 20 files exist in the fixture. The unit summary says this fixture is the \\\"cap case\\\" (ROADMAP: `40 | cited-paths | in-progress | — | cap case`), but nothing in the rows exceeds any visible cap and every cited path resolves — so the fixture does not demonstrate a cap/truncation behavior, contradicting the ROADMAP summary.\",\"severity\":\"low\",\"axis\":\"spec-drift\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/ROADMAP.md\",\"line\":9,\"title\":\"ROADMAP lists 37 as `idea` but 37 has a full review-findings ledger with confirmed findings\",\"detail\":\"ROADMAP row: `| 37 | phase-lint-script | idea | — | dogfood target |`. The 37 folder ships SPEC.md, ACCEPTANCE.md, and a 21-line review-findings.md with `confirmed` VF rows and `fix-now` findings — a state inconsistent with `idea` (no plan/review yet). Either the status is stale or the ledger is fabricated for the fixture; the two contradict.\",\"severity\":\"low\",\"axis\":\"spec-drift\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":5,\"title\":\"VF-80/VF-83/VF-85/VF-88 use `class=finding-mark` and `route=n/a`, which are not in the ledger vocabulary the other rows use\",\"detail\":\"The table header declares columns `class | route | folded`. Every F-row uses class values `fix-now` / `decision-required` and route values `fold into phase` / `replan-in-unit: …` / `surface decision, block`. The VF-* rows use `class=finding-mark` and `route=n/a` — a different vocabulary. If the router parses `class`/`route` as a closed enum (as the unit's own summary says it emits a \\\"typed route\\\"), these rows are unparseable or silently skipped; the fixture does not state which.\",\"severity\":\"med\",\"axis\":\"workflow\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":5,\"title\":\"VF-80/VF-83/VF-85/VF-88 `folded=n/a` violates the boolean folded column used everywhere else\",\"detail\":\"All F-rows use `folded` ∈ {yes,no}. VF rows use `n/a`. A parser expecting a boolean folded flag will either error or coerce; the fixture provides no rule for `n/a`, and the unit's own summary says the router \\\"parses a unit's ledger/read-set and emits a typed route\\\" — an untyped `n/a` in a typed column is a contract gap.\",\"severity\":\"med\",\"axis\":\"workflow\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":5,\"title\":\"VF-80/VF-83/VF-85/VF-88 `file:line` cells contain `·`-separated multi-field evidence, not a path:line\",\"detail\":\"Column is `file:line`. VF-80 cell: `docs/features/37-phase-lint-script/PLAN.md:27 · reviewer R1 + orchestrator reproducer · HEAD c922a34a… · recheck failing reproducer: …`. That is not a `file:line`; it embeds reviewer, HEAD, and a shell command. If the router extracts read-set paths from this column, it will pick up `HEAD`, `reviewer`, and command fragments as paths. The fixture does not demonstrate that the router tolerates this shape.\",\"severity\":\"med\",\"axis\":\"code\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":5,\"title\":\"VF-80/VF-83/VF-85/VF-88 embed shell commands and revision hashes in a fixture ledger\",\"detail\":\"Cells contain `node scripts/phase-lint.mjs docs/features/37-phase-lint-script/PLAN.md` and `git cat-file -e main:docs/features/ROADMAP_EXECUTION_ORDER.md`. If the router or any downstream consumer echoes/executes read-set content, this is an injection surface; at minimum it is unbounded free text in a column the router is supposed to parse deterministically. No escaping/quoting rule is shown.\",\"severity\":\"low\",\"axis\":\"security\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":3,\"title\":\"F80 route text contains a `|`-free but very long single cell; no length bound is declared\",\"detail\":\"F80's route cell is ~500 chars of prose including backticks and `+`; F92's is similar. The unit summary mentions `SKILL_CONTEXT_BUDGETS` ceilings but no ledger-cell length bound is visible in this slice. If the router concatenates route text into a suggested-next entry, an unbounded cell can blow the context budget the unit itself declares.\",\"severity\":\"low\",\"axis\":\"perf\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":3,\"title\":\"F80/F83/F85/F87/F88/F90/F92 route text asserts facts about files not in this fixture (SPEC.md:95,405-419,588; phase-lint.mjs:293-305)\",\"detail\":\"Routes reference `SPEC.md:95`, `SPEC.md:405-419`, `SPEC.md:588`, `SPEC.md:302`, `phase-lint.mjs:293-305`, `PLAN.md:93`, `TASKS.md:55`. The fixture's 37 SPEC.md is one line (`# SPEC stub (fixture)`), 37 has no PLAN.md, 38's PLAN/TASKS are one-line stubs, and phase-lint.mjs is one line. The routes are therefore unverifiable against the fixture and, if the router validates read-set paths, will fail resolution.\",\"severity\":\"med\",\"axis\":\"spec-drift\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":3,\"title\":\"F80 and F92 both claim to be the same regression (F80 vs F92 \\\"regression of F80\\\") but F80 is folded=yes and F92 folded=no\",\"detail\":\"F80 route: \\\"fold: widen the layer-line parse … the PREFLIGHT gate must stop bricking on the unit's own PLAN.md\\\". F92 route: \\\"regression of F80 — plan owner re-cuts the unit's own planning artifacts so the gate stops blocking on them\\\". Same defect, two rows, opposite folded status. If the router dedupes by file:line, these collide; if not, the ledger double-counts one defect. The fixture does not state the dedupe rule.\",\"severity\":\"med\",\"axis\":\"workflow\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":3,\"title\":\"F80/F83/F85/F87/F88/F90/F92 route text asserts facts about files not in this fixture (SPEC.md:95,405-419,588; phase-lint.mjs:293-305)\",\"detail\":\"Routes reference `SPEC.md:95`, `SPEC.md:405-419`, `SPEC.md:588`, `SPEC.md:302`, `phase-lint.mjs:293-305`, `PLAN.md:93`, `TASKS.md:55`. The fixture's 37 SPEC.md is one line (`# SPEC stub (fixture)`), 37 has no PLAN.md, 38's PLAN/TASKS are one-line stubs, and phase-lint.mjs is one line. The routes are therefore unverifiable against the fixture and, if the router validates read-set paths, will fail resolution.\",\"severity\":\"med\",\"axis\":\"spec-drift\"}]"
+}

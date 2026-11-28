@@ -1,0 +1,64 @@
+{
+ "id": "U2__slice__router-script__glm5.3-flash__r2",
+ "unit": "U2",
+ "job": "slice__router-script",
+ "model": "glm5.3-flash",
+ "run": 2,
+ "ms": 143684,
+ "usage": {
+  "completion_tokens": 3584,
+  "prompt_tokens": 4150,
+  "total_tokens": 7734,
+  "completion_tokens_details": {
+   "reasoning_tokens": 2988
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 4096
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "scripts/unit-route.mjs",
+   "line": 148,
+   "title": "numeric token matches exact number, not prefix",
+   "detail": "Comment claims \"A pure number matches on the folder prefix\" but the code does `folders.filter((folder) => folder.number === clean)` — exact equality. `unit-route 22` will not match folder `224-deterministic-replan-routing`, contradicting the documented resolution behavior.",
+   "severity": "low",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "scripts/unit-route.mjs",
+   "line": 86,
+   "title": "slice(1,-1) drops the last cell when the row has no trailing pipe",
+   "detail": "`cellsOf(line).slice(1, -1)` assumes a trailing `|`. For a well-formed row `| a | b |` cells are [\"\",\"a\",\"b\",\"\"] and slice works, but for `| a | b` (no trailing pipe) cells are [\"\",\"a\",\"b\"] and slice(1,-1) yields [\"a\"], silently discarding the folded cell — the row is then skipped by the `cells.length < 7` check or mis-parsed.",
+   "severity": "low",
+   "axis": "code"
+  },
+  {
+   "file": "scripts/unit-route.mjs",
+   "line": 216,
+   "title": "roadmap/fix-index parsing does not handle escaped pipes, unlike ledger parsing",
+   "detail": "`roadmapStatus` and `fixIndexStatus` use `line.split(\"|\")` while the ledger parser `cellsOf` explicitly handles `\\|` escapes. A roadmap or fix-index cell containing `\\|` shifts the column indexes, so `cells[1]`/`cells[3]` read the wrong cells and the status can be wrong or \"unknown\". Two parsers in the same file disagree on Markdown table semantics.",
+   "severity": "low",
+   "axis": "code"
+  },
+  {
+   "file": "scripts/unit-route.mjs",
+   "line": 139,
+   "title": "localeCompare undermines the declared determinism",
+   "detail": "Header says \"sorted for determinism\" and `unitFolders` sorts with `left.dir.localeCompare(right.dir)` — locale-dependent, so ordering (and thus match order, read-set tie-breaks, and the fingerprint input) can differ across environments with different locales, contradicting the module's determinism contract.",
+   "severity": "low",
+   "axis": "code"
+  },
+  {
+   "file": "scripts/unit-route.mjs",
+   "line": 253,
+   "title": "`..` substring check over-rejects legitimate paths",
+   "detail": "`candidate.includes(\"..\")` rejects any cited path containing the substring anywhere, e.g. a real file named `docs/fix/224-a..b/x.md` or `foo..bar.md` is silently dropped from the read set even though it exists and is safe; the check is meant to block traversal but path traversal is already impossible since candidates must `exists()` relative to PROJECT and cannot be absolute.",
+   "severity": "low",
+   "axis": "code"
+  }
+ ],
+ "raw": "[{\"file\":\"scripts/unit-route.mjs\",\"line\":148,\"title\":\"numeric token matches exact number, not prefix\",\"detail\":\"Comment claims \\\"A pure number matches on the folder prefix\\\" but the code does `folders.filter((folder) => folder.number === clean)` — exact equality. `unit-route 22` will not match folder `224-deterministic-replan-routing`, contradicting the documented resolution behavior.\",\"severity\":\"low\",\"axis\":\"usage-docs\"},{\"file\":\"scripts/unit-route.mjs\",\"line\":86,\"title\":\"slice(1,-1) drops the last cell when the row has no trailing pipe\",\"detail\":\"`cellsOf(line).slice(1, -1)` assumes a trailing `|`. For a well-formed row `| a | b |` cells are [\\\"\\\",\\\"a\\\",\\\"b\\\",\\\"\\\"] and slice works, but for `| a | b` (no trailing pipe) cells are [\\\"\\\",\\\"a\\\",\\\"b\\\"] and slice(1,-1) yields [\\\"a\\\"], silently discarding the folded cell — the row is then skipped by the `cells.length < 7` check or mis-parsed.\",\"severity\":\"low\",\"axis\":\"code\"},{\"file\":\"scripts/unit-route.mjs\",\"line\":216,\"title\":\"roadmap/fix-index parsing does not handle escaped pipes, unlike ledger parsing\",\"detail\":\"`roadmapStatus` and `fixIndexStatus` use `line.split(\\\"|\\\")` while the ledger parser `cellsOf` explicitly handles `\\\\|` escapes. A roadmap or fix-index cell containing `\\\\|` shifts the column indexes, so `cells[1]`/`cells[3]` read the wrong cells and the status can be wrong or \\\"unknown\\\". Two parsers in the same file disagree on Markdown table semantics.\",\"severity\":\"low\",\"axis\":\"code\"},{\"file\":\"scripts/unit-route.mjs\",\"line\":139,\"title\":\"localeCompare undermines the declared determinism\",\"detail\":\"Header says \\\"sorted for determinism\\\" and `unitFolders` sorts with `left.dir.localeCompare(right.dir)` — locale-dependent, so ordering (and thus match order, read-set tie-breaks, and the fingerprint input) can differ across environments with different locales, contradicting the module's determinism contract.\",\"severity\":\"low\",\"axis\":\"code\"},{\"file\":\"scripts/unit-route.mjs\",\"line\":253,\"title\":\"`..` substring check over-rejects legitimate paths\",\"detail\":\"`candidate.includes(\\\"..\\\")` rejects any cited path containing the substring anywhere, e.g. a real file named `docs/fix/224-a..b/x.md` or `foo..bar.md` is silently dropped from the read set even though it exists and is safe; the check is meant to block traversal but path traversal is already impossible since candidates must `exists()` relative to PROJECT and cannot be absolute.\",\"severity\":\"low\",\"axis\":\"code\"}]"
+}

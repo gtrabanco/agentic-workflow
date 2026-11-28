@@ -1,0 +1,72 @@
+{
+ "id": "U2__slice__replan-contract__deepseek-v4-flash__r2",
+ "unit": "U2",
+ "job": "slice__replan-contract",
+ "model": "deepseek-v4-flash",
+ "run": 2,
+ "ms": 4386,
+ "usage": {
+  "completion_tokens": 1147,
+  "prompt_tokens": 3128,
+  "total_tokens": 4275,
+  "completion_tokens_details": {
+   "reasoning_tokens": 0
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 3072
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "skills/replan-findings/references/PHASE_APPEND.md",
+   "line": null,
+   "title": "Hand-off block contradicts itself on next step",
+   "detail": "The hand-off template prints `→ Next: /review-plan <unit>` and then lists `PLAN-REVIEW-FAIL → repair here as one batch, rotate the artifact revision, re-review`, but the same file's Guardrails say `Never skip the re-review` and the SKILL.md Done-when says the hand-off is `/review-plan <unit>`. More concretely, the FAIL branch says 'repair here' — i.e. re-enter this same append contract — yet the contract's own load condition (SKILL.md: 'Only that line licenses this contract', i.e. `route: replan`) is not re-established by a FAIL; a FAIL is a plan-review verdict, not a router route. The doc thus instructs a re-entry path the router contract forbids.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "skills/replan-findings/references/PHASE_APPEND.md",
+   "line": null,
+   "title": "Placement rule vs. 'ledger must always end with unexecuted hardening'",
+   "detail": "Placement says: if final `Hardening & PR` already executed, append new phases after it 'then append one fresh final `Hardening & PR` closing them out' and asserts 'the ledger must always end with an unexecuted hardening close-out covering every phase.' But the first branch (hardening not yet executed) inserts new phases *before* the existing hardening — fine — while the second branch's fresh hardening is appended after the new phases, so the ledger ends with hardening. However the rule as stated ('always end with an unexecuted hardening') is violated by the first branch only if the existing hardening is later executed before the new phases run; the doc gives no rule for what happens when the pre-existing hardening executes and then a *second* replan arrives — the 'already executed' branch would append after the (now executed) hardening and add another, producing two hardening phases with the earlier one no longer last. The invariant 'always end with an unexecuted hardening' is not actually maintained across repeated replans.",
+   "severity": "low",
+   "axis": "workflow"
+  },
+  {
+   "file": "skills/replan-findings/SKILL.md",
+   "line": null,
+   "title": "Bounded intake claims router read-set is sufficient but append contract reopens finding evidence",
+   "detail": "SKILL.md Bounded intake step 1 says 'read **only** the paths on its `read-set` line' and step 2 'Read exactly those rows.' PHASE_APPEND.md Writing step 2 says 'Draft each phase against the finding's own evidence — the row's `file:line` and route cells are the authority; do not reopen the whole repository.' If the finding's `file:line` points at source the router did not include in `read-set`, the append contract requires reading it, contradicting 'read only the read-set paths.' The two documents disagree on whether source at the finding's `file:line` may be read.",
+   "severity": "med",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "skills/replan-findings/SKILL.md",
+   "line": null,
+   "title": "Missing router treated as BLOCKED but no BLOCKED vocabulary defined here",
+   "detail": "SKILL.md says 'A missing `scripts/unit-route.mjs` is a `BLOCKED` prerequisite.' The material provided defines no `BLOCKED` status vocabulary for this contract (the hand-off uses PLAN-REVIEW-PASS/FAIL; the router emits `route: replan`). The claim invents a status token the rest of the material does not use, so a consumer cannot tell what 'BLOCKED prerequisite' means operationally (stop? report? which gate?).",
+   "severity": "low",
+   "axis": "workflow"
+  },
+  {
+   "file": "skills/replan-findings/references/PHASE_APPEND.md",
+   "line": null,
+   "title": "Phase-lint fingerprint format not defined in this material",
+   "detail": "Writing step 3 requires recording `Phase-lint: PASS (8/8) · fingerprint P<n>:<layer>:<n-tasks>:<slug>` 'exactly as the planners do,' but neither this file nor SKILL.md defines the fingerprint grammar or where the planners define it; the reference to `phase-contract` is given for the 8-box shape, not the fingerprint. A consumer following this doc cannot produce the required string from the material provided.",
+   "severity": "low",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "skills/replan-findings/references/PHASE_APPEND.md",
+   "line": null,
+   "title": "'one write, one new opaque id for the whole set it touched' vs. per-phase append",
+   "detail": "Artifact-revision duty says 'one write, one new opaque id for the whole set it touched,' but Writing step 5 says 'Commit the ledger write on the unit's own branch' (singular) while Placement allows inserting phases before an existing hardening and appending after — potentially multiple textual insertions. If the append is split across commits (e.g. insert-before then append-after in separate edits), the 'one write, one id' rule is ambiguous about whether each commit rotates. The doc does not state that all insertions must be a single commit.",
+   "severity": "low",
+   "axis": "spec-drift"
+  }
+ ],
+ "raw": "[{\"file\":\"skills/replan-findings/references/PHASE_APPEND.md\",\"line\":null,\"title\":\"Hand-off block contradicts itself on next step\",\"detail\":\"The hand-off template prints `→ Next: /review-plan <unit>` and then lists `PLAN-REVIEW-FAIL → repair here as one batch, rotate the artifact revision, re-review`, but the same file's Guardrails say `Never skip the re-review` and the SKILL.md Done-when says the hand-off is `/review-plan <unit>`. More concretely, the FAIL branch says 'repair here' — i.e. re-enter this same append contract — yet the contract's own load condition (SKILL.md: 'Only that line licenses this contract', i.e. `route: replan`) is not re-established by a FAIL; a FAIL is a plan-review verdict, not a router route. The doc thus instructs a re-entry path the router contract forbids.\",\"severity\":\"med\",\"axis\":\"workflow\"},{\"file\":\"skills/replan-findings/references/PHASE_APPEND.md\",\"line\":null,\"title\":\"Placement rule vs. 'ledger must always end with unexecuted hardening'\",\"detail\":\"Placement says: if final `Hardening & PR` already executed, append new phases after it 'then append one fresh final `Hardening & PR` closing them out' and asserts 'the ledger must always end with an unexecuted hardening close-out covering every phase.' But the first branch (hardening not yet executed) inserts new phases *before* the existing hardening — fine — while the second branch's fresh hardening is appended after the new phases, so the ledger ends with hardening. However the rule as stated ('always end with an unexecuted hardening') is violated by the first branch only if the existing hardening is later executed before the new phases run; the doc gives no rule for what happens when the pre-existing hardening executes and then a *second* replan arrives — the 'already executed' branch would append after the (now executed) hardening and add another, producing two hardening phases with the earlier one no longer last. The invariant 'always end with an unexecuted hardening' is not actually maintained across repeated replans.\",\"severity\":\"low\",\"axis\":\"workflow\"},{\"file\":\"skills/replan-findings/SKILL.md\",\"line\":null,\"title\":\"Bounded intake claims router read-set is sufficient but append contract reopens finding evidence\",\"detail\":\"SKILL.md Bounded intake step 1 says 'read **only** the paths on its `read-set` line' and step 2 'Read exactly those rows.' PHASE_APPEND.md Writing step 2 says 'Draft each phase against the finding's own evidence — the row's `file:line` and route cells are the authority; do not reopen the whole repository.' If the finding's `file:line` points at source the router did not include in `read-set`, the append contract requires reading it, contradicting 'read only the read-set paths.' The two documents disagree on whether source at the finding's `file:line` may be read.\",\"severity\":\"med\",\"axis\":\"usage-docs\"},{\"file\":\"skills/replan-findings/SKILL.md\",\"line\":null,\"title\":\"Missing router treated as BLOCKED but no BLOCKED vocabulary defined here\",\"detail\":\"SKILL.md says 'A missing `scripts/unit-route.mjs` is a `BLOCKED` prerequisite.' The material provided defines no `BLOCKED` status vocabulary for this contract (the hand-off uses PLAN-REVIEW-PASS/FAIL; the router emits `route: replan`). The claim invents a status token the rest of the material does not use, so a consumer cannot tell what 'BLOCKED prerequisite' means operationally (stop? report? which gate?).\",\"severity\":\"low\",\"axis\":\"workflow\"},{\"file\":\"skills/replan-findings/references/PHASE_APPEND.md\",\"line\":null,\"title\":\"Phase-lint fingerprint format not defined in this material\",\"detail\":\"Writing step 3 requires recording `Phase-lint: PASS (8/8) · fingerprint P<n>:<layer>:<n-tasks>:<slug>` 'exactly as the planners do,' but neither this file nor SKILL.md defines the fingerprint grammar or where the planners define it; the reference to `phase-contract` is given for the 8-box shape, not the fingerprint. A consumer following this doc cannot produce the required string from the material provided.\",\"severity\":\"low\",\"axis\":\"usage-docs\"},{\"file\":\"skills/replan-findings/references/PHASE_APPEND.md\",\"line\":null,\"title\":\"'one write, one new opaque id for the whole set it touched' vs. per-phase append\",\"detail\":\"Artifact-revision duty says 'one write, one new opaque id for the whole set it touched,' but Writing step 5 says 'Commit the ledger write on the unit's own branch' (singular) while Placement allows inserting phases before an existing hardening and appending after — potentially multiple textual insertions. If the append is split across commits (e.g. insert-before then append-after in separate edits), the 'one write, one id' rule is ambiguous about whether each commit rotates. The doc does not state that all insertions must be a single commit.\",\"severity\":\"low\",\"axis\":\"spec-drift\"}]"
+}

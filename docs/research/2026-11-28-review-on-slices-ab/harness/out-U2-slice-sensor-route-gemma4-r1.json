@@ -1,0 +1,40 @@
+{
+ "id": "U2__slice__sensor-route__gemma4__r1",
+ "unit": "U2",
+ "job": "slice__sensor-route",
+ "model": "gemma4",
+ "run": 1,
+ "ms": 5700,
+ "usage": {
+  "completion_tokens": 396,
+  "prompt_tokens": 21386,
+  "total_tokens": 21782,
+  "completion_tokens_details": {
+   "reasoning_tokens": 0
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "scripts/normative-drift.test.mjs",
+   "line": 26,
+   "title": "Broken router vocabulary assertion",
+   "detail": "The test asserts that `names` (derived from `unit-route.mjs`) must be `['replan', 'decision', 'fold', 'execute', 'plan-from-issue']`, but the `unit-route.test.mjs` file (AC1) and the `workflow-status.mjs` logic (Step 13) use `plan-fix` and `plan-feature` as the actual command/route tokens. The test's expected array is a mismatch with the actual implementation's vocabulary.",
+   "severity": "high",
+   "axis": "code"
+  },
+  {
+   "file": "scripts/normative-drift.test.mjs",
+   "line": 31,
+   "title": "Broken sensor token assertion",
+   "detail": "The test asserts that `sensor` (from `workflow-status.mjs`) must include `replan-in-unit`, `/plan-feature`, `/plan-fix`, and `/fold-findings`. However, `workflow-status.mjs` (line 758) uses `replan-in-unit` in the trigger string, but the actual command tokens emitted in `readSuggestions` are `/plan-fix` and `/plan-feature`. The test checks for the presence of these strings in the file, but the logic in `workflow-status.mjs` uses them as command prefixes, not necessarily as standalone tokens in the way the regex/includes check implies. More critically, the test's assertion `router.includes(token)` for `/plan-feature` will fail because the router's `ROUTES` (as seen in the test's own regex at line 18) contains the raw route names, not the slash-prefixed command strings.",
+   "severity": "high",
+   "axis": "code"
+  }
+ ],
+ "raw": "[{\"file\":\"scripts/normative-drift.test.mjs\",\"line\":26,\"title\":\"Broken router vocabulary assertion\",\"detail\":\"The test asserts that `names` (derived from `unit-route.mjs`) must be `['replan', 'decision', 'fold', 'execute', 'plan-from-issue']`, but the `unit-route.test.mjs` file (AC1) and the `workflow-status.mjs` logic (Step 13) use `plan-fix` and `plan-feature` as the actual command/route tokens. The test's expected array is a mismatch with the actual implementation's vocabulary.\",\"severity\":\"high\",\"axis\":\"code\"},{\"file\":\"scripts/normative-drift.test.mjs\",\"line\":31,\"title\":\"Broken sensor token assertion\",\"detail\":\"The test asserts that `sensor` (from `workflow-status.mjs`) must include `replan-in-unit`, `/plan-feature`, `/plan-fix`, and `/fold-findings`. However, `workflow-status.mjs` (line 758) uses `replan-in-unit` in the trigger string, but the actual command tokens emitted in `readSuggestions` are `/plan-fix` and `/plan-feature`. The test checks for the presence of these strings in the file, but the logic in `workflow-status.mjs` uses them as command prefixes, not necessarily as standalone tokens in the way the regex/includes check implies. More critically, the test's assertion `router.includes(token)` for `/plan-feature` will fail because the router's `ROUTES` (as seen in the test's own regex at line 18) contains the raw route names, not the slash-prefixed command strings.\",\"severity\":\"high\",\"axis\":\"code\"}]"
+}

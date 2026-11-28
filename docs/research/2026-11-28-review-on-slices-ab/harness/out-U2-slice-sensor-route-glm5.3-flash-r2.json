@@ -1,0 +1,56 @@
+{
+ "id": "U2__slice__sensor-route__glm5.3-flash__r2",
+ "unit": "U2",
+ "job": "slice__sensor-route",
+ "model": "glm5.3-flash",
+ "run": 2,
+ "ms": 140739,
+ "usage": {
+  "completion_tokens": 5031,
+  "prompt_tokens": 18375,
+  "total_tokens": 23406,
+  "completion_tokens_details": {
+   "reasoning_tokens": 4227
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 18368
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "scripts/workflow-status.mjs",
+   "line": 762,
+   "title": "Sensor re-implements the routing decision instead of projecting the router's table",
+   "detail": "The doc comment claims \"The router (scripts/unit-route.mjs) owns the class→route decision; this surface projects it\", but readSuggestions decides with its own free-text heuristic: PLAN_ROUTE = /replan[- ]in[- ]unit|owned by plan|plan owner|plan-owner/i tested against the raw route/klass cells, then a fallback that sends ANY open row to /fold-findings. This is exactly the divergent-implementations defect #224 exists to close (the drift test's own comment cites the \"three-contradictory-sentences defect\"). Concrete contradictions: (a) review-loop-discipline.test.mjs §7 pins the resolution map \"class `plan` → `plan-feature`\", but a row with class `plan` and a route cell like \"fold into phase\" fails PLAN_ROUTE and gets the /fold-findings suggestion; (b) a decision-class open row (fold-findings pins \"decision-required\") is routed to /fold-findings by the sensor while the router's closed ROUTES table routes decision rows to \"decision\". Two machines now publish two different answers for the same ledger.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "scripts/workflow-status.mjs",
+   "line": 766,
+   "title": "Trigger text hardcodes 'replan-in-unit' for non-replan matches",
+   "detail": "trigger: `an open finding's frozen route is the plan owner — replan-in-unit (${...})` is emitted even when the row matched via klass or via the 'owned by plan'/'plan owner' alternatives of PLAN_ROUTE, i.e. when no row's route is replan-in-unit. The machine publishes a route name the row does not carry — the machine→text failure mode the repo's own AC15 gate defines (\"the machine publishes a value that no normative surface names\").",
+   "severity": "low",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "scripts/review-loop-discipline.test.mjs",
+   "line": 276,
+   "title": "Pinned version assertion edited, contradicting the file's own immutability contract",
+   "detail": "The diff rewrites the existing pin from assert.match(foldSkill, /version: 1\\.4\\.0/) to /version: 1\\.5\\.0/. The same file asserts (section 9, O22/O23) that tests are immutable once written and the sole legitimate amendment is \"a proven mis-encoding of external semantic\" cited from authoritative documentation; the header also states tests \"are never edited to pass\". A skill version bump is not a mis-encoding of external semantics, and the new comment self-acknowledges the edit (\"fix #224 moved it 1.4.0 → 1.5.0\") rather than meeting the stated exception. The repo's own contract requires surfacing this as a finding + SPEC amendment, not silently rewriting the expectation.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "scripts/unit-route.test.mjs",
+   "line": 150,
+   "title": "Header's fixture claim contradicted by the determinism/git-status tests",
+   "detail": "The file header states \"every fixture is either the committed tree at scripts/fixtures/unit-route/ or a copy of it under os.tmpdir()\", but the AC4 tests run the router against the live repository itself (run([\"224-deterministic-replan-routing\"], { root: null }) with cwd: repoRoot and no UNIT_ROUTE_REPO), which is neither the fixture tree nor a tmpdir copy — and the git-status test executes the router in the developer's real, possibly dirty checkout, so \"a run leaves git status --porcelain unchanged\" is only checked against whatever state happens to exist.",
+   "severity": "low",
+   "axis": "usage-docs"
+  }
+ ],
+ "raw": "[{\"file\":\"scripts/workflow-status.mjs\",\"line\":762,\"title\":\"Sensor re-implements the routing decision instead of projecting the router's table\",\"detail\":\"The doc comment claims \\\"The router (scripts/unit-route.mjs) owns the class→route decision; this surface projects it\\\", but readSuggestions decides with its own free-text heuristic: PLAN_ROUTE = /replan[- ]in[- ]unit|owned by plan|plan owner|plan-owner/i tested against the raw route/klass cells, then a fallback that sends ANY open row to /fold-findings. This is exactly the divergent-implementations defect #224 exists to close (the drift test's own comment cites the \\\"three-contradictory-sentences defect\\\"). Concrete contradictions: (a) review-loop-discipline.test.mjs §7 pins the resolution map \\\"class `plan` → `plan-feature`\\\", but a row with class `plan` and a route cell like \\\"fold into phase\\\" fails PLAN_ROUTE and gets the /fold-findings suggestion; (b) a decision-class open row (fold-findings pins \\\"decision-required\\\") is routed to /fold-findings by the sensor while the router's closed ROUTES table routes decision rows to \\\"decision\\\". Two machines now publish two different answers for the same ledger.\",\"severity\":\"med\",\"axis\":\"workflow\"},{\"file\":\"scripts/workflow-status.mjs\",\"line\":766,\"title\":\"Trigger text hardcodes 'replan-in-unit' for non-replan matches\",\"detail\":\"trigger: `an open finding's frozen route is the plan owner — replan-in-unit (${...})` is emitted even when the row matched via klass or via the 'owned by plan'/'plan owner' alternatives of PLAN_ROUTE, i.e. when no row's route is replan-in-unit. The machine publishes a route name the row does not carry — the machine→text failure mode the repo's own AC15 gate defines (\\\"the machine publishes a value that no normative surface names\\\").\",\"severity\":\"low\",\"axis\":\"usage-docs\"},{\"file\":\"scripts/review-loop-discipline.test.mjs\",\"line\":276,\"title\":\"Pinned version assertion edited, contradicting the file's own immutability contract\",\"detail\":\"The diff rewrites the existing pin from assert.match(foldSkill, /version: 1\\\\.4\\\\.0/) to /version: 1\\\\.5\\\\.0/. The same file asserts (section 9, O22/O23) that tests are immutable once written and the sole legitimate amendment is \\\"a proven mis-encoding of external semantic\\\" cited from authoritative documentation; the header also states tests \\\"are never edited to pass\\\". A skill version bump is not a mis-encoding of external semantics, and the new comment self-acknowledges the edit (\\\"fix #224 moved it 1.4.0 → 1.5.0\\\") rather than meeting the stated exception. The repo's own contract requires surfacing this as a finding + SPEC amendment, not silently rewriting the expectation.\",\"severity\":\"med\",\"axis\":\"workflow\"},{\"file\":\"scripts/unit-route.test.mjs\",\"line\":150,\"title\":\"Header's fixture claim contradicted by the determinism/git-status tests\",\"detail\":\"The file header states \\\"every fixture is either the committed tree at scripts/fixtures/unit-route/ or a copy of it under os.tmpdir()\\\", but the AC4 tests run the router against the live repository itself (run([\\\"224-deterministic-replan-routing\\\"], { root: null }) with cwd: repoRoot and no UNIT_ROUTE_REPO), which is neither the fixture tree nor a tmpdir copy — and the git-status test executes the router in the developer's real, possibly dirty checkout, so \\\"a run leaves git status --porcelain unchanged\\\" is only checked against whatever state happens to exist.\",\"severity\":\"low\",\"axis\":\"usage-docs\"}]"
+}

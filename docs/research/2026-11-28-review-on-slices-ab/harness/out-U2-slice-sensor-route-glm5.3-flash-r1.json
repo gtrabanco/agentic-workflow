@@ -1,0 +1,48 @@
+{
+ "id": "U2__slice__sensor-route__glm5.3-flash__r1",
+ "unit": "U2",
+ "job": "slice__sensor-route",
+ "model": "glm5.3-flash",
+ "run": 1,
+ "ms": 137302,
+ "usage": {
+  "completion_tokens": 4195,
+  "prompt_tokens": 18375,
+  "total_tokens": 22570,
+  "completion_tokens_details": {
+   "reasoning_tokens": 3568
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "scripts/workflow-status.mjs",
+   "line": 757,
+   "title": "Sensor re-implements the router's class→route decision it claims to only project",
+   "detail": "readSuggestions' docstring says \"The router (`scripts/unit-route.mjs`) owns the class→route decision; this surface projects it for an envelope consumer\", but the sensor never reads the router or its table — it re-derives the decision with its own local regex `PLAN_ROUTE = /replan[- ]in[- ]unit|owned by plan|plan owner|plan-owner/i` applied to free-text ledger cells. This is a second, divergent decision procedure: a route cell like \"fold into phase; plan owner notified\" matches `plan owner` and is misrouted to /plan-feature, while the router (whose closed vocabulary the normative-drift test pins to [\"replan\",\"decision\",\"fold\",\"execute\",\"plan-from-issue\"]) would route it to fold. The normative-drift test only pins token presence, not semantic agreement, so the drift it warns about (\"neither may invent a fourth destination for the same class\") is live here.",
+   "severity": "med",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "scripts/workflow-status.mjs",
+   "line": 766,
+   "title": "Decision-class open rows are routed to the fold, contradicting the router's closed set",
+   "detail": "readSuggestions has exactly two branches: plan-route match → /plan-feature|/plan-fix, otherwise any open row → /fold-findings. The repo's own vocabulary (pinned in review-loop-discipline.test.mjs: `assert.match(foldSkill, /decision-required/)` and the router route set [\"replan\",\"decision\",\"fold\",\"execute\",\"plan-from-issue\"] in normative-drift.test.mjs) defines a `decision` class/destination distinct from fold. A unit whose only open row is decision-required gets `command: \"/fold-findings\"` from the sensor, but the router's class→destination mapping sends decision rows to the decision destination — the sensor publishes a route the router does not assign for that class.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "scripts/workflow-status.mjs",
+   "line": 768,
+   "title": "Trigger text hardcodes `replan-in-unit` regardless of what actually matched",
+   "detail": "The trigger string is a constant: `trigger: \\`an open finding's frozen route is the plan owner — replan-in-unit (${...ids})\\``, but the branch fires for any PLAN_ROUTE match, including `owned by plan`, `plan owner`, or `plan-owner` in the class cell with an empty/different route cell. The emitted envelope then asserts a frozen route (`replan-in-unit`) the ledger row does not carry — the machine publishes a specific value the cited evidence doesn't contain, exactly the machine→text failure class the repo's own normative-drift gate (\"the machine publishes a value that no normative surface names\") exists to catch.",
+   "severity": "low",
+   "axis": "code"
+  }
+ ],
+ "raw": "[{\"file\":\"scripts/workflow-status.mjs\",\"line\":757,\"title\":\"Sensor re-implements the router's class→route decision it claims to only project\",\"detail\":\"readSuggestions' docstring says \\\"The router (`scripts/unit-route.mjs`) owns the class→route decision; this surface projects it for an envelope consumer\\\", but the sensor never reads the router or its table — it re-derives the decision with its own local regex `PLAN_ROUTE = /replan[- ]in[- ]unit|owned by plan|plan owner|plan-owner/i` applied to free-text ledger cells. This is a second, divergent decision procedure: a route cell like \\\"fold into phase; plan owner notified\\\" matches `plan owner` and is misrouted to /plan-feature, while the router (whose closed vocabulary the normative-drift test pins to [\\\"replan\\\",\\\"decision\\\",\\\"fold\\\",\\\"execute\\\",\\\"plan-from-issue\\\"]) would route it to fold. The normative-drift test only pins token presence, not semantic agreement, so the drift it warns about (\\\"neither may invent a fourth destination for the same class\\\") is live here.\",\"severity\":\"med\",\"axis\":\"usage-docs\"},{\"file\":\"scripts/workflow-status.mjs\",\"line\":766,\"title\":\"Decision-class open rows are routed to the fold, contradicting the router's closed set\",\"detail\":\"readSuggestions has exactly two branches: plan-route match → /plan-feature|/plan-fix, otherwise any open row → /fold-findings. The repo's own vocabulary (pinned in review-loop-discipline.test.mjs: `assert.match(foldSkill, /decision-required/)` and the router route set [\\\"replan\\\",\\\"decision\\\",\\\"fold\\\",\\\"execute\\\",\\\"plan-from-issue\\\"] in normative-drift.test.mjs) defines a `decision` class/destination distinct from fold. A unit whose only open row is decision-required gets `command: \\\"/fold-findings\\\"` from the sensor, but the router's class→destination mapping sends decision rows to the decision destination — the sensor publishes a route the router does not assign for that class.\",\"severity\":\"med\",\"axis\":\"workflow\"},{\"file\":\"scripts/workflow-status.mjs\",\"line\":768,\"title\":\"Trigger text hardcodes `replan-in-unit` regardless of what actually matched\",\"detail\":\"The trigger string is a constant: `trigger: \\\\`an open finding's frozen route is the plan owner — replan-in-unit (${...ids})\\\\``, but the branch fires for any PLAN_ROUTE match, including `owned by plan`, `plan owner`, or `plan-owner` in the class cell with an empty/different route cell. The emitted envelope then asserts a frozen route (`replan-in-unit`) the ledger row does not carry — the machine publishes a specific value the cited evidence doesn't contain, exactly the machine→text failure class the repo's own normative-drift gate (\\\"the machine publishes a value that no normative surface names\\\") exists to catch.\",\"severity\":\"low\",\"axis\":\"code\"}]"
+}

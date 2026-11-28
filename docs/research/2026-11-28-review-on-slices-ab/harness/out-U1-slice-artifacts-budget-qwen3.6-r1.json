@@ -1,0 +1,48 @@
+{
+ "id": "U1__slice__artifacts-budget__qwen3.6__r1",
+ "unit": "U1",
+ "job": "slice__artifacts-budget",
+ "model": "qwen3.6",
+ "run": 1,
+ "ms": 8827,
+ "usage": {
+  "completion_tokens": 584,
+  "prompt_tokens": 17551,
+  "total_tokens": 18135,
+  "completion_tokens_details": {
+   "reasoning_tokens": 0
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "docs/fix/README.md",
+   "line": 17,
+   "title": "Stale reference to absorbed skill in fix index",
+   "detail": "The Notes column for issue #258 lists `plan-feature-scaffold` as one of the 'Three surviving skills after feature 61'. However, the SPEC.md for this unit explicitly states under 'Why' and 'Non-goals' that `plan-feature-scaffold` was absorbed into `unit-lane` by feature 61 and no longer exists as a skill. The index incorrectly implies the skill still exists and is being modified.",
+   "severity": "med",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/258-harden-needs-input-contracts/SPEC.md",
+   "line": 130,
+   "title": "Unverified claim about prior commit validity",
+   "detail": "The 'Planning evidence' table entry PE-003 claims the fix follows the same defect class as `review-change` commit `29b52c63`, but explicitly marks this as 'ASSUMPTION-UNVERIFIED' because `git cat-file -t 29b52c63` fails. The 'References' section at the bottom lists this commit as a reference without the unverified caveat, creating a contradiction between the evidence section (which admits it's invalid) and the references (which present it as a valid anchor).",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/features/ROADMAP.md",
+   "line": 78,
+   "title": "Roadmap row 68 references fix/258 as absorbed gap",
+   "detail": "Row 68 (`subagent-first-execution`) states: 'Absorbed gap (2026-10-18, observed on feat/36 and fix/258 after unit 73's per-phase hand-off contract): running `/unit-lane` bare... leaves the lane doing design+plan only... the topology change is the fix'. This implies fix/258 addresses a gap in `/unit-lane`'s execution topology. However, the SPEC.md for fix/258 defines the objective strictly as 'harden needs-input interactive contracts' (guarding blank inputs), not fixing execution topology or hand-off contracts. This is a mischaracterization of the unit's scope in the roadmap.",
+   "severity": "med",
+   "axis": "spec-drift"
+  }
+ ],
+ "raw": "[\n  {\n    \"file\": \"docs/fix/README.md\",\n    \"line\": 17,\n    \"title\": \"Stale reference to absorbed skill in fix index\",\n    \"detail\": \"The Notes column for issue #258 lists `plan-feature-scaffold` as one of the 'Three surviving skills after feature 61'. However, the SPEC.md for this unit explicitly states under 'Why' and 'Non-goals' that `plan-feature-scaffold` was absorbed into `unit-lane` by feature 61 and no longer exists as a skill. The index incorrectly implies the skill still exists and is being modified.\",\n    \"severity\": \"med\",\n    \"axis\": \"spec-drift\"\n  },\n  {\n    \"file\": \"docs/fix/258-harden-needs-input-contracts/SPEC.md\",\n    \"line\": 130,\n    \"title\": \"Unverified claim about prior commit validity\",\n    \"detail\": \"The 'Planning evidence' table entry PE-003 claims the fix follows the same defect class as `review-change` commit `29b52c63`, but explicitly marks this as 'ASSUMPTION-UNVERIFIED' because `git cat-file -t 29b52c63` fails. The 'References' section at the bottom lists this commit as a reference without the unverified caveat, creating a contradiction between the evidence section (which admits it's invalid) and the references (which present it as a valid anchor).\",\n    \"severity\": \"low\",\n    \"axis\": \"spec-drift\"\n  },\n  {\n    \"file\": \"docs/features/ROADMAP.md\",\n    \"line\": 78,\n    \"title\": \"Roadmap row 68 references fix/258 as absorbed gap\",\n    \"detail\": \"Row 68 (`subagent-first-execution`) states: 'Absorbed gap (2026-10-18, observed on feat/36 and fix/258 after unit 73's per-phase hand-off contract): running `/unit-lane` bare... leaves the lane doing design+plan only... the topology change is the fix'. This implies fix/258 addresses a gap in `/unit-lane`'s execution topology. However, the SPEC.md for fix/258 defines the objective strictly as 'harden needs-input interactive contracts' (guarding blank inputs), not fixing execution topology or hand-off contracts. This is a mischaracterization of the unit's scope in the roadmap.\",\n    \"severity\": \"med\",\n    \"axis\": \"spec-drift\"\n  }\n]"
+}

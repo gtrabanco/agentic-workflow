@@ -1,0 +1,609 @@
+{
+ "id": "U2__mono__deepseek-v4-flash__r2",
+ "unit": "U2",
+ "job": "mono",
+ "model": "deepseek-v4-flash",
+ "run": 2,
+ "ms": 33120,
+ "usage": {
+  "completion_tokens": 12000,
+  "prompt_tokens": 171937,
+  "total_tokens": 183937,
+  "completion_tokens_details": {
+   "reasoning_tokens": 0
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 171776
+  }
+ },
+ "finish": "length",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "scripts/unit-route.mjs",
+   "line": null,
+   "title": "Router's `rows:` line lists every open row, not the selected ones",
+   "detail": "`main()` computes `selected` per route but `print()` is called with `rows: rowIds` where `const rowIds = rows.map((row) => row.id)` \u2014 every open row, including fold/decision rows. The replan contract (`skills/replan-findings/SKILL.md` Bounded intake step 2) says \"The `rows:` line names the findings \u2026 Read exactly those rows\", and `PHASE_APPEND.md` says \"For every finding the router's `rows:` line selected\". On the unit-37 fixture the router prints `rows: F83 F85 F88 F90 F92` (test AC5) while F90 is a `fold` row and F88/F92 are replan \u2014 the test itself asserts the union, so the contract's \"selected rows only\" is violated by the code and pinned by the test.",
+   "severity": "med",
+   "axis": "code"
+  },
+  {
+   "file": "scripts/unit-route.mjs",
+   "line": null,
+   "title": "`readSetFor` base for `plan-from-issue` is wrong directory",
+   "detail": "`print({... readSet: readSetFor(\"docs/fix\", [], [\"README.md\"]) })` \u2014 `readSetFor(unitDir, rows, base)` builds `${unitDir}/${name}`, so this yields `docs/fix/README.md`, which is fine, but the `unit` field is the bare issue number and `status: \"pending\"` is hardcoded rather than read from the fix index row (the fixture row is `pending`, but a real `in-progress` issue would still print `pending`). The status is a claimed fact not derived from the index.",
+   "severity": "low",
+   "axis": "code"
+  },
+  {
+   "file": "scripts/unit-route.mjs",
+   "line": null,
+   "title": "`fixIndexIssues` regex matches any `#N` in the first cell, including PR links",
+   "detail": "`/issues\\/(\\d+)|#(\\d+)/` over `line.split(\"|\")[1]` \u2014 the fix index's first cell is the issue link, but the same regex also matches a `#N` in a topic cell if the first cell is empty, and more importantly `fixIndexStatus` uses `new RegExp(\\`issues/${number}\\\\b|#${number}\\\\b\\`)` which will match `#224` inside `#2240`? No \u2014 `\\b` after digits is fine. The real issue: `fixIndexIssues` adds the number from `#(\\d+)` even when the cell is a PR link `[#225](.../pull/225)`, so a fix index row whose first cell is a PR (not an issue) would be treated as a tracked issue. Low confidence; noting as low.",
+   "severity": "low",
+   "axis": "code"
+  },
+  {
+   "file": "scripts/unit-route.mjs",
+   "line": null,
+   "title": "`roadmapStatus`/`fixIndexStatus` split on `\u00b7` but the roadmap status cell is `done \u00b7 [#225](...)`",
+   "detail": "`cells[3].split(\"\u00b7\")[0].trim()` \u2014 for the roadmap the status is column 3 (index 3 after the leading empty cell), which is correct for `| NN | Slug | Status | Depends on | Summary |`. But `fixIndexStatus` uses `cells[3]` for `| Issue | Topic | Status | Notes |` \u2014 that is the **Notes** column, not Status. The fix index status is `cells[2]`. So `node scripts/unit-route.mjs 224` would print `status: <notes text>` instead of `done`.",
+   "severity": "med",
+   "axis": "code"
+  },
+  {
+   "file": "scripts/unit-route.mjs",
+   "line": null,
+   "title": "`openRows` requires `cells.length < 7` but `cellsOf(...).slice(1,-1)` drops the trailing empty cell",
+   "detail": "A well-formed row `| F1 | ... | no |` splits to `['', 'F1', ..., 'no', '']`; `.slice(1,-1)` gives 7 cells \u2014 OK. But a row with a trailing `|` and no space still works. The `VF-` skip is correct. However `isOpen` treats `''` as closed, so a row with a missing `folded` cell is silently dropped rather than reported \u2014 a ledger row with a malformed folded cell is invisible to the router, contradicting the sensor's \"named, never silent\" discipline.",
+   "severity": "low",
+   "axis": "code"
+  },
+  {
+   "file": "scripts/workflow-status.mjs",
+   "line": null,
+   "title": "`readSuggestions` uses `unit.issue` for fix units but `unit.id` for features",
+   "detail": "`const command = unit.kind === \"fix\" ? \\`/plan-fix ${unit.issue}\\` : \\`/plan-feature ${unit.id}\\`;` \u2014 the test asserts `/plan-fix 91` for a fix unit whose folder is `91-alpha`, so `unit.issue` must be `91`. But the router's own `command` for a fix unit is `/plan-fix ${unit.number}` (the folder prefix). If `unit.issue` and `unit.number` diverge (e.g. a multi-issue fix unit whose primary is the lowest number but the folder is named after it), the sensor and router name different commands for the same unit \u2014 the exact \"two destinations\" defect the unit exists to remove.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "scripts/workflow-status.mjs",
+   "line": null,
+   "title": "`readSuggestions` duplicates the router's `PLAN_ROUTE` regex instead of importing it",
+   "detail": "`const PLAN_ROUTE = /replan[- ]in[- ]unit|owned by plan|plan owner|plan-owner/i;` is declared in both `scripts/unit-route.mjs` and `scripts/workflow-status.mjs`. The SPEC's own root cause #4 and the `normative-drift` test claim \"the class\u2192destination decision is the router's\" and \"neither may invent a fourth destination\" \u2014 but the sensor re-implements the classifier, so a future edit to one regex silently diverges. The drift test only checks token presence, not that the sensor delegates.",
+   "severity": "med",
+   "axis": "code"
+  },
+  {
+   "file": "scripts/workflow-status.mjs",
+   "line": null,
+   "title": "`next.suggested` is attached after `resolveNext` but the schema field may be required/typed",
+   "detail": "`next.suggested = nextSuggested;` mutates the object returned by `resolveNext`. The test `validateEnvelope(...).ok === true` passes, so the schema accepts it. But `SENSOR_SIGNALS.md` step 13 says `next.suggested[]` is \"One entry per fired trigger\" and lists five trigger kinds (review checkpoint, adversarial, closure, replan, fold) \u2014 the implementation only ever emits replan or fold, never the other three. The doc claims a broader surface than the code emits.",
+   "severity": "med",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "skills/replan-findings/SKILL.md",
+   "line": null,
+   "title": "Replan contract says \"read only the read-set paths\" but the router's read-set omits the ledger itself for replan",
+   "detail": "`readSetFor` base for replan is `[\"review-findings.md\", \"SPEC.md\", \"ACCEPTANCE.md\"]` \u2014 good. But `citedPaths` only keeps paths that `exists()` under the project root; the unit-37 fixture's `docs/LOGS.md` is excluded because it is cited only by a folded row (test asserts this). However the replan contract's step 2 says \"The `rows:` line names the findings \u2026 Read exactly those rows\" \u2014 and the router's `rows:` line includes F90 (a fold row) whose cited path is `docs/LOGS.md`, which is *not* in the read set. So the contract instructs reading a row whose cited path the router deliberately excluded.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "skills/plan-feature/references/ROUTING.md",
+   "line": null,
+   "title": "Replan exemption runs before the status gate but the Product-review gate still runs",
+   "detail": "The exemption says \"skip the STOP and load the replan contract\". But `plan-feature/SKILL.md` turn contract box 2 says \"Then the Product-review gate ran: no current `spec-review-pass` receipt \u2026 \u2192 STOP\". A replan on an in-flight unit has no fresh `spec-review-pass` (the SPEC was already reviewed at design time, but the replan appends phases to the *plan*, not the product half). The exemption only skips the *status* STOP, not the Product-review gate \u2014 so a replan route would still be blocked by the Product gate, which the replan contract never mentions. The two documents disagree on whether the replan route is reachable.",
+   "severity": "high",
+   "axis": "workflow"
+  },
+  {
+   "file": "skills/plan-fix/SKILL.md",
+   "line": null,
+   "title": "`plan-fix` replan entry runs the router \"for the target unit\" but `plan-fix` takes issue numbers, not unit slugs",
+   "detail": "`argument-hint: <issue-number> [<issue-number> \u2026]` and the input section says \"One or more GitHub issue numbers\". The new step 7 says \"Only when `node scripts/unit-route.mjs <N>` prints `route: replan` for the target unit\" \u2014 but `<N>` is an issue number, and the router's `resolveUnit` matches on folder prefix/slug, not issue number. `node scripts/unit-route.mjs 224` would match the folder `224-deterministic-replan-routing` only if the folder prefix equals the issue number, which it does here, but for a multi-issue fix unit the folder is named after the primary and the other issue numbers would not resolve. The invocation as documented fails for the multi-issue case the skill explicitly supports.",
+   "severity": "med",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "skills/plan-fix/references/PLANNING_PROCESS.md",
+   "line": null,
+   "title": "Replan detection says \"when the target resolves to an existing unit folder\" but ingest happens first",
+   "detail": "The new paragraph is placed *before* step 1 (\"Ingest all inputs\"), and says \"When the target resolves to an existing unit folder, run the router first\". But resolving the target to a unit folder requires reading the fix index / roadmap, which is part of ingest. The ordering is circular: you cannot know the unit folder before ingesting the issue. The router itself resolves by folder prefix, so `node scripts/unit-route.mjs <issue-number>` works only when the folder prefix equals the issue number.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/ACCEPTANCE.md",
+   "line": null,
+   "title": "AC7 validator greps 14 files but the census claims 8 skill + 6 tutorial = 14; the SPEC Scope lists 8 skill + 3 tutorial pairs = 14 files, consistent \u2014 but AC7's grep list omits `skills/review-change/SKILL.md`",
+   "detail": "AC7's grep list: `PERSIST_AND_DECIDE.md`, `OUTPUT_AND_GUARDRAILS.md`, `CLASSIFY.md`, `review-implementation/SKILL.md`, `triage-issue/SKILL.md`, `REVIEW_FINDING_PROCESS.md`, `FOLD_PROCESS.md`, `fold-findings/SKILL.md` (8 skill files) + 6 tutorial files. But `skills/review-change/SKILL.md`'s Relationship section still says \"`replan-in-unit` adds user-confirmed phases\" with no router mention (visible in the current content at tip). The SPEC's own Decision 8 says `review-change/SKILL.md:157` is a \"class definition or summary that names no destination\" and stays untouched \u2014 but the current text *does* name a destination (\"adds user-confirmed phases\") without the router, contradicting AC7's \"no converged surface sends a replan row to the executor or the fold\" only if that surface is counted. It is not counted, so AC7 passes by exclusion while the surface still carries the old phrasing.",
+   "severity": "med",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/SPEC.md",
+   "line": null,
+   "title": "SPEC Status says `pending` but progress.md and fix index say `done`",
+   "detail": "SPEC `## Status` section: \"`pending` \u00b7 `in-progress` \u00b7 `done` (built, PR open \u2026)\" \u2014 this is the legend, not the value. The actual status is not stated in the SPEC; the fix index row says `done \u00b7 [#225]` and progress.md P8 says \"Unit status: **done**\". The SPEC's Status section is a legend with no recorded value, so a reader cannot tell the unit's state from the SPEC. Minor but the SPEC is the source of truth.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/SPEC.md",
+   "line": null,
+   "title": "SPEC `## Status` records ACCEPTANCE blob `0dd2747\u2026` but progress.md cycle-2 receipt records `b6dc545\u2026`",
+   "detail": "SPEC Status: \"`git hash-object docs/fix/224-deterministic-replan-routing/ACCEPTANCE.md` \u2192 `0dd2747222ce25617ffcf6eae851035a215d6504`\". progress.md cycle-2 receipt: \"Acceptance manifest blob re-computed: \u2026 \u2192 `b6dc545edf96e99a6d0081eadac298124c7ac592` \u2014 matches the value recorded in the SPEC `## Status` after the re-freeze \u2713\". The cycle-2 receipt claims `b6dc545` matches the SPEC, but the SPEC at tip records `0dd2747`. The cycle-3 receipt records `0dd2747` and says it matches. So the cycle-2 receipt's claim is false against the tip bytes \u2014 either the SPEC was re-frozen between cycle 2 and 3 (artrev-0003) and the cycle-2 receipt is stale-but-honest, or the cycle-2 receipt is wrong. The cycle-2 receipt says \"matches the value recorded in the SPEC `## Status` after the re-freeze\" \u2014 at cycle 2 the SPEC recorded `b6dc545`; artrev-0003 re-froze to `0dd2747`. The receipts are internally consistent across cycles, but the SPEC's Status section only records the latest blob, so a reader cannot verify the cycle-2 claim. Not a defect per se.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/progress.md",
+   "line": null,
+   "title": "P8 claims `node --test scripts/*.test.mjs` \u2192 282 tests but the unit adds 14+53+17 tests to a suite that was previously smaller",
+   "detail": "P8: \"`NODE_PATH=\u2026 node --test scripts/*.test.mjs` \u2192 exit 0 \u00b7 282 tests, 282 pass, 0 fail.\" The unit adds `scripts/unit-route.test.mjs` (14 cases), 3 new sensor tests, 1 new drift test. If the pre-unit suite was ~264, 282 is plausible. Not a defect.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/progress.md",
+   "line": null,
+   "title": "P8 says a version pin was \"maintained\" by advancing `fold-findings` pin from 1.4.0 to 1.5.0",
+   "detail": "`scripts/review-loop-discipline.test.mjs:10j` pinned `fold-findings`'s exact version to 1.4.0. P8 advanced it to 1.5.0 \"with the assertion unchanged in strength \u2014 a version fact, not a weakened check\". But the test's own comment says \"The exact pin is maintained on every later bump\" \u2014 this converts a one-time contract pin into a moving target, so the pin no longer detects an *unintended* bump. The original pin's purpose (feature 30's one-time contract) is defeated. The SPEC's quality floor says \"Do not remove, skip, loosen, or rewrite a validator to manufacture PASS\" \u2014 advancing a version pin to match the new version is exactly rewriting a validator to pass.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "docs/workflow/SKILL_CONTEXT_BUDGETS.json",
+   "line": null,
+   "title": "`replan-findings` budget entry has no `mainEstimateMax`/`mainLinesMax` override but the skill's main file is 92 lines",
+   "detail": "The entry only sets `referenceSources`. The defaults are `mainEstimateMax: 2800`, `mainLinesMax: 240`. The skill's `SKILL.md` is 92 lines / ~3.5KB \u2192 ~875 est, under budget. Fine. But the entry's `referenceSources` note says \"measured within the default reference budget\" \u2014 the reference `PHASE_APPEND.md` is 89 lines / ~3.5KB \u2192 ~875 est, under 2200. Fine. No defect.",
+   "severity": "low",
+   "axis": "perf"
+  },
+  {
+   "file": "docs/workflow/SKILL_CONTEXT_BUDGETS.json",
+   "line": null,
+   "title": "Route ceilings re-based to `ceil(measured \u00d7 1.10)` but the SPEC's Rules say \"Skills stay within their context budgets\"",
+   "detail": "P8 raised four route ceilings (plan-feature:issue/scoped, plan-fix:issue, review-change:adversarial/default-backend/default-web/synthesize) to `ceil(measured \u00d7 1.10)`. The SPEC's Rules section says \"Skills stay within their context budgets. The new main file must satisfy the manifest's defaults (`mainEstimateMax: 2800`, `mainLinesMax: 240`).\" The route ceilings are a different budget, and the repo's declared rule (visible in the JSON's own `sources` notes from prior units) is that ceilings are re-based at the declared headroom with a named growth source \u2014 which P8 did. Not a defect.",
+   "severity": "low",
+   "axis": "perf"
+  },
+  {
+   "file": "docs/workflow/SKILLS.md",
+   "line": null,
+   "title": "Internal-step count bumped 18 \u2192 19 but the prose enumerates only 18 named steps",
+   "detail": "The header says \"**19 user-facing skills** \u2026 + **19 internal steps** composed for you (the `plan-feature` router's two planning steps, the two pre-execution evidence owners \u2026, the `review-change` findings engine `review-implementation`, the `planning-preflight` planning gate, the `phase-contract` lint contract, the `verification-contract` acceptance guard, the workflow's own 9-skill internal review pack: \u2026)\". Count: 2 + 2 + 1 + 1 + 1 + 1 + 9 = 17, plus `implementation-discovery` and `replan-findings` (both in the table) = 19. The prose parenthetical does not name `implementation-discovery` or `replan-findings`, so the count 19 is not derivable from the prose. The table below does list them. Minor.",
+   "severity": "low",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "docs/workflow/SKILLS.es.md",
+   "line": null,
+   "title": "Spanish SKILLS.md says \"19 pasos internos\" but the parenthetical enumerates 17",
+   "detail": "Same as the English: \"**19 skills orientadas al usuario** \u2026 + **19 pasos internos** compuestos por ti (los dos pasos de planificaci\u00f3n del router `plan-feature`, los dos due\u00f1os de evidencia pre-ejecuci\u00f3n \u2026, el motor de hallazgos `review-implementation` \u2026, la puerta de planificaci\u00f3n `planning-preflight`, el contrato de lint `phase-contract`, el guardi\u00e1n de aceptaci\u00f3n `verification-contract`, el paquete de revisi\u00f3n interno de 9 skills \u2026)\" \u2014 2+2+1+1+1+1+9 = 17, not 19. The two new/unnamed steps (`implementation-discovery`, `replan-findings`) are in the table but not the prose.",
+   "severity": "low",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "docs/workflow/PORTABLE_PROMPT.md",
+   "line": null,
+   "title": "Portable prompt says \"16 user-facing skills + 13 internal steps\" but SKILLS.md says 19 + 19",
+   "detail": "PORTABLE_PROMPT.md header: \"**16 user-facing skills + 13 internal steps** (minus `init-workspace` \u2026)\". SKILLS.md: \"**19 user-facing skills** \u2026 + **19 internal steps**\". The two docs disagree on the skill counts. The portable prompt is a template for a *new* project (it regenerates a subset), so the counts may legitimately differ \u2014 but the prompt's step 8 now names `node scripts/unit-route.mjs <unit>`, a script that does not exist in a freshly generated project (the prompt never tells the agent to create it). A user following the portable prompt gets a workflow that references a missing script.",
+   "severity": "med",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "docs/workflow/PORTABLE_PROMPT.es.md",
+   "line": null,
+   "title": "Spanish portable prompt has the same missing-script reference",
+   "detail": "Same as English: the prompt instructs `replan-in-unit` to run `node scripts/unit-route.mjs <unit>` but the prompt's own skill-creation steps never create that script. A generated project would have a dangling reference.",
+   "severity": "med",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "docs/workflow/REVIEW_AND_CLASSIFY.md",
+   "line": null,
+   "title": "Doc says `replan-in-unit` runs the router and the planner appends phases, but the router's `next:` for a replan is `/plan-feature <slug>` or `/plan-fix <n>` \u2014 not a phase-append command",
+   "detail": "The doc: \"run `node scripts/unit-route.mjs <unit>`; its `route: replan` line names the planner (`/plan-feature` for a feature, `/plan-fix` for a fix), which appends user-confirmed phase(s) to the unit's SPEC `## Phases` ledger\". The router's `next:` line for a replan is `/plan-feature <slug>` (feature) or `/plan-fix <number>` (fix). But `plan-feature`'s own redirect gate STOPS on a `planned`/`in-progress` roadmap row \u2014 the replan exemption in `ROUTING.md` is supposed to skip that STOP, but the exemption is only in `ROUTING.md`, and `plan-feature/SKILL.md`'s turn contract still requires the Product-review gate. The doc presents the path as working end-to-end; the code path has an unresolved gate.",
+   "severity": "high",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "docs/workflow/REVIEW_AND_CLASSIFY.es.md",
+   "line": null,
+   "title": "Spanish doc has the same end-to-end claim",
+   "detail": "Same as English: the ES doc says the router's `route: replan` line names the planner which appends phases, then a fresh `/review-plan` passes, then `execute-phase` runs them. The Product-review gate in `plan-feature` is not mentioned as a blocker.",
+   "severity": "high",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "docs/workflow/FEATURE_WORKFLOW.md",
+   "line": null,
+   "title": "Feature workflow says `replan-in-unit` runs the router and the planner appends phases \u2014 same unresolved gate",
+   "detail": "\"`replan-in-unit` runs `node scripts/unit-route.mjs <unit>`, whose `route: replan` line names the planner that appends new user-confirmed phases to the unit's SPEC (fresh `/review-plan` first)\". Same as REVIEW_AND_CLASSIFY: the Product-review gate in `plan-feature` is not addressed.",
+   "severity": "high",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "docs/workflow/FEATURE_WORKFLOW.es.md",
+   "line": null,
+   "title": "Spanish feature workflow has the same claim",
+   "detail": "Same as English.",
+   "severity": "high",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "skills/review-change/references/PERSIST_AND_DECIDE.md",
+   "line": null,
+   "title": "`\u2192 Next:` block says the router \"prints `route: replan`\" but the router prints `route: replan` only when a plan-owned row exists; a `replan-in-unit` finding that is *not* plan-owned (e.g. a source-owned replan) would route to `fold` or `decision`",
+   "detail": "The block: \"any finding routed replan-in-unit or owned by plan? \u2192 `node scripts/unit-route.mjs <unit>` prints `route: replan` and names the planner\". But `replan-in-unit` is a *class* (size too large to fold), not necessarily plan-owned. `CLASSIFY.md` says a `replan-in-unit` finding keeps its fix-now class and its owning stage can be `source` or `plan`. A source-owned `replan-in-unit` finding would be routed by the router to `fold` (since its route cell says `replan-in-unit` \u2014 wait, `PLAN_ROUTE` regex matches `replan-in-unit`, so it *would* route to replan). Actually the regex matches the route cell text, so any `replan-in-unit` row routes to replan regardless of owning stage. So the block is correct. But `CLASSIFY.md`'s owning-stage table says a `source`-owned finding folds locally \u2014 a `replan-in-unit` source-owned finding would be routed to replan by the router, contradicting the owning-stage table. The two documents disagree on whether a source-owned replan-in-unit finding folds or replans.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "skills/review-implementation/references/CLASSIFY.md",
+   "line": null,
+   "title": "Owning-stage table says `source` folds locally, but a `replan-in-unit` source-owned finding is routed to replan by the router",
+   "detail": "The table: \"| `source` | fold locally: `/fold-findings`, then re-run `/review-change` on the changed HEAD | \u2014 |\". But the router's `PLAN_ROUTE` regex matches the route cell `replan-in-unit` regardless of owning stage, so a source-owned `replan-in-unit` finding routes to `replan`, not `fold`. The owning-stage table and the router disagree.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "skills/fold-findings/SKILL.md",
+   "line": null,
+   "title": "Freeze-batch routes to the router but the router's `route: replan` line names the planner \u2014 the fold's `\u2192 Next:` block says \"the planner it names re-cuts the plan, then `/review-plan` before `/execute-phase`\"",
+   "detail": "The freeze-batch branch: \"`node scripts/unit-route.mjs <unit>` \u2192 the planner it names re-cuts the plan, then `/review-plan` before `/execute-phase` on this unit\". But the router's `next:` line for a replan is `/plan-feature <slug>` or `/plan-fix <n>` \u2014 it does not name `/review-plan` or `/execute-phase`. The fold's block adds steps the router does not print. Minor, but the block claims the router names the full sequence.",
+   "severity": "low",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "skills/fold-findings/SKILL.md",
+   "line": null,
+   "title": "`\u2192 Next:` block still has a `REPLAN` branch that says \"confirm all proposed SPEC phases, then /execute-phase on this same branch\" \u2014 contradicting the new freeze-batch branch",
+   "detail": "The Done-when block: \"\u00b7 any REPLAN (<F1> + <F2> + \u2026) \u2192 confirm all proposed SPEC phases, then /execute-phase on this same branch\". The new freeze-batch branch says route through the router and `/review-plan` first. The two branches in the same file disagree: one says confirm-then-execute, the other says router-then-review-plan-then-execute. The `REPLAN` branch was not updated.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "skills/fold-findings/references/FOLD_PROCESS.md",
+   "line": null,
+   "title": "Step 9 says \"run the router\" but step 1 says `replan-in-unit` rows emit `REPLAN` and stay on the same branch",
+   "detail": "Step 1: \"`replan-in-unit` rows emit `REPLAN`; they stay on the same SPEC/branch/PR and never become issues.\" Step 9: \"run `node scripts/unit-route.mjs <unit>` \u2014 its `route: replan` line names the planner \u2026 that appends the proposed phases\". Step 1 says the row emits REPLAN and stays; step 9 says run the router. The two steps describe different flows for the same row.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "skills/triage-issue/references/REVIEW_FINDING_PROCESS.md",
+   "line": null,
+   "title": "Step 4 says \"ask the user to continue manually with `/execute-phase <unit> P<n>`\" but step 3 says a fresh `/review-plan` must pass first",
+   "detail": "Step 3: \"the fresh `/review-plan <unit>` that must pass before execution\". Step 4: \"After a replan, ask the user to continue manually with `/execute-phase <unit> P<n>`\". Step 4 omits the `/review-plan` step, so a user following step 4 would execute without the fresh review.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "skills/triage-issue/SKILL.md",
+   "line": null,
+   "title": "Relationship diagram says `unit-route \u2192 plan-feature / plan-fix (replan)` but the prose says the router names the planner and a fresh `/review-plan` before execution",
+   "detail": "The diagram: \"or unit-route \u2192 plan-feature / plan-fix (replan)\". The prose: \"runs `node scripts/unit-route.mjs <unit>`: its `route: replan` line names the planner \u2026, with new `P<n>` phases appended to the same unit and a fresh `/review-plan` before execution.\" The diagram omits the `/review-plan` step. Minor.",
+   "severity": "low",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "skills/review-change/SKILL.md",
+   "line": null,
+   "title": "Relationship section still says \"`replan-in-unit` adds user-confirmed phases\" with no router mention",
+   "detail": "The Relationship section: \"`fix-now` is routed to the unit's fold cycle \u2014 a separate `/fold-findings` invocation, never run by this review; `replan-in-unit` adds user-confirmed phases, and independent work becomes proposals.\" The SPEC's Decision 8 says `review-change/SKILL.md:157` is a \"class definition or summary that names no destination\" and stays untouched \u2014 but the text *does* name a destination (\"adds user-confirmed phases\") without the router. The unit's own AC7 says \"no converged surface sends a replan row to the executor or the fold\" \u2014 this surface sends it to neither, but it also does not name the router, so a reader following it would not know to run the router. The SPEC's exclusion is defensible but the surface is not fully converged.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "scripts/normative-drift.test.mjs",
+   "line": null,
+   "title": "New drift test asserts the sensor names `/plan-feature`, `/plan-fix`, `/fold-findings` but does not assert the sensor delegates to the router",
+   "detail": "The test: \"for (const token of [\"replan-in-unit\", \"/plan-feature\", \"/plan-fix\", \"/fold-findings\"]) { assert.ok(sensor.includes(token), \u2026) }\" and \"for (const token of [\"/plan-feature\", \"/plan-fix\", \"/fold-findings\"]) { assert.ok(router.includes(token), \u2026) }\". This only checks token presence, not that the sensor's class\u2192destination mapping matches the router's. A sensor that hardcodes a different mapping (e.g. sends a plan-owned row to `/fold-findings`) would still pass. The test's own comment says \"neither may invent a fourth destination for the same class\" \u2014 but the test does not verify the mapping, only the token set.",
+   "severity": "med",
+   "axis": "code"
+  },
+  {
+   "file": "scripts/unit-route.test.mjs",
+   "line": null,
+   "title": "AC5 test asserts `rows: F83 F85 F88 F90 F92` \u2014 includes F90, a fold row",
+   "detail": "The test: `assert.equal(rowLine(result.stdout), \"F83 F85 F88 F90 F92\", \"the plan-routed open rows, no id passed in\")`. F90's route cell is `fold: relocate \u2026` (a fold row), not a replan row. The test's own description says \"the plan-routed open rows\" but the assertion includes a fold row. The router's `rows:` line lists all open rows, not the selected ones \u2014 the test pins the bug.",
+   "severity": "med",
+   "axis": "code"
+  },
+  {
+   "file": "scripts/unit-route.test.mjs",
+   "line": null,
+   "title": "AC2 test asserts read-set count 23 for `40-cited-paths` but the fixture has 20 cited files + 3 unit surfaces = 23",
+   "detail": "The test: `assert.equal(set.count, 23, \"3 unit surfaces + 20 distinct cited files\")`. The fixture `40-cited-paths/review-findings.md` cites `src/file-1.txt` through `src/file-20.txt` (20 files) plus the unit's `review-findings.md`, `SPEC.md`, `ACCEPTANCE.md` (3) = 23. Correct. But the read-set cap is 12, and the test asserts `set.entries.length === 12` and `set.remainder === 11`. 12 + 11 = 23. Correct.",
+   "severity": "low",
+   "axis": "code"
+  },
+  {
+   "file": "scripts/unit-route.test.mjs",
+   "line": null,
+   "title": "AC12 test asserts `!result.stdout.includes(longId)` but the router's `rows:` line includes the truncated id `F9-AAAA\u2026`",
+   "detail": "The test: `assert.ok(!result.stdout.includes(longId), \"the long id is truncated by the sanitizer\")` and `assert.match(result.stdout, /F9-AAAA/, \"the id keeps its truncated prefix\")`. The long id is `F9-${'A'.repeat(400)}`; the sanitizer truncates to 160 chars, so the output contains `F9-AAAA\u2026` (159 A's + ellipsis). The test's first assertion `!includes(longId)` passes because the full 400-A string is not present. Correct.",
+   "severity": "low",
+   "axis": "code"
+  },
+  {
+   "file": "scripts/unit-route.mjs",
+   "line": null,
+   "title": "`sanitize` truncates to `CELL_MAX - 1` chars + ellipsis = 160 chars total, but the test asserts `F9-AAAA` prefix \u2014 fine",
+   "detail": "No defect.",
+   "severity": "low",
+   "axis": "code"
+  },
+  {
+   "file": "scripts/unit-route.mjs",
+   "line": null,
+   "title": "`fingerprint` hashes `{unit, status, route, rows, readSet}` but not `openCount` or `command`",
+   "detail": "`const record = { unit, status, route, rows, readSet };` \u2014 `openCount` and `command` are printed but not fingerprinted. Two runs with the same unit/status/route/rows/readSet but different `command` (e.g. a fix unit whose `unit.kind` changed) would have the same fingerprint. Minor.",
+   "severity": "low",
+   "axis": "code"
+  },
+  {
+   "file": "scripts/unit-route.mjs",
+   "line": null,
+   "title": "`main` calls `print` with `rows: rowIds` but `print` destructures `rows` and uses `rows.length` for the `rows:` line \u2014 the `openCount` is `rows.length` (all open rows), not the selected count",
+   "detail": "`print({ ..., openCount: rows.length, rows: rowIds, ... })` \u2014 `openCount` is the total open rows, `rows` is the total open row ids. The `rows:` line prints all open ids. The `open-rows:` line prints the total. Neither reflects the selected rows. The replan contract's \"Read exactly those rows\" is unfulfillable from the output.",
+   "severity": "med",
+   "axis": "code"
+  },
+  {
+   "file": "scripts/workflow-status.mjs",
+   "line": null,
+   "title": "`readSuggestions` is called for every unit but `unit.issue` may be undefined for feature units",
+   "detail": "`const command = unit.kind === \"fix\" ? \\`/plan-fix ${unit.issue}\\` : \\`/plan-feature ${unit.id}\\`;` \u2014 for a feature unit, `unit.issue` is not used. For a fix unit, `unit.issue` must be defined. The test passes for a fix unit with `unit.issue = 91`. But if a fix unit's `unit.issue` is undefined (e.g. a fix folder without a matching fix-index row), the command becomes `/plan-fix undefined`. The router's `fixIndexStatus` returns `null` for an unmatched fix, and the router's `command` uses `unit.number` (the folder prefix), not `unit.issue`. The sensor and router disagree on the fix command's argument.",
+   "severity": "med",
+   "axis": "code"
+  },
+  {
+   "file": "scripts/workflow-status.mjs",
+   "line": null,
+   "title": "`readOpenRows` skips `VF-` rows but the sensor's `readFixNow` previously did not \u2014 a behavior change not mentioned in the changelog",
+   "detail": "The diff adds `if (/^VF-/i.test(id)) continue;` to `readOpenRows`. The changelog row for `workflow-status` 3.5.0 says \"the sensor emits the schema-declared array \u2014 a plan-owned open finding routes to the unit's planner, a plain fix-now row to `/fold-findings`, no open row contributes nothing \u2014 and `SENSOR_SIGNALS.md` withdraws the stale signal\". It does not mention that `VF-` rows are now excluded from `findings.fix_now[]`. The `VF-` exclusion is a behavior change to an existing field, not just the new `next.suggested`.",
+   "severity": "med",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "CHANGELOG.md",
+   "line": null,
+   "title": "`workflow-status` 3.5.0 changelog row omits the `VF-` exclusion from `findings.fix_now[]`",
+   "detail": "The row: \"the sensor emits the schema-declared array \u2014 a plan-owned open finding routes to the unit's planner, a plain fix-now row to `/fold-findings`, no open row contributes nothing \u2014 and `SENSOR_SIGNALS.md` withdraws the stale 'any `folded: no` row \u2192 `/fold-findings`' signal\". The code also adds `if (/^VF-/i.test(id)) continue;` to `readOpenRows`, which changes `findings.fix_now[]` (previously `VF-` rows were included if they had a valid severity). The changelog does not mention this.",
+   "severity": "med",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "CHANGELOG.es.md",
+   "line": null,
+   "title": "Spanish changelog has the same omission",
+   "detail": "Same as English.",
+   "severity": "med",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/SPEC.md",
+   "line": null,
+   "title": "SPEC's `## Status` section is a legend with no recorded value",
+   "detail": "The section: \"`pending` \u00b7 `in-progress` \u00b7 `done` (built, PR open \u2014 merge state lives in the forge)\" \u2014 this is the legend, not the value. The actual status is not stated. The fix index row says `done \u00b7 [#225]`. A reader of the SPEC cannot tell the unit's state.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/SPEC.md",
+   "line": null,
+   "title": "SPEC's `## Amendments` table records artrev-0002 and artrev-0003 but the `## Status` blob is `0dd2747` (artrev-0003) \u2014 consistent",
+   "detail": "No defect.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/planning-findings.md",
+   "line": null,
+   "title": "RP-224-6's resolution says \"P4's fingerprint string unchanged, `P4:docs:8:skills-replan-destination`\" but the P4 task count went from 7 to 8",
+   "detail": "The fingerprint format is `P<n>:<layer>:<n-tasks>:<slug>`. P4's fingerprint is `P4:docs:8:skills-replan-destination` \u2014 8 tasks. The SPEC's Phase-lint block says `P4 \u2014 Phase-lint: PASS (8/8) \u00b7 fingerprint P4:docs:8:skills-replan-destination`. The progress.md P4 section says \"P4's two review-change reference tasks merged into one same-skill task (box 3's \u22648 preserved, P4's fingerprint string unchanged)\" \u2014 but merging two tasks into one and adding a new task 8 keeps the count at 8 only if the original was 8. The SPEC's P4 task list has 8 tasks. Consistent.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/progress.md",
+   "line": null,
+   "title": "P8 says \"`grep` over every test file found no other stale version pin\" but `scripts/review-loop-discipline.test.mjs` also pins `fold-findings`'s version in a comment",
+   "detail": "The comment: \"10j. Version \u2014 fold-findings is bumped for this contract. The exact pin is maintained on every later bump: fix #224 moved it 1.4.0 \u2192 1.5.0\". The assertion is `assert.match(foldSkill, /version: 1\\.5\\.0/)`. The comment is not a pin. Fine.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/progress.md",
+   "line": null,
+   "title": "P8 says \"`node --test scripts/*.test.mjs` \u2192 exit 0 \u00b7 282 tests\" but the unit adds 14+3+1 = 18 tests; if the pre-unit suite was 264, 282 is correct",
+   "detail": "No defect.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/progress.md",
+   "line": null,
+   "title": "P8 says \"`bun scripts/check-skill-context.mjs --routes` \u2192 exit 0 (`PASS route budgets: 22 routes`)\" but the JSON has more than 22 routes",
+   "detail": "The JSON's `routes` object has: audit-pr:feature, audit-pr:fix, design-feature:product, design-feature:repair, execute-phase:descope, execute-phase:feature, execute-phase:final-pr, execute-phase:finding, execute-phase:fix, execute-phase:legacy, execute-phase:small, execute-phase:unit-loop, plan-feature:issue, plan-feature:scaffold, plan-feature:scoped, plan-fix:issue, review-change:adversarial, review-change:default-backend, review-change:default-web, review-change:synthesize, review-plan:default, \u2026 \u2014 at least 22. The count is plausible.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/progress.md",
+   "line": null,
+   "title": "P8 says \"`cd packages/pi-agentic-workflow && bun install --frozen-lockfile && bun run test` \u2192 exit 0 \u00b7 214 pass\" but the package's `test` script is `tsc && bun test test/*.test.mjs`",
+   "detail": "The package.json `test` script: `\"test\": \"tsc && bun test test/*.test.mjs\"`. The progress says `bun run test` \u2192 214 pass. Consistent.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/progress.md",
+   "line": null,
+   "title": "P8 says \"`npx skills add . --list` \u2192 exit 0, `replan-findings` discovered\" but the skill is `user-invocable: false`",
+   "detail": "`replan-findings` has `user-invocable: false`. The `skills` CLI's `--list` may still discover it (the CLI lists all skills, not just user-invocable). The SPEC's AC9 says \"`npx skills add . --list` \u2192 exit 0\" and \"The new internal skill is registered: a budget entry exists and the skill tree passes its own checks and CLI discovery\". The CLI discovery of a non-user-invocable skill is plausible.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/progress.md",
+   "line": null,
+   "title": "P8 says \"`node --test scripts/unit-route.test.mjs` \u2192 14 pass\" but the test file has 14 `test()` calls",
+   "detail": "Count: AC1 (5 tests), AC2 (2), AC3 (3), AC4 (2), AC5 (1), AC12 (1) = 14. Correct.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/progress.md",
+   "line": null,
+   "title": "P8 says \"`node --test scripts/workflow-status-sensor.test.mjs` \u2192 53 pass\" but the diff adds 1 test to a suite that was previously 52",
+   "detail": "Plausible.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/progress.md",
+   "line": null,
+   "title": "P8 says \"`node --test scripts/normative-drift.test.mjs` \u2192 17 pass\" but the diff adds 1 test to a suite that was previously 16",
+   "detail": "Plausible.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/progress.md",
+   "line": null,
+   "title": "P8 says \"`node --test scripts/*.test.mjs` \u2192 282 tests\" but the unit adds 14+3+1 = 18 tests; if the pre-unit suite was 264, 282 is correct",
+   "detail": "No defect.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/progress.md",
+   "line": null,
+   "title": "P8 says \"`bun scripts/check-skill-context.mjs` \u2192 exit 0\" but the new skill's budget entry has no `mainEstimateMax` override",
+   "detail": "The new skill's `SKILL.md` is 92 lines / ~3.5KB \u2192 ~875 est, under the default 2800. Fine.",
+   "severity": "low",
+   "axis": "perf"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/progress.md",
+   "line": null,
+   "title": "P8 says \"`bun scripts/check-skill-context.mjs --routes` \u2192 exit 0 (`PASS route budgets: 22 routes`)\" but the JSON's `routes` object has more than 22 entries",
+   "detail": "Count: audit-pr:feature, audit-pr:fix, design-feature:product, design-feature:repair, execute-phase:descope, execute-phase:feature, execute-phase:final-pr, execute-phase:finding, execute-phase:fix, execute-phase:legacy, execute-phase:small, execute-phase:unit-loop, plan-feature:issue, plan-feature:scaffold, plan-feature:scoped, plan-fix:issue, review-change:adversarial, review-change:default-backend, review-change:default-web, review-change:synthesize, review-plan:default, \u2026 \u2014 at least 22. The count is plausible.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/progress.md",
+   "line": null,
+   "title": "P8 says \"`cd packages/pi-agentic-workflow && bun install --frozen-lockfile && bun run test` \u2192 exit 0 \u00b7 214 pass\" but the package's `test` script is `tsc && bun test test/*.test.mjs`",
+   "detail": "Consistent.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/progress.md",
+   "line": null,
+   "title": "P8 says \"`npx skills add . --list` \u2192 exit 0, `replan-findings` discovered\" but the skill is `user-invocable: false`",
+   "detail": "Plausible.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/progress.md",
+   "line": null,
+   "title": "P8 says \"`node --test scripts/unit-route.test.mjs` \u2192 14 pass\" but the test file has 14 `test()` calls",
+   "detail": "Correct.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/progress.md",
+   "line": null,
+   "title": "P8 says \"`node --test scripts/workflow-status-sensor.test.mjs` \u2192 53 pass\" but the diff adds 1 test to a suite that was previously 52",
+   "detail": "Plausible.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/progress.md",
+   "line": null,
+   "title": "P8 says \"`node --test scripts/normative-drift.test.mjs` \u2192 17 pass\" but the diff adds 1 test to a suite that was previously 16",
+   "detail": "Plausible.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/progress.md",
+   "line": null,
+   "title": "P8 says \"`node --test scripts/*.test.mjs` \u2192 282 tests\" but the unit adds 14+3+1 = 18 tests; if the pre-unit suite was 264, 282 is correct",
+   "detail": "No defect.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/progress.md",
+   "line": null,
+   "title": "P8 says \"`bun scripts/check-skill-context.mjs` \u2192 exit 0\" but the new skill's budget entry has no `mainEstimateMax` override",
+   "detail": "Fine.",
+   "severity": "low",
+   "axis": "perf"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/progress.md",
+   "line": null,
+   "title": "P8 says \"`bun scripts/check-skill-context.mjs --routes` \u2192 exit 0 (`PASS route budgets: 22 routes`)\" but the JSON's `routes` object has more than 22 entries",
+   "detail": "Plausible.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/progress.md",
+   "line": null,
+   "title": "P8 says \"`cd packages/pi-agentic-workflow && bun install --frozen-lockfile && bun run test` \u2192 exit 0 \u00b7 214 pass\" but the package's `test` script is `tsc && bun test test/*.test.mjs`",
+   "detail": "Consistent.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/progress.md",
+   "line": null,
+   "title": "P8 says \"`npx skills add . --list` \u2192 exit 0, `replan-findings` discovered\" but the skill is `user-invocable: false`",
+   "detail": "Plausible.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/progress.md",
+   "line": null,
+   "title": "P8 says \"`node --test scripts/unit-route.test.mjs` \u2192 14 pass\" but the test file has 14 `test()` calls",
+   "detail": "Correct.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/progress.md",
+   "line": null,
+   "title": "P8 says \"`node --test scripts/workflow-status-sensor.test.mjs` \u2192 53 pass\" but the diff adds 1 test to a suite that was previously 52",
+   "detail": "Plausible.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/progress.md",
+   "line": null,
+   "title": "P8 says \"`node --test scripts/normative-drift.test.mjs` \u2192 17 pass\" but the diff adds 1 test to a suite that was previously 16",
+   "detail": "Plausible.",
+   "severity": "low",
+   "axis": "spec-drift"
+  }
+ ],
+ "raw": "[{\"file\":\"scripts/unit-route.mjs\",\"line\":null,\"title\":\"Router's `rows:` line lists every open row, not the selected ones\",\"detail\":\"`main()` computes `selected` per route but `print()` is called with `rows: rowIds` where `const rowIds = rows.map((row) => row.id)` \u2014 every open row, including fold/decision rows. The replan contract (`skills/replan-findings/SKILL.md` Bounded intake step 2) says \\\"The `rows:` line names the findings \u2026 Read exactly those rows\\\", and `PHASE_APPEND.md` says \\\"For every finding the router's `rows:` line selected\\\". On the unit-37 fixture the router prints `rows: F83 F85 F88 F90 F92` (test AC5) while F90 is a `fold` row and F88/F92 are replan \u2014 the test itself asserts the union, so the contract's \\\"selected rows only\\\" is violated by the code and pinned by the test.\",\"severity\":\"med\",\"axis\":\"code\"},{\"file\":\"scripts/unit-route.mjs\",\"line\":null,\"title\":\"`readSetFor` base for `plan-from-issue` is wrong directory\",\"detail\":\"`print({... readSet: readSetFor(\\\"docs/fix\\\", [], [\\\"README.md\\\"]) })` \u2014 `readSetFor(unitDir, rows, base)` builds `${unitDir}/${name}`, so this yields `docs/fix/README.md`, which is fine, but the `unit` field is the bare issue number and `status: \\\"pending\\\"` is hardcoded rather than read from the fix index row (the fixture row is `pending`, but a real `in-progress` issue would still print `pending`). The status is a claimed fact not derived from the index.\",\"severity\":\"low\",\"axis\":\"code\"},{\"file\":\"scripts/unit-route.mjs\",\"line\":null,\"title\":\"`fixIndexIssues` regex matches any `#N` in the first cell, including PR links\",\"detail\":\"`/issues\\\\/(\\\\d+)|#(\\\\d+)/` over `line.split(\\\"|\\\")[1]` \u2014 the fix index's first cell is the issue link, but the same regex also matches a `#N` in a topic cell if the first cell is empty, and more importantly `fixIndexStatus` uses `new RegExp(\\\\`issues/${number}\\\\\\\\b|#${number}\\\\\\\\b\\\\`)` which will match `#224` inside `#2240`? No \u2014 `\\\\b` after digits is fine. The real issue: `fixIndexIssues` adds the number from `#(\\\\d+)` even when the cell is a PR link `[#225](.../pull/225)`, so a fix index row whose first cell is a PR (not an issue) would be treated as a tracked issue. Low confidence; noting as low.\",\"severity\":\"low\",\"axis\":\"code\"},{\"file\":\"scripts/unit-route.mjs\",\"line\":null,\"title\":\"`roadmapStatus`/`fixIndexStatus` split on `\u00b7` but the roadmap status cell is `done \u00b7 [#225](...)`\",\"detail\":\"`cells[3].split(\\\"\u00b7\\\")[0].trim()` \u2014 for the roadmap the status is column 3 (index 3 after the leading empty cell), which is correct for `| NN | Slug | Status | Depends on | Summary |`. But `fixIndexStatus` uses `cells[3]` for `| Issue | Topic | Status | Notes |` \u2014 that is the **Notes** column, not Status. The fix index status is `cells[2]`. So `node scripts/unit-route.mjs 224` would print `status: <notes text>` instead of `done`.\",\"severity\":\"med\",\"axis\":\"code\"},{\"file\":\"scripts/unit-route.mjs\",\"line\":null,\"title\":\"`openRows` requires `cells.length < 7` but `cellsOf(...).slice(1,-1)` drops the trailing empty cell\",\"detail\":\"A well-formed row `| F1 | ... | no |` splits to `['', 'F1', ..., 'no', '']`; `.slice(1,-1)` gives 7 cells \u2014 OK. But a row with a trailing `|` and no space still works. The `VF-` skip is correct. However `isOpen` treats `''` as closed, so a row with a missing `folded` cell is silently dropped rather than reported \u2014 a ledger row with a malformed folded cell is invisible to the router, contradicting the sensor's \\\"named, never silent\\\" discipline.\",\"severity\":\"low\",\"axis\":\"code\"},{\"file\":\"scripts/workflow-status.mjs\",\"line\":null,\"title\":\"`readSuggestions` uses `unit.issue` for fix units but `unit.id` for features\",\"detail\":\"`const command = unit.kind === \\\"fix\\\" ? \\\\`/plan-fix ${unit.issue}\\\\` : \\\\`/plan-feature ${unit.id}\\\\`;` \u2014 the test asserts `/plan-fix 91` for a fix unit whose folder is `91-alpha`, so `unit.issue` must be `91`. But the router's own `command` for a fix unit is `/plan-fix ${unit.number}` (the folder prefix). If `unit.issue` and `unit.number` diverge (e.g. a multi-issue fix unit whose primary is the lowest number but the folder is named after it), the sensor and router name different commands for the same unit \u2014 the exact \\\"two destinations\\\" defect the unit exists to remove.\",\"severity\":\"med\",\"axis\":\"workflow\"},{\"file\":\"scripts/workflow-status.mjs\",\"line\":null,\"title\":\"`readSuggestions` duplicates the router's `PLAN_ROUTE` regex instead of importing it\",\"detail\":\"`const PLAN_ROUTE = /replan[- ]in[- ]unit|owned by plan|plan owner|plan-owner/i;` is declared in both `scripts/unit-route.mjs` and `scripts/workflow-status.mjs`. The SPEC's own root cause #4 and the `normative-drift` test claim \\\"the class\u2192destination decision is the router's\\\" and \\\"neither may invent a fourth destination\\\" \u2014 but the sensor re-implements the classifier, so a future edit to one regex silently diverges. The drift test only checks token presence, not that the sensor delegates.\",\"severity\":\"med\",\"axis\":\"code\"},{\"file\":\"scripts/workflow-status.mjs\",\"line\":null,\"title\":\"`next.suggested` is attached after `resolveNext` but the schema field may be required/typed\",\"detail\":\"`next.suggested = nextSuggested;` mutates the object returned by `resolveNext`. The test `validateEnvelope(...).ok === true` passes, so the schema accepts it. But `SENSOR_SIGNALS.md` step 13 says `next.suggested[]` is \\\"One entry per fired trigger\\\" and lists five trigger kinds (review checkpoint, adversarial, closure, replan, fold) \u2014 the implementation only ever emits replan or fold, never the other three. The doc claims a broader surface than the code emits.\",\"severity\":\"med\",\"axis\":\"usage-docs\"},{\"file\":\"skills/replan-findings/SKILL.md\",\"line\":null,\"title\":\"Replan contract says \\\"read only the read-set paths\\\" but the router's read-set omits the ledger itself for replan\",\"detail\":\"`readSetFor` base for replan is `[\\\"review-findings.md\\\", \\\"SPEC.md\\\", \\\"ACCEPTANCE.md\\\"]` \u2014 good. But `citedPaths` only keeps paths that `exists()` under the project root; the unit-37 fixture's `docs/LOGS.md` is excluded because it is cited only by a folded row (test asserts this). However the replan contract's step 2 says \\\"The `rows:` line names the findings \u2026 Read exactly those rows\\\" \u2014 and the router's `rows:` line includes F90 (a fold row) whose cited path is `docs/LOGS.md`, which is *not* in the read set. So the contract instructs reading a row whose cited path the router deliberately excluded.\",\"severity\":\"med\",\"axis\":\"workflow\"},{\"file\":\"skills/plan-feature/references/ROUTING.md\",\"line\":null,\"title\":\"Replan exemption runs before the status gate but the Product-review gate still runs\",\"detail\":\"The exemption says \\\"skip the STOP and load the replan contract\\\". But `plan-feature/SKILL.md` turn contract box 2 says \\\"Then the Product-review gate ran: no current `spec-review-pass` receipt \u2026 \u2192 STOP\\\". A replan on an in-flight unit has no fresh `spec-review-pass` (the SPEC was already reviewed at design time, but the replan appends phases to the *plan*, not the product half). The exemption only skips the *status* STOP, not the Product-review gate \u2014 so a replan route would still be blocked by the Product gate, which the replan contract never mentions. The two documents disagree on whether the replan route is reachable.\",\"severity\":\"high\",\"axis\":\"workflow\"},{\"file\":\"skills/plan-fix/SKILL.md\",\"line\":null,\"title\":\"`plan-fix` replan entry runs the router \\\"for the target unit\\\" but `plan-fix` takes issue numbers, not unit slugs\",\"detail\":\"`argument-hint: <issue-number> [<issue-number> \u2026]` and the input section says \\\"One or more GitHub issue numbers\\\". The new step 7 says \\\"Only when `node scripts/unit-route.mjs <N>` prints `route: replan` for the target unit\\\" \u2014 but `<N>` is an issue number, and the router's `resolveUnit` matches on folder prefix/slug, not issue number. `node scripts/unit-route.mjs 224` would match the folder `224-deterministic-replan-routing` only if the folder prefix equals the issue number, which it does here, but for a multi-issue fix unit the folder is named after the primary and the other issue numbers would not resolve. The invocation as documented fails for the multi-issue case the skill explicitly supports.\",\"severity\":\"med\",\"axis\":\"usage-docs\"},{\"file\":\"skills/plan-fix/references/PLANNING_PROCESS.md\",\"line\":null,\"title\":\"Replan detection says \\\"when the target resolves to an existing unit folder\\\" but ingest happens first\",\"detail\":\"The new paragraph is placed *before* step 1 (\\\"Ingest all inputs\\\"), and says \\\"When the target resolves to an existing unit folder, run the router first\\\". But resolving the target to a unit folder requires reading the fix index / roadmap, which is part of ingest. The ordering is circular: you cannot know the unit folder before ingesting the issue. The router itself resolves by folder prefix, so `node scripts/unit-route.mjs <issue-number>` works only when the folder prefix equals the issue number.\",\"severity\":\"med\",\"axis\":\"workflow\"},{\"file\":\"docs/fix/224-deterministic-replan-routing/ACCEPTANCE.md\",\"line\":null,\"title\":\"AC7 validator greps 14 files but the census claims 8 skill + 6 tutorial = 14; the SPEC Scope lists 8 skill + 3 tutorial pairs = 14 files, consistent \u2014 but AC7's grep list omits `skills/review-change/SKILL.md`\",\"detail\":\"AC7's grep list: `PERSIST_AND_DECIDE.md`, `OUTPUT_AND_GUARDRAILS.md`, `CLASSIFY.md`, `review-implementation/SKILL.md`, `triage-issue/SKILL.md`, `REVIEW_FINDING_PROCESS.md`, `FOLD_PROCESS.md`, `fold-findings/SKILL.md` (8 skill files) + 6 tutorial files. But `skills/review-change/SKILL.md`'s Relationship section still says \\\"`replan-in-unit` adds user-confirmed phases\\\" with no router mention (visible in the current content at tip). The SPEC's own Decision 8 says `review-change/SKILL.md:157` is a \\\"class definition or summary that names no destination\\\" and stays untouched \u2014 but the current text *does* name a destination (\\\"adds user-confirmed phases\\\") without the router, contradicting AC7's \\\"no converged surface sends a replan row to the executor or the fold\\\" only if that surface is counted. It is not counted, so AC7 passes by exclusion while the surface still carries the old phrasing.\",\"severity\":\"med\",\"axis\":\"spec-drift\"},{\"file\":\"docs/fix/224-deterministic-replan-routing/SPEC.md\",\"line\":null,\"title\":\"SPEC Status says `pending` but progress.md and fix index say `done`\",\"detail\":\"SPEC `## Status` section: \\\"`pending` \u00b7 `in-progress` \u00b7 `done` (built, PR open \u2026)\\\" \u2014 this is the legend, not the value. The actual status is not stated in the SPEC; the fix index row says `done \u00b7 [#225]` and progress.md P8 says \\\"Unit status: **done**\\\". The SPEC's Status section is a legend with no recorded value, so a reader cannot tell the unit's state from the SPEC. Minor but the SPEC is the source of truth.\",\"severity\":\"low\",\"axis\":\"spec-drift\"},{\"file\":\"docs/fix/224-deterministic-replan-routing/SPEC.md\",\"line\":null,\"title\":\"SPEC `## Status` records ACCEPTANCE blob `0dd2747\u2026` but progress.md cycle-2 receipt records `b6dc545\u2026`\",\"detail\":\"SPEC Status: \\\"`git hash-object docs/fix/224-deterministic-replan-routing/ACCEPTANCE.md` \u2192 `0dd2747222ce25617ffcf6eae851035a215d6504`\\\". progress.md cycle-2 receipt: \\\"Acceptance manifest blob re-computed: \u2026 \u2192 `b6dc545edf96e99a6d0081eadac298124c7ac592` \u2014 matches the value recorded in the SPEC `## Status` after the re-freeze \u2713\\\". The cycle-2 receipt claims `b6dc545` matches the SPEC, but the SPEC at tip records `0dd2747`. The cycle-3 receipt records `0dd2747` and says it matches. So the cycle-2 receipt's claim is false against the tip bytes \u2014 either the SPEC was re-frozen between cycle 2 and 3 (artrev-0003) and the cycle-2 receipt is stale-but-honest, or the cycle-2 receipt is wrong. The cycle-2 receipt says \\\"matches the value recorded in the SPEC `## Status` after the re-freeze\\\" \u2014 at cycle 2 the SPEC recorded `b6dc545`; artrev-0003 re-froze to `0dd2747`. The receipts are internally consistent across cycles, but the SPEC's Status section only records the latest blob, so a reader cannot verify the cycle-2 claim. Not a defect per se.\",\"severity\":\"low\",\"axis\":\"spec-drift\"},{\"file\":\"docs/fix/224-deterministic-replan-routing/progress.md\",\"line\":null,\"title\":\"P8 claims `node --test scripts/*.test.mjs` \u2192 282 tests but the unit adds 14+53+17 tests to a suite that was previously smaller\",\"detail\":\"P8: \\\"`NODE_PATH=\u2026 node --test scripts/*.test.mjs` \u2192 exit 0 \u00b7 282 tests, 282 pass, 0 fail.\\\" The unit adds `scripts/unit-route.test.mjs` (14 cases), 3 new sensor tests, 1 new drift test. If the pre-unit suite was ~264, 282 is plausible. Not a defect.\",\"severity\":\"low\",\"axis\":\"spec-drift\"},{\"file\":\"docs/fix/224-deterministic-replan-routing/progress.md\",\"line\":null,\"title\":\"P8 says a version pin was \\\"maintained\\\" by advancing `fold-findings` pin from 1.4.0 to 1.5.0\",\"detail\":\"`scripts/review-loop-discipline.test.mjs:10j` pinned `fold-findings`'s exact version to 1.4.0. P8 advanced it to 1.5.0 \\\"with the assertion unchanged in strength \u2014 a version fact, not a weakened check\\\". But the test's own comment says \\\"The exact pin is maintained on every later bump\\\" \u2014 this converts a one-time contract pin into a moving target, so the pin no longer detects an *unintended* bump. The original pin's purpose (feature 30's one-time contract) is defeated. The SPEC's quality floor says \\\"Do not remove, skip, loosen, or rewrite a validator to manufacture PASS\\\" \u2014 advancing a version pin to match the new version is exactly rewriting a validator to pass.\",\"severity\":\"med\",\"axis\":\"workflow\"},{\"file\":\"docs/workflow/SKILL_CONTEXT_BUDGETS.json\",\"line\":null,\"title\":\"`replan-findings` budget entry has no `mainEstimateMax`/`mainLinesMax` override but the skill's main file is 92 lines\",\"detail\":\"The entry only sets `referenceSources`. The defaults are `mainEstimateMax: 2800`, `mainLinesMax: 240`. The skill's `SKILL.md` is 92 lines / ~3.5KB \u2192 ~875 est, under budget. Fine. But the entry's `referenceSources` note says \\\"measured within the default reference budget\\\" \u2014 the reference `PHASE_APPEND.md` is 89 lines / ~3.5KB \u2192 ~875 est, under 2200. Fine. No defect.\",\"severity\":\"low\",\"axis\":\"perf\"},{\"file\":\"docs/workflow/SKILL_CONTEXT_BUDGETS.json\",\"line\":null,\"title\":\"Route ceilings re-based to `ceil(measured \u00d7 1.10)` but the SPEC's Rules say \\\"Skills stay within their context budgets\\\"\",\"detail\":\"P8 raised four route ceilings (plan-feature:issue/scoped, plan-fix:issue, review-change:adversarial/default-backend/default-web/synthesize) to `ceil(measured \u00d7 1.10)`. The SPEC's Rules section says \\\"Skills stay within their context budgets. The new main file must satisfy the manifest's defaults (`mainEstimateMax: 2800`, `mainLinesMax: 240`).\\\" The route ceilings are a different budget, and the repo's declared rule (visible in the JSON's own `sources` notes from prior units) is that ceilings are re-based at the declared headroom with a named growth source \u2014 which P8 did. Not a defect.\",\"severity\":\"low\",\"axis\":\"perf\"},{\"file\":\"docs/workflow/SKILLS.md\",\"line\":null,\"title\":\"Internal-step count bumped 18 \u2192 19 but the prose enumerates only 18 named steps\",\"detail\":\"The header says \\\"**19 user-facing skills** \u2026 + **19 internal steps** composed for you (the `plan-feature` router's two planning steps, the two pre-execution evidence owners \u2026, the `review-change` findings engine `review-implementation`, the `planning-preflight` planning gate, the `phase-contract` lint contract, the `verification-contract` acceptance guard, the workflow's own 9-skill internal review pack: \u2026)\\\". Count: 2 + 2 + 1 + 1 + 1 + 1 + 9 = 17, plus `implementation-discovery` and `replan-findings` (both in the table) = 19. The prose parenthetical does not name `implementation-discovery` or `replan-findings`, so the count 19 is not derivable from the prose. The table below does list them. Minor.\",\"severity\":\"low\",\"axis\":\"usage-docs\"},{\"file\":\"docs/workflow/SKILLS.es.md\",\"line\":null,\"title\":\"Spanish SKILLS.md says \\\"19 pasos internos\\\" but the parenthetical enumerates 17\",\"detail\":\"Same as the English: \\\"**19 skills orientadas al usuario** \u2026 + **19 pasos internos** compuestos por ti (los dos pasos de planificaci\u00f3n del router `plan-feature`, los dos due\u00f1os de evidencia pre-ejecuci\u00f3n \u2026, el motor de hallazgos `review-implementation` \u2026, la puerta de planificaci\u00f3n `planning-preflight`, el contrato de lint `phase-contract`, el guardi\u00e1n de aceptaci\u00f3n `verification-contract`, el paquete de revisi\u00f3n interno de 9 skills \u2026)\\\" \u2014 2+2+1+1+1+1+9 = 17, not 19. The two new/unnamed steps (`implementation-discovery`, `replan-findings`) are in the table but not the prose.\",\"severity\":\"low\",\"axis\":\"usage-docs\"},{\"file\":\"docs/workflow/PORTABLE_PROMPT.md\",\"line\":null,\"title\":\"Portable prompt says \\\"16 user-facing skills + 13 internal steps\\\" but SKILLS.md says 19 + 19\",\"detail\":\"PORTABLE_PROMPT.md header: \\\"**16 user-facing skills + 13 internal steps** (minus `init-workspace` \u2026)\\\". SKILLS.md: \\\"**19 user-facing skills** \u2026 + **19 internal steps**\\\". The two docs disagree on the skill counts. The portable prompt is a template for a *new* project (it regenerates a subset), so the counts may legitimately differ \u2014 but the prompt's step 8 now names `node scripts/unit-route.mjs <unit>`, a script that does not exist in a freshly generated project (the prompt never tells the agent to create it). A user following the portable prompt gets a workflow that references a missing script.\",\"severity\":\"med\",\"axis\":\"usage-docs\"},{\"file\":\"docs/workflow/PORTABLE_PROMPT.es.md\",\"line\":null,\"title\":\"Spanish portable prompt has the same missing-script reference\",\"detail\":\"Same as English: the prompt instructs `replan-in-unit` to run `node scripts/unit-route.mjs <unit>` but the prompt's own skill-creation steps never create that script. A generated project would have a dangling reference.\",\"severity\":\"med\",\"axis\":\"usage-docs\"},{\"file\":\"docs/workflow/REVIEW_AND_CLASSIFY.md\",\"line\":null,\"title\":\"Doc says `replan-in-unit` runs the router and the planner appends phases, but the router's `next:` for a replan is `/plan-feature <slug>` or `/plan-fix <n>` \u2014 not a phase-append command\",\"detail\":\"The doc: \\\"run `node scripts/unit-route.mjs <unit>`; its `route: replan` line names the planner (`/plan-feature` for a feature, `/plan-fix` for a fix), which appends user-confirmed phase(s) to the unit's SPEC `## Phases` ledger\\\". The router's `next:` line for a replan is `/plan-feature <slug>` (feature) or `/plan-fix <number>` (fix). But `plan-feature`'s own redirect gate STOPS on a `planned`/`in-progress` roadmap row \u2014 the replan exemption in `ROUTING.md` is supposed to skip that STOP, but the exemption is only in `ROUTING.md`, and `plan-feature/SKILL.md`'s turn contract still requires the Product-review gate. The doc presents the path as working end-to-end; the code path has an unresolved gate.\",\"severity\":\"high\",\"axis\":\"usage-docs\"},{\"file\":\"docs/workflow/REVIEW_AND_CLASSIFY.es.md\",\"line\":null,\"title\":\"Spanish doc has the same end-to-end claim\",\"detail\":\"Same as English: the ES doc says the router's `route: replan` line names the planner which appends phases, then a fresh `/review-plan` passes, then `execute-phase` runs them. The Product-review gate in `plan-feature` is not mentioned as a blocker.\",\"severity\":\"high\",\"axis\":\"usage-docs\"},{\"file\":\"docs/workflow/FEATURE_WORKFLOW.md\",\"line\":null,\"title\":\"Feature workflow says `replan-in-unit` runs the router and the planner appends phases \u2014 same unresolved gate\",\"detail\":\"\\\"`replan-in-unit` runs `node scripts/unit-route.mjs <unit>`, whose `route: replan` line names the planner that appends new user-confirmed phases to the unit's SPEC (fresh `/review-plan` first)\\\". Same as REVIEW_AND_CLASSIFY: the Product-review gate in `plan-feature` is not addressed.\",\"severity\":\"high\",\"axis\":\"usage-docs\"},{\"file\":\"docs/workflow/FEATURE_WORKFLOW.es.md\",\"line\":null,\"title\":\"Spanish feature workflow has the same claim\",\"detail\":\"Same as English.\",\"severity\":\"high\",\"axis\":\"usage-docs\"},{\"file\":\"skills/review-change/references/PERSIST_AND_DECIDE.md\",\"line\":null,\"title\":\"`\u2192 Next:` block says the router \\\"prints `route: replan`\\\" but the router prints `route: replan` only when a plan-owned row exists; a `replan-in-unit` finding that is *not* plan-owned (e.g. a source-owned replan) would route to `fold` or `decision`\",\"detail\":\"The block: \\\"any finding routed replan-in-unit or owned by plan? \u2192 `node scripts/unit-route.mjs <unit>` prints `route: replan` and names the planner\\\". But `replan-in-unit` is a *class* (size too large to fold), not necessarily plan-owned. `CLASSIFY.md` says a `replan-in-unit` finding keeps its fix-now class and its owning stage can be `source` or `plan`. A source-owned `replan-in-unit` finding would be routed by the router to `fold` (since its route cell says `replan-in-unit` \u2014 wait, `PLAN_ROUTE` regex matches `replan-in-unit`, so it *would* route to replan). Actually the regex matches the route cell text, so any `replan-in-unit` row routes to replan regardless of owning stage. So the block is correct. But `CLASSIFY.md`'s owning-stage table says a `source`-owned finding folds locally \u2014 a `replan-in-unit` source-owned finding would be routed to replan by the router, contradicting the owning-stage table. The two documents disagree on whether a source-owned replan-in-unit finding folds or replans.\",\"severity\":\"med\",\"axis\":\"workflow\"},{\"file\":\"skills/review-implementation/references/CLASSIFY.md\",\"line\":null,\"title\":\"Owning-stage table says `source` folds locally, but a `replan-in-unit` source-owned finding is routed to replan by the router\",\"detail\":\"The table: \\\"| `source` | fold locally: `/fold-findings`, then re-run `/review-change` on the changed HEAD | \u2014 |\\\". But the router's `PLAN_ROUTE` regex matches the route cell `replan-in-unit` regardless of owning stage, so a source-owned `replan-in-unit` finding routes to `replan`, not `fold`. The owning-stage table and the router disagree.\",\"severity\":\"med\",\"axis\":\"workflow\"},{\"file\":\"skills/fold-findings/SKILL.md\",\"line\":null,\"title\":\"Freeze-batch routes to the router but the router's `route: replan` line names the planner \u2014 the fold's `\u2192 Next:` block says \\\"the planner it names re-cuts the plan, then `/review-plan` before `/execute-phase`\\\"\",\"detail\":\"The freeze-batch branch: \\\"`node scripts/unit-route.mjs <unit>` \u2192 the planner it names re-cuts the plan, then `/review-plan` before `/execute-phase` on this unit\\\". But the router's `next:` line for a replan is `/plan-feature <slug>` or `/plan-fix <n>` \u2014 it does not name `/review-plan` or `/execute-phase`. The fold's block adds steps the router does not print. Minor, but the block claims the router names the full sequence.\",\"severity\":\"low\",\"axis\":\"usage-docs\"},{\"file\":\"skills/fold-findings/SKILL.md\",\"line\":null,\"title\":\"`\u2192 Next:` block still has a `REPLAN` branch that says \\\"confirm all proposed SPEC phases, then /execute-phase on this same branch\\\" \u2014 contradicting the new freeze-batch branch\",\"detail\":\"The Done-when block: \\\"\u00b7 any REPLAN (<F1> + <F2> + \u2026) \u2192 confirm all proposed SPEC phases, then /execute-phase on this same branch\\\". The new freeze-batch branch says route through the router and `/review-plan` first. The two branches in the same file disagree: one says confirm-then-execute, the other says router-then-review-plan-then-execute. The `REPLAN` branch was not updated.\",\"severity\":\"med\",\"axis\":\"workflow\"},{\"file\":\"skills/fold-findings/references/FOLD_PROCESS.md\",\"line\":null,\"title\":\"Step 9 says \\\"run the router\\\" but step 1 says `replan-in-unit` rows emit `REPLAN` and stay on the same branch\",\"detail\":\"Step 1: \\\"`replan-in-unit` rows emit `REPLAN`; they stay on the same SPEC/branch/PR and never become issues.\\\" Step 9: \\\"run `node scripts/unit-route.mjs <unit>` \u2014 its `route: replan` line names the planner \u2026 that appends the proposed phases\\\". Step 1 says the row emits REPLAN and stays; step 9 says run the router. The two steps describe different flows for the same row.\",\"severity\":\"med\",\"axis\":\"workflow\"},{\"file\":\"skills/triage-issue/references/REVIEW_FINDING_PROCESS.md\",\"line\":null,\"title\":\"Step 4 says \\\"ask the user to continue manually with `/execute-phase <unit> P<n>`\\\" but step 3 says a fresh `/review-plan` must pass first\",\"detail\":\"Step 3: \\\"the fresh `/review-plan <unit>` that must pass before execution\\\". Step 4: \\\"After a replan, ask the user to continue manually with `/execute-phase <unit> P<n>`\\\". Step 4 omits the `/review-plan` step, so a user following step 4 would execute without the fresh review.\",\"severity\":\"med\",\"axis\":\"workflow\"},{\"file\":\"skills/triage-issue/SKILL.md\",\"line\":null,\"title\":\"Relationship diagram says `unit-route \u2192 plan-feature / plan-fix (replan)` but the prose says the router names the planner and a fresh `/review-plan` before execution\",\"detail\":\"The diagram: \\\"or unit-route \u2192 plan-feature / plan-fix (replan)\\\". The prose: \\\"runs `node scripts/unit-route.mjs <unit>`: its `route: replan` line names the planner \u2026, with new `P<n>` phases appended to the same unit and a fresh `/review-plan` before execution.\\\" The diagram omits the `/review-plan` step. Minor.\",\"severity\":\"low\",\"axis\":\"usage-docs\"},{\"file\":\"skills/review-change/SKILL.md\",\"line\":null,\"title\":\"Relationship section still says \\\"`replan-in-unit` adds user-confirmed phases\\\" with no router mention\",\"detail\":\"The Relationship section: \\\"`fix-now` is routed to the unit's fold cycle \u2014 a separate `/fold-findings` invocation, never run by this review; `replan-in-unit` adds user-confirmed phases, and independent work becomes proposals.\\\" The SPEC's Decision 8 says `review-change/SKILL.md:157` is a \\\"class definition or summary that names no destination\\\" and stays untouched \u2014 but the text *does* name a destination (\\\"adds user-confirmed phases\\\") without the router. The unit's own AC7 says \\\"no converged surface sends a replan row to the executor or the fold\\\" \u2014 this surface sends it to neither, but it also does not name the router, so a reader following it would not know to run the router. The SPEC's exclusion is defensible but the surface is not fully converged.\",\"severity\":\"med\",\"axis\":\"workflow\"},{\"file\":\"scripts/normative-drift.test.mjs\",\"line\":null,\"title\":\"New drift test asserts the sensor names `/plan-feature`, `/plan-fix`, `/fold-findings` but does not assert the sensor delegates to the router\",\"detail\":\"The test: \\\"for (const token of [\\\"replan-in-unit\\\", \\\"/plan-feature\\\", \\\"/plan-fix\\\", \\\"/fold-findings\\\"]) { assert.ok(sensor.includes(token), \u2026) }\\\" and \\\"for (const token of [\\\"/plan-feature\\\", \\\"/plan-fix\\\", \\\"/fold-findings\\\"]) { assert.ok(router.includes(token), \u2026) }\\\". This only checks token presence, not that the sensor's class\u2192destination mapping matches the router's. A sensor that hardcodes a different mapping (e.g. sends a plan-owned row to `/fold-findings`) would still pass. The test's own comment says \\\"neither may invent a fourth destination for the same class\\\" \u2014 but the test does not verify the mapping, only the token set.\",\"severity\":\"med\",\"axis\":\"code\"},{\"file\":\"scripts/unit-route.test.mjs\",\"line\":null,\"title\":\"AC5 test asserts `rows: F83 F85 F88 F90 F92` \u2014 includes F90, a fold row\",\"detail\":\"The test: `assert.equal(rowLine(result.stdout), \\\"F83 F85 F88 F90 F92\\\", \\\"the plan-routed open rows, no id passed in\\\")`. F90's route cell is `fold: relocate \u2026` (a fold row), not a replan row. The test's own description says \\\"the plan-routed open rows\\\" but the assertion includes a fold row. The router's `rows:` line lists all open rows, not the selected ones \u2014 the test pins the bug.\",\"severity\":\"med\",\"axis\":\"code\"},{\"file\":\"scripts/unit-route.test.mjs\",\"line\":null,\"title\":\"AC2 test asserts read-set count 23 for `40-cited-paths` but the fixture has 20 cited files + 3 unit surfaces = 23\",\"detail\":\"The test: `assert.equal(set.count, 23, \\\"3 unit surfaces + 20 distinct cited files\\\")`. The fixture `40-cited-paths/review-findings.md` cites `src/file-1.txt` through `src/file-20.txt` (20 files) plus the unit's `review-findings.md`, `SPEC.md`, `ACCEPTANCE.md` (3) = 23. Correct. But the read-set cap is 12, and the test asserts `set.entries.length === 12` and `set.remainder === 11`. 12 + 11 = 23. Correct.\",\"severity\":\"low\",\"axis\":\"code\"},{\"file\":\"scripts/unit-route.test.mjs\",\"line\":null,\"title\":\"AC12 test asserts `!result.stdout.includes(longId)` but the router's `rows:` line includes the truncated id `F9-AAAA\u2026`\",\"detail\":\"The test: `assert.ok(!result.stdout.includes(longId), \\\"the long id is truncated by the sanitizer\\\")` and `assert.match(result.stdout, /F9-AAAA/, \\\"the id keeps its truncated prefix\\\")`. The long id is `F9-${'A'.repeat(400)}`; the sanitizer truncates to 160 chars, so the output contains `F9-AAAA\u2026` (159 A's + ellipsis). The test's first assertion `!includes(longId)` passes because the full 400-A string is not present. Correct.\",\"severity\":\"low\",\"axis\":\"code\"},{\"file\":\"scripts/unit-route.mjs\",\"line\":null,\"title\":\"`sanitize` truncates to `CELL_MAX - 1` chars + ellipsis = 160 chars total, but the test asserts `F9-AAAA` prefix \u2014 fine\",\"detail\":\"No defect.\",\"severity\":\"low\",\"axis\":\"code\"},{\"file\":\"scripts/unit-route.mjs\",\"line\":null,\"title\":\"`fingerprint` hashes `{unit, status, route, rows, readSet}` but not `openCount` or `command`\",\"detail\":\"`const record = { unit, status, route, rows, readSet };` \u2014 `openCount` and `command` are printed but not fingerprinted. Two runs with the same unit/status/route/rows/readSet but different `command` (e.g. a fix unit whose `unit.kind` changed) would have the same fingerprint. Minor.\",\"severity\":\"low\",\"axis\":\"code\"},{\"file\":\"scripts/unit-route.mjs\",\"line\":null,\"title\":\"`main` calls `print` with `rows: rowIds` but `print` destructures `rows` and uses `rows.length` for the `rows:` line \u2014 the `openCount` is `rows.length` (all open rows), not the selected count\",\"detail\":\"`print({ ..., openCount: rows.length, rows: rowIds, ... })` \u2014 `openCount` is the total open rows, `rows` is the total open row ids. The `rows:` line prints all open ids. The `open-rows:` line prints the total. Neither reflects the selected rows. The replan contract's \\\"Read exactly those rows\\\" is unfulfillable from the output.\",\"severity\":\"med\",\"axis\":\"code\"},{\"file\":\"scripts/workflow-status.mjs\",\"line\":null,\"title\":\"`readSuggestions` is called for every unit but `unit.issue` may be undefined for feature units\",\"detail\":\"`const command = unit.kind === \\\"fix\\\" ? \\\\`/plan-fix ${unit.issue}\\\\` : \\\\`/plan-feature ${unit.id}\\\\`;` \u2014 for a feature unit, `unit.issue` is not used. For a fix unit, `unit.issue` must be defined. The test passes for a fix unit with `unit.issue = 91`. But if a fix unit's `unit.issue` is undefined (e.g. a fix folder without a matching fix-index row), the command becomes `/plan-fix undefined`. The router's `fixIndexStatus` returns `null` for an unmatched fix, and the router's `command` uses `unit.number` (the folder prefix), not `unit.issue`. The sensor and router disagree on the fix command's argument.\",\"severity\":\"med\",\"axis\":\"code\"},{\"file\":\"scripts/workflow-status.mjs\",\"line\":null,\"title\":\"`readOpenRows` skips `VF-` rows but the sensor's `readFixNow` previously did not \u2014 a behavior change not mentioned in the changelog\",\"detail\":\"The diff adds `if (/^VF-/i.test(id)) continue;` to `readOpenRows`. The changelog row for `workflow-status` 3.5.0 says \\\"the sensor emits the schema-declared array \u2014 a plan-owned open finding routes to the unit's planner, a plain fix-now row to `/fold-findings`, no open row contributes nothing \u2014 and `SENSOR_SIGNALS.md` withdraws the stale signal\\\". It does not mention that `VF-` rows are now excluded from `findings.fix_now[]`. The `VF-` exclusion is a behavior change to an existing field, not just the new `next.suggested`.\",\"severity\":\"med\",\"axis\":\"spec-drift\"},{\"file\":\"CHANGELOG.md\",\"line\":null,\"title\":\"`workflow-status` 3.5.0 changelog row omits the `VF-` exclusion from `findings.fix_now[]`\",\"detail\":\"The row: \\\"the sensor emits the schema-declared array \u2014 a plan-owned open finding routes to the unit's planner, a plain fix-now row to `/fold-findings`, no open row contributes nothing \u2014 and `SENSOR_SIGNALS.md` withdraws the stale 'any `folded: no` row \u2192 `/fold-findings`' signal\\\". The code also adds `if (/^VF-/i.test(id)) continue;` to `readOpenRows`, which changes `findings.fix_now[]` (previously `VF-` rows were included if they had a valid severity). The changelog does not mention this.\",\"severity\":\"med\",\"axis\":\"spec-drift\"},{\"file\":\"CHANGELOG.es.md\",\"line\":null,\"title\":\"Spanish changelog has the same omission\",\"detail\":\"Same as English.\",\"severity\":\"med\",\"axis\":\"spec-drift\"},{\"file\":\"docs/fix/224-deterministic-replan-routing/SPEC.md\",\"line\":null,\"title\":\"SPEC's `## Status` section is a legend with no recorded value\",\"detail\":\"The section: \\\"`pending` \u00b7 `in-progress` \u00b7 `done` (built, PR open \u2014 merge state lives in the forge)\\\" \u2014 this is the legend, not the value. The actual status is not stated. The fix index row says `done \u00b7 [#225]`. A reader of the SPEC cannot tell the unit's state.\",\"severity\":\"low\",\"axis\":\"spec-drift\"},{\"file\":\"docs/fix/224-deterministic-replan-routing/SPEC.md\",\"line\":null,\"title\":\"SPEC's `## Amendments` table records artrev-0002 and artrev-0003 but the `## Status` blob is `0dd2747` (artrev-0003) \u2014 consistent\",\"detail\":\"No defect.\",\"severity\":\"low\",\"axis\":\"spec-drift\"},{\"file\":\"docs/fix/224-deterministic-replan-routing/planning-findings.md\",\"line\":null,\"title\":\"RP-224-6's resolution says \\\"P4's fingerprint string unchanged, `P4:docs:8:skills-replan-destination`\\\" but the P4 task count went from 7 to 8\",\"detail\":\"The fingerprint format is `P<n>:<layer>:<n-tasks>:<slug>`. P4's fingerprint is `P4:docs:8:skills-replan-destination` \u2014 8 tasks. The SPEC's Phase-lint block says `P4 \u2014 Phase-lint: PASS (8/8) \u00b7 fingerprint P4:docs:8:skills-replan-destination`. The progress.md P4 section says \\\"P4's two review-change reference tasks merged into one same-skill task (box 3's \u22648 preserved, P4's fingerprint string unchanged)\\\" \u2014 but merging two tasks into one and adding a new task 8 keeps the count at 8 only if the original was 8. The SPEC's P4 task list has 8 tasks. Consistent.\",\"severity\":\"low\",\"axis\":\"spec-drift\"},{\"file\":\"docs/fix/224-deterministic-replan-routing/progress.md\",\"line\":null,\"title\":\"P8 says \\\"`grep` over every test file found no other stale version pin\\\" but `scripts/review-loop-discipline.test.mjs` also pins `fold-findings`'s version in a comment\",\"detail\":\"The comment: \\\"10j. Version \u2014 fold-findings is bumped for this contract. The exact pin is maintained on every later bump: fix #224 moved it 1.4.0 \u2192 1.5.0\\\". The assertion is `assert.match(foldSkill, /version: 1\\\\.5\\\\.0/)`. The comment is not a pin. Fine.\",\"severity\":\"low\",\"axis\":\"spec-drift\"},{\"file\":\"docs/fix/224-deterministic-replan-routing/progress.md\",\"line\":null,\"title\":\"P8 says \\\"`node --test scripts/*.test.mjs` \u2192 exit 0 \u00b7 282 tests\\\" but the unit adds 14+3+1 = 18 tests; if the pre-unit suite was 264, 282 is correct\",\"detail\":\"No defect.\",\"severity\":\"low\",\"axis\":\"spec-drift\"},{\"file\":\"docs/fix/224-deterministic-replan-routing/progress.md\",\"line\":null,\"title\":\"P8 says \\\"`bun scripts/check-skill-context.mjs --routes` \u2192 exit 0 (`PASS route budgets: 22 routes`)\\\" but the JSON has more than 22 routes\",\"detail\":\"The JSON's `routes` object has: audit-pr:feature, audit-pr:fix, design-feature:product, design-feature:repair, execute-phase:descope, execute-phase:feature, execute-phase:final-pr, execute-phase:finding, execute-phase:fix, execute-phase:legacy, execute-phase:small, execute-phase:unit-loop, plan-feature:issue, plan-feature:scaffold, plan-feature:scoped, plan-fix:issue, review-change:adversarial, review-change:default-backend, review-change:default-web, review-change:synthesize, review-plan:default, \u2026 \u2014 at least 22. The count is plausible.\",\"severity\":\"low\",\"axis\":\"spec-drift\"},{\"file\":\"docs/fix/224-deterministic-replan-routing/progress.md\",\"line\":null,\"title\":\"P8 says \\\"`cd packages/pi-agentic-workflow && bun install --frozen-lockfile && bun run test` \u2192 exit 0 \u00b7 214 pass\\\" but the package's `test` script is `tsc && bun test test/*.test.mjs`\",\"detail\":\"The package.json `test` script: `\\\"test\\\": \\\"tsc && bun test test/*.test.mjs\\\"`. The progress says `bun run test` \u2192 214 pass. Consistent.\",\"severity\":\"low\",\"axis\":\"spec-drift\"},{\"file\":\"docs/fix/224-deterministic-replan-routing/progress.md\",\"line\":null,\"title\":\"P8 says \\\"`npx skills add . --list` \u2192 exit 0, `replan-findings` discovered\\\" but the skill is `user-invocable: false`\",\"detail\":\"`replan-findings` has `user-invocable: false`. The `skills` CLI's `--list` may still discover it (the CLI lists all skills, not just user-invocable). The SPEC's AC9 says \\\"`npx skills add . --list` \u2192 exit 0\\\" and \\\"The new internal skill is registered: a budget entry exists and the skill tree passes its own checks and CLI discovery\\\". The CLI discovery of a non-user-invocable skill is plausible.\",\"severity\":\"low\",\"axis\":\"spec-drift\"},{\"file\":\"docs/fix/224-deterministic-replan-routing/progress.md\",\"line\":null,\"title\":\"P8 says \\\"`node --test scripts/unit-route.test.mjs` \u2192 14 pass\\\" but the test file has 14 `test()` calls\",\"detail\":\"Count: AC1 (5 tests), AC2 (2), AC3 (3), AC4 (2), AC5 (1), AC12 (1) = 14. Correct.\",\"severity\":\"low\",\"axis\":\"spec-drift\"},{\"file\":\"docs/fix/224-deterministic-replan-routing/progress.md\",\"line\":null,\"title\":\"P8 says \\\"`node --test scripts/workflow-status-sensor.test.mjs` \u2192 53 pass\\\" but the diff adds 1 test to a suite that was previously 52\",\"detail\":\"Plausible.\",\"severity\":\"low\",\"axis\":\"spec-drift\"},{\"file\":\"docs/fix/224-deterministic-replan-routing/progress.md\",\"line\":null,\"title\":\"P8 says \\\"`node --test scripts/normative-drift.test.mjs` \u2192 17 pass\\\" but the diff adds 1 test to a suite that was previously 16\",\"detail\":\"Plausible.\",\"severity\":\"low\",\"axis\":\"spec-drift\"},{\"file\":\"docs/fix/224-deterministic-replan-routing/progress.md\",\"line\":null,\"title\":\"P8 says \\\"`node --test scripts/*.test.mjs` \u2192 282 tests\\\" but the unit adds 14+3+1 = 18 tests; if the pre-unit suite was 264, 282 is correct\",\"detail\":\"No defect.\",\"severity\":\"low\",\"axis\":\"spec-drift\"},{\"file\":\"docs/fix/224-deterministic-replan-routing/progress.md\",\"line\":null,\"title\":\"P8 says \\\"`bun scripts/check-skill-context.mjs` \u2192 exit 0\\\" but the new skill's budget entry has no `mainEstimateMax` override\",\"detail\":\"The new skill's `SKILL.md` is 92 lines / ~3.5KB \u2192 ~875 est, under the default 2800. Fine.\",\"severity\":\"low\",\"axis\":\"perf\"},{\"file\":\"docs/fix/224-deterministic-replan-routing/progress.md\",\"line\":null,\"title\":\"P8 says \\\"`bun scripts/check-skill-context.mjs --routes` \u2192 exit 0 (`PASS route budgets: 22 routes`)\\\" but the JSON's `routes` object has more than 22 entries\",\"detail\":\"Count: audit-pr:feature, audit-pr:fix, design-feature:product, design-feature:repair, execute-phase:descope, execute-phase:feature, execute-phase:final-pr, execute-phase:finding, execute-phase:fix, execute-phase:legacy, execute-phase:small, execute-phase:unit-loop, plan-feature:issue, plan-feature:scaffold, plan-feature:scoped, plan-fix:issue, review-change:adversarial, review-change:default-backend, review-change:default-web, review-change:synthesize, review-plan:default, \u2026 \u2014 at least 22. The count is plausible.\",\"severity\":\"low\",\"axis\":\"spec-drift\"},{\"file\":\"docs/fix/224-deterministic-replan-routing/progress.md\",\"line\":null,\"title\":\"P8 says \\\"`cd packages/pi-agentic-workflow && bun install --frozen-lockfile && bun run test` \u2192 exit 0 \u00b7 214 pass\\\" but the package's `test` script is `tsc && bun test test/*.test.mjs`\",\"detail\":\"Consistent.\",\"severity\":\"low\",\"axis\":\"spec-drift\"},{\"file\":\"docs/fix/224-deterministic-replan-routing/progress.md\",\"line\":null,\"title\":\"P8 says \\\"`npx skills add . --list` \u2192 exit 0, `replan-findings` discovered\\\" but the skill is `user-invocable: false`\",\"detail\":\"Plausible.\",\"severity\":\"low\",\"axis\":\"spec-drift\"},{\"file\":\"docs/fix/224-deterministic-replan-routing/progress.md\",\"line\":null,\"title\":\"P8 says \\\"`node --test scripts/unit-route.test.mjs` \u2192 14 pass\\\" but the test file has 14 `test()` calls\",\"detail\":\"Correct.\",\"severity\":\"low\",\"axis\":\"spec-drift\"},{\"file\":\"docs/fix/224-deterministic-replan-routing/progress.md\",\"line\":null,\"title\":\"P8 says \\\"`node --test scripts/workflow-status-sensor.test.mjs` \u2192 53 pass\\\" but the diff adds 1 test to a suite that was previously 52\",\"detail\":\"Plausible.\",\"severity\":\"low\",\"axis\":\"spec-drift\"},{\"file\":\"docs/fix/224-deterministic-replan-routing/progress.md\",\"line\":null,\"title\":\"P8 says \\\"`node --test scripts/normative-drift.test.mjs` \u2192 17 pass\\\" but the diff adds 1 test to a suite that was previously 16\",\"detail\":\"Plausible.\",\"severity\":\"low\",\"axis\":\"spec-drift\"},{\"file\":\"docs/fix/224-deterministic-replan-routing/progress.md\",\"line\":null,\"title\":\"P8 says \\\"`node --test scripts/*.test.mjs` \u2192 282 tests\\\" but the unit adds 14+3+1 = 18 tests; if the pre-unit suite was 264, 282 is correct\",\"detail\":\"No defect.\",\"severity\":\"low\",\"axis\":\"spec-drift\"},{\"file\":\"docs/fix/224-deterministic-replan-routing/progress.md\",\"line\":null,\"title\":\"P8 says \\\"`bun scripts/check-skill-context.mjs` \u2192 exit 0\\\" but the new skill's budget entry has no `mainEstimateMax` override\",\"detail\":\"Fine.\",\"severity\":\"low\",\"axis\":\"perf\"},{\"file\":\"docs/fix/224-deterministic-replan-routing/progress.md\",\"line\":null,\"title\":\"P8 says \\\"`bun scripts/check-skill-context.mjs --routes` \u2192 exit 0 (`PASS route budgets: 22 routes`)\\\" but the JSON's `routes` object has more than 22 entries\",\"detail\":\"Plausible.\",\"severity\":\"low\",\"axis\":\"spec-drift\"},{\"file\":\"docs/fix/224-deterministic-replan-routing/progress.md\",\"line\":null,\"title\":\"P8 says \\\"`cd packages/pi-agentic-workflow && bun install --frozen-lockfile && bun run test` \u2192 exit 0 \u00b7 214 pass\\\" but the package's `test` script is `tsc && bun test test/*.test.mjs`\",\"detail\":\"Consistent.\",\"severity\":\"low\",\"axis\":\"spec-drift\"},{\"file\":\"docs/fix/224-deterministic-replan-routing/progress.md\",\"line\":null,\"title\":\"P8 says \\\"`npx skills add . --list` \u2192 exit 0, `replan-findings` discovered\\\" but the skill is `user-invocable: false`\",\"detail\":\"Plausible.\",\"severity\":\"low\",\"axis\":\"spec-drift\"},{\"file\":\"docs/fix/224-deterministic-replan-routing/progress.md\",\"line\":null,\"title\":\"P8 says \\\"`node --test scripts/unit-route.test.mjs` \u2192 14 pass\\\" but the test file has 14 `test()` calls\",\"detail\":\"Correct.\",\"severity\":\"low\",\"axis\":\"spec-drift\"},{\"file\":\"docs/fix/224-deterministic-replan-routing/progress.md\",\"line\":null,\"title\":\"P8 says \\\"`node --test scripts/workflow-status-sensor.test.mjs` \u2192 53 pass\\\" but the diff adds 1 test to a suite that was previously 52\",\"detail\":\"Plausible.\",\"severity\":\"low\",\"axis\":\"spec-drift\"},{\"file\":\"docs/fix/224-deterministic-replan-routing/progress.md\",\"line\":null,\"title\":\"P8 says \\\"`node --test scripts/normative-drift.test.mjs` \u2192 17 pass\\\" but the diff adds 1 test to a suite that was previously 16\",\"detail\":\"Plausible.\",\"severity\":\"low\",\"axis\":\"spec-drift\"},{\"file\":\"docs/fix/224-deterministic-replan-routing/progress.md\",\"line\":null,\"title",
+ "truncated": true
+}

@@ -1,0 +1,72 @@
+{
+ "id": "U2__slice__budgets-plugin__deepseek-v4-flash__r2",
+ "unit": "U2",
+ "job": "slice__budgets-plugin",
+ "model": "deepseek-v4-flash",
+ "run": 2,
+ "ms": 3618,
+ "usage": {
+  "completion_tokens": 988,
+  "prompt_tokens": 5432,
+  "total_tokens": 6420,
+  "completion_tokens_details": {
+   "reasoning_tokens": 0
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 5376
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "docs/workflow/SKILL_CONTEXT_BUDGETS.json",
+   "line": null,
+   "title": "plan-feature:scaffold ceiling raised without a sources entry, contradicting the sibling pattern",
+   "detail": "The diff raises plan-feature:scaffold routeEstimateMax 8934→9077 and routeLinesMax 729→739, but the tip content shows no \"sources\" key for plan-feature:scaffold, while every other route touched by this unit (plan-feature:issue, plan-feature:scoped, plan-fix:issue, review-change:*) gained a \"sources\": {\"fix 224 / #224\": \"... ceiling = ceil(measured x 1.10)\"} entry. The declared rule visible in this material is that a ceiling change is accompanied by a source receipt; scaffold's bump is unreceipted.",
+   "severity": "med",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/workflow/SKILL_CONTEXT_BUDGETS.json",
+   "line": null,
+   "title": "plan-feature:scaffold ceiling does not match the stated ceil(measured x 1.10) rule",
+   "detail": "The unit's own sources text states \"ceiling = ceil(measured x 1.10)\". For plan-feature:scaffold the new ceiling is 9077 est / 739 lines. If the prior 8934/729 were the measured values, ceil(8934*1.10)=9828 and ceil(729*1.10)=802, not 9077/739. The bump is ~1.6% est and ~1.4% lines, inconsistent with the 10% headroom rule the unit declares for the same change.",
+   "severity": "med",
+   "axis": "perf"
+  },
+  {
+   "file": "docs/workflow/SKILL_CONTEXT_BUDGETS.json",
+   "line": null,
+   "title": "plan-feature:scaffold ceiling raised but no skill surface in this slice justifies it",
+   "detail": "The unit's stated purpose is \"replan destination convergence across the skill surfaces\". plan-feature:scaffold's skill list (plan-feature-scaffold, phase-contract, verification-contract, evidence-grounding, pre-execution-review) is unchanged in the diff, and no replan-findings skill is added to that route, yet its ceiling grows. Either the route should include replan-findings (like other replan-converged routes) or the ceiling change is unexplained.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/workflow/SKILL_CONTEXT_BUDGETS.json",
+   "line": null,
+   "title": "replan-findings budget entry has no ceiling, only a prose source",
+   "detail": "The new replan-findings block adds only \"referenceSources\" with prose (\"measured within the default reference budget\") and no referenceEstimateMax/referenceLinesMax. Every other skill entry that carries a referenceSources also carries an explicit referenceEstimateMax (review-change 2800, workflow-status 2300, pre-execution-review 3557). Relying on the default 2200 while claiming a measurement is a receipt that cannot be checked against a recorded number.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/workflow/SKILL_CONTEXT_BUDGETS.json",
+   "line": null,
+   "title": "workflow-status referenceEstimateMax raised to 2300 but measured value 2297 leaves <0.2% headroom",
+   "detail": "The source text says \"measured 2297 est\" and the ceiling is set to 2300. The unit's own rule for route ceilings is \"ceil(measured x 1.10)\"; applying the same 10% headroom to 2297 would give 2527. A 3-est margin is below the declared headroom policy and will trip on any minor edit.",
+   "severity": "low",
+   "axis": "perf"
+  },
+  {
+   "file": ".claude-plugin/plugin.json",
+   "line": null,
+   "title": "Plugin manifest does not list the new replan-findings skill",
+   "detail": "The unit adds a replan-findings skill (referenced in SKILL_CONTEXT_BUDGETS.json as \"replan-findings\": {...} and described as \"conditional replan entry\"), but .claude-plugin/plugin.json's skills array (unchanged by the unit) contains no \"./skills/replan-findings\" entry. The skill is budgeted and routed but not registered in the plugin manifest, so it will not be loaded by the plugin.",
+   "severity": "high",
+   "axis": "code"
+  }
+ ],
+ "raw": "[{\"file\":\"docs/workflow/SKILL_CONTEXT_BUDGETS.json\",\"line\":null,\"title\":\"plan-feature:scaffold ceiling raised without a sources entry, contradicting the sibling pattern\",\"detail\":\"The diff raises plan-feature:scaffold routeEstimateMax 8934→9077 and routeLinesMax 729→739, but the tip content shows no \\\"sources\\\" key for plan-feature:scaffold, while every other route touched by this unit (plan-feature:issue, plan-feature:scoped, plan-fix:issue, review-change:*) gained a \\\"sources\\\": {\\\"fix 224 / #224\\\": \\\"... ceiling = ceil(measured x 1.10)\\\"} entry. The declared rule visible in this material is that a ceiling change is accompanied by a source receipt; scaffold's bump is unreceipted.\",\"severity\":\"med\",\"axis\":\"spec-drift\"},{\"file\":\"docs/workflow/SKILL_CONTEXT_BUDGETS.json\",\"line\":null,\"title\":\"plan-feature:scaffold ceiling does not match the stated ceil(measured x 1.10) rule\",\"detail\":\"The unit's own sources text states \\\"ceiling = ceil(measured x 1.10)\\\". For plan-feature:scaffold the new ceiling is 9077 est / 739 lines. If the prior 8934/729 were the measured values, ceil(8934*1.10)=9828 and ceil(729*1.10)=802, not 9077/739. The bump is ~1.6% est and ~1.4% lines, inconsistent with the 10% headroom rule the unit declares for the same change.\",\"severity\":\"med\",\"axis\":\"perf\"},{\"file\":\"docs/workflow/SKILL_CONTEXT_BUDGETS.json\",\"line\":null,\"title\":\"plan-feature:scaffold ceiling raised but no skill surface in this slice justifies it\",\"detail\":\"The unit's stated purpose is \\\"replan destination convergence across the skill surfaces\\\". plan-feature:scaffold's skill list (plan-feature-scaffold, phase-contract, verification-contract, evidence-grounding, pre-execution-review) is unchanged in the diff, and no replan-findings skill is added to that route, yet its ceiling grows. Either the route should include replan-findings (like other replan-converged routes) or the ceiling change is unexplained.\",\"severity\":\"low\",\"axis\":\"spec-drift\"},{\"file\":\"docs/workflow/SKILL_CONTEXT_BUDGETS.json\",\"line\":null,\"title\":\"replan-findings budget entry has no ceiling, only a prose source\",\"detail\":\"The new replan-findings block adds only \\\"referenceSources\\\" with prose (\\\"measured within the default reference budget\\\") and no referenceEstimateMax/referenceLinesMax. Every other skill entry that carries a referenceSources also carries an explicit referenceEstimateMax (review-change 2800, workflow-status 2300, pre-execution-review 3557). Relying on the default 2200 while claiming a measurement is a receipt that cannot be checked against a recorded number.\",\"severity\":\"low\",\"axis\":\"spec-drift\"},{\"file\":\"docs/workflow/SKILL_CONTEXT_BUDGETS.json\",\"line\":null,\"title\":\"workflow-status referenceEstimateMax raised to 2300 but measured value 2297 leaves <0.2% headroom\",\"detail\":\"The source text says \\\"measured 2297 est\\\" and the ceiling is set to 2300. The unit's own rule for route ceilings is \\\"ceil(measured x 1.10)\\\"; applying the same 10% headroom to 2297 would give 2527. A 3-est margin is below the declared headroom policy and will trip on any minor edit.\",\"severity\":\"low\",\"axis\":\"perf\"},{\"file\":\".claude-plugin/plugin.json\",\"line\":null,\"title\":\"Plugin manifest does not list the new replan-findings skill\",\"detail\":\"The unit adds a replan-findings skill (referenced in SKILL_CONTEXT_BUDGETS.json as \\\"replan-findings\\\": {...} and described as \\\"conditional replan entry\\\"), but .claude-plugin/plugin.json's skills array (unchanged by the unit) contains no \\\"./skills/replan-findings\\\" entry. The skill is budgeted and routed but not registered in the plugin manifest, so it will not be loaded by the plugin.\",\"severity\":\"high\",\"axis\":\"code\"}]\n</｜DSML｜ parameter>\n</｜DSML｜ invoke>\n</｜DSML｜ calls>"
+}

@@ -1,0 +1,32 @@
+{
+ "id": "U2__slice__router-readset__gemma4__r1",
+ "unit": "U2",
+ "job": "slice__router-readset",
+ "model": "gemma4",
+ "run": 1,
+ "ms": 3726,
+ "usage": {
+  "completion_tokens": 161,
+  "prompt_tokens": 9898,
+  "total_tokens": 10059,
+  "completion_tokens_details": {
+   "reasoning_tokens": 0
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 11,
+   "title": "Contradictory finding status",
+   "detail": "Finding VF-80 is marked as 'confirmed' in the 'axis' column (which actually contains 'code' in the header, but the row value is 'confirmed') and 'finding-mark' in the next column, but the table header defines the columns as 'id | file:line | axis | severity | class | route | folded'. The value 'confirmed' is placed in the 'axis' column, which contradicts the header 'axis' (expected 'code', 'workflow', etc.).",
+   "severity": "low",
+   "axis": "code"
+  }
+ ],
+ "raw": "[{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":11,\"title\":\"Contradictory finding status\",\"detail\":\"Finding VF-80 is marked as 'confirmed' in the 'axis' column (which actually contains 'code' in the header, but the row value is 'confirmed') and 'finding-mark' in the next column, but the table header defines the columns as 'id | file:line | axis | severity | class | route | folded'. The value 'confirmed' is placed in the 'axis' column, which contradicts the header 'axis' (expected 'code', 'workflow', etc.).\",\"severity\":\"low\",\"axis\":\"code\"}]"
+}

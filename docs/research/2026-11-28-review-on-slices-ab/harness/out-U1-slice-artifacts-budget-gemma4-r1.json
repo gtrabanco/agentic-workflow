@@ -1,0 +1,40 @@
+{
+ "id": "U1__slice__artifacts-budget__gemma4__r1",
+ "unit": "U1",
+ "job": "slice__artifacts-budget",
+ "model": "gemma4",
+ "run": 1,
+ "ms": 24955,
+ "usage": {
+  "completion_tokens": 259,
+  "prompt_tokens": 18251,
+  "total_tokens": 18510,
+  "completion_tokens_details": {
+   "reasoning_tokens": 0
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "docs/fix/258-harden-needs-input-contracts/SPEC.md",
+   "line": 134,
+   "title": "Spec-drift: unit-lane input classification mismatch",
+   "detail": "The Input audit table for `unit-lane` classifies U5 (Vague/ambiguous scope) as `required`, but the `unit-lane` description in the `Objective` section (line 15) and the `Acceptance criteria` (line 34) only explicitly mention `unit kind` and `acceptance criteria` as required, omitting the 'ambiguous scope' classification mentioned in the audit.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/258-harden-needs-input-contracts/SPEC.md",
+   "line": 154,
+   "title": "Spec-drift: init-workspace input classification mismatch",
+   "detail": "The Input audit table for `init-workspace` classifies I3 (Upgrade vs bootstrap mode selection) as `required`, but the `Acceptance criteria` (line 41) only explicitly mandates consent for installs/hooks/overwrites, failing to list mode selection as a required input.",
+   "severity": "low",
+   "axis": "spec-drift"
+  }
+ ],
+ "raw": "[{\"file\":\"docs/fix/258-harden-needs-input-contracts/SPEC.md\",\"line\":134,\"title\":\"Spec-drift: unit-lane input classification mismatch\",\"detail\":\"The Input audit table for `unit-lane` classifies U5 (Vague/ambiguous scope) as `required`, but the `unit-lane` description in the `Objective` section (line 15) and the `Acceptance criteria` (line 34) only explicitly mention `unit kind` and `acceptance criteria` as required, omitting the 'ambiguous scope' classification mentioned in the audit.\",\"severity\":\"low\",\"axis\":\"spec-drift\"},{\"file\":\"docs/fix/258-harden-needs-input-contracts/SPEC.md\",\"line\":154,\"title\":\"Spec-drift: init-workspace input classification mismatch\",\"detail\":\"The Input audit table for `init-workspace` classifies I3 (Upgrade vs bootstrap mode selection) as `required`, but the `Acceptance criteria` (line 41) only explicitly mandates consent for installs/hooks/overwrites, failing to list mode selection as a required input.\",\"severity\":\"low\",\"axis\":\"spec-drift\"}]"
+}

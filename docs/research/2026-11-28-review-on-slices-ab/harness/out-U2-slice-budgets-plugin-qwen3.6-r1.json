@@ -1,0 +1,40 @@
+{
+ "id": "U2__slice__budgets-plugin__qwen3.6__r1",
+ "unit": "U2",
+ "job": "slice__budgets-plugin",
+ "model": "qwen3.6",
+ "run": 1,
+ "ms": 42021,
+ "usage": {
+  "completion_tokens": 1409,
+  "prompt_tokens": 6108,
+  "total_tokens": 7517,
+  "completion_tokens_details": {
+   "reasoning_tokens": 0
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "docs/workflow/SKILL_CONTEXT_BUDGETS.json",
+   "line": 261,
+   "title": "Route budget ceiling calculation error for plan-feature:issue",
+   "detail": "The source claim states 'ceiling = ceil(measured x 1.10)'. The diff shows routeEstimateMax changed from 11430 to 11572. If 11430 was the previous ceiling (ceil(measured * 1.10)), the measured value is approx 10391. The new ceiling 11572 implies a measured value of approx 10520. However, 11572 / 1.10 = 10520.00. If the measured value increased, the previous ceiling should have been higher than 11430 if the measured value was already > 10391. More critically, checking the math: 11572 / 1.1 = 10520. 11430 / 1.1 = 10390.9. The delta is small. Let's look at another one. plan-feature:scaffold: 23908. 23908/1.1 = 21734.5. Previous was not listed in diff for this specific route? Wait, diff shows plan-feature:scaffold changed from 8934 to 9077? No, diff shows plan-feature:scaffold changed from 8934 to 9077 in the diff block? Let's re-read diff. Diff line 276-287: plan-feature:scaffold routeEstimateMax 8934 -> 9077. 9077/1.1 = 8251.8. 8934/1.1 = 8121.8. This seems consistent. Let's look at plan-fix:issue. 26825 -> 27091. 27091/1.1 = 24628. 26825/1.1 = 24386. Consistent. Let's look at review-change:adversarial. 18497 -> 18676. 18676/1.1 = 16978. 18497/1.1 = 16815. Consistent. Let's look at review-change:default-backend. 16680 -> 16859. 16859/1.1 = 15326. 16680/1.1 = 15163. Consistent. Let's look at review-change:synthesize. 17193 -> 17373. 17373/1.1 = 15793. 17193/1.1 = 15630. Consistent. Let's look at plan-feature:issue. 11430 -> 11572. 11572/1.1 = 10520. 11430/1.1 = 10390.9. Consistent. Let's look at plan-feature:scoped. 8934 -> 9077. 9077/1.1 = 8251. 8934/1.1 = 8121. Consistent. Wait, I missed one. plan-feature:scaffold in the diff is listed as changing from 8934 to 9077? No, looking at the diff: `plan-feature:scaffold` block shows `routeEstimateMax: 8934` becoming `9077`. But in the current content, `plan-feature:scaffold` has `routeEstimateMax: 23908`. The diff shows `plan-feature:scaffold` changing from 8934 to 9077? No, the diff shows `plan-feature:scaffold` block in the diff section has `routeEstimateMax: 8934` and `9077`. But the current content shows `23908`. This is a contradiction. The diff shows a change for `plan-feature:scaffold` from 8934 to 9077, but the current content shows 23908. This implies the diff is either incomplete or the current content is wrong. Actually, looking closely at the diff: The diff block for `plan-feature:scaffold` shows `routeEstimateMax: 8934` -> `9077`. But the current content for `plan-feature:scaffold` shows `routeEstimateMax: 23908`. This is a massive discrepancy. The diff claims to update `plan-feature:scaffold` from 8934 to 9077, but the file content shows 23908. This suggests the diff is for a different route or the content is wrong. Wait, looking at the diff again: `plan-feature:scaffold` is listed in the diff. The base value is 8934, tip is 9077. But the current content shows 23908. This is a clear defect. The diff and current content do not match for this route.",
+   "severity": "high",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/workflow/SKILL_CONTEXT_BUDGETS.json",
+   "line": 287,
+   "title": "Route budget ceiling calculation error for plan-feature:scaffold",
+   "detail": "The diff shows `plan-feature:scaffold` changing from 8934 to 9077. The current content shows `plan-feature:scaffold` with `routeEstimateMax: 23908`. The diff and current content are contradictory. The diff implies the value should be 9077, but the file has 23908. This is a spec drift between the diff and the final state.",
+   "severity": "high",
+   "axis": "spec-drift"
+  }
+ ],
+ "raw": "[\n  {\n    \"file\": \"docs/workflow/SKILL_CONTEXT_BUDGETS.json\",\n    \"line\": 261,\n    \"title\": \"Route budget ceiling calculation error for plan-feature:issue\",\n    \"detail\": \"The source claim states 'ceiling = ceil(measured x 1.10)'. The diff shows routeEstimateMax changed from 11430 to 11572. If 11430 was the previous ceiling (ceil(measured * 1.10)), the measured value is approx 10391. The new ceiling 11572 implies a measured value of approx 10520. However, 11572 / 1.10 = 10520.00. If the measured value increased, the previous ceiling should have been higher than 11430 if the measured value was already > 10391. More critically, checking the math: 11572 / 1.1 = 10520. 11430 / 1.1 = 10390.9. The delta is small. Let's look at another one. plan-feature:scaffold: 23908. 23908/1.1 = 21734.5. Previous was not listed in diff for this specific route? Wait, diff shows plan-feature:scaffold changed from 8934 to 9077? No, diff shows plan-feature:scaffold changed from 8934 to 9077 in the diff block? Let's re-read diff. Diff line 276-287: plan-feature:scaffold routeEstimateMax 8934 -> 9077. 9077/1.1 = 8251.8. 8934/1.1 = 8121.8. This seems consistent. Let's look at plan-fix:issue. 26825 -> 27091. 27091/1.1 = 24628. 26825/1.1 = 24386. Consistent. Let's look at review-change:adversarial. 18497 -> 18676. 18676/1.1 = 16978. 18497/1.1 = 16815. Consistent. Let's look at review-change:default-backend. 16680 -> 16859. 16859/1.1 = 15326. 16680/1.1 = 15163. Consistent. Let's look at review-change:synthesize. 17193 -> 17373. 17373/1.1 = 15793. 17193/1.1 = 15630. Consistent. Let's look at plan-feature:issue. 11430 -> 11572. 11572/1.1 = 10520. 11430/1.1 = 10390.9. Consistent. Let's look at plan-feature:scoped. 8934 -> 9077. 9077/1.1 = 8251. 8934/1.1 = 8121. Consistent. Wait, I missed one. plan-feature:scaffold in the diff is listed as changing from 8934 to 9077? No, looking at the diff: `plan-feature:scaffold` block shows `routeEstimateMax: 8934` becoming `9077`. But in the current content, `plan-feature:scaffold` has `routeEstimateMax: 23908`. The diff shows `plan-feature:scaffold` changing from 8934 to 9077? No, the diff shows `plan-feature:scaffold` block in the diff section has `routeEstimateMax: 8934` and `9077`. But the current content shows `23908`. This is a contradiction. The diff shows a change for `plan-feature:scaffold` from 8934 to 9077, but the current content shows 23908. This implies the diff is either incomplete or the current content is wrong. Actually, looking closely at the diff: The diff block for `plan-feature:scaffold` shows `routeEstimateMax: 8934` -> `9077`. But the current content for `plan-feature:scaffold` shows `routeEstimateMax: 23908`. This is a massive discrepancy. The diff claims to update `plan-feature:scaffold` from 8934 to 9077, but the file content shows 23908. This suggests the diff is for a different route or the content is wrong. Wait, looking at the diff again: `plan-feature:scaffold` is listed in the diff. The base value is 8934, tip is 9077. But the current content shows 23908. This is a clear defect. The diff and current content do not match for this route.\",\n    \"severity\": \"high\",\n    \"axis\": \"spec-drift\"\n  },\n  {\n    \"file\": \"docs/workflow/SKILL_CONTEXT_BUDGETS.json\",\n    \"line\": 287,\n    \"title\": \"Route budget ceiling calculation error for plan-feature:scaffold\",\n    \"detail\": \"The diff shows `plan-feature:scaffold` changing from 8934 to 9077. The current content shows `plan-feature:scaffold` with `routeEstimateMax: 23908`. The diff and current content are contradictory. The diff implies the value should be 9077, but the file has 23908. This is a spec drift between the diff and the final state.\",\n    \"severity\": \"high\",\n    \"axis\": \"spec-drift\"\n  }\n]"
+}

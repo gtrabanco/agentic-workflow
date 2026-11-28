@@ -1,0 +1,96 @@
+{
+ "id": "U2__slice__router-script__deepseek-v4-flash__r2",
+ "unit": "U2",
+ "job": "slice__router-script",
+ "model": "deepseek-v4-flash",
+ "run": 2,
+ "ms": 5021,
+ "usage": {
+  "completion_tokens": 1402,
+  "prompt_tokens": 4411,
+  "total_tokens": 5813,
+  "completion_tokens_details": {
+   "reasoning_tokens": 0
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 4352
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "scripts/unit-route.mjs",
+   "line": null,
+   "title": "openRows drops rows with fewer than 7 cells, silently misrouting",
+   "detail": "openRows requires `cells.length < 7` to skip, but the ledger row shape destructured is `[id, file, axis, severity, klass, route, folded]` = 7 cells. A ledger row with the documented 7 columns yields cells.length===7 and is kept; however any row missing the trailing folded cell (6 cells) is silently dropped rather than treated as open, so a unit with only such rows routes to `execute` instead of `fold`/`replan`. The header comment claims 'an open row whose frozen route is the plan owner' drives replan, but a malformed/short row is invisible.",
+   "severity": "med",
+   "axis": "code"
+  },
+  {
+   "file": "scripts/unit-route.mjs",
+   "line": null,
+   "title": "isOpen treats any non-empty folded value as open, including 'no'",
+   "detail": "isOpen returns true for every value except yes/—/-/n/a/''. A folded cell of `no` (the natural closed marker) is treated as OPEN, so closed rows are counted as open and can force replan/fold routes. The function name and the docstring ('Every open row of a ledger') imply closed detection, but `no` is not in the closed set.",
+   "severity": "high",
+   "axis": "code"
+  },
+  {
+   "file": "scripts/unit-route.mjs",
+   "line": null,
+   "title": "plan-from-issue readSet uses docs/fix base but unit is an issue number",
+   "detail": "In the no-folder branch, print is called with `unit: clean` (the issue number) and `readSet: readSetFor(\"docs/fix\", [], [\"README.md\"])`. readSetFor joins `${unitDir}/${name}` = `docs/fix/README.md`, which exists, so read-set is fine; but `status: \"pending\"` is hardcoded and never derived from fixIndexStatus, contradicting the header claim that the route is answered 'from the unit's own ledger' and the fix-index status function that exists. A tracked issue already marked done still routes plan-from-issue with status pending.",
+   "severity": "med",
+   "axis": "code"
+  },
+  {
+   "file": "scripts/unit-route.mjs",
+   "line": null,
+   "title": "fixIndexIssues regex only inspects second cell, misses issue refs elsewhere",
+   "detail": "fixIndexIssues reads `line.split(\"|\")[1]` only, while fixIndexStatus scans `cells[1]` too but with a different regex. If the fix index places the issue link in a different column (the README table shape is not pinned in this material), plan-from-issue silently fails to match and exits 1 'unknown unit' for a tracked issue. The two functions also disagree on matching (`issues/(\\d+)|#(\\d+)` vs `issues/${number}\\b|#${number}\\b`), so an issue can be 'tracked' for one and not the other.",
+   "severity": "med",
+   "axis": "code"
+  },
+  {
+   "file": "scripts/unit-route.mjs",
+   "line": null,
+   "title": "fingerprint record omits command and openCount, so distinct routes can collide",
+   "detail": "print builds `record = { unit, status, route, rows, readSet }` and hashes it, but the emitted block also contains `open-rows: ${openCount}` and `next: ${command}`. Two invocations differing only in command (e.g. fix vs feature replan command) or openCount produce the same fingerprint, so the 'deterministic decision fingerprint over the exact inputs the answer used' claim is false — it does not cover all printed inputs.",
+   "severity": "low",
+   "axis": "code"
+  },
+  {
+   "file": "scripts/unit-route.mjs",
+   "line": null,
+   "title": "resolveUnit numeric match ignores kind, so feature and fix with same number are ambiguous",
+   "detail": "resolveUnit filters `folder.number === clean` across both docs/features and docs/fix. A feature 224 and a fix 224 both match, producing matches.length>1 and exit 2 'ambiguous unit' even though the user passed a bare number that the fix-index path would have disambiguated. The docstring says 'A pure number matches on the folder prefix' without noting the cross-kind collision.",
+   "severity": "med",
+   "axis": "code"
+  },
+  {
+   "file": "scripts/unit-route.mjs",
+   "line": null,
+   "title": "citedPaths PATH_RE can match absolute-looking and URL fragments before filtering",
+   "detail": "PATH_RE `[A-Za-z0-9_.@-]+(?:\\/[A-Za-z0-9_.@-]+)+` will match substrings of `https://host/path` as `host/path` (the `://` is not part of the match), and the later `candidate.includes(\"://\")` check never fires because the scheme was already stripped. A ledger cell containing a URL can therefore inject a repo-relative path into the read set if a same-named file exists. The `startsWith(\"/\")` guard is also dead for the same reason.",
+   "severity": "low",
+   "axis": "security"
+  },
+  {
+   "file": "scripts/unit-route.mjs",
+   "line": null,
+   "title": "READ_SET_MAX truncation prints remainder but fingerprint hashes full set",
+   "detail": "print slices readSet to READ_SET_MAX for display and appends '… and N more', but `record.readSet` hashes the full readSet. The header says the block 'carries one explicit remainder line' and the fingerprint is 'over the exact inputs the answer used' — the displayed block and the fingerprinted record diverge once readSet exceeds 12, so two runs with different hidden remainders can share a visible block but differ in fingerprint (or vice versa the visible block is not reproducible from the fingerprint).",
+   "severity": "low",
+   "axis": "code"
+  },
+  {
+   "file": "scripts/unit-route.mjs",
+   "line": null,
+   "title": "main guard compares resolved argv[1] to module URL, breaks under symlink/relative invocation",
+   "detail": "`path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)` fails when the script is invoked via a symlink or a path that resolves differently (e.g. through node_modules bin shim), so main never runs and the CLI silently exits 0 with no output. The documented invocation `node scripts/unit-route.mjs <unit>` works only for the exact real path.",
+   "severity": "low",
+   "axis": "usage-docs"
+  }
+ ],
+ "raw": "[{\"file\":\"scripts/unit-route.mjs\",\"line\":null,\"title\":\"openRows drops rows with fewer than 7 cells, silently misrouting\",\"detail\":\"openRows requires `cells.length < 7` to skip, but the ledger row shape destructured is `[id, file, axis, severity, klass, route, folded]` = 7 cells. A ledger row with the documented 7 columns yields cells.length===7 and is kept; however any row missing the trailing folded cell (6 cells) is silently dropped rather than treated as open, so a unit with only such rows routes to `execute` instead of `fold`/`replan`. The header comment claims 'an open row whose frozen route is the plan owner' drives replan, but a malformed/short row is invisible.\",\"severity\":\"med\",\"axis\":\"code\"},{\"file\":\"scripts/unit-route.mjs\",\"line\":null,\"title\":\"isOpen treats any non-empty folded value as open, including 'no'\",\"detail\":\"isOpen returns true for every value except yes/—/-/n/a/''. A folded cell of `no` (the natural closed marker) is treated as OPEN, so closed rows are counted as open and can force replan/fold routes. The function name and the docstring ('Every open row of a ledger') imply closed detection, but `no` is not in the closed set.\",\"severity\":\"high\",\"axis\":\"code\"},{\"file\":\"scripts/unit-route.mjs\",\"line\":null,\"title\":\"plan-from-issue readSet uses docs/fix base but unit is an issue number\",\"detail\":\"In the no-folder branch, print is called with `unit: clean` (the issue number) and `readSet: readSetFor(\\\"docs/fix\\\", [], [\\\"README.md\\\"])`. readSetFor joins `${unitDir}/${name}` = `docs/fix/README.md`, which exists, so read-set is fine; but `status: \\\"pending\\\"` is hardcoded and never derived from fixIndexStatus, contradicting the header claim that the route is answered 'from the unit's own ledger' and the fix-index status function that exists. A tracked issue already marked done still routes plan-from-issue with status pending.\",\"severity\":\"med\",\"axis\":\"code\"},{\"file\":\"scripts/unit-route.mjs\",\"line\":null,\"title\":\"fixIndexIssues regex only inspects second cell, misses issue refs elsewhere\",\"detail\":\"fixIndexIssues reads `line.split(\\\"|\\\")[1]` only, while fixIndexStatus scans `cells[1]` too but with a different regex. If the fix index places the issue link in a different column (the README table shape is not pinned in this material), plan-from-issue silently fails to match and exits 1 'unknown unit' for a tracked issue. The two functions also disagree on matching (`issues/(\\\\d+)|#(\\\\d+)` vs `issues/${number}\\\\b|#${number}\\\\b`), so an issue can be 'tracked' for one and not the other.\",\"severity\":\"med\",\"axis\":\"code\"},{\"file\":\"scripts/unit-route.mjs\",\"line\":null,\"title\":\"fingerprint record omits command and openCount, so distinct routes can collide\",\"detail\":\"print builds `record = { unit, status, route, rows, readSet }` and hashes it, but the emitted block also contains `open-rows: ${openCount}` and `next: ${command}`. Two invocations differing only in command (e.g. fix vs feature replan command) or openCount produce the same fingerprint, so the 'deterministic decision fingerprint over the exact inputs the answer used' claim is false — it does not cover all printed inputs.\",\"severity\":\"low\",\"axis\":\"code\"},{\"file\":\"scripts/unit-route.mjs\",\"line\":null,\"title\":\"resolveUnit numeric match ignores kind, so feature and fix with same number are ambiguous\",\"detail\":\"resolveUnit filters `folder.number === clean` across both docs/features and docs/fix. A feature 224 and a fix 224 both match, producing matches.length>1 and exit 2 'ambiguous unit' even though the user passed a bare number that the fix-index path would have disambiguated. The docstring says 'A pure number matches on the folder prefix' without noting the cross-kind collision.\",\"severity\":\"med\",\"axis\":\"code\"},{\"file\":\"scripts/unit-route.mjs\",\"line\":null,\"title\":\"citedPaths PATH_RE can match absolute-looking and URL fragments before filtering\",\"detail\":\"PATH_RE `[A-Za-z0-9_.@-]+(?:\\\\/[A-Za-z0-9_.@-]+)+` will match substrings of `https://host/path` as `host/path` (the `://` is not part of the match), and the later `candidate.includes(\\\"://\\\")` check never fires because the scheme was already stripped. A ledger cell containing a URL can therefore inject a repo-relative path into the read set if a same-named file exists. The `startsWith(\\\"/\\\")` guard is also dead for the same reason.\",\"severity\":\"low\",\"axis\":\"security\"},{\"file\":\"scripts/unit-route.mjs\",\"line\":null,\"title\":\"READ_SET_MAX truncation prints remainder but fingerprint hashes full set\",\"detail\":\"print slices readSet to READ_SET_MAX for display and appends '… and N more', but `record.readSet` hashes the full readSet. The header says the block 'carries one explicit remainder line' and the fingerprint is 'over the exact inputs the answer used' — the displayed block and the fingerprinted record diverge once readSet exceeds 12, so two runs with different hidden remainders can share a visible block but differ in fingerprint (or vice versa the visible block is not reproducible from the fingerprint).\",\"severity\":\"low\",\"axis\":\"code\"},{\"file\":\"scripts/unit-route.mjs\",\"line\":null,\"title\":\"main guard compares resolved argv[1] to module URL, breaks under symlink/relative invocation\",\"detail\":\"`path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)` fails when the script is invoked via a symlink or a path that resolves differently (e.g. through node_modules bin shim), so main never runs and the CLI silently exits 0 with no output. The documented invocation `node scripts/unit-route.mjs <unit>` works only for the exact real path.\",\"severity\":\"low\",\"axis\":\"usage-docs\"}]"
+}

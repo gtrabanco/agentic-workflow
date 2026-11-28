@@ -1,0 +1,448 @@
+{
+ "id": "U2__slice__unit-artifacts__deepseek-v4-flash__r1",
+ "unit": "U2",
+ "job": "slice__unit-artifacts",
+ "model": "deepseek-v4-flash",
+ "run": 1,
+ "ms": 24647,
+ "usage": {
+  "completion_tokens": 10310,
+  "prompt_tokens": 34660,
+  "total_tokens": 44970,
+  "completion_tokens_details": {
+   "reasoning_tokens": 0
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/ACCEPTANCE.md",
+   "line": 1,
+   "title": "ACCEPTANCE.md is a new file but SPEC records a different blob hash for it",
+   "detail": "SPEC `## Status` records `git hash-object docs/fix/224-deterministic-replan-routing/ACCEPTANCE.md` → `0dd2747222ce25617ffcf6eae851035a215d6504`, and the diff header for ACCEPTANCE.md shows `index 000000000..0dd274722` — consistent. However progress.md's cycle-1 receipt records the acceptance blob as `4e22637d6d5bcee5e0e0e9149385dcf00b2bf64c` and cycle-2 as `b6dc545edf96e99a6d0081eadac298124c7ac592`, while the SPEC's `## Amendments` claims artrev-0002 and artrev-0003 re-froze the manifest. The current tip blob `0dd274722` matches only the artrev-0003 value; the intermediate values are not the tip, which is expected — but the SPEC `## Status` line says the blob is 're-frozen by the repair batches, fix-224-artrev-0002 and fix-224-artrev-0003' and then records a single hash. This is a spec-drift note only if the recorded hash is wrong; it is not. No defect.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/SPEC.md",
+   "line": 1,
+   "title": "AC7 validator greps 14 files but the SPEC's own Scope enumerates 8 skill + 6 tutorial = 14; ACCEPTANCE AC7 says 'eight skill files and six tutorial files' — consistent. No defect.",
+   "detail": "No defect found in the AC7 enumeration.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/SPEC.md",
+   "line": 1,
+   "title": "AC13 validator uses `grep -q \"^| 3\\.5\\.1 |\"` which matches any per-skill table cell, not specifically review-change's",
+   "detail": "AC13's validator is `grep -q \"^version: 3\\.5\\.1\" skills/review-change/SKILL.md && grep -q \"^| 3\\.5\\.1 |\" CHANGELOG.md && grep -q \"^| 3\\.5\\.1 |\" CHANGELOG.es.md`. The second and third greps match ANY row starting with `| 3.5.1 |` in the changelog — not necessarily the review-change per-skill table. If another skill also has a 3.5.1 cell (e.g. workflow-status is bumped to 3.5.0 in P6, not 3.5.1, so this specific collision does not occur here), the validator would pass for the wrong reason. The progress.md cycle-3 receipt acknowledges this: 'AC13's loose grep is pinned by the drift test's newest-cell-equals-frontmatter check'. So the loose grep is a known limitation, but the ACCEPTANCE criterion as written does not require the drift test to pass — it only requires the three greps. A future skill at 3.5.1 would make AC13 pass without review-change's cell existing. This is a validator weakness, not a current defect.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/SPEC.md",
+   "line": 1,
+   "title": "SPEC `## Status` says 'Acceptance manifest blob at planning time (re-frozen by the repair batches, fix-224-artrev-0002 and fix-224-artrev-0003)' but records only one hash",
+   "detail": "The Status section reads: 'Acceptance manifest blob at planning time (re-frozen by the repair batches, `fix-224-artrev-0002` and `fix-224-artrev-0003`): `git hash-object ...` → `0dd2747222ce25617ffcf6eae851035a215d6504`'. The parenthetical claims two re-freezes but records a single blob. The progress.md receipts show three distinct blobs across the three cycles (4e22637d, b6dc545e, 0dd27472). The Status line is ambiguous about which blob is 'at planning time' — it is the artrev-0003 blob, which is the current tip. Not a defect, just imprecise wording.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/SPEC.md",
+   "line": 1,
+   "title": "AC5 says 'the router answers `replan` and lists the plan-routed row ids without being told any id' but the fixture is a committed copy — the router is told the unit slug, not the ids",
+   "detail": "AC5: 'against the committed fixture replicating unit 37's plan-routed ledger rows ... the router answers `replan` and lists the plan-routed row ids without being told any id'. The router is invoked as `node scripts/unit-route.mjs <unit>` — it is told the unit slug, and the fixture provides the ledger. 'Without being told any id' means without being told the finding id, which is true. No defect.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/SPEC.md",
+   "line": 1,
+   "title": "P8 progress claims '282 tests, 282 pass' for `node --test scripts/*.test.mjs` but the SPEC's AC11 validator is the same command — consistent",
+   "detail": "No defect.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/SPEC.md",
+   "line": 1,
+   "title": "P8 progress says 'A version pin was maintained' — `scripts/review-loop-discipline.test.mjs:10j` pinned fold-findings 1.4.0, advanced to 1.5.0",
+   "detail": "The progress.md P8 section says: 'A version pin was maintained. `scripts/review-loop-discipline.test.mjs:10j` pinned `fold-findings`'s exact `version:` to 1.4.0 (feature 30's one-time contract pin). P4 bumps that skill to 1.5.0 by SPEC obligation, so the pin was advanced to 1.5.0 with the assertion unchanged in strength — a version fact, not a weakened check.' This is a test edit to accommodate a version bump. The SPEC's Quality floor says 'Do not remove, skip, loosen, or rewrite a validator to manufacture PASS.' Advancing a version pin from 1.4.0 to 1.5.0 is arguably a rewrite of a validator. The progress.md argues it is 'a version fact, not a weakened check' — the assertion strength is unchanged, only the expected value moved. This is a judgment call, but the SPEC's own quality floor language ('rewrite a validator') is broad enough that this edit should have been disclosed as a SPEC amendment or at least flagged in the ACCEPTANCE manifest. It is disclosed in progress.md but not in the SPEC's `## Amendments` table. This is a workflow/spec-drift concern: the SPEC's frozen acceptance manifest was not amended to reflect a test edit that changes a pinned value.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/SPEC.md",
+   "line": 1,
+   "title": "P8 progress says 'Route ceilings re-based' — four routes raised past 10% headroom with a `sources` note",
+   "detail": "progress.md P8: 'The converged prose grew four routes past their declared 10 % headroom (plan-feature:issue/scoped, plan-fix:issue, review-change:adversarial/default-backend/default-web/synthesize). Each ceiling was raised to `ceil(measured × 1.10)` with a `sources` note in `docs/workflow/SKILL_CONTEXT_BUDGETS.json` naming fix #224 as the growth source.' The SPEC's Rules section says 'Skills stay within their context budgets. The new main file must satisfy the manifest's defaults (`mainEstimateMax: 2800`, `mainLinesMax: 240`).' Raising route ceilings is not the same as staying within budgets — it is re-basing the budgets. The SPEC does not authorize budget re-basing; the Rules section only mentions the new skill's main file defaults. The P6 progress also says 'the `workflow-status` `referenceEstimateMax` was re-based to 2300 with a declared `referenceSources` note (measured 2297) rather than trimming the required signal out.' These are budget ceiling raises that are not covered by any SPEC obligation or acceptance criterion. The SPEC's `## Amendments` table does not record them. This is a workflow/spec-drift defect: the unit changed budget ceilings without a SPEC amendment, and the SPEC's Rules section does not authorize it.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/SPEC.md",
+   "line": 1,
+   "title": "P2 progress says plan-feature main estimate was 2802 > 2800 and was compressed back under — but the SPEC's Rules section says the new main file must satisfy 2800, not existing files",
+   "detail": "progress.md P2: 'the added prose pushed plan-feature's main estimate to 2802 > 2800 and ROUTING.md to 2227 > 2200; both were compressed back under the defaults rather than raising the budget (plan-feature now 2799, ROUTING under 2200).' This is consistent with the Rules section. No defect.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/SPEC.md",
+   "line": 1,
+   "title": "P6 progress says SENSOR_SIGNALS.md pushed to 2297 est > 2200 default and `referenceEstimateMax` was re-based to 2300",
+   "detail": "This is the same budget re-basing concern as the P8 route ceilings. The SPEC's Rules section does not authorize raising `referenceEstimateMax` for workflow-status. The P6 progress discloses it, but the SPEC's `## Amendments` table does not record it. This is a workflow/spec-drift defect.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/SPEC.md",
+   "line": 1,
+   "title": "AC9 validator is `bun scripts/check-skill-context.mjs` → exit 0; `npx skills add . --list` → exit 0 — but the SPEC's Scope says the new skill is 'discovered from the filesystem and `skills.sh.json` declares `notGrouped: bottom`, so it is listed ungrouped'",
+   "detail": "The Scope's Out of scope section says: 'the new skill is discovered from the filesystem and `skills.sh.json` declares `notGrouped: bottom`, so it is listed ungrouped.' AC9's validator is `npx skills add . --list` → exit 0. The progress.md P8 says `npx skills add . --list` → exit 0, `replan-findings` discovered. Consistent. No defect.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/SPEC.md",
+   "line": 1,
+   "title": "AC11 validator is `node --test scripts/*.test.mjs` → exit 0; progress.md P8 runs it with `NODE_PATH=packages/agentic-workflow-schema/node_modules` prefix",
+   "detail": "AC11's validator is `node --test scripts/*.test.mjs` → exit 0. progress.md P8 runs `NODE_PATH=packages/agentic-workflow-schema/node_modules node --test scripts/*.test.mjs` → exit 0. The NODE_PATH prefix is an environment setup, not a change to the command. The ACCEPTANCE's Commands section lists `node --test scripts/*.test.mjs` (the project gate) without the NODE_PATH prefix. If the schema package is not installed, the bare command may fail. The progress.md cycle-1 receipt notes 'The schema package was absent from `node_modules`; `bun install --frozen-lockfile` + `bun run build` ran inside `packages/agentic-workflow-schema`'. This suggests the bare AC11 command may not work without setup. This is a usage-docs concern: the documented invocation may fail without the NODE_PATH prefix or a prior install. However, the ACCEPTANCE's Commands section is a list of commands, not necessarily bare invocations. The progress.md P8 shows the command with the prefix. This is a minor inconsistency.",
+   "severity": "low",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/SPEC.md",
+   "line": 1,
+   "title": "AC13 says 'the version signal rides the reference edit: `skills/review-change`'s `version:` is bumped from 3.5.0 to 3.5.1 (patch — prose only)' — but P4 also bumps review-implementation, triage-issue, fold-findings",
+   "detail": "AC13 only covers review-change's version bump. P4 progress says review-implementation 1.7.0 → 1.8.0, triage-issue 2.7.0 → 2.8.0, fold-findings 1.4.0 → 1.5.0. These bumps are not covered by any acceptance criterion. The SPEC's Obligations table has OB-11 for review-change only. The other skill bumps are done in P4 but not validated by any AC. This is a spec-drift concern: the unit bumps four skills but only one bump is acceptance-verified. The progress.md P4 says 'Version bumps with per-skill changelog cells EN+ES: review-change 3.5.0 → 3.5.1 (patch), review-implementation 1.7.0 → 1.8.0, triage-issue 2.7.0 → 2.8.0, fold-findings 1.4.0 → 1.5.0.' The SPEC's P4 task list only has task 8 for review-change's bump. The other bumps are not in the task list. This is a spec-drift defect: the phase ledger does not account for three of the four version bumps that the progress log claims were made.",
+   "severity": "med",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/SPEC.md",
+   "line": 1,
+   "title": "P4 task list has 8 tasks; progress.md P4 says 'Version bumps with per-skill changelog cells EN+ES: review-change 3.5.0 → 3.5.1 (patch), review-implementation 1.7.0 → 1.8.0, triage-issue 2.7.0 → 2.8.0, fold-findings 1.4.0 → 1.5.0'",
+   "detail": "The SPEC's P4 task list: task 1 (review-change refs), task 2 (CLASSIFY.md), task 3 (review-implementation SKILL.md + bump), task 4 (triage-issue SKILL.md), task 5 (triage-issue RFP + bump), task 6 (fold-findings FOLD_PROCESS.md), task 7 (fold-findings SKILL.md + bump), task 8 (review-change bump). The progress.md P4 says review-implementation 1.7.0 → 1.8.0 (task 3 covers this), triage-issue 2.7.0 → 2.8.0 (task 5 covers this), fold-findings 1.4.0 → 1.5.0 (task 7 covers this). So the task list does cover the bumps. No defect.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/SPEC.md",
+   "line": 1,
+   "title": "P4 task 4 says 'Restate the replan destination in `skills/triage-issue/SKILL.md` (OB-4)' — no version bump mentioned, but progress.md P4 says triage-issue 2.7.0 → 2.8.0",
+   "detail": "P4 task 4: 'Restate the replan destination in `skills/triage-issue/SKILL.md` (OB-4)'. P4 task 5: 'Restate the replan destination in `skills/triage-issue/references/REVIEW_FINDING_PROCESS.md` and bump that skill's version (OB-4; PE-003)'. The bump is in task 5, which covers the same skill. So the bump is accounted for. No defect.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/SPEC.md",
+   "line": 1,
+   "title": "P4 task 3 says 'Restate the replan destination in `skills/review-implementation/SKILL.md` and bump its version (OB-4)' — progress.md P4 says review-implementation 1.7.0 → 1.8.0",
+   "detail": "Consistent. No defect.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/SPEC.md",
+   "line": 1,
+   "title": "P4 task 7 says 'Restate the replan destination in `skills/fold-findings/SKILL.md` and bump its version (OB-4; PE-004)' — progress.md P4 says fold-findings 1.4.0 → 1.5.0",
+   "detail": "Consistent. No defect.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/SPEC.md",
+   "line": 1,
+   "title": "P6 task 6 says 'Bump `skills/workflow-status/SKILL.md` for the withdrawn signal (OB-5)' — progress.md P6 says workflow-status 3.4.0 → 3.5.0",
+   "detail": "Consistent. No defect.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/SPEC.md",
+   "line": 1,
+   "title": "P2 task 3 says 'Wire the conditional load into `skills/plan-feature/SKILL.md` and bump its version (OB-2; PE-002)' — progress.md P2 says plan-feature 5.1.0 → 5.2.0",
+   "detail": "Consistent. No defect.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/SPEC.md",
+   "line": 1,
+   "title": "P2 task 5 says 'Wire the conditional load into `skills/plan-fix/SKILL.md` and bump its version (OB-2; PE-002)' — progress.md P2 says plan-fix 3.1.0 → 3.2.0",
+   "detail": "Consistent. No defect.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/SPEC.md",
+   "line": 1,
+   "title": "P7 task 2 says 'Bump the mirror package version and add its changelog row (OB-8)' — progress.md P7 says package version 0.9.2 → 0.10.0",
+   "detail": "Consistent. No defect.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/SPEC.md",
+   "line": 1,
+   "title": "P8 progress says 'Two gate repairs were required and are part of this phase, not silent edits' — but the SPEC's P8 task list does not include these repairs",
+   "detail": "The SPEC's P8 task list: re-run gate, pending-docs check, set fix-index row to done, git push, open PR, update fix-index row, commit link. The progress.md P8 says 'Two gate repairs were required and are part of this phase, not silent edits: 1. Route ceilings re-based... 2. A version pin was maintained...' These repairs are not in the P8 task list. They are disclosed in progress.md but not in the SPEC's phase ledger. This is a spec-drift defect: the phase ledger does not account for two gate repairs that the progress log claims were made in P8.",
+   "severity": "med",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/SPEC.md",
+   "line": 1,
+   "title": "P8 progress says 'the `docs/` pending check is a *post-commit* check; this receipt is committed with the phase, so the check runs against a clean tree' — but the SPEC's P8 task says 'Pending-docs check: `git status --porcelain -- docs/` → empty'",
+   "detail": "The SPEC's P8 task: 'Pending-docs check: `git status --porcelain -- docs/` → empty'. The progress.md P8 says the check is post-commit. The task does not specify pre- or post-commit. The progress.md clarifies. No defect.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/SPEC.md",
+   "line": 1,
+   "title": "P8 progress says 'Close-out: fix-index row flipped to `done` and committed (`eb09fdda`), branch pushed, PR opened and printed — **https://github.com/gtrabanco/agentic-workflow/pull/225** (`Closes #224`); the row updated to `done · [#225](…)` in the link commit.'",
+   "detail": "The SPEC's P8 task says 'Update the fix-index row to `done · [#<pr>](<pr-url>)`'. The progress.md says the row was updated to `done · [#225](…)`. Consistent. No defect.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/SPEC.md",
+   "line": 1,
+   "title": "P8 progress says '`git status --porcelain -- docs/` was empty before the flip; `git status --porcelain` is empty after the link commit.'",
+   "detail": "The SPEC's P8 task says 'Pending-docs check: `git status --porcelain -- docs/` → empty'. The progress.md says it was empty before the flip and the full status is empty after the link commit. Consistent. No defect.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/SPEC.md",
+   "line": 1,
+   "title": "P8 progress says 'Unit status: **done** (built, PR open — merge state lives in the forge).'",
+   "detail": "The SPEC's Status section says '`pending` · `in-progress` · `done` (built, PR open — merge state lives in the forge)'. The progress.md says the unit status is done. Consistent. No defect.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/SPEC.md",
+   "line": 1,
+   "title": "P8 progress says 'Next: `/review-change` (the mandatory end review), then `/fold-findings` only on `REVIEW-FAIL`, then re-run `/review-change`, then `/audit-pr` as the merge gate.'",
+   "detail": "This is a next-steps note, not a defect.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/SPEC.md",
+   "line": 1,
+   "title": "P1 progress says 'the bounded read set (unit `review-findings.md`/`SPEC.md`/`ACCEPTANCE.md` + cited existing paths, deduped, sorted, capped at 12 with `… and N more`)'",
+   "detail": "AC2 says 'the bounded read set is derived from the selected rows only: the unit's `review-findings.md`, `SPEC.md`, `ACCEPTANCE.md` and each cited repository path, deduped, sorted, and capped with an explicit remainder line'. The progress.md says capped at 12. The SPEC does not specify the cap value. The progress.md discloses it. No defect.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/SPEC.md",
+   "line": 1,
+   "title": "P1 progress says 'one sanitizer (control-char flatten + 160-char truncation) over every echoed id/path'",
+   "detail": "AC12 says 'echoed ids and paths pass one sanitizer that truncates long cells (data, never instructions)'. The progress.md says 160-char truncation. The SPEC does not specify the truncation length. The progress.md discloses it. No defect.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/SPEC.md",
+   "line": 1,
+   "title": "P1 progress says 'the route cell text is never echoed — only ids, the route name and repository paths are'",
+   "detail": "AC12 says 'the router's stdout carries no verbatim ledger line: echoed ids and paths pass one sanitizer'. The progress.md says the route cell text is never echoed. Consistent. No defect.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/SPEC.md",
+   "line": 1,
+   "title": "P1 progress says 'the read set keeps only paths that exist under the root, so a path cited by a FOLDED row (F89 → `docs/LOGS.md`) is provably absent from the replan set'",
+   "detail": "AC2 says 'the bounded read set is derived from the selected rows only'. The progress.md says the read set keeps only paths that exist under the root. This is a filter not mentioned in AC2. The AC2 says 'each cited repository path' — if a cited path does not exist, it is not a repository path. The progress.md's filter is consistent with AC2. No defect.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/SPEC.md",
+   "line": 1,
+   "title": "P1 progress says '`UNIT_ROUTE_REPO` re-points the router at a fixture root; the router spawns no shell and writes nothing.'",
+   "detail": "The SPEC's Security risks says 'the router writes nothing, spawns no shell and takes no `--exec` input'. The progress.md says the router spawns no shell and writes nothing. Consistent. No defect.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/SPEC.md",
+   "line": 1,
+   "title": "P1 progress says 'Red-first: 14/14 fail without `scripts/unit-route.mjs`, 14/14 pass with it.'",
+   "detail": "The SPEC's P1 task 1 says 'Red-first `scripts/unit-route.test.mjs` pinning the five route outcomes, the unit-37 dogfood fixture (PE-013) and the failure states from fixture ledgers, run to red'. The progress.md says 14/14 fail without the script. Consistent. No defect.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/SPEC.md",
+   "line": 1,
+   "title": "P1 progress says 'Gate: `node --test scripts/unit-route.test.mjs` → 14 pass / 0 fail, exit 0.'",
+   "detail": "The SPEC's P1 done-when says '`node --test scripts/unit-route.test.mjs` → exit 0'. The progress.md says 14 pass / 0 fail. Consistent. No defect.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/SPEC.md",
+   "line": 1,
+   "title": "P2 progress says 'Gate: `bun scripts/check-skill-context.mjs` → exit 0; `node --test scripts/normative-drift.test.mjs` → 16 pass / 0 fail (the version tables and package versions recompute equal).'",
+   "detail": "The SPEC's P2 done-when says '`bun scripts/check-skill-context.mjs` → exit 0'. The progress.md says 16 pass / 0 fail for normative-drift. Consistent. No defect.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/SPEC.md",
+   "line": 1,
+   "title": "P3 progress says 'Gate: `node --test scripts/workflow-status-sensor.test.mjs` → 53 pass / 0 fail, exit 0; `node --test scripts/normative-drift.test.mjs` → 17 pass / 0 fail, exit 0.'",
+   "detail": "The SPEC's P3 done-when says '`node --test scripts/workflow-status-sensor.test.mjs` → exit 0'. The progress.md says 53 pass / 0 fail. Consistent. No defect.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/SPEC.md",
+   "line": 1,
+   "title": "P4 progress says 'Gate: `grep -c \"unit-route\"` → ≥1 on all eight files (1,1,3,1,2,1,2,2); `grep -q \"^version: 3\\.5\\.1\" skills/review-change/SKILL.md && grep -q \"^| 3\\.5\\.1 |\" CHANGELOG.md && grep -q \"^| 3\\.5\\.1 |\" CHANGELOG.es.md` → exit 0; `bun scripts/check-skill-context.mjs` → exit 0; `node --test scripts/normative-drift.test.mjs` → 17 pass / 0 fail.'",
+   "detail": "The SPEC's P4 done-when says '`grep -c \"unit-route\" ...` → ≥1 per file, and `grep -q \"^version: 3\\.5\\.1\" ...` → exit 0 (OB-11, AC13)'. The progress.md says the greps pass. Consistent. No defect.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/SPEC.md",
+   "line": 1,
+   "title": "P5 progress says 'Gate: `grep -c \"unit-route\"` on the six files → 2, 2, 1, 1, 1, 1; the full AC7 census over all 14 files → ≥1 each.'",
+   "detail": "The SPEC's P5 done-when says '`grep -c \"unit-route\" docs/workflow/REVIEW_AND_CLASSIFY.md ...` → ≥1 per file'. The progress.md says the greps pass. Consistent. No defect.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/SPEC.md",
+   "line": 1,
+   "title": "P6 progress says 'Gate: `grep -q \"unit-route\" CHANGELOG.md && grep -q \"unit-route\" CHANGELOG.es.md && grep -q \"replan-findings\" docs/workflow/SKILLS.md && grep -q \"replan-findings\" docs/workflow/SKILLS.es.md` → exit 0; `bun scripts/check-skill-context.mjs` → exit 0; `node --test scripts/normative-drift.test.mjs` → 17 pass / 0 fail.'",
+   "detail": "The SPEC's P6 done-when says '`grep -q \"unit-route\" CHANGELOG.md && grep -q \"unit-route\" CHANGELOG.es.md && grep -q \"replan-findings\" docs/workflow/SKILLS.md && grep -q \"replan-findings\" docs/workflow/SKILLS.es.md` → exit 0'. The progress.md says the greps pass. Consistent. No defect.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/SPEC.md",
+   "line": 1,
+   "title": "P7 progress says 'Gate: `node --test packages/pi-agentic-workflow/test/skill-parity.test.mjs` → 7 pass / 0 fail, exit 0 (every bundled file byte-identical to its `skills/` source); `node --test scripts/normative-drift.test.mjs` → 17 pass / 0 fail (package-versions recompute to 0.10.0).'",
+   "detail": "The SPEC's P7 done-when says '`node --test packages/pi-agentic-workflow/test/skill-parity.test.mjs` → exit 0'. The progress.md says 7 pass / 0 fail. Consistent. No defect.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/SPEC.md",
+   "line": 1,
+   "title": "P8 progress says 'Full gate at the executed head (all commands RUN, exit codes pasted): ... `NODE_PATH=packages/agentic-workflow-schema/node_modules node --test scripts/*.test.mjs` → exit 0 · 282 tests, 282 pass, 0 fail.'",
+   "detail": "The SPEC's P8 done-when says 'the project verification gate commands exit 0'. The progress.md says 282 tests pass. Consistent. No defect.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/SPEC.md",
+   "line": 1,
+   "title": "P8 progress says '`bun scripts/check-skill-context.mjs` → exit 0; `bun scripts/check-skill-context.mjs --routes` → exit 0 (`PASS route budgets: 22 routes`).'",
+   "detail": "The SPEC's P8 done-when says 'the project verification gate commands exit 0'. The progress.md says the checker passes. Consistent. No defect.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/SPEC.md",
+   "line": 1,
+   "title": "P8 progress says '`cd packages/pi-agentic-workflow && bun install --frozen-lockfile && bun run test` → exit 0 · 214 pass, 0 fail (gitignored `node_modules/` only).'",
+   "detail": "The SPEC's P8 done-when says 'the project verification gate commands exit 0'. The progress.md says 214 tests pass. Consistent. No defect.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/SPEC.md",
+   "line": 1,
+   "title": "P8 progress says '`npx skills add . --list` → exit 0, `replan-findings` discovered.'",
+   "detail": "The SPEC's AC9 validator says '`npx skills add . --list` → exit 0'. The progress.md says the command passes. Consistent. No defect.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/SPEC.md",
+   "line": 1,
+   "title": "P8 progress says '`node --test scripts/unit-route.test.mjs` → 14 pass; `node --test scripts/workflow-status-sensor.test.mjs` → 53 pass; `node --test scripts/normative-drift.test.mjs` → 17 pass.'",
+   "detail": "The SPEC's AC1, AC6, and the Commands section list these tests. The progress.md says they pass. Consistent. No defect.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/SPEC.md",
+   "line": 1,
+   "title": "P8 progress says 'Two gate repairs were required and are part of this phase, not silent edits: 1. Route ceilings re-based. ... 2. A version pin was maintained. ...'",
+   "detail": "This is the same concern as the earlier budget re-basing and version pin edit. The SPEC's `## Amendments` table does not record these repairs. The progress.md discloses them but the SPEC's frozen ledgers do not. This is a workflow/spec-drift defect.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/SPEC.md",
+   "line": 1,
+   "title": "P8 progress says 'A version pin was maintained. `scripts/review-loop-discipline.test.mjs:10j` pinned `fold-findings`'s exact `version:` to 1.4.0 (feature 30's one-time contract pin). P4 bumps that skill to 1.5.0 by SPEC obligation, so the pin was advanced to 1.5.0 with the assertion unchanged in strength — a version fact, not a weakened check.'",
+   "detail": "The SPEC's Quality floor says 'Do not remove, skip, loosen, or rewrite a validator to manufacture PASS.' Advancing a version pin from 1.4.0 to 1.5.0 is a rewrite of a validator. The progress.md argues it is 'a version fact, not a weakened check'. The assertion strength is unchanged, but the expected value moved. This is a judgment call. The SPEC's `## Amendments` table does not record this edit. This is a workflow/spec-drift defect.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/SPEC.md",
+   "line": 1,
+   "title": "P8 progress says 'Route ceilings re-based. The converged prose grew four routes past their declared 10 % headroom (plan-feature:issue/scoped, plan-fix:issue, review-change:adversarial/default-backend/default-web/synthesize). Each ceiling was raised to `ceil(measured × 1.10)` with a `sources` note in `docs/workflow/SKILL_CONTEXT_BUDGETS.json` naming fix #224 as the growth source.'",
+   "detail": "The SPEC's Rules section says 'Skills stay within their context budgets. The new main file must satisfy the manifest's defaults (`mainEstimateMax: 2800`, `mainLinesMax: 240`).' Raising route ceilings is not the same as staying within budgets — it is re-basing the budgets. The SPEC does not authorize budget re-basing. The SPEC's `## Amendments` table does not record this change. This is a workflow/spec-drift defect.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/SPEC.md",
+   "line": 1,
+   "title": "P6 progress says 'the SENSOR_SIGNALS.md addition pushed that reference to 2297 est > the 2200 default; the `workflow-status` `referenceEstimateMax` was re-based to 2300 with a declared `referenceSources` note (measured 2297) rather than trimming the required signal out.'",
+   "detail": "The SPEC's Rules section does not authorize raising `referenceEstimateMax` for workflow-status. The P6 progress discloses it, but the SPEC's `## Amendments` table does not record it. This is a workflow/spec-drift defect.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/SPEC.md",
+   "line": 1,
+   "title": "P2 progress says 'the added prose pushed plan-feature's main estimate to 2802 > 2800 and ROUTING.md to 2227 > 2200; both were compressed back under the defaults rather than raising the budget (plan-feature now 2799, ROUTING under 2200).'",
+   "detail": "This is consistent with the Rules section. No defect.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/SPEC.md",
+   "line": 1,
+   "title": "P8 progress says '`git status --porcelain -- docs/` was empty before the flip; `git status --porcelain` is empty after the link commit.'",
+   "detail": "The SPEC's P8 task says 'Pending-docs check: `git status --porcelain -- docs/` → empty'. The progress.md says it was empty before the flip and the full status is empty after the link commit. Consistent. No defect.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/SPEC.md",
+   "line": 1,
+   "title": "P8 progress says 'Unit status: **done** (built, PR open — merge state lives in the forge).'",
+   "detail": "The SPEC's Status section says '`pending` · `in-progress` · `done` (built, PR open — merge state lives in the forge)'. The progress.md says the unit status is done. Consistent. No defect.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/SPEC.md",
+   "line": 1,
+   "title": "P8 progress says 'Next: `/review-change` (the mandatory end review), then `/fold-findings` only on `REVIEW-FAIL`, then re-run `/review-change`, then `/audit-pr` as the merge gate.'",
+   "detail": "This is a next-steps note, not a defect.",
+   "severity": "low",
+   "axis": "spec-drift"
+  }
+ ],
+ "raw": "[\n  {\n    \"file\": \"docs/fix/224-deterministic-replan-routing/ACCEPTANCE.md\",\n    \"line\": 1,\n    \"title\": \"ACCEPTANCE.md is a new file but SPEC records a different blob hash for it\",\n    \"detail\": \"SPEC `## Status` records `git hash-object docs/fix/224-deterministic-replan-routing/ACCEPTANCE.md` → `0dd2747222ce25617ffcf6eae851035a215d6504`, and the diff header for ACCEPTANCE.md shows `index 000000000..0dd274722` — consistent. However progress.md's cycle-1 receipt records the acceptance blob as `4e22637d6d5bcee5e0e0e9149385dcf00b2bf64c` and cycle-2 as `b6dc545edf96e99a6d0081eadac298124c7ac592`, while the SPEC's `## Amendments` claims artrev-0002 and artrev-0003 re-froze the manifest. The current tip blob `0dd274722` matches only the artrev-0003 value; the intermediate values are not the tip, which is expected — but the SPEC `## Status` line says the blob is 're-frozen by the repair batches, fix-224-artrev-0002 and fix-224-artrev-0003' and then records a single hash. This is a spec-drift note only if the recorded hash is wrong; it is not. No defect.\",\n    \"severity\": \"low\",\n    \"axis\": \"spec-drift\"\n  },\n  {\n    \"file\": \"docs/fix/224-deterministic-replan-routing/SPEC.md\",\n    \"line\": 1,\n    \"title\": \"AC7 validator greps 14 files but the SPEC's own Scope enumerates 8 skill + 6 tutorial = 14; ACCEPTANCE AC7 says 'eight skill files and six tutorial files' — consistent. No defect.\",\n    \"detail\": \"No defect found in the AC7 enumeration.\",\n    \"severity\": \"low\",\n    \"axis\": \"spec-drift\"\n  },\n  {\n    \"file\": \"docs/fix/224-deterministic-replan-routing/SPEC.md\",\n    \"line\": 1,\n    \"title\": \"AC13 validator uses `grep -q \\\"^| 3\\\\.5\\\\.1 |\\\"` which matches any per-skill table cell, not specifically review-change's\",\n    \"detail\": \"AC13's validator is `grep -q \\\"^version: 3\\\\.5\\\\.1\\\" skills/review-change/SKILL.md && grep -q \\\"^| 3\\\\.5\\\\.1 |\\\" CHANGELOG.md && grep -q \\\"^| 3\\\\.5\\\\.1 |\\\" CHANGELOG.es.md`. The second and third greps match ANY row starting with `| 3.5.1 |` in the changelog — not necessarily the review-change per-skill table. If another skill also has a 3.5.1 cell (e.g. workflow-status is bumped to 3.5.0 in P6, not 3.5.1, so this specific collision does not occur here), the validator would pass for the wrong reason. The progress.md cycle-3 receipt acknowledges this: 'AC13's loose grep is pinned by the drift test's newest-cell-equals-frontmatter check'. So the loose grep is a known limitation, but the ACCEPTANCE criterion as written does not require the drift test to pass — it only requires the three greps. A future skill at 3.5.1 would make AC13 pass without review-change's cell existing. This is a validator weakness, not a current defect.\",\n    \"severity\": \"low\",\n    \"axis\": \"spec-drift\"\n  },\n  {\n    \"file\": \"docs/fix/224-deterministic-replan-routing/SPEC.md\",\n    \"line\": 1,\n    \"title\": \"SPEC `## Status` says 'Acceptance manifest blob at planning time (re-frozen by the repair batches, fix-224-artrev-0002 and fix-224-artrev-0003)' but records only one hash\",\n    \"detail\": \"The Status section reads: 'Acceptance manifest blob at planning time (re-frozen by the repair batches, `fix-224-artrev-0002` and `fix-224-artrev-0003`): `git hash-object ...` → `0dd2747222ce25617ffcf6eae851035a215d6504`'. The parenthetical claims two re-freezes but records a single blob. The progress.md receipts show three distinct blobs across the three cycles (4e22637d, b6dc545e, 0dd27472). The Status line is ambiguous about which blob is 'at planning time' — it is the artrev-0003 blob, which is the current tip. Not a defect, just imprecise wording.\",\n    \"severity\": \"low\",\n    \"axis\": \"spec-drift\"\n  },\n  {\n    \"file\": \"docs/fix/224-deterministic-replan-routing/SPEC.md\",\n    \"line\": 1,\n    \"title\": \"AC5 says 'the router answers `replan` and lists the plan-routed row ids without being told any id' but the fixture is a committed copy — the router is told the unit slug, not the ids\",\n    \"detail\": \"AC5: 'against the committed fixture replicating unit 37's plan-routed ledger rows ... the router answers `replan` and lists the plan-routed row ids without being told any id'. The router is invoked as `node scripts/unit-route.mjs <unit>` — it is told the unit slug, and the fixture provides the ledger. 'Without being told any id' means without being told the finding id, which is true. No defect.\",\n    \"severity\": \"low\",\n    \"axis\": \"spec-drift\"\n  },\n  {\n    \"file\": \"docs/fix/224-deterministic-replan-routing/SPEC.md\",\n    \"line\": 1,\n    \"title\": \"P8 progress claims '282 tests, 282 pass' for `node --test scripts/*.test.mjs` but the SPEC's AC11 validator is the same command — consistent\",\n    \"detail\": \"No defect.\",\n    \"severity\": \"low\",\n    \"axis\": \"spec-drift\"\n  },\n  {\n    \"file\": \"docs/fix/224-deterministic-replan-routing/SPEC.md\",\n    \"line\": 1,\n    \"title\": \"P8 progress says 'A version pin was maintained' — `scripts/review-loop-discipline.test.mjs:10j` pinned fold-findings 1.4.0, advanced to 1.5.0\",\n    \"detail\": \"The progress.md P8 section says: 'A version pin was maintained. `scripts/review-loop-discipline.test.mjs:10j` pinned `fold-findings`'s exact `version:` to 1.4.0 (feature 30's one-time contract pin). P4 bumps that skill to 1.5.0 by SPEC obligation, so the pin was advanced to 1.5.0 with the assertion unchanged in strength — a version fact, not a weakened check.' This is a test edit to accommodate a version bump. The SPEC's Quality floor says 'Do not remove, skip, loosen, or rewrite a validator to manufacture PASS.' Advancing a version pin from 1.4.0 to 1.5.0 is arguably a rewrite of a validator. The progress.md argues it is 'a version fact, not a weakened check' — the assertion strength is unchanged, only the expected value moved. This is a judgment call, but the SPEC's own quality floor language ('rewrite a validator') is broad enough that this edit should have been disclosed as a SPEC amendment or at least flagged in the ACCEPTANCE manifest. It is disclosed in progress.md but not in the SPEC's `## Amendments` table. This is a workflow/spec-drift concern: the SPEC's frozen acceptance manifest was not amended to reflect a test edit that changes a pinned value.\",\n    \"severity\": \"med\",\n    \"axis\": \"workflow\"\n  },\n  {\n    \"file\": \"docs/fix/224-deterministic-replan-routing/SPEC.md\",\n    \"line\": 1,\n    \"title\": \"P8 progress says 'Route ceilings re-based' — four routes raised past 10% headroom with a `sources` note\",\n    \"detail\": \"progress.md P8: 'The converged prose grew four routes past their declared 10 % headroom (plan-feature:issue/scoped, plan-fix:issue, review-change:adversarial/default-backend/default-web/synthesize). Each ceiling was raised to `ceil(measured × 1.10)` with a `sources` note in `docs/workflow/SKILL_CONTEXT_BUDGETS.json` naming fix #224 as the growth source.' The SPEC's Rules section says 'Skills stay within their context budgets. The new main file must satisfy the manifest's defaults (`mainEstimateMax: 2800`, `mainLinesMax: 240`).' Raising route ceilings is not the same as staying within budgets — it is re-basing the budgets. The SPEC does not authorize budget re-basing; the Rules section only mentions the new skill's main file defaults. The P6 progress also says 'the `workflow-status` `referenceEstimateMax` was re-based to 2300 with a declared `referenceSources` note (measured 2297) rather than trimming the required signal out.' These are budget ceiling raises that are not covered by any SPEC obligation or acceptance criterion. The SPEC's `## Amendments` table does not record them. This is a workflow/spec-drift defect: the unit changed budget ceilings without a SPEC amendment, and the SPEC's Rules section does not authorize it.\",\n    \"severity\": \"med\",\n    \"axis\": \"workflow\"\n  },\n  {\n    \"file\": \"docs/fix/224-deterministic-replan-routing/SPEC.md\",\n    \"line\": 1,\n    \"title\": \"P2 progress says plan-feature main estimate was 2802 > 2800 and was compressed back under — but the SPEC's Rules section says the new main file must satisfy 2800, not existing files\",\n    \"detail\": \"progress.md P2: 'the added prose pushed plan-feature's main estimate to 2802 > 2800 and ROUTING.md to 2227 > 2200; both were compressed back under the defaults rather than raising the budget (plan-feature now 2799, ROUTING under 2200).' This is consistent with the Rules section. No defect.\",\n    \"severity\": \"low\",\n    \"axis\": \"spec-drift\"\n  },\n  {\n    \"file\": \"docs/fix/224-deterministic-replan-routing/SPEC.md\",\n    \"line\": 1,\n    \"title\": \"P6 progress says SENSOR_SIGNALS.md pushed to 2297 est > 2200 default and `referenceEstimateMax` was re-based to 2300\",\n    \"detail\": \"This is the same budget re-basing concern as the P8 route ceilings. The SPEC's Rules section does not authorize raising `referenceEstimateMax` for workflow-status. The P6 progress discloses it, but the SPEC's `## Amendments` table does not record it. This is a workflow/spec-drift defect.\",\n    \"severity\": \"med\",\n    \"axis\": \"workflow\"\n  },\n  {\n    \"file\": \"docs/fix/224-deterministic-replan-routing/SPEC.md\",\n    \"line\": 1,\n    \"title\": \"AC9 validator is `bun scripts/check-skill-context.mjs` → exit 0; `npx skills add . --list` → exit 0 — but the SPEC's Scope says the new skill is 'discovered from the filesystem and `skills.sh.json` declares `notGrouped: bottom`, so it is listed ungrouped'\",\n    \"detail\": \"The Scope's Out of scope section says: 'the new skill is discovered from the filesystem and `skills.sh.json` declares `notGrouped: bottom`, so it is listed ungrouped.' AC9's validator is `npx skills add . --list` → exit 0. The progress.md P8 says `npx skills add . --list` → exit 0, `replan-findings` discovered. Consistent. No defect.\",\n    \"severity\": \"low\",\n    \"axis\": \"spec-drift\"\n  },\n  {\n    \"file\": \"docs/fix/224-deterministic-replan-routing/SPEC.md\",\n    \"line\": 1,\n    \"title\": \"AC11 validator is `node --test scripts/*.test.mjs` → exit 0; progress.md P8 runs it with `NODE_PATH=packages/agentic-workflow-schema/node_modules` prefix\",\n    \"detail\": \"AC11's validator is `node --test scripts/*.test.mjs` → exit 0. progress.md P8 runs `NODE_PATH=packages/agentic-workflow-schema/node_modules node --test scripts/*.test.mjs` → exit 0. The NODE_PATH prefix is an environment setup, not a change to the command. The ACCEPTANCE's Commands section lists `node --test scripts/*.test.mjs` (the project gate) without the NODE_PATH prefix. If the schema package is not installed, the bare command may fail. The progress.md cycle-1 receipt notes 'The schema package was absent from `node_modules`; `bun install --frozen-lockfile` + `bun run build` ran inside `packages/agentic-workflow-schema`'. This suggests the bare AC11 command may not work without setup. This is a usage-docs concern: the documented invocation may fail without the NODE_PATH prefix or a prior install. However, the ACCEPTANCE's Commands section is a list of commands, not necessarily bare invocations. The progress.md P8 shows the command with the prefix. This is a minor inconsistency.\",\n    \"severity\": \"low\",\n    \"axis\": \"usage-docs\"\n  },\n  {\n    \"file\": \"docs/fix/224-deterministic-replan-routing/SPEC.md\",\n    \"line\": 1,\n    \"title\": \"AC13 says 'the version signal rides the reference edit: `skills/review-change`'s `version:` is bumped from 3.5.0 to 3.5.1 (patch — prose only)' — but P4 also bumps review-implementation, triage-issue, fold-findings\",\n    \"detail\": \"AC13 only covers review-change's version bump. P4 progress says review-implementation 1.7.0 → 1.8.0, triage-issue 2.7.0 → 2.8.0, fold-findings 1.4.0 → 1.5.0. These bumps are not covered by any acceptance criterion. The SPEC's Obligations table has OB-11 for review-change only. The other skill bumps are done in P4 but not validated by any AC. This is a spec-drift concern: the unit bumps four skills but only one bump is acceptance-verified. The progress.md P4 says 'Version bumps with per-skill changelog cells EN+ES: review-change 3.5.0 → 3.5.1 (patch), review-implementation 1.7.0 → 1.8.0, triage-issue 2.7.0 → 2.8.0, fold-findings 1.4.0 → 1.5.0.' The SPEC's P4 task list only has task 8 for review-change's bump. The other bumps are not in the task list. This is a spec-drift defect: the phase ledger does not account for three of the four version bumps that the progress log claims were made.\",\n    \"severity\": \"med\",\n    \"axis\": \"spec-drift\"\n  },\n  {\n    \"file\": \"docs/fix/224-deterministic-replan-routing/SPEC.md\",\n    \"line\": 1,\n    \"title\": \"P4 task list has 8 tasks; progress.md P4 says 'Version bumps with per-skill changelog cells EN+ES: review-change 3.5.0 → 3.5.1 (patch), review-implementation 1.7.0 → 1.8.0, triage-issue 2.7.0 → 2.8.0, fold-findings 1.4.0 → 1.5.0'\",\n    \"detail\": \"The SPEC's P4 task list: task 1 (review-change refs), task 2 (CLASSIFY.md), task 3 (review-implementation SKILL.md + bump), task 4 (triage-issue SKILL.md), task 5 (triage-issue RFP + bump), task 6 (fold-findings FOLD_PROCESS.md), task 7 (fold-findings SKILL.md + bump), task 8 (review-change bump). The progress.md P4 says review-implementation 1.7.0 → 1.8.0 (task 3 covers this), triage-issue 2.7.0 → 2.8.0 (task 5 covers this), fold-findings 1.4.0 → 1.5.0 (task 7 covers this). So the task list does cover the bumps. No defect.\",\n    \"severity\": \"low\",\n    \"axis\": \"spec-drift\"\n  },\n  {\n    \"file\": \"docs/fix/224-deterministic-replan-routing/SPEC.md\",\n    \"line\": 1,\n    \"title\": \"P4 task 4 says 'Restate the replan destination in `skills/triage-issue/SKILL.md` (OB-4)' — no version bump mentioned, but progress.md P4 says triage-issue 2.7.0 → 2.8.0\",\n    \"detail\": \"P4 task 4: 'Restate the replan destination in `skills/triage-issue/SKILL.md` (OB-4)'. P4 task 5: 'Restate the replan destination in `skills/triage-issue/references/REVIEW_FINDING_PROCESS.md` and bump that skill's version (OB-4; PE-003)'. The bump is in task 5, which covers the same skill. So the bump is accounted for. No defect.\",\n    \"severity\": \"low\",\n    \"axis\": \"spec-drift\"\n  },\n  {\n    \"file\": \"docs/fix/224-deterministic-replan-routing/SPEC.md\",\n    \"line\": 1,\n    \"title\": \"P4 task 3 says 'Restate the replan destination in `skills/review-implementation/SKILL.md` and bump its version (OB-4)' — progress.md P4 says review-implementation 1.7.0 → 1.8.0\",\n    \"detail\": \"Consistent. No defect.\",\n    \"severity\": \"low\",\n    \"axis\": \"spec-drift\"\n  },\n  {\n    \"file\": \"docs/fix/224-deterministic-replan-routing/SPEC.md\",\n    \"line\": 1,\n    \"title\": \"P4 task 7 says 'Restate the replan destination in `skills/fold-findings/SKILL.md` and bump its version (OB-4; PE-004)' — progress.md P4 says fold-findings 1.4.0 → 1.5.0\",\n    \"detail\": \"Consistent. No defect.\",\n    \"severity\": \"low\",\n    \"axis\": \"spec-drift\"\n  },\n  {\n    \"file\": \"docs/fix/224-deterministic-replan-routing/SPEC.md\",\n    \"line\": 1,\n    \"title\": \"P6 task 6 says 'Bump `skills/workflow-status/SKILL.md` for the withdrawn signal (OB-5)' — progress.md P6 says workflow-status 3.4.0 → 3.5.0\",\n    \"detail\": \"Consistent. No defect.\",\n    \"severity\": \"low\",\n    \"axis\": \"spec-drift\"\n  },\n  {\n    \"file\": \"docs/fix/224-deterministic-replan-routing/SPEC.md\",\n    \"line\": 1,\n    \"title\": \"P2 task 3 says 'Wire the conditional load into `skills/plan-feature/SKILL.md` and bump its version (OB-2; PE-002)' — progress.md P2 says plan-feature 5.1.0 → 5.2.0\",\n    \"detail\": \"Consistent. No defect.\",\n    \"severity\": \"low\",\n    \"axis\": \"spec-drift\"\n  },\n  {\n    \"file\": \"docs/fix/224-deterministic-replan-routing/SPEC.md\",\n    \"line\": 1,\n    \"title\": \"P2 task 5 says 'Wire the conditional load into `skills/plan-fix/SKILL.md` and bump its version (OB-2; PE-002)' — progress.md P2 says plan-fix 3.1.0 → 3.2.0\",\n    \"detail\": \"Consistent. No defect.\",\n    \"severity\": \"low\",\n    \"axis\": \"spec-drift\"\n  },\n  {\n    \"file\": \"docs/fix/224-deterministic-replan-routing/SPEC.md\",\n    \"line\": 1,\n    \"title\": \"P7 task 2 says 'Bump the mirror package version and add its changelog row (OB-8)' — progress.md P7 says package version 0.9.2 → 0.10.0\",\n    \"detail\": \"Consistent. No defect.\",\n    \"severity\": \"low\",\n    \"axis\": \"spec-drift\"\n  },\n  {\n    \"file\": \"docs/fix/224-deterministic-replan-routing/SPEC.md\",\n    \"line\": 1,\n    \"title\": \"P8 progress says 'Two gate repairs were required and are part of this phase, not silent edits' — but the SPEC's P8 task list does not include these repairs\",\n    \"detail\": \"The SPEC's P8 task list: re-run gate, pending-docs check, set fix-index row to done, git push, open PR, update fix-index row, commit link. The progress.md P8 says 'Two gate repairs were required and are part of this phase, not silent edits: 1. Route ceilings re-based... 2. A version pin was maintained...' These repairs are not in the P8 task list. They are disclosed in progress.md but not in the SPEC's phase ledger. This is a spec-drift defect: the phase ledger does not account for two gate repairs that the progress log claims were made in P8.\",\n    \"severity\": \"med\",\n    \"axis\": \"spec-drift\"\n  },\n  {\n    \"file\": \"docs/fix/224-deterministic-replan-routing/SPEC.md\",\n    \"line\": 1,\n    \"title\": \"P8 progress says 'the `docs/` pending check is a *post-commit* check; this receipt is committed with the phase, so the check runs against a clean tree' — but the SPEC's P8 task says 'Pending-docs check: `git status --porcelain -- docs/` → empty'\",\n    \"detail\": \"The SPEC's P8 task: 'Pending-docs check: `git status --porcelain -- docs/` → empty'. The progress.md P8 says the check is post-commit. The task does not specify pre- or post-commit. The progress.md clarifies. No defect.\",\n    \"severity\": \"low\",\n    \"axis\": \"spec-drift\"\n  },\n  {\n    \"file\": \"docs/fix/224-deterministic-replan-routing/SPEC.md\",\n    \"line\": 1,\n    \"title\": \"P8 progress says 'Close-out: fix-index row flipped to `done` and committed (`eb09fdda`), branch pushed, PR opened and printed — **https://github.com/gtrabanco/agentic-workflow/pull/225** (`Closes #224`); the row updated to `done · [#225](…)` in the link commit.'\",\n    \"detail\": \"The SPEC's P8 task says 'Update the fix-index row to `done · [#<pr>](<pr-url>)`'. The progress.md says the row was updated to `done · [#225](…)`. Consistent. No defect.\",\n    \"severity\": \"low\",\n    \"axis\": \"spec-drift\"\n  },\n  {\n    \"file\": \"docs/fix/224-deterministic-replan-routing/SPEC.md\",\n    \"line\": 1,\n    \"title\": \"P8 progress says '`git status --porcelain -- docs/` was empty before the flip; `git status --porcelain` is empty after the link commit.'\",\n    \"detail\": \"The SPEC's P8 task says 'Pending-docs check: `git status --porcelain -- docs/` → empty'. The progress.md says it was empty before the flip and the full status is empty after the link commit. Consistent. No defect.\",\n    \"severity\": \"low\",\n    \"axis\": \"spec-drift\"\n  },\n  {\n    \"file\": \"docs/fix/224-deterministic-replan-routing/SPEC.md\",\n    \"line\": 1,\n    \"title\": \"P8 progress says 'Unit status: **done** (built, PR open — merge state lives in the forge).'\",\n    \"detail\": \"The SPEC's Status section says '`pending` · `in-progress` · `done` (built, PR open — merge state lives in the forge)'. The progress.md says the unit status is done. Consistent. No defect.\",\n    \"severity\": \"low\",\n    \"axis\": \"spec-drift\"\n  },\n  {\n    \"file\": \"docs/fix/224-deterministic-replan-routing/SPEC.md\",\n    \"line\": 1,\n    \"title\": \"P8 progress says 'Next: `/review-change` (the mandatory end review), then `/fold-findings` only on `REVIEW-FAIL`, then re-run `/review-change`, then `/audit-pr` as the merge gate.'\",\n    \"detail\": \"This is a next-steps note, not a defect.\",\n    \"severity\": \"low\",\n    \"axis\": \"spec-drift\"\n  },\n  {\n    \"file\": \"docs/fix/224-deterministic-replan-routing/SPEC.md\",\n    \"line\": 1,\n    \"title\": \"P1 progress says 'the bounded read set (unit `review-findings.md`/`SPEC.md`/`ACCEPTANCE.md` + cited existing paths, deduped, sorted, capped at 12 with `… and N more`)'\",\n    \"detail\": \"AC2 says 'the bounded read set is derived from the selected rows only: the unit's `review-findings.md`, `SPEC.md`, `ACCEPTANCE.md` and each cited repository path, deduped, sorted, and capped with an explicit remainder line'. The progress.md says capped at 12. The SPEC does not specify the cap value. The progress.md discloses it. No defect.\",\n    \"severity\": \"low\",\n    \"axis\": \"spec-drift\"\n  },\n  {\n    \"file\": \"docs/fix/224-deterministic-replan-routing/SPEC.md\",\n    \"line\": 1,\n    \"title\": \"P1 progress says 'one sanitizer (control-char flatten + 160-char truncation) over every echoed id/path'\",\n    \"detail\": \"AC12 says 'echoed ids and paths pass one sanitizer that truncates long cells (data, never instructions)'. The progress.md says 160-char truncation. The SPEC does not specify the truncation length. The progress.md discloses it. No defect.\",\n    \"severity\": \"low\",\n    \"axis\": \"spec-drift\"\n  },\n  {\n    \"file\": \"docs/fix/224-deterministic-replan-routing/SPEC.md\",\n    \"line\": 1,\n    \"title\": \"P1 progress says 'the route cell text is never echoed — only ids, the route name and repository paths are'\",\n    \"detail\": \"AC12 says 'the router's stdout carries no verbatim ledger line: echoed ids and paths pass one sanitizer'. The progress.md says the route cell text is never echoed. Consistent. No defect.\",\n    \"severity\": \"low\",\n    \"axis\": \"spec-drift\"\n  },\n  {\n    \"file\": \"docs/fix/224-deterministic-replan-routing/SPEC.md\",\n    \"line\": 1,\n    \"title\": \"P1 progress says 'the read set keeps only paths that exist under the root, so a path cited by a FOLDED row (F89 → `docs/LOGS.md`) is provably absent from the replan set'\",\n    \"detail\": \"AC2 says 'the bounded read set is derived from the selected rows only'. The progress.md says the read set keeps only paths that exist under the root. This is a filter not mentioned in AC2. The AC2 says 'each cited repository path' — if a cited path does not exist, it is not a repository path. The progress.md's filter is consistent with AC2. No defect.\",\n    \"severity\": \"low\",\n    \"axis\": \"spec-drift\"\n  },\n  {\n    \"file\": \"docs/fix/224-deterministic-replan-routing/SPEC.md\",\n    \"line\": 1,\n    \"title\": \"P1 progress says '`UNIT_ROUTE_REPO` re-points the router at a fixture root; the router spawns no shell and writes nothing.'\",\n    \"detail\": \"The SPEC's Security risks says 'the router writes nothing, spawns no shell and takes no `--exec` input'. The progress.md says the router spawns no shell and writes nothing. Consistent. No defect.\",\n    \"severity\": \"low\",\n    \"axis\": \"spec-drift\"\n  },\n  {\n    \"file\": \"docs/fix/224-deterministic-replan-routing/SPEC.md\",\n    \"line\": 1,\n    \"title\": \"P1 progress says 'Red-first: 14/14 fail without `scripts/unit-route.mjs`, 14/14 pass with it.'\",\n    \"detail\": \"The SPEC's P1 task 1 says 'Red-first `scripts/unit-route.test.mjs` pinning the five route outcomes, the unit-37 dogfood fixture (PE-013) and the failure states from fixture ledgers, run to red'. The progress.md says 14/14 fail without the script. Consistent. No defect.\",\n    \"severity\": \"low\",\n    \"axis\": \"spec-drift\"\n  },\n  {\n    \"file\": \"docs/fix/224-deterministic-replan-routing/SPEC.md\",\n    \"line\": 1,\n    \"title\": \"P1 progress says 'Gate: `node --test scripts/unit-route.test.mjs` → 14 pass / 0 fail, exit 0.'\",\n    \"detail\": \"The SPEC's P1 done-when says '`node --test scripts/unit-route.test.mjs` → exit 0'. The progress.md says 14 pass / 0 fail. Consistent. No defect.\",\n    \"severity\": \"low\",\n    \"axis\": \"spec-drift\"\n  },\n  {\n    \"file\": \"docs/fix/224-deterministic-replan-routing/SPEC.md\",\n    \"line\": 1,\n    \"title\": \"P2 progress says 'Gate: `bun scripts/check-skill-context.mjs` → exit 0; `node --test scripts/normative-drift.test.mjs` → 16 pass / 0 fail (the version tables and package versions recompute equal).'\",\n    \"detail\": \"The SPEC's P2 done-when says '`bun scripts/check-skill-context.mjs` → exit 0'. The progress.md says 16 pass / 0 fail for normative-drift. Consistent. No defect.\",\n    \"severity\": \"low\",\n    \"axis\": \"spec-drift\"\n  },\n  {\n    \"file\": \"docs/fix/224-deterministic-replan-routing/SPEC.md\",\n    \"line\": 1,\n    \"title\": \"P3 progress says 'Gate: `node --test scripts/workflow-status-sensor.test.mjs` → 53 pass / 0 fail, exit 0; `node --test scripts/normative-drift.test.mjs` → 17 pass / 0 fail, exit 0.'\",\n    \"detail\": \"The SPEC's P3 done-when says '`node --test scripts/workflow-status-sensor.test.mjs` → exit 0'. The progress.md says 53 pass / 0 fail. Consistent. No defect.\",\n    \"severity\": \"low\",\n    \"axis\": \"spec-drift\"\n  },\n  {\n    \"file\": \"docs/fix/224-deterministic-replan-routing/SPEC.md\",\n    \"line\": 1,\n    \"title\": \"P4 progress says 'Gate: `grep -c \\\"unit-route\\\"` → ≥1 on all eight files (1,1,3,1,2,1,2,2); `grep -q \\\"^version: 3\\\\.5\\\\.1\\\" skills/review-change/SKILL.md && grep -q \\\"^| 3\\\\.5\\\\.1 |\\\" CHANGELOG.md && grep -q \\\"^| 3\\\\.5\\\\.1 |\\\" CHANGELOG.es.md` → exit 0; `bun scripts/check-skill-context.mjs` → exit 0; `node --test scripts/normative-drift.test.mjs` → 17 pass / 0 fail.'\",\n    \"detail\": \"The SPEC's P4 done-when says '`grep -c \\\"unit-route\\\" ...` → ≥1 per file, and `grep -q \\\"^version: 3\\\\.5\\\\.1\\\" ...` → exit 0 (OB-11, AC13)'. The progress.md says the greps pass. Consistent. No defect.\",\n    \"severity\": \"low\",\n    \"axis\": \"spec-drift\"\n  },\n  {\n    \"file\": \"docs/fix/224-deterministic-replan-routing/SPEC.md\",\n    \"line\": 1,\n    \"title\": \"P5 progress says 'Gate: `grep -c \\\"unit-route\\\"` on the six files → 2, 2, 1, 1, 1, 1; the full AC7 census over all 14 files → ≥1 each.'\",\n    \"detail\": \"The SPEC's P5 done-when says '`grep -c \\\"unit-route\\\" docs/workflow/REVIEW_AND_CLASSIFY.md ...` → ≥1 per file'. The progress.md says the greps pass. Consistent. No defect.\",\n    \"severity\": \"low\",\n    \"axis\": \"spec-drift\"\n  },\n  {\n    \"file\": \"docs/fix/224-deterministic-replan-routing/SPEC.md\",\n    \"line\": 1,\n    \"title\": \"P6 progress says 'Gate: `grep -q \\\"unit-route\\\" CHANGELOG.md && grep -q \\\"unit-route\\\" CHANGELOG.es.md && grep -q \\\"replan-findings\\\" docs/workflow/SKILLS.md && grep -q \\\"replan-findings\\\" docs/workflow/SKILLS.es.md` → exit 0; `bun scripts/check-skill-context.mjs` → exit 0; `node --test scripts/normative-drift.test.mjs` → 17 pass / 0 fail.'\",\n    \"detail\": \"The SPEC's P6 done-when says '`grep -q \\\"unit-route\\\" CHANGELOG.md && grep -q \\\"unit-route\\\" CHANGELOG.es.md && grep -q \\\"replan-findings\\\" docs/workflow/SKILLS.md && grep -q \\\"replan-findings\\\" docs/workflow/SKILLS.es.md` → exit 0'. The progress.md says the greps pass. Consistent. No defect.\",\n    \"severity\": \"low\",\n    \"axis\": \"spec-drift\"\n  },\n  {\n    \"file\": \"docs/fix/224-deterministic-replan-routing/SPEC.md\",\n    \"line\": 1,\n    \"title\": \"P7 progress says 'Gate: `node --test packages/pi-agentic-workflow/test/skill-parity.test.mjs` → 7 pass / 0 fail, exit 0 (every bundled file byte-identical to its `skills/` source); `node --test scripts/normative-drift.test.mjs` → 17 pass / 0 fail (package-versions recompute to 0.10.0).'\",\n    \"detail\": \"The SPEC's P7 done-when says '`node --test packages/pi-agentic-workflow/test/skill-parity.test.mjs` → exit 0'. The progress.md says 7 pass / 0 fail. Consistent. No defect.\",\n    \"severity\": \"low\",\n    \"axis\": \"spec-drift\"\n  },\n  {\n    \"file\": \"docs/fix/224-deterministic-replan-routing/SPEC.md\",\n    \"line\": 1,\n    \"title\": \"P8 progress says 'Full gate at the executed head (all commands RUN, exit codes pasted): ... `NODE_PATH=packages/agentic-workflow-schema/node_modules node --test scripts/*.test.mjs` → exit 0 · 282 tests, 282 pass, 0 fail.'\",\n    \"detail\": \"The SPEC's P8 done-when says 'the project verification gate commands exit 0'. The progress.md says 282 tests pass. Consistent. No defect.\",\n    \"severity\": \"low\",\n    \"axis\": \"spec-drift\"\n  },\n  {\n    \"file\": \"docs/fix/224-deterministic-replan-routing/SPEC.md\",\n    \"line\": 1,\n    \"title\": \"P8 progress says '`bun scripts/check-skill-context.mjs` → exit 0; `bun scripts/check-skill-context.mjs --routes` → exit 0 (`PASS route budgets: 22 routes`).'\",\n    \"detail\": \"The SPEC's P8 done-when says 'the project verification gate commands exit 0'. The progress.md says the checker passes. Consistent. No defect.\",\n    \"severity\": \"low\",\n    \"axis\": \"spec-drift\"\n  },\n  {\n    \"file\": \"docs/fix/224-deterministic-replan-routing/SPEC.md\",\n    \"line\": 1,\n    \"title\": \"P8 progress says '`cd packages/pi-agentic-workflow && bun install --frozen-lockfile && bun run test` → exit 0 · 214 pass, 0 fail (gitignored `node_modules/` only).'\",\n    \"detail\": \"The SPEC's P8 done-when says 'the project verification gate commands exit 0'. The progress.md says 214 tests pass. Consistent. No defect.\",\n    \"severity\": \"low\",\n    \"axis\": \"spec-drift\"\n  },\n  {\n    \"file\": \"docs/fix/224-deterministic-replan-routing/SPEC.md\",\n    \"line\": 1,\n    \"title\": \"P8 progress says '`npx skills add . --list` → exit 0, `replan-findings` discovered.'\",\n    \"detail\": \"The SPEC's AC9 validator says '`npx skills add . --list` → exit 0'. The progress.md says the command passes. Consistent. No defect.\",\n    \"severity\": \"low\",\n    \"axis\": \"spec-drift\"\n  },\n  {\n    \"file\": \"docs/fix/224-deterministic-replan-routing/SPEC.md\",\n    \"line\": 1,\n    \"title\": \"P8 progress says '`node --test scripts/unit-route.test.mjs` → 14 pass; `node --test scripts/workflow-status-sensor.test.mjs` → 53 pass; `node --test scripts/normative-drift.test.mjs` → 17 pass.'\",\n    \"detail\": \"The SPEC's AC1, AC6, and the Commands section list these tests. The progress.md says they pass. Consistent. No defect.\",\n    \"severity\": \"low\",\n    \"axis\": \"spec-drift\"\n  },\n  {\n    \"file\": \"docs/fix/224-deterministic-replan-routing/SPEC.md\",\n    \"line\": 1,\n    \"title\": \"P8 progress says 'Two gate repairs were required and are part of this phase, not silent edits: 1. Route ceilings re-based. ... 2. A version pin was maintained. ...'\",\n    \"detail\": \"This is the same concern as the earlier budget re-basing and version pin edit. The SPEC's `## Amendments` table does not record these repairs. The progress.md discloses them but the SPEC's frozen ledgers do not. This is a workflow/spec-drift defect.\",\n    \"severity\": \"med\",\n    \"axis\": \"workflow\"\n  },\n  {\n    \"file\": \"docs/fix/224-deterministic-replan-routing/SPEC.md\",\n    \"line\": 1,\n    \"title\": \"P8 progress says 'A version pin was maintained. `scripts/review-loop-discipline.test.mjs:10j` pinned `fold-findings`'s exact `version:` to 1.4.0 (feature 30's one-time contract pin). P4 bumps that skill to 1.5.0 by SPEC obligation, so the pin was advanced to 1.5.0 with the assertion unchanged in strength — a version fact, not a weakened check.'\",\n    \"detail\": \"The SPEC's Quality floor says 'Do not remove, skip, loosen, or rewrite a validator to manufacture PASS.' Advancing a version pin from 1.4.0 to 1.5.0 is a rewrite of a validator. The progress.md argues it is 'a version fact, not a weakened check'. The assertion strength is unchanged, but the expected value moved. This is a judgment call. The SPEC's `## Amendments` table does not record this edit. This is a workflow/spec-drift defect.\",\n    \"severity\": \"med\",\n    \"axis\": \"workflow\"\n  },\n  {\n    \"file\": \"docs/fix/224-deterministic-replan-routing/SPEC.md\",\n    \"line\": 1,\n    \"title\": \"P8 progress says 'Route ceilings re-based. The converged prose grew four routes past their declared 10 % headroom (plan-feature:issue/scoped, plan-fix:issue, review-change:adversarial/default-backend/default-web/synthesize). Each ceiling was raised to `ceil(measured × 1.10)` with a `sources` note in `docs/workflow/SKILL_CONTEXT_BUDGETS.json` naming fix #224 as the growth source.'\",\n    \"detail\": \"The SPEC's Rules section says 'Skills stay within their context budgets. The new main file must satisfy the manifest's defaults (`mainEstimateMax: 2800`, `mainLinesMax: 240`).' Raising route ceilings is not the same as staying within budgets — it is re-basing the budgets. The SPEC does not authorize budget re-basing. The SPEC's `## Amendments` table does not record this change. This is a workflow/spec-drift defect.\",\n    \"severity\": \"med\",\n    \"axis\": \"workflow\"\n  },\n  {\n    \"file\": \"docs/fix/224-deterministic-replan-routing/SPEC.md\",\n    \"line\": 1,\n    \"title\": \"P6 progress says 'the SENSOR_SIGNALS.md addition pushed that reference to 2297 est > the 2200 default; the `workflow-status` `referenceEstimateMax` was re-based to 2300 with a declared `referenceSources` note (measured 2297) rather than trimming the required signal out.'\",\n    \"detail\": \"The SPEC's Rules section does not authorize raising `referenceEstimateMax` for workflow-status. The P6 progress discloses it, but the SPEC's `## Amendments` table does not record it. This is a workflow/spec-drift defect.\",\n    \"severity\": \"med\",\n    \"axis\": \"workflow\"\n  },\n  {\n    \"file\": \"docs/fix/224-deterministic-replan-routing/SPEC.md\",\n    \"line\": 1,\n    \"title\": \"P2 progress says 'the added prose pushed plan-feature's main estimate to 2802 > 2800 and ROUTING.md to 2227 > 2200; both were compressed back under the defaults rather than raising the budget (plan-feature now 2799, ROUTING under 2200).'\",\n    \"detail\": \"This is consistent with the Rules section. No defect.\",\n    \"severity\": \"low\",\n    \"axis\": \"spec-drift\"\n  },\n  {\n    \"file\": \"docs/fix/224-deterministic-replan-routing/SPEC.md\",\n    \"line\": 1,\n    \"title\": \"P8 progress says '`git status --porcelain -- docs/` was empty before the flip; `git status --porcelain` is empty after the link commit.'\",\n    \"detail\": \"The SPEC's P8 task says 'Pending-docs check: `git status --porcelain -- docs/` → empty'. The progress.md says it was empty before the flip and the full status is empty after the link commit. Consistent. No defect.\",\n    \"severity\": \"low\",\n    \"axis\": \"spec-drift\"\n  },\n  {\n    \"file\": \"docs/fix/224-deterministic-replan-routing/SPEC.md\",\n    \"line\": 1,\n    \"title\": \"P8 progress says 'Unit status: **done** (built, PR open — merge state lives in the forge).'\",\n    \"detail\": \"The SPEC's Status section says '`pending` · `in-progress` · `done` (built, PR open — merge state lives in the forge)'. The progress.md says the unit status is done. Consistent. No defect.\",\n    \"severity\": \"low\",\n    \"axis\": \"spec-drift\"\n  },\n  {\n    \"file\": \"docs/fix/224-deterministic-replan-routing/SPEC.md\",\n    \"line\": 1,\n    \"title\": \"P8 progress says 'Next: `/review-change` (the mandatory end review), then `/fold-findings` only on `REVIEW-FAIL`, then re-run `/review-change`, then `/audit-pr` as the merge gate.'\",\n    \"detail\": \"This is a next-steps note, not a defect.\",\n    \"severity\": \"low\",\n    \"axis\": \"spec-drift\"\n  }\n]"
+}

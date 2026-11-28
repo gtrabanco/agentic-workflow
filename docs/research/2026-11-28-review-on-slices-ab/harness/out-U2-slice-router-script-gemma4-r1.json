@@ -1,0 +1,32 @@
+{
+ "id": "U2__slice__router-script__gemma4__r1",
+ "unit": "U2",
+ "job": "slice__router-script",
+ "model": "gemma4",
+ "run": 1,
+ "ms": 3077,
+ "usage": {
+  "completion_tokens": 237,
+  "prompt_tokens": 4819,
+  "total_tokens": 5056,
+  "completion_tokens_details": {
+   "reasoning_tokens": 0
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "scripts/unit-route.mjs",
+   "line": 248,
+   "title": "Inconsistent command for plan-from-issue",
+   "detail": "The script claims `plan-from-issue` is a valid route in the header (line 16) and the `ROUTES` constant (line 35), but when a tracked issue is found (line 248), it uses the command `/plan-fix ${clean}`. However, for a `replan` route (line 265), it uses `/plan-fix ${unit.number}` for fixes and `/plan-feature ${unit.slug}` for features. The `plan-from-issue` route lacks a corresponding command pattern in the logic, and the `print` function will fail if `route` is not in `ROUTES`, but `plan-from-issue` is in `ROUTES` while the logic for `execute` (line 274) uses `/execute-phase ${unit.slug}`. There is a mismatch between the intended route name and the command structure for issues.",
+   "severity": "med",
+   "axis": "workflow"
+  }
+ ],
+ "raw": "[{\"file\":\"scripts/unit-route.mjs\",\"line\":248,\"title\":\"Inconsistent command for plan-from-issue\",\"detail\":\"The script claims `plan-from-issue` is a valid route in the header (line 16) and the `ROUTES` constant (line 35), but when a tracked issue is found (line 248), it uses the command `/plan-fix ${clean}`. However, for a `replan` route (line 265), it uses `/plan-fix ${unit.number}` for fixes and `/plan-feature ${unit.slug}` for features. The `plan-from-issue` route lacks a corresponding command pattern in the logic, and the `print` function will fail if `route` is not in `ROUTES`, but `plan-from-issue` is in `ROUTES` while the logic for `execute` (line 274) uses `/execute-phase ${unit.slug}`. There is a mismatch between the intended route name and the command structure for issues.\",\"severity\":\"med\",\"axis\":\"workflow\"}]"
+}

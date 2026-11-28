@@ -1,0 +1,32 @@
+{
+ "id": "U2__slice__replan-contract__gemma4__r2",
+ "unit": "U2",
+ "job": "slice__replan-contract",
+ "model": "gemma4",
+ "run": 2,
+ "ms": 1735,
+ "usage": {
+  "completion_tokens": 167,
+  "prompt_tokens": 3322,
+  "total_tokens": 3489,
+  "completion_tokens_details": {
+   "reasoning_tokens": 0
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "skills/replan-findings/SKILL.md",
+   "line": 44,
+   "title": "Inconsistent router output requirement",
+   "detail": "The documentation states the router prints `route: replan` (line 44), but the 'Load condition' section (line 31) and the 'When to use' section (line 24) imply the router's output is the sole license for the contract. However, the 'Bounded intake' section (line 47) refers to a `read-set` line and a `rows:` line which are not explicitly defined as part of the `route: replan` output format in the 'Load condition' block, creating ambiguity in the contract's trigger mechanism.",
+   "severity": "low",
+   "axis": "usage-docs"
+  }
+ ],
+ "raw": "[{\"file\":\"skills/replan-findings/SKILL.md\",\"line\":44,\"title\":\"Inconsistent router output requirement\",\"detail\":\"The documentation states the router prints `route: replan` (line 44), but the 'Load condition' section (line 31) and the 'When to use' section (line 24) imply the router's output is the sole license for the contract. However, the 'Bounded intake' section (line 47) refers to a `read-set` line and a `rows:` line which are not explicitly defined as part of the `route: replan` output format in the 'Load condition' block, creating ambiguity in the contract's trigger mechanism.\",\"severity\":\"low\",\"axis\":\"usage-docs\"}]"
+}

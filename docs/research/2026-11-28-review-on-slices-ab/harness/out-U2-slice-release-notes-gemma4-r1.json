@@ -1,0 +1,32 @@
+{
+ "id": "U2__slice__release-notes__gemma4__r1",
+ "unit": "U2",
+ "job": "slice__release-notes",
+ "model": "gemma4",
+ "run": 1,
+ "ms": 3630,
+ "usage": {
+  "completion_tokens": 202,
+  "prompt_tokens": 13110,
+  "total_tokens": 13312,
+  "completion_tokens_details": {
+   "reasoning_tokens": 0
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "CHANGELOG.es.md",
+   "line": 11,
+   "title": "Inconsistent versioning type for re-bundle",
+   "detail": "The entry for `@gtrabanco/pi-agentic-workflow` (0.10.0) is marked as 'menor' (minor), but the description states it is a 'Re-empaquetado' (re-bundle) that includes multiple version bumps for several skills (e.g., `review-change` 3.5.1, `review-implementation` 1.8.0). While the package itself has no code change, the unit's own versioning policy defines 'major' for breaking changes and 'minor' for new capabilities; a re-bundle of multiple updated skills is a significant release event that contradicts the 'no code change' claim if the purpose is to publish the new versions of the constituent skills.",
+   "severity": "low",
+   "axis": "spec-drift"
+  }
+ ],
+ "raw": "[{\"file\":\"CHANGELOG.es.md\",\"line\":11,\"title\":\"Inconsistent versioning type for re-bundle\",\"detail\":\"The entry for `@gtrabanco/pi-agentic-workflow` (0.10.0) is marked as 'menor' (minor), but the description states it is a 'Re-empaquetado' (re-bundle) that includes multiple version bumps for several skills (e.g., `review-change` 3.5.1, `review-implementation` 1.8.0). While the package itself has no code change, the unit's own versioning policy defines 'major' for breaking changes and 'minor' for new capabilities; a re-bundle of multiple updated skills is a significant release event that contradicts the 'no code change' claim if the purpose is to publish the new versions of the constituent skills.\",\"severity\":\"low\",\"axis\":\"spec-drift\"}]"
+}

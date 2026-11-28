@@ -1,0 +1,32 @@
+{
+ "id": "U1__slice__init-consent__gemma4__r1",
+ "unit": "U1",
+ "job": "slice__init-consent",
+ "model": "gemma4",
+ "run": 1,
+ "ms": 1430,
+ "usage": {
+  "completion_tokens": 136,
+  "prompt_tokens": 3455,
+  "total_tokens": 3591,
+  "completion_tokens_details": {
+   "reasoning_tokens": 0
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "skills/init-workspace/SKILL.md",
+   "line": 44,
+   "title": "Contradictory target-dir fallback",
+   "detail": "The 'Needs-input guard' section states 'Cwd is used as a fallback only' for `<target-dir>`, but 'Step 0 — Discover the project' states 'Inspect the target dir ([target-dir], default cwd)'. This creates ambiguity: is CWD a fallback for a missing input (which requires a re-ask/halt per the guard) or a default value (which violates the 'no default' rule)?",
+   "severity": "med",
+   "axis": "spec-drift"
+  }
+ ],
+ "raw": "[{\"file\":\"skills/init-workspace/SKILL.md\",\"line\":44,\"title\":\"Contradictory target-dir fallback\",\"detail\":\"The 'Needs-input guard' section states 'Cwd is used as a fallback only' for `<target-dir>`, but 'Step 0 — Discover the project' states 'Inspect the target dir ([target-dir], default cwd)'. This creates ambiguity: is CWD a fallback for a missing input (which requires a re-ask/halt per the guard) or a default value (which violates the 'no default' rule)?\",\"severity\":\"med\",\"axis\":\"spec-drift\"}]"
+}

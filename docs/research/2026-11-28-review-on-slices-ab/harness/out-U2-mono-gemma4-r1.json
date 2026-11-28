@@ -1,0 +1,40 @@
+{
+ "id": "U2__mono__gemma4__r1",
+ "unit": "U2",
+ "job": "mono",
+ "model": "gemma4",
+ "run": 1,
+ "ms": 43979,
+ "usage": {
+  "completion_tokens": 263,
+  "prompt_tokens": 182998,
+  "total_tokens": 183261,
+  "completion_tokens_details": {
+   "reasoning_tokens": 0
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "scripts/workflow-status.mjs",
+   "line": 735,
+   "title": "Incorrect variable name in sensor signal",
+   "detail": "The `readSuggestions` function uses `unit.issue` for fix units, but the `unit` object passed from `buildEnvelope` (line 1132) uses `unit.id` for features and `unit.number` for fixes. This will result in `undefined` in the `command` string for fix units.",
+   "severity": "high",
+   "axis": "code"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/ACCEPTANCE.md",
+   "line": 41,
+   "title": "Validator mismatch for AC7",
+   "detail": "The validator for AC7 uses `grep -c \"unit-route\"` on a specific list of 14 files. However, the `SPEC.md` (Scope section) and `progress.md` (P4 task) claim this census includes tutorial files (e.g., `docs/workflow/FEATURE_WORKFLOW.md`). The grep command in the validator does not include the `docs/workflow/` directory, so it will fail to verify the tutorial files mentioned in the requirement.",
+   "severity": "med",
+   "axis": "usage-docs"
+  }
+ ],
+ "raw": "[{\"file\":\"scripts/workflow-status.mjs\",\"line\":735,\"title\":\"Incorrect variable name in sensor signal\",\"detail\":\"The `readSuggestions` function uses `unit.issue` for fix units, but the `unit` object passed from `buildEnvelope` (line 1132) uses `unit.id` for features and `unit.number` for fixes. This will result in `undefined` in the `command` string for fix units.\",\"severity\":\"high\",\"axis\":\"code\"},{\"file\":\"docs/fix/224-deterministic-replan-routing/ACCEPTANCE.md\",\"line\":41,\"title\":\"Validator mismatch for AC7\",\"detail\":\"The validator for AC7 uses `grep -c \\\"unit-route\\\"` on a specific list of 14 files. However, the `SPEC.md` (Scope section) and `progress.md` (P4 task) claim this census includes tutorial files (e.g., `docs/workflow/FEATURE_WORKFLOW.md`). The grep command in the validator does not include the `docs/workflow/` directory, so it will fail to verify the tutorial files mentioned in the requirement.\",\"severity\":\"med\",\"axis\":\"usage-docs\"}]"
+}

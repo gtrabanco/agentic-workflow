@@ -1,0 +1,48 @@
+{
+ "id": "U2__slice__tutorial-crossrefs__glm5.3-flash__r2",
+ "unit": "U2",
+ "job": "slice__tutorial-crossrefs",
+ "model": "glm5.3-flash",
+ "run": 2,
+ "ms": 60271,
+ "usage": {
+  "completion_tokens": 3597,
+  "prompt_tokens": 25463,
+  "total_tokens": 29060,
+  "completion_tokens_details": {
+   "reasoning_tokens": 3070
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 18432
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "docs/workflow/PORTABLE_PROMPT.md",
+   "line": 10,
+   "title": "Portable prompt hardcodes this repo's script path",
+   "detail": "The portable prompt's own premise is 'Do not assume this project matches any other — discover its conventions and adapt' and 'If something doesn't exist, note it; the skills must degrade gracefully... rather than assuming a path'. The edited line instructs the generated system to run 'node scripts/unit-route.mjs <unit>' — a repo-specific script of THIS repository that a freshly regenerated target repo will not have. The prompt now assumes a path exists in the target project, contradicting its declared degrade-gracefully contract.",
+   "severity": "med",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "docs/workflow/SKILLS.md",
+   "line": 6,
+   "title": "Internal-step count bumped but enumeration not updated",
+   "detail": "The diff changes '18 internal steps' to '19 internal steps' to account for the new `replan-findings`, but the enumerating sentence that follows ('the plan-feature router's two planning steps, the two pre-execution evidence owners..., the review-change findings engine..., the planning-preflight planning gate, the phase-contract lint contract, the verification-contract acceptance guard, the workflow's own 9-skill internal review pack') still does not mention `replan-findings` anywhere, unlike every other category it names. Same in SKILLS.es.md ('19 pasos internos' with the identical enumeration omitting replan-findings).",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/workflow/PORTABLE_PROMPT.es.md",
+   "line": 147,
+   "title": "ES/EN portable prompt blocks are not the same literal prompt",
+   "detail": "The ES file declares the embedded block is 'deliberadamente sin traducir — es un prompt literal... Pégalo textualmente sin importar el idioma', i.e. it must be byte-identical to PORTABLE_PROMPT.md's block. But the ES block reads 'on failure recomienda el camino manual `/fold-findings`, y luego un nuevo `/review-change`; los hallazgos no' while the EN block reads 'on failure recommend the manual path `/fold-findings`, then re-run `/review-change`; unresolved findings route to `triage-issue --prioritize-now`' — Spanish interpolation inside the ES 'untranslated' prompt and divergent trailing text. The unit edited both files in the same hunk region and left the pair inconsistent.",
+   "severity": "low",
+   "axis": "usage-docs"
+  }
+ ],
+ "raw": "[\n  {\"file\":\"docs/workflow/PORTABLE_PROMPT.md\",\"line\":10,\"title\":\"Portable prompt hardcodes this repo's script path\",\"detail\":\"The portable prompt's own premise is 'Do not assume this project matches any other — discover its conventions and adapt' and 'If something doesn't exist, note it; the skills must degrade gracefully... rather than assuming a path'. The edited line instructs the generated system to run 'node scripts/unit-route.mjs <unit>' — a repo-specific script of THIS repository that a freshly regenerated target repo will not have. The prompt now assumes a path exists in the target project, contradicting its declared degrade-gracefully contract.\",\"severity\":\"med\",\"axis\":\"usage-docs\"},\n  {\"file\":\"docs/workflow/SKILLS.md\",\"line\":6,\"title\":\"Internal-step count bumped but enumeration not updated\",\"detail\":\"The diff changes '18 internal steps' to '19 internal steps' to account for the new `replan-findings`, but the enumerating sentence that follows ('the plan-feature router's two planning steps, the two pre-execution evidence owners..., the review-change findings engine..., the planning-preflight planning gate, the phase-contract lint contract, the verification-contract acceptance guard, the workflow's own 9-skill internal review pack') still does not mention `replan-findings` anywhere, unlike every other category it names. Same in SKILLS.es.md ('19 pasos internos' with the identical enumeration omitting replan-findings).\",\"severity\":\"low\",\"axis\":\"spec-drift\"},\n  {\"file\":\"docs/workflow/PORTABLE_PROMPT.es.md\",\"line\":147,\"title\":\"ES/EN portable prompt blocks are not the same literal prompt\",\"detail\":\"The ES file declares the embedded block is 'deliberadamente sin traducir — es un prompt literal... Pégalo textualmente sin importar el idioma', i.e. it must be byte-identical to PORTABLE_PROMPT.md's block. But the ES block reads 'on failure recomienda el camino manual `/fold-findings`, y luego un nuevo `/review-change`; los hallazgos no' while the EN block reads 'on failure recommend the manual path `/fold-findings`, then re-run `/review-change`; unresolved findings route to `triage-issue --prioritize-now`' — Spanish interpolation inside the ES 'untranslated' prompt and divergent trailing text. The unit edited both files in the same hunk region and left the pair inconsistent.\",\"severity\":\"low\",\"axis\":\"usage-docs\"}\n]"
+}

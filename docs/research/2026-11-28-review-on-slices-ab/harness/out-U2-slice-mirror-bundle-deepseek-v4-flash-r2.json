@@ -1,0 +1,136 @@
+{
+ "id": "U2__slice__mirror-bundle__deepseek-v4-flash__r2",
+ "unit": "U2",
+ "job": "slice__mirror-bundle",
+ "model": "deepseek-v4-flash",
+ "run": 2,
+ "ms": 8644,
+ "usage": {
+  "completion_tokens": 2646,
+  "prompt_tokens": 26797,
+  "total_tokens": 29443,
+  "completion_tokens_details": {
+   "reasoning_tokens": 0
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 26624
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "packages/pi-agentic-workflow/skills/plan-feature/SKILL.md",
+   "line": null,
+   "title": "Allowlist count/description now contradicts itself",
+   "detail": "The section header still says \"Progressive loading — route before planning\" and the intro was changed from \"The reference allowlist is exactly the two paths below:\" to \"The allowlist:\" while the list now has four numbered items (ROUTING.md, planning-preflight, phase-contract, replan-findings). The closing sentence still reads \"Both resources are normative, one hop from this file, and fail closed when missing\" — \"Both\" now refers to four resources. The declared allowlist contract is internally inconsistent.",
+   "severity": "med",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "packages/pi-agentic-workflow/skills/plan-fix/SKILL.md",
+   "line": null,
+   "title": "Allowlist count changed to vague 'paths below' but list grew to 7",
+   "detail": "Diff changes \"The allowlist is exactly these five paths:\" to \"The allowlist is exactly the paths below:\" and adds item 7 (replan contract). The list now has seven items; the original said five. The rewrite hides the count mismatch rather than fixing it, and the section still claims an exact allowlist while the numbering (1..7) no longer matches any stated count.",
+   "severity": "low",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "packages/pi-agentic-workflow/skills/replan-findings/SKILL.md",
+   "line": null,
+   "title": "Replan contract claims router 'read-set'/'rows:' lines that unit-route.mjs may not emit",
+   "detail": "replan-findings/SKILL.md and PHASE_APPEND.md instruct the planner to read \"only the paths on its `read-set` line\" and \"the `rows:` line names the findings\", and plan-feature/plan-fix/CLASSIFY all say the router prints `route: replan`. The only router output contract visible in this material is `route: replan` (e.g. fold-findings: \"whose `route: replan` line names the planner\"). No file in this slice documents a `read-set:` or `rows:` line as part of unit-route.mjs's output; the replan contract depends on output fields not established anywhere in the reviewed material.",
+   "severity": "med",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "packages/pi-agentic-workflow/skills/replan-findings/SKILL.md",
+   "line": null,
+   "title": "Replan contract says router names the planner, but plan-feature/plan-fix are the ones that load it",
+   "detail": "replan-findings says the router's `route: replan` line \"names the planner (`/plan-feature <unit>` or `/plan-fix <n>`)\" and that plan-feature/plan-fix load this contract \"only when `node scripts/unit-route.mjs <NN>` prints `route: replan`\". But plan-feature's ROUTING.md says the replan exemption runs the router \"Before the status gate\" and skips the STOP — i.e. plan-feature is already the invoked planner, so the router cannot be naming plan-feature as the planner to invoke. The two documents describe incompatible call orders (router→planner vs planner→router).",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "packages/pi-agentic-workflow/skills/plan-feature/references/ROUTING.md",
+   "line": null,
+   "title": "Replan exemption bypasses the Product-review gate that plan-feature's turn contract requires",
+   "detail": "plan-feature's Turn contract states the Product-review gate must run and a current `spec-review-pass` receipt is required before any SPEC edit. ROUTING.md's new \"Replan exemption\" says a `route: replan` line means \"skip the STOP\" and load the replan contract to re-cut the plan — and replan-findings explicitly says \"No planning preflight\" and skips the normalized-repository-state read. The exemption as written lets a replan write SPEC phases without the Product-review gate the same skill declares mandatory, contradicting its own turn contract.",
+   "severity": "high",
+   "axis": "workflow"
+  },
+  {
+   "file": "packages/pi-agentic-workflow/skills/fold-findings/SKILL.md",
+   "line": null,
+   "title": "Freeze-batch now routes to a planner but the receipt/next block still says 'plan-fix/execute-phase'",
+   "detail": "The batch-state table row for freeze-batch was changed to route to `node scripts/unit-route.mjs <unit>` → planner → `/review-plan` → `/execute-phase`. But the same skill's earlier prose (line ~121) still says the loop \"stops and routes to `node scripts/unit-route.mjs <unit>`, whose `route: replan` line names the planner that re-cuts the plan\" while the REPAIR-RECEIPT/`→ Next:` contract elsewhere in the skill (per the diff context) still references the old plan-fix/execute-phase hand-off. The two hand-off descriptions in one skill disagree on whether `/review-plan` intervenes.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "packages/pi-agentic-workflow/skills/review-change/references/OUTPUT_AND_GUARDRAILS.md",
+   "line": null,
+   "title": "replan-in-unit routing now requires /review-plan, contradicting review-change's own 'never invokes /plan-feature' boundary",
+   "detail": "review-change SKILL.md states the review \"never invokes `/fold-findings`, `/execute-phase`, `/plan-feature`, `/design-feature` or `/triage-issue`\" and ends at the report. OUTPUT_AND_GUARDRAILS now instructs the review to \"run `node scripts/unit-route.mjs <unit>`\" and describes the planner re-cutting the plan — a planning action the review-end boundary forbids. The routing text tells the reviewer to drive a replan the skill's own turn boundary says it must not perform.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "packages/pi-agentic-workflow/skills/triage-issue/references/REVIEW_FINDING_PROCESS.md",
+   "line": null,
+   "title": "Triage replan route says run router then planner, but output block still lists plan-feature/plan-fix as Action",
+   "detail": "The process now says \"Run `node scripts/unit-route.mjs <unit>`; its `route: replan` line names the planner\". The fixed output block still reads `Action taken: <current-unit fold/phase | plan-feature | plan-fix | user decision>` — no `unit-route` action, and the router is described as naming the planner while the action vocabulary omits it. The documented invocation and the fixed output contract disagree.",
+   "severity": "low",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "packages/pi-agentic-workflow/skills/workflow-status/references/SENSOR_SIGNALS.md",
+   "line": null,
+   "title": "New plan-owner signal claims to mirror unit-route.mjs class→destination but no such mapping is defined here",
+   "detail": "The new signal says an open row \"whose frozen route is the plan owner\" maps to `/plan-feature <unit>` | `/plan-fix <issue>` and claims it is \"the same class→destination decision `scripts/unit-route.mjs` owns\". But the ledger schema in this material is `| id | file:line | axis | severity | class | route | folded |` — `route` values are `replan-in-unit`/`decision-required`/etc., not \"plan owner\". The sensor invents a \"frozen route is the plan owner\" predicate not present in the ledger vocabulary the same material declares, so the trigger cannot be computed from the stated schema.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "packages/pi-agentic-workflow/skills/replan-findings/references/PHASE_APPEND.md",
+   "line": null,
+   "title": "Append contract says 'never touch review-findings.md' but the fold must later prove the row's work landed",
+   "detail": "PHASE_APPEND says appended phases \"carry the finding ids it closes in its task text, so the fold can prove the row's work landed\" and also \"Never touch `review-findings.md`. Classification and `folded` are owned by `review-change` and `fold-findings`.\" The replan route appends phases but leaves the ledger row `folded: no`; nothing in this contract says how the row transitions after execution, and the hand-off goes to `/review-plan` then `/execute-phase` — not to `/fold-findings`. The row can remain open after its phase executes, re-triggering the same replan signal.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "packages/pi-agentic-workflow/skills/plan-fix/references/PLANNING_PROCESS.md",
+   "line": null,
+   "title": "Replan detection says 'when target resolves to existing unit folder' but plan-fix input is issue numbers",
+   "detail": "plan-fix's Input is \"One or more GitHub issue numbers\". The new PLANNING_PROCESS step says \"When the target resolves to an existing unit folder, run `node scripts/unit-route.mjs <unit>` first\" — but the skill's declared input is issue numbers, and the router is invoked with `<unit>` (a folder), not an issue number. The documented invocation does not match the skill's argument contract.",
+   "severity": "med",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "packages/pi-agentic-workflow/skills/replan-findings/SKILL.md",
+   "line": null,
+   "title": "Replan contract claims 'no planning preflight' but plan-feature's allowlist still requires it for any writing route",
+   "detail": "plan-feature SKILL.md item 2 says \"Any route that can write planning artifacts: after the redirect gate permits routing, consume the planning preflight ... before composing an internal step.\" The replan route writes SPEC phases (a planning artifact) yet replan-findings says \"No planning preflight\" and only loads it \"when an appended phase turns out to touch a surface the frozen evidence does not cover.\" The two skills' contracts for the same write conflict.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "packages/pi-agentic-workflow/skills/review-implementation/references/CLASSIFY.md",
+   "line": null,
+   "title": "CLASSIFY says replan 'never routes to plan-fix' but the same paragraph now names /plan-fix as the planner",
+   "detail": "The edited paragraph reads: \"its `route: replan` line names the planner (`/plan-feature <unit>` or `/plan-fix <n>`) ... It never routes to `plan-fix` for a new unit or a new issue (AC 12).\" The sentence now both names `/plan-fix` as the replan planner and forbids routing to `plan-fix`, with only the qualifier \"for a new unit or a new issue\" distinguishing them — ambiguous enough that a reader cannot tell when `/plan-fix` is the correct replan target vs forbidden.",
+   "severity": "low",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "packages/pi-agentic-workflow/skills/fold-findings/references/FOLD_PROCESS.md",
+   "line": null,
+   "title": "Replan step now requires /review-plan but the fold's own turn contract does not list it",
+   "detail": "FOLD_PROCESS step 9 now says \"After the user confirms and a fresh `/review-plan <unit>` passes, `/execute-phase <unit>` completes them.\" fold-findings' Turn contract (SKILL.md) lists only FOLDED/DISPUTED/BLOCKED/REPLAN outcomes and a `→ Next:` block; it does not include a `/review-plan` gate before execution. The reference adds a mandatory gate the skill's own turn contract omits, so a fold following the turn contract can hand off to execute-phase without the review-plan the reference requires.",
+   "severity": "med",
+   "axis": "workflow"
+  }
+ ],
+ "raw": "[{\"file\":\"packages/pi-agentic-workflow/skills/plan-feature/SKILL.md\",\"line\":null,\"title\":\"Allowlist count/description now contradicts itself\",\"detail\":\"The section header still says \\\"Progressive loading — route before planning\\\" and the intro was changed from \\\"The reference allowlist is exactly the two paths below:\\\" to \\\"The allowlist:\\\" while the list now has four numbered items (ROUTING.md, planning-preflight, phase-contract, replan-findings). The closing sentence still reads \\\"Both resources are normative, one hop from this file, and fail closed when missing\\\" — \\\"Both\\\" now refers to four resources. The declared allowlist contract is internally inconsistent.\",\"severity\":\"med\",\"axis\":\"usage-docs\"},{\"file\":\"packages/pi-agentic-workflow/skills/plan-fix/SKILL.md\",\"line\":null,\"title\":\"Allowlist count changed to vague 'paths below' but list grew to 7\",\"detail\":\"Diff changes \\\"The allowlist is exactly these five paths:\\\" to \\\"The allowlist is exactly the paths below:\\\" and adds item 7 (replan contract). The list now has seven items; the original said five. The rewrite hides the count mismatch rather than fixing it, and the section still claims an exact allowlist while the numbering (1..7) no longer matches any stated count.\",\"severity\":\"low\",\"axis\":\"usage-docs\"},{\"file\":\"packages/pi-agentic-workflow/skills/replan-findings/SKILL.md\",\"line\":null,\"title\":\"Replan contract claims router 'read-set'/'rows:' lines that unit-route.mjs may not emit\",\"detail\":\"replan-findings/SKILL.md and PHASE_APPEND.md instruct the planner to read \\\"only the paths on its `read-set` line\\\" and \\\"the `rows:` line names the findings\\\", and plan-feature/plan-fix/CLASSIFY all say the router prints `route: replan`. The only router output contract visible in this material is `route: replan` (e.g. fold-findings: \\\"whose `route: replan` line names the planner\\\"). No file in this slice documents a `read-set:` or `rows:` line as part of unit-route.mjs's output; the replan contract depends on output fields not established anywhere in the reviewed material.\",\"severity\":\"med\",\"axis\":\"usage-docs\"},{\"file\":\"packages/pi-agentic-workflow/skills/replan-findings/SKILL.md\",\"line\":null,\"title\":\"Replan contract says router names the planner, but plan-feature/plan-fix are the ones that load it\",\"detail\":\"replan-findings says the router's `route: replan` line \\\"names the planner (`/plan-feature <unit>` or `/plan-fix <n>`)\\\" and that plan-feature/plan-fix load this contract \\\"only when `node scripts/unit-route.mjs <NN>` prints `route: replan`\\\". But plan-feature's ROUTING.md says the replan exemption runs the router \\\"Before the status gate\\\" and skips the STOP — i.e. plan-feature is already the invoked planner, so the router cannot be naming plan-feature as the planner to invoke. The two documents describe incompatible call orders (router→planner vs planner→router).\",\"severity\":\"med\",\"axis\":\"workflow\"},{\"file\":\"packages/pi-agentic-workflow/skills/plan-feature/references/ROUTING.md\",\"line\":null,\"title\":\"Replan exemption bypasses the Product-review gate that plan-feature's turn contract requires\",\"detail\":\"plan-feature's Turn contract states the Product-review gate must run and a current `spec-review-pass` receipt is required before any SPEC edit. ROUTING.md's new \\\"Replan exemption\\\" says a `route: replan` line means \\\"skip the STOP\\\" and load the replan contract to re-cut the plan — and replan-findings explicitly says \\\"No planning preflight\\\" and skips the normalized-repository-state read. The exemption as written lets a replan write SPEC phases without the Product-review gate the same skill declares mandatory, contradicting its own turn contract.\",\"severity\":\"high\",\"axis\":\"workflow\"},{\"file\":\"packages/pi-agentic-workflow/skills/fold-findings/SKILL.md\",\"line\":null,\"title\":\"Freeze-batch now routes to a planner but the receipt/next block still says 'plan-fix/execute-phase'\",\"detail\":\"The batch-state table row for freeze-batch was changed to route to `node scripts/unit-route.mjs <unit>` → planner → `/review-plan` → `/execute-phase`. But the same skill's earlier prose (line ~121) still says the loop \\\"stops and routes to `node scripts/unit-route.mjs <unit>`, whose `route: replan` line names the planner that re-cuts the plan\\\" while the REPAIR-RECEIPT/`→ Next:` contract elsewhere in the skill (per the diff context) still references the old plan-fix/execute-phase hand-off. The two hand-off descriptions in one skill disagree on whether `/review-plan` intervenes.\",\"severity\":\"med\",\"axis\":\"workflow\"},{\"file\":\"packages/pi-agentic-workflow/skills/review-change/references/OUTPUT_AND_GUARDRAILS.md\",\"line\":null,\"title\":\"replan-in-unit routing now requires /review-plan, contradicting review-change's own 'never invokes /plan-feature' boundary\",\"detail\":\"review-change SKILL.md states the review \\\"never invokes `/fold-findings`, `/execute-phase`, `/plan-feature`, `/design-feature` or `/triage-issue`\\\" and ends at the report. OUTPUT_AND_GUARDRAILS now instructs the review to \\\"run `node scripts/unit-route.mjs <unit>`\\\" and describes the planner re-cutting the plan — a planning action the review-end boundary forbids. The routing text tells the reviewer to drive a replan the skill's own turn boundary says it must not perform.\",\"severity\":\"med\",\"axis\":\"workflow\"},{\"file\":\"packages/pi-agentic-workflow/skills/triage-issue/references/REVIEW_FINDING_PROCESS.md\",\"line\":null,\"title\":\"Triage replan route says run router then planner, but output block still lists plan-feature/plan-fix as Action\",\"detail\":\"The process now says \\\"Run `node scripts/unit-route.mjs <unit>`; its `route: replan` line names the planner\\\". The fixed output block still reads `Action taken: <current-unit fold/phase | plan-feature | plan-fix | user decision>` — no `unit-route` action, and the router is described as naming the planner while the action vocabulary omits it. The documented invocation and the fixed output contract disagree.\",\"severity\":\"low\",\"axis\":\"usage-docs\"},{\"file\":\"packages/pi-agentic-workflow/skills/workflow-status/references/SENSOR_SIGNALS.md\",\"line\":null,\"title\":\"New plan-owner signal claims to mirror unit-route.mjs class→destination but no such mapping is defined here\",\"detail\":\"The new signal says an open row \\\"whose frozen route is the plan owner\\\" maps to `/plan-feature <unit>` | `/plan-fix <issue>` and claims it is \\\"the same class→destination decision `scripts/unit-route.mjs` owns\\\". But the ledger schema in this material is `| id | file:line | axis | severity | class | route | folded |` — `route` values are `replan-in-unit`/`decision-required`/etc., not \\\"plan owner\\\". The sensor invents a \\\"frozen route is the plan owner\\\" predicate not present in the ledger vocabulary the same material declares, so the trigger cannot be computed from the stated schema.\",\"severity\":\"med\",\"axis\":\"workflow\"},{\"file\":\"packages/pi-agentic-workflow/skills/replan-findings/references/PHASE_APPEND.md\",\"line\":null,\"title\":\"Append contract says 'never touch review-findings.md' but the fold must later prove the row's work landed\",\"detail\":\"PHASE_APPEND says appended phases \\\"carry the finding ids it closes in its task text, so the fold can prove the row's work landed\\\" and also \\\"Never touch `review-findings.md`. Classification and `folded` are owned by `review-change` and `fold-findings`.\\\" The replan route appends phases but leaves the ledger row `folded: no`; nothing in this contract says how the row transitions after execution, and the hand-off goes to `/review-plan` then `/execute-phase` — not to `/fold-findings`. The row can remain open after its phase executes, re-triggering the same replan signal.\",\"severity\":\"med\",\"axis\":\"workflow\"},{\"file\":\"packages/pi-agentic-workflow/skills/plan-fix/references/PLANNING_PROCESS.md\",\"line\":null,\"title\":\"Replan detection says 'when target resolves to existing unit folder' but plan-fix input is issue numbers\",\"detail\":\"plan-fix's Input is \\\"One or more GitHub issue numbers\\\". The new PLANNING_PROCESS step says \\\"When the target resolves to an existing unit folder, run `node scripts/unit-route.mjs <unit>` first\\\" — but the skill's declared input is issue numbers, and the router is invoked with `<unit>` (a folder), not an issue number. The documented invocation does not match the skill's argument contract.\",\"severity\":\"med\",\"axis\":\"usage-docs\"},{\"file\":\"packages/pi-agentic-workflow/skills/replan-findings/SKILL.md\",\"line\":null,\"title\":\"Replan contract claims 'no planning preflight' but plan-feature's allowlist still requires it for any writing route\",\"detail\":\"plan-feature SKILL.md item 2 says \\\"Any route that can write planning artifacts: after the redirect gate permits routing, consume the planning preflight ... before composing an internal step.\\\" The replan route writes SPEC phases (a planning artifact) yet replan-findings says \\\"No planning preflight\\\" and only loads it \\\"when an appended phase turns out to touch a surface the frozen evidence does not cover.\\\" The two skills' contracts for the same write conflict.\",\"severity\":\"med\",\"axis\":\"workflow\"},{\"file\":\"packages/pi-agentic-workflow/skills/review-implementation/references/CLASSIFY.md\",\"line\":null,\"title\":\"CLASSIFY says replan 'never routes to plan-fix' but the same paragraph now names /plan-fix as the planner\",\"detail\":\"The edited paragraph reads: \\\"its `route: replan` line names the planner (`/plan-feature <unit>` or `/plan-fix <n>`) ... It never routes to `plan-fix` for a new unit or a new issue (AC 12).\\\" The sentence now both names `/plan-fix` as the replan planner and forbids routing to `plan-fix`, with only the qualifier \\\"for a new unit or a new issue\\\" distinguishing them — ambiguous enough that a reader cannot tell when `/plan-fix` is the correct replan target vs forbidden.\",\"severity\":\"low\",\"axis\":\"usage-docs\"},{\"file\":\"packages/pi-agentic-workflow/skills/fold-findings/references/FOLD_PROCESS.md\",\"line\":null,\"title\":\"Replan step now requires /review-plan but the fold's own turn contract does not list it\",\"detail\":\"FOLD_PROCESS step 9 now says \\\"After the user confirms and a fresh `/review-plan <unit>` passes, `/execute-phase <unit>` completes them.\\\" fold-findings' Turn contract (SKILL.md) lists only FOLDED/DISPUTED/BLOCKED/REPLAN outcomes and a `→ Next:` block; it does not include a `/review-plan` gate before execution. The reference adds a mandatory gate the skill's own turn contract omits, so a fold following the turn contract can hand off to execute-phase without the review-plan the reference requires.\",\"severity\":\"med\",\"axis\":\"workflow\"}]"
+}

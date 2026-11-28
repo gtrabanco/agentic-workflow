@@ -1,0 +1,40 @@
+{
+ "id": "U2__slice__mirror-bundle__gemma4__r2",
+ "unit": "U2",
+ "job": "slice__mirror-bundle",
+ "model": "gemma4",
+ "run": 2,
+ "ms": 6326,
+ "usage": {
+  "completion_tokens": 424,
+  "prompt_tokens": 28068,
+  "total_tokens": 28492,
+  "completion_tokens_details": {
+   "reasoning_tokens": 0
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "packages/pi-agentic-workflow/skills/workflow-status/SKILL.md",
+   "line": 46,
+   "title": "Inconsistent next.suggested command",
+   "detail": "The Turn contract (line 46) claims `next.suggested` carries the unit's slug/NN and that `planned`/`in-progress` status recommends `/execute-phase <NN>` or `/review-plan <NN>`. However, `SENSOR_SIGNALS.md` (line 74) defines the trigger for a `replan-in-unit` finding as `{command: \"/plan-feature <unit>\" | \"/plan-fix <issue>\"...}`. This contradicts the sensor's own logic for handling units with open findings that require replanning, as the `workflow-status` skill's contract does not account for the router-driven replan command in its `next.suggested` validation rules.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "packages/pi-agentic-workflow/skills/review-change/references/PERSIST_AND_DECIDE.md",
+   "line": 134,
+   "title": "Contradictory replan routing logic",
+   "detail": "The `PERSIST_AND_DECIDE.md` file (line 134) states that for a finding owned by plan, the next step is `/plan-feature <unit>` or `/plan-fix <n>`. However, `review-change/SKILL.md` (line 118) and `review-implementation/references/CLASSIFY.md` (line 56) explicitly state that the router `node scripts/unit-route.mjs <unit>` must be run first to name the planner. The instruction in `PERSIST_AND_DECIDE.md` omits the mandatory router step, which contradicts the 'replan-in-unit' contract established in the classification and routing documentation.",
+   "severity": "med",
+   "axis": "workflow"
+  }
+ ],
+ "raw": "[{\"file\":\"packages/pi-agentic-workflow/skills/workflow-status/SKILL.md\",\"line\":46,\"title\":\"Inconsistent next.suggested command\",\"detail\":\"The Turn contract (line 46) claims `next.suggested` carries the unit's slug/NN and that `planned`/`in-progress` status recommends `/execute-phase <NN>` or `/review-plan <NN>`. However, `SENSOR_SIGNALS.md` (line 74) defines the trigger for a `replan-in-unit` finding as `{command: \\\"/plan-feature <unit>\\\" | \\\"/plan-fix <issue>\\\"...}`. This contradicts the sensor's own logic for handling units with open findings that require replanning, as the `workflow-status` skill's contract does not account for the router-driven replan command in its `next.suggested` validation rules.\",\"severity\":\"med\",\"axis\":\"workflow\"},{\"file\":\"packages/pi-agentic-workflow/skills/review-change/references/PERSIST_AND_DECIDE.md\",\"line\":134,\"title\":\"Contradictory replan routing logic\",\"detail\":\"The `PERSIST_AND_DECIDE.md` file (line 134) states that for a finding owned by plan, the next step is `/plan-feature <unit>` or `/plan-fix <n>`. However, `review-change/SKILL.md` (line 118) and `review-implementation/references/CLASSIFY.md` (line 56) explicitly state that the router `node scripts/unit-route.mjs <unit>` must be run first to name the planner. The instruction in `PERSIST_AND_DECIDE.md` omits the mandatory router step, which contradicts the 'replan-in-unit' contract established in the classification and routing documentation.\",\"severity\":\"med\",\"axis\":\"workflow\"}]"
+}

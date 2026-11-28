@@ -1,0 +1,32 @@
+{
+ "id": "U1__slice__artifacts-budget__gemma4__r2",
+ "unit": "U1",
+ "job": "slice__artifacts-budget",
+ "model": "gemma4",
+ "run": 2,
+ "ms": 11902,
+ "usage": {
+  "completion_tokens": 261,
+  "prompt_tokens": 18251,
+  "total_tokens": 18512,
+  "completion_tokens_details": {
+   "reasoning_tokens": 0
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "docs/workflow/SKILL_CONTEXT_BUDGETS.json",
+   "line": 118,
+   "title": "Inconsistent unit-lane budget reasoning",
+   "detail": "The `mainReason` for `unit-lane` claims the ceiling was re-based from `2800/240` to `ceil(3026*1.10)=3329/ceil(245*1.10)=270`. However, the `mainEstimateMax` is set to `3329` (correct) but `mainLinesMax` is set to `270`. The math `ceil(245 * 1.10)` is `270`, but the previous value was `240`. If the new measured lines are `245`, the new ceiling is `270`. This is consistent, but the `mainReason` text says `2800/240` (the old values) while the math uses `3026` and `245`. The discrepancy is in the 'from' values vs the 'to' values in the prose.",
+   "severity": "low",
+   "axis": "spec-drift"
+  }
+ ],
+ "raw": "[{\"file\":\"docs/workflow/SKILL_CONTEXT_BUDGETS.json\",\"line\":118,\"title\":\"Inconsistent unit-lane budget reasoning\",\"detail\":\"The `mainReason` for `unit-lane` claims the ceiling was re-based from `2800/240` to `ceil(3026*1.10)=3329/ceil(245*1.10)=270`. However, the `mainEstimateMax` is set to `3329` (correct) but `mainLinesMax` is set to `270`. The math `ceil(245 * 1.10)` is `270`, but the previous value was `240`. If the new measured lines are `245`, the new ceiling is `270`. This is consistent, but the `mainReason` text says `2800/240` (the old values) while the math uses `3026` and `245`. The discrepancy is in the 'from' values vs the 'to' values in the prose.\",\"severity\":\"low\",\"axis\":\"spec-drift\"}]"
+}

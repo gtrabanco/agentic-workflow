@@ -1,0 +1,32 @@
+{
+ "id": "U2__slice__unit-artifacts__gemma4__r2",
+ "unit": "U2",
+ "job": "slice__unit-artifacts",
+ "model": "gemma4",
+ "run": 2,
+ "ms": 5092,
+ "usage": {
+  "completion_tokens": 186,
+  "prompt_tokens": 38160,
+  "total_tokens": 38346,
+  "completion_tokens_details": {
+   "reasoning_tokens": 0
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/SPEC.md",
+   "line": 114,
+   "title": "Inconsistent Census Enumeration",
+   "detail": "The 'Scope' section (lines 114-125) enumerates eight skill files and six tutorial files for the destination census, but the 'Planning evidence' table (PE-007, line 175) and the 'P4' phase description (line 345) claim a wider census of 14 files (eight skills + three tutorial pairs * 2 languages). The 'Scope' list is under-inclusive compared to the actual validator and the convergence claim.",
+   "severity": "med",
+   "axis": "spec-drift"
+  }
+ ],
+ "raw": "[\n  {\n    \"file\": \"docs/fix/224-deterministic-replan-routing/SPEC.md\",\n    \"line\": 114,\n    \"title\": \"Inconsistent Census Enumeration\",\n    \"detail\": \"The 'Scope' section (lines 114-125) enumerates eight skill files and six tutorial files for the destination census, but the 'Planning evidence' table (PE-007, line 175) and the 'P4' phase description (line 345) claim a wider census of 14 files (eight skills + three tutorial pairs * 2 languages). The 'Scope' list is under-inclusive compared to the actual validator and the convergence claim.\",\n    \"severity\": \"med\",\n    \"axis\": \"spec-drift\"\n  }\n]"
+}

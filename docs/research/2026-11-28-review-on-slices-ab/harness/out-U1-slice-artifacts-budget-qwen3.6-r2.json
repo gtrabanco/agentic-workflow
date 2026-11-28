@@ -1,0 +1,56 @@
+{
+ "id": "U1__slice__artifacts-budget__qwen3.6__r2",
+ "unit": "U1",
+ "job": "slice__artifacts-budget",
+ "model": "qwen3.6",
+ "run": 2,
+ "ms": 9507,
+ "usage": {
+  "completion_tokens": 1330,
+  "prompt_tokens": 17551,
+  "total_tokens": 18881,
+  "completion_tokens_details": {
+   "reasoning_tokens": 0
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "docs/fix/258-harden-needs-input-contracts/SPEC.md",
+   "line": 13,
+   "title": "Spec-drift: Absorbed skills listed as surviving",
+   "detail": "The Objective section lists 'Three surviving skills that interrupt the user for input (execute-phase, unit-lane, init-workspace)'. However, the Notes column in docs/fix/README.md (and the diff provided) explicitly states 'Three surviving skills after feature 61 (execute-phase, plan-feature-scaffold absorbed, unit-lane)'. The SPEC.md Objective omits `init-workspace` from the parenthetical list of survivors in that specific sentence structure, but more critically, the 'Why' section states 'Feature 61 retired plan-feature-scaffold and plan-fix (absorbed into unit-lane), so the issue's original five-skill table reduces to the three surviving skills above.' The README.md row for #258 says 'Three surviving skills... (execute-phase, plan-feature-scaffold absorbed, unit-lane)'. This implies `init-workspace` was NOT one of the original five or is being excluded from the 'surviving' count in the README's parenthetical, yet the SPEC and the fix unit clearly include `init-workspace` as a target. The contradiction is between the README's parenthetical list of 'surviving' skills (which only names 2 explicitly and implies the 3rd is the one not absorbed, but lists `plan-feature-scaffold` as absorbed *into* unit-lane, leaving `execute-phase` and `unit-lane` as the named survivors, omitting `init-workspace` from that specific parenthetical) vs the SPEC which targets 3 skills including `init-workspace`. Actually, looking closer: README says 'Three surviving skills... (execute-phase, plan-feature-scaffold absorbed, unit-lane)'. This phrasing is ambiguous/broken. It likely means 'execute-phase, unit-lane, and init-workspace are the survivors; plan-feature-scaffold was absorbed'. But it lists `plan-feature-scaffold` inside the parenthesis of 'surviving skills'. The SPEC Objective lists 'execute-phase, unit-lane, init-workspace'. The README list is inconsistent with the SPEC's target set.",
+   "severity": "med",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/258-harden-needs-input-contracts/SPEC.md",
+   "line": 13,
+   "title": "Spec-drift: 'Same defect class' claim unverified",
+   "detail": "The Objective states 'Same defect class as review-change's 29b52c63 fix.' The 'Planning evidence' section PE-003 explicitly records: 'unverified: that commit is not a valid object in this repository (git cat-file -t 29b52c63 fails); the pattern is taken from the issue's narrative only'. The SPEC claims a specific prior commit reference as a basis for the defect class, but the evidence section admits this commit is invalid/missing. This is a broken reference in the spec's own evidence.",
+   "severity": "med",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/258-harden-needs-input-contracts/SPEC.md",
+   "line": 13,
+   "title": "Spec-drift: Task P5 validator mismatch with Evidence",
+   "detail": "Task P5 validator is `grep -cE \"^(\\\\|.*258|.*harden-needs-input)\" CHANGELOG.md` ≥ 3. The Evidence section AC6 claims '4 rows (3 skill + 1 re-bundle)' and `grep '258' CHANGELOG.md = 4`. The validator regex `^(\\|.*258|.*harden-needs-input)` requires the line to start with `|` and contain `258`, OR start with `harden-needs-input`. If the re-bundle row does not start with `|` or contain `258` (it might contain `harden-needs-input` or not), the count might differ. More importantly, the Evidence claims 4 rows match `grep '258'`, but the validator only counts ≥ 3. If the re-bundle row doesn't match the specific regex, the validator passes (3) while the evidence claim (4) might be misleading if the 4th row is a false positive or vice versa. However, the bigger issue is the Evidence AC6 says 'grep '258' CHANGELOG.md = 4' but the validator is `≥ 3`. This is not a defect, just a loose bound. The real defect is in the README.md row.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/README.md",
+   "line": 14,
+   "title": "Workflow: README row description contradicts SPEC scope",
+   "detail": "The README.md row for #258 states: 'Three surviving skills after feature 61 (execute-phase, plan-feature-scaffold absorbed, unit-lane) continue past blank required input...'. This parenthetical list implies the 'three surviving skills' are `execute-phase`, `unit-lane`, and implicitly `init-workspace` (which is not listed in the parenthesis but is the third skill in the SPEC). However, the parenthesis lists `plan-feature-scaffold` as 'absorbed', which is a past-tense action, not a current survivor. The phrasing 'Three surviving skills... (A, B absorbed, C)' is syntactically confusing and suggests A and C are the survivors, omitting the third. The SPEC clearly targets `execute-phase`, `unit-lane`, AND `init-workspace`. The README description is ambiguous and potentially misleading about which skills are affected.",
+   "severity": "low",
+   "axis": "usage-docs"
+  }
+ ],
+ "raw": "[\n  {\n    \"file\": \"docs/fix/258-harden-needs-input-contracts/SPEC.md\",\n    \"line\": 13,\n    \"title\": \"Spec-drift: Absorbed skills listed as surviving\",\n    \"detail\": \"The Objective section lists 'Three surviving skills that interrupt the user for input (execute-phase, unit-lane, init-workspace)'. However, the Notes column in docs/fix/README.md (and the diff provided) explicitly states 'Three surviving skills after feature 61 (execute-phase, plan-feature-scaffold absorbed, unit-lane)'. The SPEC.md Objective omits `init-workspace` from the parenthetical list of survivors in that specific sentence structure, but more critically, the 'Why' section states 'Feature 61 retired plan-feature-scaffold and plan-fix (absorbed into unit-lane), so the issue's original five-skill table reduces to the three surviving skills above.' The README.md row for #258 says 'Three surviving skills... (execute-phase, plan-feature-scaffold absorbed, unit-lane)'. This implies `init-workspace` was NOT one of the original five or is being excluded from the 'surviving' count in the README's parenthetical, yet the SPEC and the fix unit clearly include `init-workspace` as a target. The contradiction is between the README's parenthetical list of 'surviving' skills (which only names 2 explicitly and implies the 3rd is the one not absorbed, but lists `plan-feature-scaffold` as absorbed *into* unit-lane, leaving `execute-phase` and `unit-lane` as the named survivors, omitting `init-workspace` from that specific parenthetical) vs the SPEC which targets 3 skills including `init-workspace`. Actually, looking closer: README says 'Three surviving skills... (execute-phase, plan-feature-scaffold absorbed, unit-lane)'. This phrasing is ambiguous/broken. It likely means 'execute-phase, unit-lane, and init-workspace are the survivors; plan-feature-scaffold was absorbed'. But it lists `plan-feature-scaffold` inside the parenthesis of 'surviving skills'. The SPEC Objective lists 'execute-phase, unit-lane, init-workspace'. The README list is inconsistent with the SPEC's target set.\",\n    \"severity\": \"med\",\n    \"axis\": \"spec-drift\"\n  },\n  {\n    \"file\": \"docs/fix/258-harden-needs-input-contracts/SPEC.md\",\n    \"line\": 13,\n    \"title\": \"Spec-drift: 'Same defect class' claim unverified\",\n    \"detail\": \"The Objective states 'Same defect class as review-change's 29b52c63 fix.' The 'Planning evidence' section PE-003 explicitly records: 'unverified: that commit is not a valid object in this repository (git cat-file -t 29b52c63 fails); the pattern is taken from the issue's narrative only'. The SPEC claims a specific prior commit reference as a basis for the defect class, but the evidence section admits this commit is invalid/missing. This is a broken reference in the spec's own evidence.\",\n    \"severity\": \"med\",\n    \"axis\": \"spec-drift\"\n  },\n  {\n    \"file\": \"docs/fix/258-harden-needs-input-contracts/SPEC.md\",\n    \"line\": 13,\n    \"title\": \"Spec-drift: Task P5 validator mismatch with Evidence\",\n    \"detail\": \"Task P5 validator is `grep -cE \\\"^(\\\\\\\\|.*258|.*harden-needs-input)\\\" CHANGELOG.md` ≥ 3. The Evidence section AC6 claims '4 rows (3 skill + 1 re-bundle)' and `grep '258' CHANGELOG.md = 4`. The validator regex `^(\\\\|.*258|.*harden-needs-input)` requires the line to start with `|` and contain `258`, OR start with `harden-needs-input`. If the re-bundle row does not start with `|` or contain `258` (it might contain `harden-needs-input` or not), the count might differ. More importantly, the Evidence claims 4 rows match `grep '258'`, but the validator only counts ≥ 3. If the re-bundle row doesn't match the specific regex, the validator passes (3) while the evidence claim (4) might be misleading if the 4th row is a false positive or vice versa. However, the bigger issue is the Evidence AC6 says 'grep '258' CHANGELOG.md = 4' but the validator is `≥ 3`. This is not a defect, just a loose bound. The real defect is in the README.md row.\",\n    \"severity\": \"low\",\n    \"axis\": \"spec-drift\"\n  },\n  {\n    \"file\": \"docs/fix/README.md\",\n    \"line\": 14,\n    \"title\": \"Workflow: README row description contradicts SPEC scope\",\n    \"detail\": \"The README.md row for #258 states: 'Three surviving skills after feature 61 (execute-phase, plan-feature-scaffold absorbed, unit-lane) continue past blank required input...'. This parenthetical list implies the 'three surviving skills' are `execute-phase`, `unit-lane`, and implicitly `init-workspace` (which is not listed in the parenthesis but is the third skill in the SPEC). However, the parenthesis lists `plan-feature-scaffold` as 'absorbed', which is a past-tense action, not a current survivor. The phrasing 'Three surviving skills... (A, B absorbed, C)' is syntactically confusing and suggests A and C are the survivors, omitting the third. The SPEC clearly targets `execute-phase`, `unit-lane`, AND `init-workspace`. The README description is ambiguous and potentially misleading about which skills are affected.\",\n    \"severity\": \"low\",\n    \"axis\": \"usage-docs\"\n  }\n]"
+}

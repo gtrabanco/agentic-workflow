@@ -1,0 +1,80 @@
+{
+ "id": "U2__slice__sensor-route__deepseek-v4-flash__r1",
+ "unit": "U2",
+ "job": "slice__sensor-route",
+ "model": "deepseek-v4-flash",
+ "run": 1,
+ "ms": 5672,
+ "usage": {
+  "completion_tokens": 1547,
+  "prompt_tokens": 19476,
+  "total_tokens": 21023,
+  "completion_tokens_details": {
+   "reasoning_tokens": 0
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "scripts/workflow-status.mjs",
+   "line": 713,
+   "title": "Sensor re-implements the router's class→route decision instead of projecting it",
+   "detail": "The new `readSuggestions` decides plan-vs-fold itself via `PLAN_ROUTE = /replan[- ]in[- ]unit|owned by plan|plan owner|plan-owner/i` tested against `row.route` and `row.klass`. The comment claims 'The router (`scripts/unit-route.mjs`) owns the class→route decision; this surface projects it', and the new normative-drift test asserts 'The sensor projects the router's class→destination mapping; neither may invent a fourth destination for the same class'. But the sensor never imports or invokes the router; it re-derives the mapping from a regex. That is exactly the drift the test claims to prevent — the two surfaces can disagree (e.g. a route cell the router classifies as replan but the regex misses, or vice versa).",
+   "severity": "med",
+   "axis": "code"
+  },
+  {
+   "file": "scripts/workflow-status.mjs",
+   "line": 713,
+   "title": "PLAN_ROUTE regex matches `klass` too, so a class cell containing 'plan owner' routes to replan",
+   "detail": "`readSuggestions` filters with `PLAN_ROUTE.test(String(row.route ?? '')) || PLAN_ROUTE.test(String(row.klass ?? ''))`. The `klass` column is the CLASSIFY class (e.g. `fix-now`, `replan-in-unit`), not a free-text route. Matching the regex against `klass` means any class cell that happens to contain 'plan'/'owner' text (or a future class name) silently flips the suggestion to the planner. The router's own contract (per the test) is that the *route* cell carries the destination; testing `klass` is a second, undocumented decision path.",
+   "severity": "med",
+   "axis": "code"
+  },
+  {
+   "file": "scripts/workflow-status.mjs",
+   "line": 1183,
+   "title": "`next.suggested` is assigned after `resolveNext` but the envelope schema/`next` shape is not shown to accept it",
+   "detail": "The diff adds `next.suggested = nextSuggested;` after `resolveNext(...)`. The sensor's own P1 test asserts `'recommended' in envelope.next && 'alternatives' in envelope.next && 'tier' in envelope.next` and `!('state' in envelope.next)`, and the sensor test suite validates the envelope with `validateEnvelope`. If the schema's `next` object is a closed field list (the normative-drift test's `publishedFieldLists` reads `rejectUnexpectedKeys(value.next, ...)`), adding `suggested` without a schema change would fail validation. The material shows the sensor test asserting `validateEnvelope(...).ok === true` for the replan case, so either the schema was extended in another slice (not visible here) or this assignment breaks the closed `next` field list. Flagging because the reviewed slice adds the field with no schema change in view.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "scripts/workflow-status.mjs",
+   "line": 713,
+   "title": "`readOpenRows` drops `VF-` rows but `readFixNow` previously relied on the same loop; behavior change is untested for the fix-now path",
+   "detail": "The refactor splits `readFixNow` into `readOpenRows` + a consumer. `readOpenRows` now skips `VF-` rows (`if (/^VF-/i.test(id)) continue;`). The old `readFixNow` did not skip them. The new sensor test only covers `next.suggested` routing; no test in this slice asserts that `findings`/fix-now output is unchanged for a ledger containing `VF-` rows. If `VF-` rows were previously (incorrectly) counted as fix-now findings, this is a silent behavior change to the `findings` dimension with no pin.",
+   "severity": "low",
+   "axis": "code"
+  },
+  {
+   "file": "scripts/normative-drift.test.mjs",
+   "line": 1086,
+   "title": "New drift test asserts the sensor 'projects' the router but only checks string presence, not that the sensor calls the router",
+   "detail": "The test `#224 canonical destination vocabulary` asserts `sensor.includes(token)` for `replan-in-unit`, `/plan-feature`, `/plan-fix`, `/fold-findings` and `router.includes(token)` for the three commands. It never asserts the sensor imports/invokes `unit-route.mjs`. So the test passes while the sensor re-implements the mapping (see the `PLAN_ROUTE` regex defect). The test's own comment claims 'The sensor projects the router's class→destination mapping; neither may invent a fourth destination' — the assertion does not enforce that claim.",
+   "severity": "med",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "scripts/unit-route.test.mjs",
+   "line": 1,
+   "title": "Test file references `scripts/unit-route.mjs` and `scripts/fixtures/unit-route/` which are not in this slice",
+   "detail": "`unit-route.test.mjs` is new and imports/executes `scripts/unit-route.mjs` and reads `scripts/fixtures/unit-route/`. Neither file appears in the reviewed slice. If they are in another slice that is fine, but the test's AC4 case `run(['224-deterministic-replan-routing'], { root: null })` runs against the live repo and asserts `git status --porcelain` is unchanged — that test will fail in any tree where the router or fixture is absent, and the test has no `exists()` guard (unlike the normative-drift test which guards with `if (!exists(routerRel)) return t.skip(...)`).",
+   "severity": "low",
+   "axis": "code"
+  },
+  {
+   "file": "scripts/review-loop-discipline.test.mjs",
+   "line": 275,
+   "title": "Version pin bumped 1.4.0 → 1.5.0 but the comment claims 'assertion unchanged in strength'",
+   "detail": "The diff changes `assert.match(foldSkill, /version: 1\\.4\\.0/)` to `/version: 1\\.5\\.0/` and the comment says 'with the assertion unchanged in strength'. The assertion is a literal version pin; bumping it is not 'unchanged in strength' — it is a different pin. Minor, but the comment misdescribes the change.",
+   "severity": "low",
+   "axis": "spec-drift"
+  }
+ ],
+ "raw": "[\n  {\n    \"file\": \"scripts/workflow-status.mjs\",\n    \"line\": 713,\n    \"title\": \"Sensor re-implements the router's class→route decision instead of projecting it\",\n    \"detail\": \"The new `readSuggestions` decides plan-vs-fold itself via `PLAN_ROUTE = /replan[- ]in[- ]unit|owned by plan|plan owner|plan-owner/i` tested against `row.route` and `row.klass`. The comment claims 'The router (`scripts/unit-route.mjs`) owns the class→route decision; this surface projects it', and the new normative-drift test asserts 'The sensor projects the router's class→destination mapping; neither may invent a fourth destination for the same class'. But the sensor never imports or invokes the router; it re-derives the mapping from a regex. That is exactly the drift the test claims to prevent — the two surfaces can disagree (e.g. a route cell the router classifies as replan but the regex misses, or vice versa).\",\n    \"severity\": \"med\",\n    \"axis\": \"code\"\n  },\n  {\n    \"file\": \"scripts/workflow-status.mjs\",\n    \"line\": 713,\n    \"title\": \"PLAN_ROUTE regex matches `klass` too, so a class cell containing 'plan owner' routes to replan\",\n    \"detail\": \"`readSuggestions` filters with `PLAN_ROUTE.test(String(row.route ?? '')) || PLAN_ROUTE.test(String(row.klass ?? ''))`. The `klass` column is the CLASSIFY class (e.g. `fix-now`, `replan-in-unit`), not a free-text route. Matching the regex against `klass` means any class cell that happens to contain 'plan'/'owner' text (or a future class name) silently flips the suggestion to the planner. The router's own contract (per the test) is that the *route* cell carries the destination; testing `klass` is a second, undocumented decision path.\",\n    \"severity\": \"med\",\n    \"axis\": \"code\"\n  },\n  {\n    \"file\": \"scripts/workflow-status.mjs\",\n    \"line\": 1183,\n    \"title\": \"`next.suggested` is assigned after `resolveNext` but the envelope schema/`next` shape is not shown to accept it\",\n    \"detail\": \"The diff adds `next.suggested = nextSuggested;` after `resolveNext(...)`. The sensor's own P1 test asserts `'recommended' in envelope.next && 'alternatives' in envelope.next && 'tier' in envelope.next` and `!('state' in envelope.next)`, and the sensor test suite validates the envelope with `validateEnvelope`. If the schema's `next` object is a closed field list (the normative-drift test's `publishedFieldLists` reads `rejectUnexpectedKeys(value.next, ...)`), adding `suggested` without a schema change would fail validation. The material shows the sensor test asserting `validateEnvelope(...).ok === true` for the replan case, so either the schema was extended in another slice (not visible here) or this assignment breaks the closed `next` field list. Flagging because the reviewed slice adds the field with no schema change in view.\",\n    \"severity\": \"med\",\n    \"axis\": \"workflow\"\n  },\n  {\n    \"file\": \"scripts/workflow-status.mjs\",\n    \"line\": 713,\n    \"title\": \"`readOpenRows` drops `VF-` rows but `readFixNow` previously relied on the same loop; behavior change is untested for the fix-now path\",\n    \"detail\": \"The refactor splits `readFixNow` into `readOpenRows` + a consumer. `readOpenRows` now skips `VF-` rows (`if (/^VF-/i.test(id)) continue;`). The old `readFixNow` did not skip them. The new sensor test only covers `next.suggested` routing; no test in this slice asserts that `findings`/fix-now output is unchanged for a ledger containing `VF-` rows. If `VF-` rows were previously (incorrectly) counted as fix-now findings, this is a silent behavior change to the `findings` dimension with no pin.\",\n    \"severity\": \"low\",\n    \"axis\": \"code\"\n  },\n  {\n    \"file\": \"scripts/normative-drift.test.mjs\",\n    \"line\": 1086,\n    \"title\": \"New drift test asserts the sensor 'projects' the router but only checks string presence, not that the sensor calls the router\",\n    \"detail\": \"The test `#224 canonical destination vocabulary` asserts `sensor.includes(token)` for `replan-in-unit`, `/plan-feature`, `/plan-fix`, `/fold-findings` and `router.includes(token)` for the three commands. It never asserts the sensor imports/invokes `unit-route.mjs`. So the test passes while the sensor re-implements the mapping (see the `PLAN_ROUTE` regex defect). The test's own comment claims 'The sensor projects the router's class→destination mapping; neither may invent a fourth destination' — the assertion does not enforce that claim.\",\n    \"severity\": \"med\",\n    \"axis\": \"spec-drift\"\n  },\n  {\n    \"file\": \"scripts/unit-route.test.mjs\",\n    \"line\": 1,\n    \"title\": \"Test file references `scripts/unit-route.mjs` and `scripts/fixtures/unit-route/` which are not in this slice\",\n    \"detail\": \"`unit-route.test.mjs` is new and imports/executes `scripts/unit-route.mjs` and reads `scripts/fixtures/unit-route/`. Neither file appears in the reviewed slice. If they are in another slice that is fine, but the test's AC4 case `run(['224-deterministic-replan-routing'], { root: null })` runs against the live repo and asserts `git status --porcelain` is unchanged — that test will fail in any tree where the router or fixture is absent, and the test has no `exists()` guard (unlike the normative-drift test which guards with `if (!exists(routerRel)) return t.skip(...)`).\",\n    \"severity\": \"low\",\n    \"axis\": \"code\"\n  },\n  {\n    \"file\": \"scripts/review-loop-discipline.test.mjs\",\n    \"line\": 275,\n    \"title\": \"Version pin bumped 1.4.0 → 1.5.0 but the comment claims 'assertion unchanged in strength'\",\n    \"detail\": \"The diff changes `assert.match(foldSkill, /version: 1\\\\.4\\\\.0/)` to `/version: 1\\\\.5\\\\.0/` and the comment says 'with the assertion unchanged in strength'. The assertion is a literal version pin; bumping it is not 'unchanged in strength' — it is a different pin. Minor, but the comment misdescribes the change.\",\n    \"severity\": \"low\",\n    \"axis\": \"spec-drift\"\n  }\n]"
+}

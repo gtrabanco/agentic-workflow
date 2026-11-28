@@ -1,0 +1,48 @@
+{
+ "id": "U2__slice__replan-contract__qwen3.6__r2",
+ "unit": "U2",
+ "job": "slice__replan-contract",
+ "model": "qwen3.6",
+ "run": 2,
+ "ms": 10630,
+ "usage": {
+  "completion_tokens": 806,
+  "prompt_tokens": 3208,
+  "total_tokens": 4014,
+  "completion_tokens_details": {
+   "reasoning_tokens": 0
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 2096
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "skills/replan-findings/references/PHASE_APPEND.md",
+   "line": 23,
+   "title": "Workflow: Hardening phase placement logic contradicts execution order guarantee",
+   "detail": "The placement rule states: 'Final `Hardening & PR` phase already executed → append the new phase(s) **after** it, then append one fresh final `Hardening & PR` closing them out.' This results in a ledger ending with two 'Hardening & PR' phases (the old executed one, then the new one). The document claims 'the ledger must always end with an unexecuted hardening close-out covering every phase.' However, by appending *after* the existing final phase, the new phases are placed *between* the old hardening and the new hardening. If the old hardening was 'executed', it is in the past. The new phases are in the future. The ledger order becomes: [Old Phases] [Old Hardening (Executed)] [New Phases] [New Hardening (Unexecuted)]. This violates the implicit contract that phases are executed in order and that a hardening phase covers all preceding work. The old hardening cannot cover the new phases placed after it. The fix should be to replace the final hardening or insert before it, not append after it.",
+   "severity": "high",
+   "axis": "workflow"
+  },
+  {
+   "file": "skills/replan-findings/SKILL.md",
+   "line": 46,
+   "title": "Usage-docs: Documented invocation fails due to missing script",
+   "detail": "The 'Load condition' section states: 'A missing `scripts/unit-route.mjs` is a `BLOCKED` prerequisite, never a reason to guess or to read the whole ledger.' However, the 'When to use' section says: 'only after `node scripts/unit-route.mjs <unit>` printed `route: replan`.' If the script is missing, the user cannot run the command to check the route, creating a deadlock where the skill cannot be loaded (because the route isn't confirmed) but the route cannot be confirmed (because the script is missing). The doc claims this is a 'BLOCKED' state, but provides no resolution path other than 'run the router first', which is impossible if the script is missing. This is a broken invocation flow.",
+   "severity": "med",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "skills/replan-findings/references/PHASE_APPEND.md",
+   "line": 58,
+   "title": "Spec-drift: Artifact revision reuse rule contradicts 'new write' definition",
+   "detail": "The 'Artifact-revision duty' section states: 'The same id may be reused by several reviews of unchanged bytes, never across a write.' It also states: 'A revert to previously published bytes is a new write and gets a new id'. This creates a contradiction: if a revert is a 'new write', it must get a new id. But if the bytes are 'unchanged' (reverted to previous), the reuse rule suggests the old id *could* be reused. The document does not clarify if 'unchanged bytes' in the reuse rule refers to the *content* or the *logical operation*. If a revert is a new write, it should always get a new id, regardless of content equality, to prevent the 'mutate-and-revert' attack mentioned. The current wording allows ambiguity that could lead to reusing an old ID for a revert, defeating the security purpose.",
+   "severity": "med",
+   "axis": "spec-drift"
+  }
+ ],
+ "raw": "[\n  {\n    \"file\": \"skills/replan-findings/references/PHASE_APPEND.md\",\n    \"line\": 23,\n    \"title\": \"Workflow: Hardening phase placement logic contradicts execution order guarantee\",\n    \"detail\": \"The placement rule states: 'Final `Hardening & PR` phase already executed → append the new phase(s) **after** it, then append one fresh final `Hardening & PR` closing them out.' This results in a ledger ending with two 'Hardening & PR' phases (the old executed one, then the new one). The document claims 'the ledger must always end with an unexecuted hardening close-out covering every phase.' However, by appending *after* the existing final phase, the new phases are placed *between* the old hardening and the new hardening. If the old hardening was 'executed', it is in the past. The new phases are in the future. The ledger order becomes: [Old Phases] [Old Hardening (Executed)] [New Phases] [New Hardening (Unexecuted)]. This violates the implicit contract that phases are executed in order and that a hardening phase covers all preceding work. The old hardening cannot cover the new phases placed after it. The fix should be to replace the final hardening or insert before it, not append after it.\",\n    \"severity\": \"high\",\n    \"axis\": \"workflow\"\n  },\n  {\n    \"file\": \"skills/replan-findings/SKILL.md\",\n    \"line\": 46,\n    \"title\": \"Usage-docs: Documented invocation fails due to missing script\",\n    \"detail\": \"The 'Load condition' section states: 'A missing `scripts/unit-route.mjs` is a `BLOCKED` prerequisite, never a reason to guess or to read the whole ledger.' However, the 'When to use' section says: 'only after `node scripts/unit-route.mjs <unit>` printed `route: replan`.' If the script is missing, the user cannot run the command to check the route, creating a deadlock where the skill cannot be loaded (because the route isn't confirmed) but the route cannot be confirmed (because the script is missing). The doc claims this is a 'BLOCKED' state, but provides no resolution path other than 'run the router first', which is impossible if the script is missing. This is a broken invocation flow.\",\n    \"severity\": \"med\",\n    \"axis\": \"usage-docs\"\n  },\n  {\n    \"file\": \"skills/replan-findings/references/PHASE_APPEND.md\",\n    \"line\": 58,\n    \"title\": \"Spec-drift: Artifact revision reuse rule contradicts 'new write' definition\",\n    \"detail\": \"The 'Artifact-revision duty' section states: 'The same id may be reused by several reviews of unchanged bytes, never across a write.' It also states: 'A revert to previously published bytes is a new write and gets a new id'. This creates a contradiction: if a revert is a 'new write', it must get a new id. But if the bytes are 'unchanged' (reverted to previous), the reuse rule suggests the old id *could* be reused. The document does not clarify if 'unchanged bytes' in the reuse rule refers to the *content* or the *logical operation*. If a revert is a new write, it should always get a new id, regardless of content equality, to prevent the 'mutate-and-revert' attack mentioned. The current wording allows ambiguity that could lead to reusing an old ID for a revert, defeating the security purpose.\",\n    \"severity\": \"med\",\n    \"axis\": \"spec-drift\"\n  }\n]"
+}

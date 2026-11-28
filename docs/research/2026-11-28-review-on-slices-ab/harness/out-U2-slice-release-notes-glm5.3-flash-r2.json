@@ -1,0 +1,72 @@
+{
+ "id": "U2__slice__release-notes__glm5.3-flash__r2",
+ "unit": "U2",
+ "job": "slice__release-notes",
+ "model": "glm5.3-flash",
+ "run": 2,
+ "ms": 23616,
+ "usage": {
+  "completion_tokens": 1427,
+  "prompt_tokens": 12634,
+  "total_tokens": 14061,
+  "completion_tokens_details": {
+   "reasoning_tokens": 664
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 9216
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "CHANGELOG.md",
+   "line": 96,
+   "title": "Table row ends with stray '|---|' separator fragment",
+   "detail": "The new 0.10.0 row ends with `... publish the re-bundle. |---|` — a table-separator fragment appended to the data row, corrupting the markdown table. Same artifact on the workflow-status 3.5.0 (~line 158), review-change 3.5.1 (~line 391), fold-findings 1.5.0 (~line 442) and triage-issue 2.8.0 (~line 552) rows.",
+   "severity": "med",
+   "axis": "code"
+  },
+  {
+   "file": "CHANGELOG.md",
+   "line": 94,
+   "title": "Header separator dropped a column",
+   "detail": "The diff changes the table header separator from `|---|---|---|---|` to `|---|---|---|` while the rows still carry 4 cells (Version|Date|Type|What changed), so the changed tables (package, workflow-status, review-change, fold-findings, triage-issue) render with a mismatched separator row.",
+   "severity": "med",
+   "axis": "code"
+  },
+  {
+   "file": "CHANGELOG.es.md",
+   "line": 96,
+   "title": "Same stray '|---|' and 3-column separator in Spanish file",
+   "detail": "Identical defects mirrored: 0.10.0 row ends `... publicar el re-empaquetado. |---|`, and the header separator is reduced to `|---|---|---|` under 4-cell rows (also on workflow-status 3.5.0, review-change 3.5.1, fold-findings 1.5.0, triage-issue 2.8.0 rows).",
+   "severity": "med",
+   "axis": "code"
+  },
+  {
+   "file": "CHANGELOG.md",
+   "line": 391,
+   "title": "review-change 3.5.1 labeled 'patch' but changes routing behavior",
+   "detail": "The versioning policy defines patch as 'wording, examples, clarifications…; no behavior change.' The 3.5.1 entry states the Routing table and REVIEW-FAIL `→ Next:` block now route `replan-in-unit` through `node scripts/unit-route.mjs <unit>` 'replacing the two contradictory sentences that sent the class to the executor and to `plan-feature`' — a changed routing case, which the policy classifies as minor ('a new routing case'). Same mismatch in CHANGELOG.es.md ('parche').",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "CHANGELOG.md",
+   "line": 158,
+   "title": "workflow-status 3.5.0 text garbled: 'no open row contributes nothing'",
+   "detail": "The entry reads 'a plain fix-now row to `/fold-findings`, no open row contributes nothing' — a double negative that contradicts the intended schema-declared behavior (an empty suggestion array contributes nothing); as written it asserts an open row does contribute nothing, contradicting the first clause that a plan-owned open finding routes to the planner.",
+   "severity": "low",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "CHANGELOG.md",
+   "line": 610,
+   "title": "replan-findings 1.0.0 has no bump type",
+   "detail": "The new skill row uses '—' in the Type column while the policy table only defines major/minor/patch; the entry also claims 'no planning preflight' and 'never straight to `/execute-phase`' without a stated validator/test receipt, unlike every other mechanized change in these tables which names its validator script.",
+   "severity": "low",
+   "axis": "spec-drift"
+  }
+ ],
+ "raw": "[\n  {\"file\":\"CHANGELOG.md\",\"line\":96,\"title\":\"Table row ends with stray '|---|' separator fragment\",\"detail\":\"The new 0.10.0 row ends with `... publish the re-bundle. |---|` — a table-separator fragment appended to the data row, corrupting the markdown table. Same artifact on the workflow-status 3.5.0 (~line 158), review-change 3.5.1 (~line 391), fold-findings 1.5.0 (~line 442) and triage-issue 2.8.0 (~line 552) rows.\",\"severity\":\"med\",\"axis\":\"code\"},\n  {\"file\":\"CHANGELOG.md\",\"line\":94,\"title\":\"Header separator dropped a column\",\"detail\":\"The diff changes the table header separator from `|---|---|---|---|` to `|---|---|---|` while the rows still carry 4 cells (Version|Date|Type|What changed), so the changed tables (package, workflow-status, review-change, fold-findings, triage-issue) render with a mismatched separator row.\",\"severity\":\"med\",\"axis\":\"code\"},\n  {\"file\":\"CHANGELOG.es.md\",\"line\":96,\"title\":\"Same stray '|---|' and 3-column separator in Spanish file\",\"detail\":\"Identical defects mirrored: 0.10.0 row ends `... publicar el re-empaquetado. |---|`, and the header separator is reduced to `|---|---|---|` under 4-cell rows (also on workflow-status 3.5.0, review-change 3.5.1, fold-findings 1.5.0, triage-issue 2.8.0 rows).\",\"severity\":\"med\",\"axis\":\"code\"},\n  {\"file\":\"CHANGELOG.md\",\"line\":391,\"title\":\"review-change 3.5.1 labeled 'patch' but changes routing behavior\",\"detail\":\"The versioning policy defines patch as 'wording, examples, clarifications…; no behavior change.' The 3.5.1 entry states the Routing table and REVIEW-FAIL `→ Next:` block now route `replan-in-unit` through `node scripts/unit-route.mjs <unit>` 'replacing the two contradictory sentences that sent the class to the executor and to `plan-feature`' — a changed routing case, which the policy classifies as minor ('a new routing case'). Same mismatch in CHANGELOG.es.md ('parche').\",\"severity\":\"med\",\"axis\":\"workflow\"},\n  {\"file\":\"CHANGELOG.md\",\"line\":158,\"title\":\"workflow-status 3.5.0 text garbled: 'no open row contributes nothing'\",\"detail\":\"The entry reads 'a plain fix-now row to `/fold-findings`, no open row contributes nothing' — a double negative that contradicts the intended schema-declared behavior (an empty suggestion array contributes nothing); as written it asserts an open row does contribute nothing, contradicting the first clause that a plan-owned open finding routes to the planner.\",\"severity\":\"low\",\"axis\":\"usage-docs\"},\n  {\"file\":\"CHANGELOG.md\",\"line\":610,\"title\":\"replan-findings 1.0.0 has no bump type\",\"detail\":\"The new skill row uses '—' in the Type column while the policy table only defines major/minor/patch; the entry also claims 'no planning preflight' and 'never straight to `/execute-phase`' without a stated validator/test receipt, unlike every other mechanized change in these tables which names its validator script.\",\"severity\":\"low\",\"axis\":\"spec-drift\"}\n]"
+}

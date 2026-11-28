@@ -1,0 +1,32 @@
+{
+ "id": "U2__slice__review-pack-docs__gemma4__r2",
+ "unit": "U2",
+ "job": "slice__review-pack-docs",
+ "model": "gemma4",
+ "run": 2,
+ "ms": 5779,
+ "usage": {
+  "completion_tokens": 236,
+  "prompt_tokens": 36936,
+  "total_tokens": 37172,
+  "completion_tokens_details": {
+   "reasoning_tokens": 0
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "skills/fold-findings/SKILL.md",
+   "line": 181,
+   "title": "Inconsistent Next: instruction for replan-class",
+   "detail": "The table row for `freeze-batch (≥ 1 replan-class row)` claims the consumer should run `node scripts/unit-route.mjs <unit> → the planner it names re-cuts the plan, then /review-plan before /execute-phase on this unit`. However, the `replan-in-unit` logic in `skills/review-implementation/references/CLASSIFY.md` and `skills/plan-fix/references/PLANNING_PROCESS.md` specifies that the planner re-cuts the SPEC, but the `fold-findings` skill's own `Done when` section and `replan-in-unit` description in `skills/triage-issue/SKILL.md` do not explicitly mandate the `/review-plan` step as part of the consumer's immediate next command sequence, creating ambiguity in the hand-off contract.",
+   "severity": "low",
+   "axis": "usage-docs"
+  }
+ ],
+ "raw": "[{\"file\":\"skills/fold-findings/SKILL.md\",\"line\":181,\"title\":\"Inconsistent Next: instruction for replan-class\",\"detail\":\"The table row for `freeze-batch (≥ 1 replan-class row)` claims the consumer should run `node scripts/unit-route.mjs <unit> → the planner it names re-cuts the plan, then /review-plan before /execute-phase on this unit`. However, the `replan-in-unit` logic in `skills/review-implementation/references/CLASSIFY.md` and `skills/plan-fix/references/PLANNING_PROCESS.md` specifies that the planner re-cuts the SPEC, but the `fold-findings` skill's own `Done when` section and `replan-in-unit` description in `skills/triage-issue/SKILL.md` do not explicitly mandate the `/review-plan` step as part of the consumer's immediate next command sequence, creating ambiguity in the hand-off contract.\",\"severity\":\"low\",\"axis\":\"usage-docs\"}]"
+}

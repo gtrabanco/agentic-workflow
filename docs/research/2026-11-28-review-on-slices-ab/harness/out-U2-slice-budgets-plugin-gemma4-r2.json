@@ -1,0 +1,32 @@
+{
+ "id": "U2__slice__budgets-plugin__gemma4__r2",
+ "unit": "U2",
+ "job": "slice__budgets-plugin",
+ "model": "gemma4",
+ "run": 2,
+ "ms": 1441,
+ "usage": {
+  "completion_tokens": 97,
+  "prompt_tokens": 6346,
+  "total_tokens": 6443,
+  "completion_tokens_details": {
+   "reasoning_tokens": 0
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "docs/workflow/SKILL_CONTEXT_BUDGETS.json",
+   "line": 25,
+   "title": "Missing skill definition",
+   "detail": "The skill 'replan-findings' is referenced in 'referenceSources' (line 25) but is not defined in the 'skills' object. This breaks the schema contract where all referenced skills must have a corresponding entry in the 'skills' map.",
+   "severity": "high",
+   "axis": "code"
+  }
+ ],
+ "raw": "[{\"file\":\"docs/workflow/SKILL_CONTEXT_BUDGETS.json\",\"line\":25,\"title\":\"Missing skill definition\",\"detail\":\"The skill 'replan-findings' is referenced in 'referenceSources' (line 25) but is not defined in the 'skills' object. This breaks the schema contract where all referenced skills must have a corresponding entry in the 'skills' map.\",\"severity\":\"high\",\"axis\":\"code\"}]"
+}

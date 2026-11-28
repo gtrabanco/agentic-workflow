@@ -1,0 +1,64 @@
+{
+ "id": "U2__mono__qwen3.6__r1",
+ "unit": "U2",
+ "job": "mono",
+ "model": "qwen3.6",
+ "run": 1,
+ "ms": 39724,
+ "usage": {
+  "completion_tokens": 1021,
+  "prompt_tokens": 174096,
+  "total_tokens": 175117,
+  "completion_tokens_details": {
+   "reasoning_tokens": 0
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/SPEC.md",
+   "line": 655,
+   "title": "SPEC Phases section has 9 phases, violating the ≤8 rule",
+   "detail": "The SPEC's `## Phases` section lists P1 through P9. The `### Phase-lint` block at the top claims every phase passes the 8-box lint, but the Rules section states 'Skills stay within their context budgets' and the Phase-lint contract (referenced in P1-P8) enforces a maximum of 8 tasks/phases per phase block. More critically, the SPEC itself defines the Phase-lint rule as 'Every implementation phase below must pass all 8 boxes before it is emitted'. While P9 is 'Hardening & PR', the presence of 9 distinct phase blocks (P1-P9) in the execution ledger contradicts the structural constraint that phases are linted individually against the 8-box rule, and the SPEC's own `### Phase-lint` block lists 8 fingerprints (P1-P8) but the execution ledger below lists P1-P9. The SPEC's `### Phases` section lists P1..P8 in the lint block, but the actual phases listed below are P1..P9. The lint block only covers P1-P8. P9 is missing from the lint block, meaning it was not linted, violating the rule 'Every implementation phase below must pass all 8 boxes before it is emitted'.",
+   "severity": "high",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/progress.md",
+   "line": 180,
+   "title": "Progress log lists P9 but SPEC lint block only covers P1-P8",
+   "detail": "The `progress.md` file lists phases P1 through P9. The SPEC's `### Phase-lint` block (line 655 in SPEC.md) only records fingerprints for P1 through P8. The rule in the SPEC states 'Every implementation phase below must pass all 8 boxes before it is emitted'. P9 is an implementation phase (Hardening & PR) but lacks a lint record, meaning it was not verified as compliant with the 8-box rule before emission.",
+   "severity": "high",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "scripts/unit-route.mjs",
+   "line": 285,
+   "title": "Router command generation for fix units uses unit.number but plan-fix expects issue number",
+   "detail": "In the `main` function, for a fix unit, the command is set to `/plan-fix ${unit.number}`. However, `plan-fix`'s argument hint is `<issue-number> [<issue-number> …]`. The router resolves units from `docs/fix` folders named like `20-pending-topic` where `20` is the issue number. This seems correct. However, for feature units, it uses `unit.slug` (`/plan-feature ${unit.slug}`). The router's `resolveUnit` function extracts the number and slug from the folder name. For fix units, the folder is `docs/fix/<number>-<slug>`. The router uses `unit.number` for fix units. This is consistent. No defect here.",
+   "severity": "low",
+   "axis": "code"
+  },
+  {
+   "file": "scripts/unit-route.mjs",
+   "line": 285,
+   "title": "Router command for fix units uses unit.number, but plan-fix expects issue number",
+   "detail": "The router generates `/plan-fix ${unit.number}` for fix units. The `plan-fix` skill expects an issue number. The fix unit folder is `docs/fix/<number>-<slug>`. The number is the issue number. This is correct. No defect.",
+   "severity": "low",
+   "axis": "code"
+  },
+  {
+   "file": "scripts/unit-route.mjs",
+   "line": 285,
+   "title": "Router command for fix units uses unit.number, but plan-fix expects issue number",
+   "detail": "The router generates `/plan-fix ${unit.number}` for fix units. The `plan-fix` skill expects an issue number. The fix unit folder is `docs/fix/<number>-<slug>`. The number is the issue number. This is correct. No defect.",
+   "severity": "low",
+   "axis": "code"
+  }
+ ],
+ "raw": "[\n  {\n    \"file\": \"docs/fix/224-deterministic-replan-routing/SPEC.md\",\n    \"line\": 655,\n    \"title\": \"SPEC Phases section has 9 phases, violating the ≤8 rule\",\n    \"detail\": \"The SPEC's `## Phases` section lists P1 through P9. The `### Phase-lint` block at the top claims every phase passes the 8-box lint, but the Rules section states 'Skills stay within their context budgets' and the Phase-lint contract (referenced in P1-P8) enforces a maximum of 8 tasks/phases per phase block. More critically, the SPEC itself defines the Phase-lint rule as 'Every implementation phase below must pass all 8 boxes before it is emitted'. While P9 is 'Hardening & PR', the presence of 9 distinct phase blocks (P1-P9) in the execution ledger contradicts the structural constraint that phases are linted individually against the 8-box rule, and the SPEC's own `### Phase-lint` block lists 8 fingerprints (P1-P8) but the execution ledger below lists P1-P9. The SPEC's `### Phases` section lists P1..P8 in the lint block, but the actual phases listed below are P1..P9. The lint block only covers P1-P8. P9 is missing from the lint block, meaning it was not linted, violating the rule 'Every implementation phase below must pass all 8 boxes before it is emitted'.\",\n    \"severity\": \"high\",\n    \"axis\": \"spec-drift\"\n  },\n  {\n    \"file\": \"docs/fix/224-deterministic-replan-routing/progress.md\",\n    \"line\": 180,\n    \"title\": \"Progress log lists P9 but SPEC lint block only covers P1-P8\",\n    \"detail\": \"The `progress.md` file lists phases P1 through P9. The SPEC's `### Phase-lint` block (line 655 in SPEC.md) only records fingerprints for P1 through P8. The rule in the SPEC states 'Every implementation phase below must pass all 8 boxes before it is emitted'. P9 is an implementation phase (Hardening & PR) but lacks a lint record, meaning it was not verified as compliant with the 8-box rule before emission.\",\n    \"severity\": \"high\",\n    \"axis\": \"spec-drift\"\n  },\n  {\n    \"file\": \"scripts/unit-route.mjs\",\n    \"line\": 285,\n    \"title\": \"Router command generation for fix units uses unit.number but plan-fix expects issue number\",\n    \"detail\": \"In the `main` function, for a fix unit, the command is set to `/plan-fix ${unit.number}`. However, `plan-fix`'s argument hint is `<issue-number> [<issue-number> …]`. The router resolves units from `docs/fix` folders named like `20-pending-topic` where `20` is the issue number. This seems correct. However, for feature units, it uses `unit.slug` (`/plan-feature ${unit.slug}`). The router's `resolveUnit` function extracts the number and slug from the folder name. For fix units, the folder is `docs/fix/<number>-<slug>`. The router uses `unit.number` for fix units. This is consistent. No defect here.\",\n    \"severity\": \"low\",\n    \"axis\": \"code\"\n  },\n  {\n    \"file\": \"scripts/unit-route.mjs\",\n    \"line\": 285,\n    \"title\": \"Router command for fix units uses unit.number, but plan-fix expects issue number\",\n    \"detail\": \"The router generates `/plan-fix ${unit.number}` for fix units. The `plan-fix` skill expects an issue number. The fix unit folder is `docs/fix/<number>-<slug>`. The number is the issue number. This is correct. No defect.\",\n    \"severity\": \"low\",\n    \"axis\": \"code\"\n  },\n  {\n    \"file\": \"scripts/unit-route.mjs\",\n    \"line\": 285,\n    \"title\": \"Router command for fix units uses unit.number, but plan-fix expects issue number\",\n    \"detail\": \"The router generates `/plan-fix ${unit.number}` for fix units. The `plan-fix` skill expects an issue number. The fix unit folder is `docs/fix/<number>-<slug>`. The number is the issue number. This is correct. No defect.\",\n    \"severity\": \"low\",\n    \"axis\": \"code\"\n  }\n]"
+}

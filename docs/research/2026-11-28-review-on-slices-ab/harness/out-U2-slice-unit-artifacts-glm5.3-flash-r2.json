@@ -1,0 +1,64 @@
+{
+ "id": "U2__slice__unit-artifacts__glm5.3-flash__r2",
+ "unit": "U2",
+ "job": "slice__unit-artifacts",
+ "model": "glm5.3-flash",
+ "run": 2,
+ "ms": 139627,
+ "usage": {
+  "completion_tokens": 4194,
+  "prompt_tokens": 34008,
+  "total_tokens": 38202,
+  "completion_tokens_details": {
+   "reasoning_tokens": 3169
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/ACCEPTANCE.md",
+   "line": 39,
+   "title": "AC11 validator as written cannot run without NODE_PATH",
+   "detail": "AC11's validator is `node --test scripts/*.test.mjs` → exit 0, but the unit's own receipts establish the schema package is absent from node_modules and the gate only passes with the env var: progress.md P8 runs `NODE_PATH=packages/agentic-workflow-schema/node_modules node --test scripts/*.test.mjs`, and the cycle-1 portability note records 'The schema package was absent from node_modules; bun install --frozen-lockfile + bun run build ran inside packages/agentic-workflow-schema (gitignored paths only) so the authoritative validator executed'. The documented AC11 invocation omits NODE_PATH and therefore fails on a clean checkout — the recorded gate and the acceptance validator are not the same command.",
+   "severity": "med",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/progress.md",
+   "line": null,
+   "title": "Budget ceilings raised to fit grown content, contradicting the unit's own budget rule and its own P2 precedent",
+   "detail": "SPEC 'Rules that must never be violated' states 'Skills stay within their context budgets', and P2's gotcha applies exactly that principle: 'both were compressed back under the defaults rather than raising the budget'. Yet P6 raises workflow-status's referenceEstimateMax 2200 → 2300 because 'the SENSOR_SIGNALS.md addition pushed that reference to 2297 est > the 2200 default', and P8 raises seven route ceilings to 'ceil(measured × 1.10)' because 'the converged prose grew four routes past their declared 10 % headroom'. The unit treats the identical situation (content exceeding a declared ceiling) with opposite policies — compress in P2, raise the ceiling in P6/P8 — so the declared rule 'skills stay within their context budgets' is satisfied by moving the budgets rather than the skills.",
+   "severity": "med",
+   "axis": "perf"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/progress.md",
+   "line": null,
+   "title": "P8 says 'four routes' past headroom but lists seven",
+   "detail": "P8 gate repair 1: 'The converged prose grew four routes past their declared 10 % headroom (plan-feature:issue/scoped, plan-fix:issue, review-change:adversarial/default-backend/default-web/synthesize).' The parenthetical enumerates seven routes (plan-feature:issue, plan-feature:scoped, plan-fix:issue, review-change:adversarial, review-change:default-backend, review-change:default-web, review-change:synthesize), not four. The receipt's own count contradicts its list.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/SPEC.md",
+   "line": null,
+   "title": "Affected-docs rows map SKILLS.md (+ES) to AC8, which does not cover them",
+   "detail": "The '## Affected docs' table maps `docs/workflow/SKILLS.md` and `docs/workflow/SKILLS.es.md` to acceptance criterion 'AC8'. AC8's validator is `grep -n \"unit-route\" skills/plan-feature/SKILL.md skills/plan-fix/SKILL.md` plus surrounding lines — the planners' conditional-load wiring. Nothing in AC8 (or any other criterion) observes SKILLS.md's internal-step list or its 18 → 19 count; that work is owned by P6/OB-7, and OB-7's validator is `bun scripts/check-skill-context.mjs`, not AC8. The recorded criterion mapping contradicts the criteria's own validators.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/progress.md",
+   "line": null,
+   "title": "Frozen version pin in a test file was edited to make the gate pass",
+   "detail": "P8 gate repair 2: `scripts/review-loop-discipline.test.mjs:10j` pinned `fold-findings`'s `version:` to 1.4.0 ('feature 30's one-time contract pin'); P4's SPEC-obligated bump to 1.5.0 broke the gate, and the repair edited the pin to 1.5.0. ACCEPTANCE's quality floor says 'Do not remove, skip, loosen, or rewrite a validator to manufacture PASS.' The edit is disclosed and the underlying bump is legitimate, but the unit rewrote a frozen contract pin inside a validator to restore green, which is at minimum in tension with the floor it declares; the 'one-time contract pin' semantics (a pin that was supposed to hold 1.4.0) is silently retired without a SPEC amendment.",
+   "severity": "low",
+   "axis": "workflow"
+  }
+ ],
+ "raw": "[{\"file\":\"docs/fix/224-deterministic-replan-routing/ACCEPTANCE.md\",\"line\":39,\"title\":\"AC11 validator as written cannot run without NODE_PATH\",\"detail\":\"AC11's validator is `node --test scripts/*.test.mjs` → exit 0, but the unit's own receipts establish the schema package is absent from node_modules and the gate only passes with the env var: progress.md P8 runs `NODE_PATH=packages/agentic-workflow-schema/node_modules node --test scripts/*.test.mjs`, and the cycle-1 portability note records 'The schema package was absent from node_modules; bun install --frozen-lockfile + bun run build ran inside packages/agentic-workflow-schema (gitignored paths only) so the authoritative validator executed'. The documented AC11 invocation omits NODE_PATH and therefore fails on a clean checkout — the recorded gate and the acceptance validator are not the same command.\",\"severity\":\"med\",\"axis\":\"usage-docs\"},{\"file\":\"docs/fix/224-deterministic-replan-routing/progress.md\",\"line\":null,\"title\":\"Budget ceilings raised to fit grown content, contradicting the unit's own budget rule and its own P2 precedent\",\"detail\":\"SPEC 'Rules that must never be violated' states 'Skills stay within their context budgets', and P2's gotcha applies exactly that principle: 'both were compressed back under the defaults rather than raising the budget'. Yet P6 raises workflow-status's referenceEstimateMax 2200 → 2300 because 'the SENSOR_SIGNALS.md addition pushed that reference to 2297 est > the 2200 default', and P8 raises seven route ceilings to 'ceil(measured × 1.10)' because 'the converged prose grew four routes past their declared 10 % headroom'. The unit treats the identical situation (content exceeding a declared ceiling) with opposite policies — compress in P2, raise the ceiling in P6/P8 — so the declared rule 'skills stay within their context budgets' is satisfied by moving the budgets rather than the skills.\",\"severity\":\"med\",\"axis\":\"perf\"},{\"file\":\"docs/fix/224-deterministic-replan-routing/progress.md\",\"line\":null,\"title\":\"P8 says 'four routes' past headroom but lists seven\",\"detail\":\"P8 gate repair 1: 'The converged prose grew four routes past their declared 10 % headroom (plan-feature:issue/scoped, plan-fix:issue, review-change:adversarial/default-backend/default-web/synthesize).' The parenthetical enumerates seven routes (plan-feature:issue, plan-feature:scoped, plan-fix:issue, review-change:adversarial, review-change:default-backend, review-change:default-web, review-change:synthesize), not four. The receipt's own count contradicts its list.\",\"severity\":\"low\",\"axis\":\"spec-drift\"},{\"file\":\"docs/fix/224-deterministic-replan-routing/SPEC.md\",\"line\":null,\"title\":\"Affected-docs rows map SKILLS.md (+ES) to AC8, which does not cover them\",\"detail\":\"The '## Affected docs' table maps `docs/workflow/SKILLS.md` and `docs/workflow/SKILLS.es.md` to acceptance criterion 'AC8'. AC8's validator is `grep -n \\\"unit-route\\\" skills/plan-feature/SKILL.md skills/plan-fix/SKILL.md` plus surrounding lines — the planners' conditional-load wiring. Nothing in AC8 (or any other criterion) observes SKILLS.md's internal-step list or its 18 → 19 count; that work is owned by P6/OB-7, and OB-7's validator is `bun scripts/check-skill-context.mjs`, not AC8. The recorded criterion mapping contradicts the criteria's own validators.\",\"severity\":\"low\",\"axis\":\"spec-drift\"},{\"file\":\"docs/fix/224-deterministic-replan-routing/progress.md\",\"line\":null,\"title\":\"Frozen version pin in a test file was edited to make the gate pass\",\"detail\":\"P8 gate repair 2: `scripts/review-loop-discipline.test.mjs:10j` pinned `fold-findings`'s `version:` to 1.4.0 ('feature 30's one-time contract pin'); P4's SPEC-obligated bump to 1.5.0 broke the gate, and the repair edited the pin to 1.5.0. ACCEPTANCE's quality floor says 'Do not remove, skip, loosen, or rewrite a validator to manufacture PASS.' The edit is disclosed and the underlying bump is legitimate, but the unit rewrote a frozen contract pin inside a validator to restore green, which is at minimum in tension with the floor it declares; the 'one-time contract pin' semantics (a pin that was supposed to hold 1.4.0) is silently retired without a SPEC amendment.\",\"severity\":\"low\",\"axis\":\"workflow\"}]"
+}

@@ -1,0 +1,32 @@
+{
+ "id": "U1__slice__release-notes__gemma4__r1",
+ "unit": "U1",
+ "job": "slice__release-notes",
+ "model": "gemma4",
+ "run": 1,
+ "ms": 1610,
+ "usage": {
+  "completion_tokens": 96,
+  "prompt_tokens": 6304,
+  "total_tokens": 6400,
+  "completion_tokens_details": {
+   "reasoning_tokens": 0
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "CHANGELOG.md",
+   "line": 753,
+   "title": "Broken syntax in init-workspace 3.3.0 row",
+   "detail": "The diff for `init-workspace` 3.3.0 contains a trailing pipe character inside the description text: `... (feature 65 P8, AC22):|`. This is a syntax error in the Markdown table structure.",
+   "severity": "med",
+   "axis": "code"
+  }
+ ],
+ "raw": "[{\"file\":\"CHANGELOG.md\",\"line\":753,\"title\":\"Broken syntax in init-workspace 3.3.0 row\",\"detail\":\"The diff for `init-workspace` 3.3.0 contains a trailing pipe character inside the description text: `... (feature 65 P8, AC22):|`. This is a syntax error in the Markdown table structure.\",\"severity\":\"med\",\"axis\":\"code\"}]"
+}

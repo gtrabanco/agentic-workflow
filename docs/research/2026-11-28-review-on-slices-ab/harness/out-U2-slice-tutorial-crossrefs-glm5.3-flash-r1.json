@@ -1,0 +1,48 @@
+{
+ "id": "U2__slice__tutorial-crossrefs__glm5.3-flash__r1",
+ "unit": "U2",
+ "job": "slice__tutorial-crossrefs",
+ "model": "glm5.3-flash",
+ "run": 1,
+ "ms": 41251,
+ "usage": {
+  "completion_tokens": 2206,
+  "prompt_tokens": 25463,
+  "total_tokens": 27669,
+  "completion_tokens_details": {
+   "reasoning_tokens": 1610
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "docs/workflow/REVIEW_AND_CLASSIFY.md",
+   "line": 79,
+   "title": "replan route to /plan-fix contradicts the doc's own 'never plan-fix' rule",
+   "detail": "The same section states, two bullets apart: \"**fix-now** → folds directly into the current unit's open phase. Never a tracked issue, never `plan-fix` (AC 12).\" and the new text \"**fix-now / replan-in-unit** → run `node scripts/unit-route.mjs <unit>`; its `route: replan` line names the planner (`/plan-feature` for a feature, `/plan-fix` for a fix)\". The combined class `fix-now / replan-in-unit` is covered by both bullets, so for a fix unit the doc simultaneously forbids and mandates `plan-fix`. Same contradiction in REVIEW_AND_CLASSIFY.es.md (\"Nunca un issue rastreado, nunca `plan-fix` (AC 12)\" vs \"`/plan-fix` para un fix\").",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "docs/workflow/PORTABLE_PROMPT.md",
+   "line": 141,
+   "title": "portable prompt hardcodes this repo's script path into a generic regeneration prompt",
+   "detail": "The prompt's own contract says \"Do not assume this project matches any other — discover its conventions and adapt\" and \"rather than copying this repo's specifics verbatim\", and \"If something doesn't exist, note it; the skills must degrade gracefully\". The new instruction tells the target repo's generated `review-change` to literally run `node scripts/unit-route.mjs <unit>` — a script that exists only in this repo and is not part of anything the prompt tells the agent to create. In every regenerated repo the documented invocation fails (file not found), and no degrade path is specified for it. Same in PORTABLE_PROMPT.es.md.",
+   "severity": "med",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "docs/workflow/SKILLS.md",
+   "line": 7,
+   "title": "internal-step count arithmetic not supported by the enumerated list",
+   "detail": "The diff bumps \"18 internal steps\" to \"19 internal steps\" to account for `replan-findings`, but the paragraph's enumeration (plan-feature's two planning steps = 2, evidence-grounding + pre-execution-review = 2, review-implementation = 1, planning-preflight = 1, phase-contract = 1, verification-contract = 1, 9-skill review pack = 9) totals 17, and the enumerated sentence was not updated to name `replan-findings` (or `implementation-discovery`), so the stated 19 is only reachable via table rows the intro text omits. Same in SKILLS.es.md (\"19 pasos internos\").",
+   "severity": "low",
+   "axis": "spec-drift"
+  }
+ ],
+ "raw": "[{\"file\":\"docs/workflow/REVIEW_AND_CLASSIFY.md\",\"line\":79,\"title\":\"replan route to /plan-fix contradicts the doc's own 'never plan-fix' rule\",\"detail\":\"The same section states, two bullets apart: \\\"**fix-now** → folds directly into the current unit's open phase. Never a tracked issue, never `plan-fix` (AC 12).\\\" and the new text \\\"**fix-now / replan-in-unit** → run `node scripts/unit-route.mjs <unit>`; its `route: replan` line names the planner (`/plan-feature` for a feature, `/plan-fix` for a fix)\\\". The combined class `fix-now / replan-in-unit` is covered by both bullets, so for a fix unit the doc simultaneously forbids and mandates `plan-fix`. Same contradiction in REVIEW_AND_CLASSIFY.es.md (\\\"Nunca un issue rastreado, nunca `plan-fix` (AC 12)\\\" vs \\\"`/plan-fix` para un fix\\\").\",\"severity\":\"med\",\"axis\":\"workflow\"},{\"file\":\"docs/workflow/PORTABLE_PROMPT.md\",\"line\":141,\"title\":\"portable prompt hardcodes this repo's script path into a generic regeneration prompt\",\"detail\":\"The prompt's own contract says \\\"Do not assume this project matches any other — discover its conventions and adapt\\\" and \\\"rather than copying this repo's specifics verbatim\\\", and \\\"If something doesn't exist, note it; the skills must degrade gracefully\\\". The new instruction tells the target repo's generated `review-change` to literally run `node scripts/unit-route.mjs <unit>` — a script that exists only in this repo and is not part of anything the prompt tells the agent to create. In every regenerated repo the documented invocation fails (file not found), and no degrade path is specified for it. Same in PORTABLE_PROMPT.es.md.\",\"severity\":\"med\",\"axis\":\"usage-docs\"},{\"file\":\"docs/workflow/SKILLS.md\",\"line\":7,\"title\":\"internal-step count arithmetic not supported by the enumerated list\",\"detail\":\"The diff bumps \\\"18 internal steps\\\" to \\\"19 internal steps\\\" to account for `replan-findings`, but the paragraph's enumeration (plan-feature's two planning steps = 2, evidence-grounding + pre-execution-review = 2, review-implementation = 1, planning-preflight = 1, phase-contract = 1, verification-contract = 1, 9-skill review pack = 9) totals 17, and the enumerated sentence was not updated to name `replan-findings` (or `implementation-discovery`), so the stated 19 is only reachable via table rows the intro text omits. Same in SKILLS.es.md (\\\"19 pasos internos\\\").\",\"severity\":\"low\",\"axis\":\"spec-drift\"}]"
+}

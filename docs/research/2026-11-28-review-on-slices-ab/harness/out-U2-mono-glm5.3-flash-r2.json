@@ -1,0 +1,88 @@
+{
+ "id": "U2__mono__glm5.3-flash__r2",
+ "unit": "U2",
+ "job": "mono",
+ "model": "glm5.3-flash",
+ "run": 2,
+ "ms": 158004,
+ "usage": {
+  "completion_tokens": 8667,
+  "prompt_tokens": 165391,
+  "total_tokens": 174058,
+  "completion_tokens_details": {
+   "reasoning_tokens": 7324
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 161088
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "skills/fold-findings/SKILL.md",
+   "line": null,
+   "title": "Done-when block still routes replan straight to /execute-phase",
+   "detail": "The unit's AC7 claims 'no converged surface sends a replan row to the executor or the fold', and the branch table was updated to the router, but the same file's Done-when `→ Next:` block still reads '· any REPLAN (<F1> + <F2> + …) → confirm all proposed SPEC phases, then /execute-phase on this same branch' and the per-finding report line is still 'REPLAN <proposed phase(s) → /execute-phase>'. Both contradict the new canonical destination (router → planner → fresh /review-plan before /execute-phase) and make AC7's unqualified clause false while its grep validator passes — the exact true-by-narrow-grep defect class RP-224-3 was supposed to have closed.",
+   "severity": "high",
+   "axis": "workflow"
+  },
+  {
+   "file": "scripts/workflow-status.mjs",
+   "line": 760,
+   "title": "Sensor's class→destination mapping drops the decision class",
+   "detail": "readSuggestions routes any non-plan open row to '/fold-findings', and SENSOR_SIGNALS.md step 13 now documents 'any other `folded: no` row → /fold-findings'. But the router the sensor claims to project ('the same class→destination decision scripts/unit-route.mjs owns') returns `decision` for a decision-required row (routeOfRow: DECISION_ROUTE → 'decision', command 'decision required — stop and surface to the user'), and fold-findings itself freeze-batches on decision-required rows (FOLD_PROCESS.md: '≥ 1 row with frozen class `replan-in-unit` or `decision-required` … nothing folds'). So the sensor sends a decision row to a skill that is contractually forbidden to act on it — the same misdirection class the fix removed for replan rows.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "skills/replan-findings/SKILL.md",
+   "line": null,
+   "title": "`rows:` line is not the selected set the contract assumes",
+   "detail": "unit-route.mjs prints `rows: ${rows.map(id).join(' ')}` — ALL open rows, not the route-selected ones (fixture 10-replan-unit prints 'F1 F2 F3' where F1 is fold-class and F3 decision-class on a replan route). But replan-findings says 'The `rows:` line names the findings … Read exactly those rows' and PHASE_APPEND says 'For every finding the router's `rows:` line selected, append one or more phases' — which would append repair phases for fold- and decision-class rows, contradicting the contract's own 'Never widen the scope past the selected rows' guardrail.",
+   "severity": "med",
+   "axis": "code"
+  },
+  {
+   "file": "packages/pi-agentic-workflow/skills/triage-issue/references/REVIEW_FINDING_PROCESS.md",
+   "line": null,
+   "title": "Step 4 hand-off contradicts the updated step 3",
+   "detail": "Step 3 was rewritten to require 'the fresh `/review-plan <unit>` that must pass before execution', but step 4 still reads 'After a replan, ask the user to continue manually with `/execute-phase <unit> P<n>` (or the fix equivalent), then re-run `/review-change`' — no /review-plan, sending the user straight to the executor, the exact dead end this unit claims to have removed from every surface.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "skills/plan-feature/SKILL.md",
+   "line": null,
+   "title": "Turn contract contradicts the new replan exemption",
+   "detail": "The Turn contract still pins '✓ The redirect gate ran FIRST … undesigned input → STOP, print the fixed `/design-feature <slug>` block, do nothing else this turn', but ROUTING.md's new exemption says 'Before the status gate, run `node scripts/unit-route.mjs <NN>` … skip the STOP' — and the shipped dogfood fixture has roadmap row 37 = `idea` (undesigned) answering `route: replan`. A replan-routed `idea` unit therefore violates the skill's own first turn-contract box; the two normative surfaces in the same skill disagree.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "CHANGELOG.md",
+   "line": 94,
+   "title": "Added changelog rows end with a stray `|---|`",
+   "detail": "Every row added by this unit terminates with the literal text `|---|` inside the last cell (e.g. '| 0.10.0 | 2026-09-15 | minor | **Deterministic replan routing re-bundle (fix #224)**: … re-bundle. |---|'; same for the workflow-status 3.5.0, plan-feature 5.2.0, plan-fix 3.2.0, review-change 3.5.1, fold-findings 1.5.0 and triage-issue 2.8.0 rows in both CHANGELOG.md and CHANGELOG.es.md). The `---|` renders as cell content, corrupting the table.",
+   "severity": "low",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "CHANGELOG.md",
+   "line": 391,
+   "title": "review-change 3.5.1 labelled patch despite a routing behavior change",
+   "detail": "The repo's own versioning policy defines patch as 'no behavior change' and minor as 'a new routing case'. The 3.5.1 cell itself describes a behavior change ('the `REVIEW-FAIL` `→ Next:` block and the Routing table route a `replan-in-unit` … replacing the two contradictory sentences'), and AC13/SPEC hard-code 'patch — prose only'. By the declared policy this is a minor, so the recorded version signal understates the change.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "skills/plan-feature/SKILL.md",
+   "line": null,
+   "title": "Stale 'Both resources' wording after the allowlist grew",
+   "detail": "The progressive-loading section was changed from two paths to four items ('The allowlist:' with items 1–4 including the replan contract), but the closing sentence still reads 'Do not load planning gates after a redirect stop. Both resources are normative, one hop from this file' — 'Both' no longer matches the list it governs.",
+   "severity": "low",
+   "axis": "usage-docs"
+  }
+ ],
+ "raw": "[{\"file\":\"skills/fold-findings/SKILL.md\",\"line\":null,\"title\":\"Done-when block still routes replan straight to /execute-phase\",\"detail\":\"The unit's AC7 claims 'no converged surface sends a replan row to the executor or the fold', and the branch table was updated to the router, but the same file's Done-when `→ Next:` block still reads '· any REPLAN (<F1> + <F2> + …) → confirm all proposed SPEC phases, then /execute-phase on this same branch' and the per-finding report line is still 'REPLAN <proposed phase(s) → /execute-phase>'. Both contradict the new canonical destination (router → planner → fresh /review-plan before /execute-phase) and make AC7's unqualified clause false while its grep validator passes — the exact true-by-narrow-grep defect class RP-224-3 was supposed to have closed.\",\"severity\":\"high\",\"axis\":\"workflow\"},{\"file\":\"scripts/workflow-status.mjs\",\"line\":760,\"title\":\"Sensor's class→destination mapping drops the decision class\",\"detail\":\"readSuggestions routes any non-plan open row to '/fold-findings', and SENSOR_SIGNALS.md step 13 now documents 'any other `folded: no` row → /fold-findings'. But the router the sensor claims to project ('the same class→destination decision scripts/unit-route.mjs owns') returns `decision` for a decision-required row (routeOfRow: DECISION_ROUTE → 'decision', command 'decision required — stop and surface to the user'), and fold-findings itself freeze-batches on decision-required rows (FOLD_PROCESS.md: '≥ 1 row with frozen class `replan-in-unit` or `decision-required` … nothing folds'). So the sensor sends a decision row to a skill that is contractually forbidden to act on it — the same misdirection class the fix removed for replan rows.\",\"severity\":\"med\",\"axis\":\"workflow\"},{\"file\":\"skills/replan-findings/SKILL.md\",\"line\":null,\"title\":\"`rows:` line is not the selected set the contract assumes\",\"detail\":\"unit-route.mjs prints `rows: ${rows.map(id).join(' ')}` — ALL open rows, not the route-selected ones (fixture 10-replan-unit prints 'F1 F2 F3' where F1 is fold-class and F3 decision-class on a replan route). But replan-findings says 'The `rows:` line names the findings … Read exactly those rows' and PHASE_APPEND says 'For every finding the router's `rows:` line selected, append one or more phases' — which would append repair phases for fold- and decision-class rows, contradicting the contract's own 'Never widen the scope past the selected rows' guardrail.\",\"severity\":\"med\",\"axis\":\"code\"},{\"file\":\"packages/pi-agentic-workflow/skills/triage-issue/references/REVIEW_FINDING_PROCESS.md\",\"line\":null,\"title\":\"Step 4 hand-off contradicts the updated step 3\",\"detail\":\"Step 3 was rewritten to require 'the fresh `/review-plan <unit>` that must pass before execution', but step 4 still reads 'After a replan, ask the user to continue manually with `/execute-phase <unit> P<n>` (or the fix equivalent), then re-run `/review-change`' — no /review-plan, sending the user straight to the executor, the exact dead end this unit claims to have removed from every surface.\",\"severity\":\"med\",\"axis\":\"workflow\"},{\"file\":\"skills/plan-feature/SKILL.md\",\"line\":null,\"title\":\"Turn contract contradicts the new replan exemption\",\"detail\":\"The Turn contract still pins '✓ The redirect gate ran FIRST … undesigned input → STOP, print the fixed `/design-feature <slug>` block, do nothing else this turn', but ROUTING.md's new exemption says 'Before the status gate, run `node scripts/unit-route.mjs <NN>` … skip the STOP' — and the shipped dogfood fixture has roadmap row 37 = `idea` (undesigned) answering `route: replan`. A replan-routed `idea` unit therefore violates the skill's own first turn-contract box; the two normative surfaces in the same skill disagree.\",\"severity\":\"med\",\"axis\":\"workflow\"},{\"file\":\"CHANGELOG.md\",\"line\":94,\"title\":\"Added changelog rows end with a stray `|---|`\",\"detail\":\"Every row added by this unit terminates with the literal text `|---|` inside the last cell (e.g. '| 0.10.0 | 2026-09-15 | minor | **Deterministic replan routing re-bundle (fix #224)**: … re-bundle. |---|'; same for the workflow-status 3.5.0, plan-feature 5.2.0, plan-fix 3.2.0, review-change 3.5.1, fold-findings 1.5.0 and triage-issue 2.8.0 rows in both CHANGELOG.md and CHANGELOG.es.md). The `---|` renders as cell content, corrupting the table.\",\"severity\":\"low\",\"axis\":\"usage-docs\"},{\"file\":\"CHANGELOG.md\",\"line\":391,\"title\":\"review-change 3.5.1 labelled patch despite a routing behavior change\",\"detail\":\"The repo's own versioning policy defines patch as 'no behavior change' and minor as 'a new routing case'. The 3.5.1 cell itself describes a behavior change ('the `REVIEW-FAIL` `→ Next:` block and the Routing table route a `replan-in-unit` … replacing the two contradictory sentences'), and AC13/SPEC hard-code 'patch — prose only'. By the declared policy this is a minor, so the recorded version signal understates the change.\",\"severity\":\"low\",\"axis\":\"spec-drift\"},{\"file\":\"skills/plan-feature/SKILL.md\",\"line\":null,\"title\":\"Stale 'Both resources' wording after the allowlist grew\",\"detail\":\"The progressive-loading section was changed from two paths to four items ('The allowlist:' with items 1–4 including the replan contract), but the closing sentence still reads 'Do not load planning gates after a redirect stop. Both resources are normative, one hop from this file' — 'Both' no longer matches the list it governs.\",\"severity\":\"low\",\"axis\":\"usage-docs\"}]"
+}

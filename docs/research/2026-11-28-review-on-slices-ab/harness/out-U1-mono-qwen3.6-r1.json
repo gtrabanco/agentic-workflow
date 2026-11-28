@@ -1,0 +1,64 @@
+{
+ "id": "U1__mono__qwen3.6__r1",
+ "unit": "U1",
+ "job": "mono",
+ "model": "qwen3.6",
+ "run": 1,
+ "ms": 8145,
+ "usage": {
+  "completion_tokens": 957,
+  "prompt_tokens": 34210,
+  "total_tokens": 35167,
+  "completion_tokens_details": {
+   "reasoning_tokens": 0
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "docs/fix/258-harden-needs-input-contracts/SPEC.md",
+   "line": 173,
+   "title": "Unverified claim in Planning evidence",
+   "detail": "PE-003 claims the fix follows the same defect-class pattern as review-change's commit 29b52c63, but explicitly states 'unverified: that commit is not a valid object in this repository'. This is a spec-drift where the unit's own evidence section records an unverified assumption as a planning evidence item, contradicting the requirement for verified evidence in the 'Applicable tests' section.",
+   "severity": "med",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/258-harden-needs-input-contracts/SPEC.md",
+   "line": 185,
+   "title": "Obligation O4 missing from Obligations table",
+   "detail": "The 'Planning evidence' section notes 'O1, O2, O3 minus O4 folded into O1–O3', but the Obligations table only lists O1, O2, O3, O5, and O6. O4 is referenced in the evidence note but does not exist in the obligations table, creating a gap in the declared obligations.",
+   "severity": "med",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/258-harden-needs-input-contracts/SPEC.md",
+   "line": 195,
+   "title": "Evidence AC6 count mismatch",
+   "detail": "Evidence AC6 states '4 rows (3 skill + 1 re-bundle)' and the grep validator expects '≥ 3' for '258' in CHANGELOG.md. However, the CHANGELOG diff shows 4 rows containing '258' (one for pi-agentic-workflow, one for execute-phase, one for unit-lane, one for init-workspace). The validator `grep -cE \"^(\\|.*258|.*harden-needs-input)\" CHANGELOG.md` ≥ 3 is satisfied, but the evidence description '4 rows' contradicts the validator's threshold of 3, implying the validator might be too loose or the count is misreported. More critically, the SPEC AC6 says 'All bumped skills appear in CHANGELOG.md... and README.md', but the Evidence AC6 only verifies CHANGELOG.md rows, not README.md cells, leaving part of AC6 unverified in the evidence table.",
+   "severity": "med",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "skills/unit-lane/SKILL.md",
+   "line": 47,
+   "title": "Needs-input guard placement contradicts workflow",
+   "detail": "The 'Needs-input guard' section is placed after the 'Turn contract' and 'When to use' sections, but before 'Step 0'. The 'Turn contract' box now includes the guard's halt message, but the guard itself is defined later. This is a structural drift where the contract box references behavior defined in a section that appears after it, which can confuse the agent's parsing order if it processes the contract box first.",
+   "severity": "low",
+   "axis": "workflow"
+  },
+  {
+   "file": "docs/fix/258-harden-needs-input-contracts/SPEC.md",
+   "line": 165,
+   "title": "Input audit E1 current behavior description is inaccurate",
+   "detail": "The Input audit table for E1 states 'if blank/missing the slug is empty, unit-route.mjs fails with a non-helpful error — skill proceeds to unit not found path and may infer from context.' The diff shows the guard is added to prevent this, but the 'Current blank behavior' column describes the pre-fix state. The 'Post-fix behavior' column correctly describes the new guard. However, the SPEC AC1 requires 'read-verified' for the guard, but the evidence AC1 only verifies grep counts, not the semantic correctness of the guard text against the audit. This is a minor verification gap.",
+   "severity": "low",
+   "axis": "spec-drift"
+  }
+ ],
+ "raw": "[\n  {\n    \"file\": \"docs/fix/258-harden-needs-input-contracts/SPEC.md\",\n    \"line\": 173,\n    \"title\": \"Unverified claim in Planning evidence\",\n    \"detail\": \"PE-003 claims the fix follows the same defect-class pattern as review-change's commit 29b52c63, but explicitly states 'unverified: that commit is not a valid object in this repository'. This is a spec-drift where the unit's own evidence section records an unverified assumption as a planning evidence item, contradicting the requirement for verified evidence in the 'Applicable tests' section.\",\n    \"severity\": \"med\",\n    \"axis\": \"spec-drift\"\n  },\n  {\n    \"file\": \"docs/fix/258-harden-needs-input-contracts/SPEC.md\",\n    \"line\": 185,\n    \"title\": \"Obligation O4 missing from Obligations table\",\n    \"detail\": \"The 'Planning evidence' section notes 'O1, O2, O3 minus O4 folded into O1–O3', but the Obligations table only lists O1, O2, O3, O5, and O6. O4 is referenced in the evidence note but does not exist in the obligations table, creating a gap in the declared obligations.\",\n    \"severity\": \"med\",\n    \"axis\": \"spec-drift\"\n  },\n  {\n    \"file\": \"docs/fix/258-harden-needs-input-contracts/SPEC.md\",\n    \"line\": 195,\n    \"title\": \"Evidence AC6 count mismatch\",\n    \"detail\": \"Evidence AC6 states '4 rows (3 skill + 1 re-bundle)' and the grep validator expects '≥ 3' for '258' in CHANGELOG.md. However, the CHANGELOG diff shows 4 rows containing '258' (one for pi-agentic-workflow, one for execute-phase, one for unit-lane, one for init-workspace). The validator `grep -cE \\\"^(\\\\|.*258|.*harden-needs-input)\\\" CHANGELOG.md` ≥ 3 is satisfied, but the evidence description '4 rows' contradicts the validator's threshold of 3, implying the validator might be too loose or the count is misreported. More critically, the SPEC AC6 says 'All bumped skills appear in CHANGELOG.md... and README.md', but the Evidence AC6 only verifies CHANGELOG.md rows, not README.md cells, leaving part of AC6 unverified in the evidence table.\",\n    \"severity\": \"med\",\n    \"axis\": \"spec-drift\"\n  },\n  {\n    \"file\": \"skills/unit-lane/SKILL.md\",\n    \"line\": 47,\n    \"title\": \"Needs-input guard placement contradicts workflow\",\n    \"detail\": \"The 'Needs-input guard' section is placed after the 'Turn contract' and 'When to use' sections, but before 'Step 0'. The 'Turn contract' box now includes the guard's halt message, but the guard itself is defined later. This is a structural drift where the contract box references behavior defined in a section that appears after it, which can confuse the agent's parsing order if it processes the contract box first.\",\n    \"severity\": \"low\",\n    \"axis\": \"workflow\"\n  },\n  {\n    \"file\": \"docs/fix/258-harden-needs-input-contracts/SPEC.md\",\n    \"line\": 165,\n    \"title\": \"Input audit E1 current behavior description is inaccurate\",\n    \"detail\": \"The Input audit table for E1 states 'if blank/missing the slug is empty, unit-route.mjs fails with a non-helpful error — skill proceeds to unit not found path and may infer from context.' The diff shows the guard is added to prevent this, but the 'Current blank behavior' column describes the pre-fix state. The 'Post-fix behavior' column correctly describes the new guard. However, the SPEC AC1 requires 'read-verified' for the guard, but the evidence AC1 only verifies grep counts, not the semantic correctness of the guard text against the audit. This is a minor verification gap.\",\n    \"severity\": \"low\",\n    \"axis\": \"spec-drift\"\n  }\n]"
+}

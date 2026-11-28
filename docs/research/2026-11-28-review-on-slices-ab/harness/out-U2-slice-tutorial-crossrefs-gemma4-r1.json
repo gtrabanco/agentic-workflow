@@ -1,0 +1,40 @@
+{
+ "id": "U2__slice__tutorial-crossrefs__gemma4__r1",
+ "unit": "U2",
+ "job": "slice__tutorial-crossrefs",
+ "model": "gemma4",
+ "run": 1,
+ "ms": 5421,
+ "usage": {
+  "completion_tokens": 265,
+  "prompt_tokens": 26768,
+  "total_tokens": 27033,
+  "completion_tokens_details": {
+   "reasoning_tokens": 0
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "docs/workflow/FEATURE_WORKFLOW.es.md",
+   "line": 316,
+   "title": "Inconsistent replan-in-unit description",
+   "detail": "The diff claims `replan-in-unit` executes `node scripts/unit-route.mjs <unit>`, but the current content (and the English version) describes it as appending phases. While the diff is intended to update the text, the resulting documentation in the 'current content' section for the Spanish version does not match the logic described in the English version or the intended fix for deterministic routing described in the unit's README.",
+   "severity": "low",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "docs/workflow/PORTABLE_PROMPT.es.md",
+   "line": 144,
+   "title": "Broken sentence structure in replan-in-unit description",
+   "detail": "The diff introduces a syntax error/broken sentence: `replan-in-unit runs node scripts/unit-route.mjs <unit> so the planner its route: replan line names appends user-confirmed phases`. The phrase `so the planner its route: replan line names appends` is ungrammatical and likely a failed merge/edit of the logic.",
+   "severity": "med",
+   "axis": "code"
+  }
+ ],
+ "raw": "[{\"file\":\"docs/workflow/FEATURE_WORKFLOW.es.md\",\"line\":316,\"title\":\"Inconsistent replan-in-unit description\",\"detail\":\"The diff claims `replan-in-unit` executes `node scripts/unit-route.mjs <unit>`, but the current content (and the English version) describes it as appending phases. While the diff is intended to update the text, the resulting documentation in the 'current content' section for the Spanish version does not match the logic described in the English version or the intended fix for deterministic routing described in the unit's README.\",\"severity\":\"low\",\"axis\":\"usage-docs\"},{\"file\":\"docs/workflow/PORTABLE_PROMPT.es.md\",\"line\":144,\"title\":\"Broken sentence structure in replan-in-unit description\",\"detail\":\"The diff introduces a syntax error/broken sentence: `replan-in-unit runs node scripts/unit-route.mjs <unit> so the planner its route: replan line names appends user-confirmed phases`. The phrase `so the planner its route: replan line names appends` is ungrammatical and likely a failed merge/edit of the logic.\",\"severity\":\"med\",\"axis\":\"code\"}]"
+}

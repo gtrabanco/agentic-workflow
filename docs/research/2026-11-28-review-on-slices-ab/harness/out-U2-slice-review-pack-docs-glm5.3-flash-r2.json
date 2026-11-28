@@ -1,0 +1,88 @@
+{
+ "id": "U2__slice__review-pack-docs__glm5.3-flash__r2",
+ "unit": "U2",
+ "job": "slice__review-pack-docs",
+ "model": "glm5.3-flash",
+ "run": 2,
+ "ms": 132945,
+ "usage": {
+  "completion_tokens": 3829,
+  "prompt_tokens": 34498,
+  "total_tokens": 38327,
+  "completion_tokens_details": {
+   "reasoning_tokens": 2553
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 34496
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "skills/fold-findings/SKILL.md",
+   "line": null,
+   "title": "REPLAN verdict/branch still routes straight to /execute-phase",
+   "detail": "The per-finding verdict contract still reads `REPLAN <proposed phase(s) → /execute-phase>` and the closing block branch says `any REPLAN (<F1> + <F2> + …) → confirm all proposed SPEC phases, then /execute-phase on this same branch` — but the same file's freeze-batch section and FOLD_PROCESS step 9 now mandate `node scripts/unit-route.mjs <unit>` → planner → `a fresh /review-plan <unit>` passes BEFORE `/execute-phase`. The REPLAN path in the fixed output blocks skips the router and the review-plan gate the unit just made mandatory elsewhere.",
+   "severity": "med",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "skills/plan-fix/SKILL.md",
+   "line": null,
+   "title": "Replan contract loaded after the fix SPEC is already drafted",
+   "detail": "Step 7 ('Only when `node scripts/unit-route.mjs <N>` prints `route: replan` … its phases are appended to the unit's existing SPEC ledger on the same branch instead of a new fix SPEC') is the LAST allowlist item, ordered after steps 1–6 which ingest issues, draft the SPEC, freeze ACCEPTANCE.md, and prepare the hand-off. By the time the conditional load fires, the new fix SPEC the replan path forbids ('do not draft a new fix SPEC', PLANNING_PROCESS.md) has already been produced. The conditional must gate before drafting, not after.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "skills/plan-feature/references/ROUTING.md",
+   "line": null,
+   "title": "Replan exemption contradicts the gate's own no-bypass/never-replan contract",
+   "detail": "The new exemption says a `route: replan` line means 'skip the STOP' for an already-planned/in-progress unit. But step 2 of the same file says planned → STOP, 'Never invoke plan-feature-scaffold — re-scaffolding an already-planned feature is the re-plan-loop bug this gate exists to close', step 4 says replanning a `done` row 'stays forbidden', and the fixed gate block prints 'no bypass flag exists for this gate'. Nothing in the exemption reconciles these absolute 'never' statements with the new conditional bypass, and plan-feature SKILL.md's turn contract ('The redirect gate ran FIRST … undesigned input → STOP') is unchanged.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "skills/review-change/references/PERSIST_AND_DECIDE.md",
+   "line": null,
+   "title": "Orphaned '(yes: <which box fired>; no: omit this line)' fragment in the fixed REVIEW-FAIL block",
+   "detail": "In the REVIEW-FAIL `→ Next:` block, the line `    (yes: <which box fired>; no: omit this line)` now appears AFTER the two-cycle-cap paragraph, detached from the adversarial bullet it qualifies ('adversarial recommendation checklist fired AND this run was single-reviewer? → re-run the fold review as /review-change --adversarial N … instead of single-reviewer'). The file mandates the block be emitted 'verbatim, as multiple literal lines'; the displaced qualifier breaks the fixed block and reads as a dangling instruction after prose.",
+   "severity": "med",
+   "axis": "code"
+  },
+  {
+   "file": "skills/workflow-status/references/SENSOR_SIGNALS.md",
+   "line": null,
+   "title": "Sensor duplicates the class→destination decision the router is declared to own",
+   "detail": "The new `next.suggested[]` entry emits `{command: \"/plan-feature <unit>\" | \"/plan-fix <issue>\"…}` directly, while the same entry states this is 'the same class→destination decision `scripts/unit-route.mjs` owns'. Every other updated surface (fold-findings, CLASSIFY.md, PERSIST_AND_DECIDE.md, triage-issue, plan-fix) routes through running the router; the sensor re-derives the planner choice itself, contradicting the single-sourcing claim and able to disagree with the router's output.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "skills/plan-feature/SKILL.md",
+   "line": null,
+   "title": "Stale 'Both resources' and unordered router step in the allowlist",
+   "detail": "After adding item 4 (replan contract), the closing line still reads 'Both resources are normative, one hop from this file' — the allowlist now names four resources. Also item 4 conditions on the router output, but the router per ROUTING.md must run 'Before the status gate' (inside item 1); the allowlist gives no instruction to run it there, so a reader following the ordered allowlist runs it last, after the gates it is supposed to precede.",
+   "severity": "low",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "skills/review-change/SKILL.md",
+   "line": null,
+   "title": "Relationship section not updated to the router flow",
+   "detail": "'`replan-in-unit` adds user-confirmed phases' still describes the old direct append-then-execute flow, while every other file in this slice (review-implementation, CLASSIFY.md, OUTPUT_AND_GUARDRAILS.md, PERSIST_AND_DECIDE.md) now routes replan-in-unit through `scripts/unit-route.mjs` plus a fresh `/review-plan` before `execute-phase`.",
+   "severity": "low",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "skills/plan-fix/references/PLANNING_PROCESS.md",
+   "line": null,
+   "title": "Router precondition unreachable for plan-fix's own input",
+   "detail": "'When the target resolves to an existing unit folder, run `node scripts/unit-route.mjs <unit>` first' — plan-fix's input is issue number(s) (SKILL.md Input: 'One or more GitHub issue numbers'), and a new issue typically resolves to no unit folder, so the mandated pre-ingest router run has no defined target; the rule also hard-fails 'BLOCKED' on a missing script with no fallback for the ordinary new-fix path.",
+   "severity": "low",
+   "axis": "code"
+  }
+ ],
+ "raw": "[{\"file\":\"skills/fold-findings/SKILL.md\",\"line\":null,\"title\":\"REPLAN verdict/branch still routes straight to /execute-phase\",\"detail\":\"The per-finding verdict contract still reads `REPLAN <proposed phase(s) → /execute-phase>` and the closing block branch says `any REPLAN (<F1> + <F2> + …) → confirm all proposed SPEC phases, then /execute-phase on this same branch` — but the same file's freeze-batch section and FOLD_PROCESS step 9 now mandate `node scripts/unit-route.mjs <unit>` → planner → `a fresh /review-plan <unit>` passes BEFORE `/execute-phase`. The REPLAN path in the fixed output blocks skips the router and the review-plan gate the unit just made mandatory elsewhere.\",\"severity\":\"med\",\"axis\":\"usage-docs\"},\n{\"file\":\"skills/plan-fix/SKILL.md\",\"line\":null,\"title\":\"Replan contract loaded after the fix SPEC is already drafted\",\"detail\":\"Step 7 ('Only when `node scripts/unit-route.mjs <N>` prints `route: replan` … its phases are appended to the unit's existing SPEC ledger on the same branch instead of a new fix SPEC') is the LAST allowlist item, ordered after steps 1–6 which ingest issues, draft the SPEC, freeze ACCEPTANCE.md, and prepare the hand-off. By the time the conditional load fires, the new fix SPEC the replan path forbids ('do not draft a new fix SPEC', PLANNING_PROCESS.md) has already been produced. The conditional must gate before drafting, not after.\",\"severity\":\"med\",\"axis\":\"workflow\"},\n{\"file\":\"skills/plan-feature/references/ROUTING.md\",\"line\":null,\"title\":\"Replan exemption contradicts the gate's own no-bypass/never-replan contract\",\"detail\":\"The new exemption says a `route: replan` line means 'skip the STOP' for an already-planned/in-progress unit. But step 2 of the same file says planned → STOP, 'Never invoke plan-feature-scaffold — re-scaffolding an already-planned feature is the re-plan-loop bug this gate exists to close', step 4 says replanning a `done` row 'stays forbidden', and the fixed gate block prints 'no bypass flag exists for this gate'. Nothing in the exemption reconciles these absolute 'never' statements with the new conditional bypass, and plan-feature SKILL.md's turn contract ('The redirect gate ran FIRST … undesigned input → STOP') is unchanged.\",\"severity\":\"med\",\"axis\":\"workflow\"},\n{\"file\":\"skills/review-change/references/PERSIST_AND_DECIDE.md\",\"line\":null,\"title\":\"Orphaned '(yes: <which box fired>; no: omit this line)' fragment in the fixed REVIEW-FAIL block\",\"detail\":\"In the REVIEW-FAIL `→ Next:` block, the line `    (yes: <which box fired>; no: omit this line)` now appears AFTER the two-cycle-cap paragraph, detached from the adversarial bullet it qualifies ('adversarial recommendation checklist fired AND this run was single-reviewer? → re-run the fold review as /review-change --adversarial N … instead of single-reviewer'). The file mandates the block be emitted 'verbatim, as multiple literal lines'; the displaced qualifier breaks the fixed block and reads as a dangling instruction after prose.\",\"severity\":\"med\",\"axis\":\"code\"},\n{\"file\":\"skills/workflow-status/references/SENSOR_SIGNALS.md\",\"line\":null,\"title\":\"Sensor duplicates the class→destination decision the router is declared to own\",\"detail\":\"The new `next.suggested[]` entry emits `{command: \\\"/plan-feature <unit>\\\" | \\\"/plan-fix <issue>\\\"…}` directly, while the same entry states this is 'the same class→destination decision `scripts/unit-route.mjs` owns'. Every other updated surface (fold-findings, CLASSIFY.md, PERSIST_AND_DECIDE.md, triage-issue, plan-fix) routes through running the router; the sensor re-derives the planner choice itself, contradicting the single-sourcing claim and able to disagree with the router's output.\",\"severity\":\"med\",\"axis\":\"workflow\"},\n{\"file\":\"skills/plan-feature/SKILL.md\",\"line\":null,\"title\":\"Stale 'Both resources' and unordered router step in the allowlist\",\"detail\":\"After adding item 4 (replan contract), the closing line still reads 'Both resources are normative, one hop from this file' — the allowlist now names four resources. Also item 4 conditions on the router output, but the router per ROUTING.md must run 'Before the status gate' (inside item 1); the allowlist gives no instruction to run it there, so a reader following the ordered allowlist runs it last, after the gates it is supposed to precede.\",\"severity\":\"low\",\"axis\":\"usage-docs\"},\n{\"file\":\"skills/review-change/SKILL.md\",\"line\":null,\"title\":\"Relationship section not updated to the router flow\",\"detail\":\"'`replan-in-unit` adds user-confirmed phases' still describes the old direct append-then-execute flow, while every other file in this slice (review-implementation, CLASSIFY.md, OUTPUT_AND_GUARDRAILS.md, PERSIST_AND_DECIDE.md) now routes replan-in-unit through `scripts/unit-route.mjs` plus a fresh `/review-plan` before `execute-phase`.\",\"severity\":\"low\",\"axis\":\"spec-drift\"},\n{\"file\":\"skills/plan-fix/references/PLANNING_PROCESS.md\",\"line\":null,\"title\":\"Router precondition unreachable for plan-fix's own input\",\"detail\":\"'When the target resolves to an existing unit folder, run `node scripts/unit-route.mjs <unit>` first' — plan-fix's input is issue number(s) (SKILL.md Input: 'One or more GitHub issue numbers'), and a new issue typically resolves to no unit folder, so the mandated pre-ingest router run has no defined target; the rule also hard-fails 'BLOCKED' on a missing script with no fallback for the ordinary new-fix path.\",\"severity\":\"low\",\"axis\":\"code\"}]"
+}

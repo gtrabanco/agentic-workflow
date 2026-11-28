@@ -1,0 +1,40 @@
+{
+ "id": "U1__slice__release-notes__qwen3.6__r2",
+ "unit": "U1",
+ "job": "slice__release-notes",
+ "model": "qwen3.6",
+ "run": 2,
+ "ms": 6757,
+ "usage": {
+  "completion_tokens": 518,
+  "prompt_tokens": 6076,
+  "total_tokens": 6594,
+  "completion_tokens_details": {
+   "reasoning_tokens": 0
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "CHANGELOG.md",
+   "line": 699,
+   "title": "Trailing pipe in table cell breaks markdown table parsing",
+   "detail": "The row for `init-workspace` 3.3.0 contains a trailing pipe character `|` at the end of the 'What changed' column content: `...freshness fast path. |`. This creates an extra empty column or malformed table structure, violating the markdown table syntax defined by the surrounding rows.",
+   "severity": "med",
+   "axis": "code"
+  },
+  {
+   "file": "CHANGELOG.md",
+   "line": 99,
+   "title": "CHANGELOG entry claims 'No package code change' but unit description states code changes",
+   "detail": "The `@gtrabanco/pi-agentic-workflow` 0.22.0 entry states: 'No package code change — the bump exists because the shipped skill content changed'. However, the unit description provided in the prompt explicitly lists 'fix/258-harden-needs-input-contracts' as adding 'a guard that stops execution...'. The `package.json` diff shows a version bump to 0.22.0. If the 'guard' is implemented in the skill content (SKILL.md) rather than the package code (TS/JS), the claim might be technically true, but the unit description 'fix/258... adds a guard' implies a code/logic change. More critically, the `package.json` diff shows the version bump, but the CHANGELOG entry for 0.22.0 is the only one claiming 'No package code change' while others (like 0.21.0) also claim it. The defect is likely that the 'guard' is a behavioral change in the skill's *instructions* (content), not the package's *code* (TS), so the claim is consistent. However, looking closer at the `init-workspace` 3.3.0 row (line 699), the trailing pipe is a clear syntax error. The 0.22.0 entry's claim is consistent with the nature of 'skill content' changes in this repo (SKILL.md updates). I will stick to the syntax error.",
+   "severity": "med",
+   "axis": "code"
+  }
+ ],
+ "raw": "[\n  {\n    \"file\": \"CHANGELOG.md\",\n    \"line\": 699,\n    \"title\": \"Trailing pipe in table cell breaks markdown table parsing\",\n    \"detail\": \"The row for `init-workspace` 3.3.0 contains a trailing pipe character `|` at the end of the 'What changed' column content: `...freshness fast path. |`. This creates an extra empty column or malformed table structure, violating the markdown table syntax defined by the surrounding rows.\",\n    \"severity\": \"med\",\n    \"axis\": \"code\"\n  },\n  {\n    \"file\": \"CHANGELOG.md\",\n    \"line\": 99,\n    \"title\": \"CHANGELOG entry claims 'No package code change' but unit description states code changes\",\n    \"detail\": \"The `@gtrabanco/pi-agentic-workflow` 0.22.0 entry states: 'No package code change — the bump exists because the shipped skill content changed'. However, the unit description provided in the prompt explicitly lists 'fix/258-harden-needs-input-contracts' as adding 'a guard that stops execution...'. The `package.json` diff shows a version bump to 0.22.0. If the 'guard' is implemented in the skill content (SKILL.md) rather than the package code (TS/JS), the claim might be technically true, but the unit description 'fix/258... adds a guard' implies a code/logic change. More critically, the `package.json` diff shows the version bump, but the CHANGELOG entry for 0.22.0 is the only one claiming 'No package code change' while others (like 0.21.0) also claim it. The defect is likely that the 'guard' is a behavioral change in the skill's *instructions* (content), not the package's *code* (TS), so the claim is consistent. However, looking closer at the `init-workspace` 3.3.0 row (line 699), the trailing pipe is a clear syntax error. The 0.22.0 entry's claim is consistent with the nature of 'skill content' changes in this repo (SKILL.md updates). I will stick to the syntax error.\",\n    \"severity\": \"med\",\n    \"axis\": \"code\"\n  }\n]"
+}

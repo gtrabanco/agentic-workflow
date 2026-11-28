@@ -1,0 +1,56 @@
+{
+ "id": "U1__slice__lane-guard__qwen3.6__r1",
+ "unit": "U1",
+ "job": "slice__lane-guard",
+ "model": "qwen3.6",
+ "run": 1,
+ "ms": 9436,
+ "usage": {
+  "completion_tokens": 606,
+  "prompt_tokens": 5686,
+  "total_tokens": 6292,
+  "completion_tokens_details": {
+   "reasoning_tokens": 0
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "skills/unit-lane/SKILL.md",
+   "line": 24,
+   "title": "Guard message mismatch",
+   "detail": "The Turn contract box states the stop message is `→ Next: unit-lane requires manual input — cannot proceed`. However, the specific guard sections in DESIGN.md and RESEARCH.md use `→ Next: unit-lane (design step) requires manual input — cannot proceed` and `→ Next: unit-lane (research step) requires manual input — cannot proceed`. The SKILL.md guard section also omits the step context. This inconsistency violates the workflow axis's requirement for consistent gate/verdict vocabularies.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "skills/unit-lane/SKILL.md",
+   "line": 24,
+   "title": "Guard message format violation",
+   "detail": "The Turn contract box claims the stop message is `→ Next: unit-lane requires manual input — cannot proceed`. The 'Close the unit' section (Step 6) and 'Execute triaged steps' section use `→ Next:` followed by a command path (e.g., `→ Next: /execute-phase ...` or `→ Next: /review-change ...`). The guard message lacks the leading slash and command structure used elsewhere for navigation, creating a drift in the 'Next' block format.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "skills/unit-lane/references/DESIGN.md",
+   "line": 8,
+   "title": "Guard message inconsistency",
+   "detail": "The DESIGN.md needs-input guard emits `→ Next: unit-lane (design step) requires manual input — cannot proceed`. This contradicts the SKILL.md Turn contract which specifies `→ Next: unit-lane requires manual input — cannot proceed` (no step context). The unit's own documents contradict each other on the exact string for the halt condition.",
+   "severity": "med",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "skills/unit-lane/references/RESEARCH.md",
+   "line": 6,
+   "title": "Guard message inconsistency",
+   "detail": "The RESEARCH.md needs-input guard emits `→ Next: unit-lane (research step) requires manual input — cannot proceed`. This contradicts the SKILL.md Turn contract which specifies `→ Next: unit-lane requires manual input — cannot proceed`. The unit's own documents contradict each other on the exact string for the halt condition.",
+   "severity": "med",
+   "axis": "spec-drift"
+  }
+ ],
+ "raw": "[\n  {\n    \"file\": \"skills/unit-lane/SKILL.md\",\n    \"line\": 24,\n    \"title\": \"Guard message mismatch\",\n    \"detail\": \"The Turn contract box states the stop message is `→ Next: unit-lane requires manual input — cannot proceed`. However, the specific guard sections in DESIGN.md and RESEARCH.md use `→ Next: unit-lane (design step) requires manual input — cannot proceed` and `→ Next: unit-lane (research step) requires manual input — cannot proceed`. The SKILL.md guard section also omits the step context. This inconsistency violates the workflow axis's requirement for consistent gate/verdict vocabularies.\",\n    \"severity\": \"med\",\n    \"axis\": \"workflow\"\n  },\n  {\n    \"file\": \"skills/unit-lane/SKILL.md\",\n    \"line\": 24,\n    \"title\": \"Guard message format violation\",\n    \"detail\": \"The Turn contract box claims the stop message is `→ Next: unit-lane requires manual input — cannot proceed`. The 'Close the unit' section (Step 6) and 'Execute triaged steps' section use `→ Next:` followed by a command path (e.g., `→ Next: /execute-phase ...` or `→ Next: /review-change ...`). The guard message lacks the leading slash and command structure used elsewhere for navigation, creating a drift in the 'Next' block format.\",\n    \"severity\": \"med\",\n    \"axis\": \"workflow\"\n  },\n  {\n    \"file\": \"skills/unit-lane/references/DESIGN.md\",\n    \"line\": 8,\n    \"title\": \"Guard message inconsistency\",\n    \"detail\": \"The DESIGN.md needs-input guard emits `→ Next: unit-lane (design step) requires manual input — cannot proceed`. This contradicts the SKILL.md Turn contract which specifies `→ Next: unit-lane requires manual input — cannot proceed` (no step context). The unit's own documents contradict each other on the exact string for the halt condition.\",\n    \"severity\": \"med\",\n    \"axis\": \"spec-drift\"\n  },\n  {\n    \"file\": \"skills/unit-lane/references/RESEARCH.md\",\n    \"line\": 6,\n    \"title\": \"Guard message inconsistency\",\n    \"detail\": \"The RESEARCH.md needs-input guard emits `→ Next: unit-lane (research step) requires manual input — cannot proceed`. This contradicts the SKILL.md Turn contract which specifies `→ Next: unit-lane requires manual input — cannot proceed`. The unit's own documents contradict each other on the exact string for the halt condition.\",\n    \"severity\": \"med\",\n    \"axis\": \"spec-drift\"\n  }\n]"
+}

@@ -1,0 +1,112 @@
+{
+ "id": "U2__mono__glm5.3-flash__r1",
+ "unit": "U2",
+ "job": "mono",
+ "model": "glm5.3-flash",
+ "run": 1,
+ "ms": 176152,
+ "usage": {
+  "completion_tokens": 11719,
+  "prompt_tokens": 165391,
+  "total_tokens": 177110,
+  "completion_tokens_details": {
+   "reasoning_tokens": 10041
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "skills/fold-findings/SKILL.md",
+   "line": 76,
+   "title": "fold-findings still routes REPLAN straight to /execute-phase",
+   "detail": "The unit's own AC7 requires 'no converged surface sends a replan row to the executor or the fold', and fold-findings/SKILL.md is one of the eight converged surfaces — yet its per-finding report contract still prints `REPLAN <proposed phase(s) → /execute-phase>` and its Done-when closing block still says `· any REPLAN (<F1> + <F2> + …) → confirm all proposed SPEC phases, then /execute-phase on this same branch`. Both contradict the new canonical destination the same file's freeze-batch section and branch table now state (router → planner → fresh /review-plan → execute-phase). The exact 'two contradictory sentences' defect class the fix claims to remove survives inside a converged surface.",
+   "severity": "high",
+   "axis": "workflow"
+  },
+  {
+   "file": "skills/plan-feature/references/ROUTING.md",
+   "line": 9,
+   "title": "router-first gate BLOCKs the planners' primary paths",
+   "detail": "ROUTING.md now orders 'Before the status gate, run `node scripts/unit-route.mjs <NN>`' and only says 'a router that cannot run is BLOCKED' — but the router exits 1 ('unknown unit') for any slug with no unit folder (unit-route.mjs `fail(1, \"unknown unit: …\")` when `matches.length === 0` and the token is non-numeric). A brand-new feature slug (ROUTING step 5: 'Roadmap row status `idea`, or no row at all → STOP → /design-feature') and a brand-new fix issue not yet in the fix index (plan-fix's core input, per PLANNING_PROCESS 'run the router before ingest') both produce exit 1, which is neither 'any other route' nor 'cannot run' — leaving the documented undesigned-feature redirect and new-issue drafting paths blocked. Exit 1 is a determined answer, not a missing script.",
+   "severity": "high",
+   "axis": "workflow"
+  },
+  {
+   "file": "skills/plan-feature/SKILL.md",
+   "line": 62,
+   "title": "preflight mandatory vs skipped on the replan route",
+   "detail": "Progressive-loading item 2 says 'Any route that can write planning artifacts: … consume the planning preflight … before composing an internal step', and appending SPEC phases is a planning-artifact write. Item 4 plus skills/replan-findings/SKILL.md ('**No planning preflight.** … the normalized-repository-state read `planning-preflight` owns is not consumed on this route') contradict item 2 within the same allowlist — one of the two rules must be false.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "scripts/unit-route.mjs",
+   "line": 297,
+   "title": "`rows:` line lists all open rows, not the route-selected ones",
+   "detail": "`const rowIds = rows.map((row) => row.id)` prints every open row: for fixture 10-replan-unit the test itself asserts `rows: F1 F2 F3` where only F2 is replan-routed (F1=fold, F3=decision). But replan-findings/SKILL.md says 'The `rows:` line names the findings … Read exactly those rows' and PHASE_APPEND.md says 'For every finding the router's `rows:` line selected, append one or more phases' — a consumer following the contract appends phases for the fold/decision rows too, violating the contract's own 'Never widen the scope past the selected rows' guardrail. AC5 passes only because unit 37's open rows happen to be all-replan.",
+   "severity": "med",
+   "axis": "code"
+  },
+  {
+   "file": "skills/fold-findings/references/FOLD_PROCESS.md",
+   "line": 46,
+   "title": "freeze-batch claims `route: replan` for decision-required rows",
+   "detail": "The freeze-batch condition is '≥ 1 row with frozen class `replan-in-unit` **or `decision-required`**', and the new text says the loop 'routes to `node scripts/unit-route.mjs <unit>`, whose `route: replan` line names the planner'. For a decision-required row the router prints `route: decision` with `next: decision required — stop and surface to the user` (unit-route.mjs DECISION_ROUTE branch) — no replan line and no planner. The fold's documented consumer action is unactionable for half its own trigger set.",
+   "severity": "med",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "scripts/workflow-status.mjs",
+   "line": 760,
+   "title": "sensor routes decision-required rows to the fold, router says decision",
+   "detail": "`readSuggestions` only tests PLAN_ROUTE; a `decision-required` open row falls into the `rows.length > 0` branch and emits `{command: \"/fold-findings\"}`. The router the changelog says 'owns the class→destination decision' answers `route: decision` for the same row (fixture 12-decision-unit), and normative-drift's new test claims 'neither may invent a fourth destination for the same class' — here the two machine surfaces disagree on the decision class's destination.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": ".claude-plugin/plugin.json",
+   "line": null,
+   "title": "new skill missing from the plugin manifest",
+   "detail": "The skills array enumerates every workflow skill including internal ones (`./skills/implementation-discovery`, `./skills/evidence-grounding`, …) but has no `./skills/replan-findings` entry. AC9's 'the new internal skill is registered … the skill tree stays discoverable' and SKILLS.md's registration claim are not satisfied on the plugin-manifest discovery surface this file owns.",
+   "severity": "med",
+   "axis": "code"
+  },
+  {
+   "file": "CHANGELOG.md",
+   "line": 94,
+   "title": "stray `|---|` appended to new changelog rows",
+   "detail": "Every added row in this unit ends with a literal `|---|` inside the last cell (e.g. `…publish the re-bundle. |---|`, also on the 3.5.0, 5.2.0, 3.2.0, 3.5.1, 1.5.0 and 2.8.0 rows and their ES siblings). That renders as literal text in the table cell — a markdown defect in the release record repeated across both CHANGELOG files.",
+   "severity": "low",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "CHANGELOG.md",
+   "line": 156,
+   "title": "double negative in the 3.5.0 cell",
+   "detail": "'a plain fix-now row to `/fold-findings`, no open row contributes nothing' literally asserts every open row contributes something; the intended claim (per AC6: 'a unit with no open row contributes no suggestion') is the opposite. The ES sibling repeats it ('ninguna fila abierta no aporta nada').",
+   "severity": "low",
+   "axis": "brand"
+  },
+  {
+   "file": "skills/triage-issue/references/REVIEW_FINDING_PROCESS.md",
+   "line": 30,
+   "title": "step 4 drops the fresh /review-plan its own step 3 just added",
+   "detail": "Step 3 now requires 'the fresh `/review-plan <unit>` that must pass before execution', but step 4 still says 'After a replan, ask the user to continue manually with `/execute-phase <unit> P<n>`' with no review-plan step — the same file contradicts itself about whether execution may follow the replan directly.",
+   "severity": "low",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "skills/plan-feature/SKILL.md",
+   "line": 70,
+   "title": "stale 'Both resources' after the allowlist grew",
+   "detail": "The closing line of the progressive-loading section still reads 'Do not load planning gates after a redirect stop. Both resources are normative, one hop from this file' — the allowlist it closes now has four entries, so 'Both' no longer refers to anything countable.",
+   "severity": "low",
+   "axis": "usage-docs"
+  }
+ ],
+ "raw": "[{\"file\":\"skills/fold-findings/SKILL.md\",\"line\":76,\"title\":\"fold-findings still routes REPLAN straight to /execute-phase\",\"detail\":\"The unit's own AC7 requires 'no converged surface sends a replan row to the executor or the fold', and fold-findings/SKILL.md is one of the eight converged surfaces — yet its per-finding report contract still prints `REPLAN <proposed phase(s) → /execute-phase>` and its Done-when closing block still says `· any REPLAN (<F1> + <F2> + …) → confirm all proposed SPEC phases, then /execute-phase on this same branch`. Both contradict the new canonical destination the same file's freeze-batch section and branch table now state (router → planner → fresh /review-plan → execute-phase). The exact 'two contradictory sentences' defect class the fix claims to remove survives inside a converged surface.\",\"severity\":\"high\",\"axis\":\"workflow\"},{\"file\":\"skills/plan-feature/references/ROUTING.md\",\"line\":9,\"title\":\"router-first gate BLOCKs the planners' primary paths\",\"detail\":\"ROUTING.md now orders 'Before the status gate, run `node scripts/unit-route.mjs <NN>`' and only says 'a router that cannot run is BLOCKED' — but the router exits 1 ('unknown unit') for any slug with no unit folder (unit-route.mjs `fail(1, \\\"unknown unit: …\\\")` when `matches.length === 0` and the token is non-numeric). A brand-new feature slug (ROUTING step 5: 'Roadmap row status `idea`, or no row at all → STOP → /design-feature') and a brand-new fix issue not yet in the fix index (plan-fix's core input, per PLANNING_PROCESS 'run the router before ingest') both produce exit 1, which is neither 'any other route' nor 'cannot run' — leaving the documented undesigned-feature redirect and new-issue drafting paths blocked. Exit 1 is a determined answer, not a missing script.\",\"severity\":\"high\",\"axis\":\"workflow\"},{\"file\":\"skills/plan-feature/SKILL.md\",\"line\":62,\"title\":\"preflight mandatory vs skipped on the replan route\",\"detail\":\"Progressive-loading item 2 says 'Any route that can write planning artifacts: … consume the planning preflight … before composing an internal step', and appending SPEC phases is a planning-artifact write. Item 4 plus skills/replan-findings/SKILL.md ('**No planning preflight.** … the normalized-repository-state read `planning-preflight` owns is not consumed on this route') contradict item 2 within the same allowlist — one of the two rules must be false.\",\"severity\":\"med\",\"axis\":\"workflow\"},{\"file\":\"scripts/unit-route.mjs\",\"line\":297,\"title\":\"`rows:` line lists all open rows, not the route-selected ones\",\"detail\":\"`const rowIds = rows.map((row) => row.id)` prints every open row: for fixture 10-replan-unit the test itself asserts `rows: F1 F2 F3` where only F2 is replan-routed (F1=fold, F3=decision). But replan-findings/SKILL.md says 'The `rows:` line names the findings … Read exactly those rows' and PHASE_APPEND.md says 'For every finding the router's `rows:` line selected, append one or more phases' — a consumer following the contract appends phases for the fold/decision rows too, violating the contract's own 'Never widen the scope past the selected rows' guardrail. AC5 passes only because unit 37's open rows happen to be all-replan.\",\"severity\":\"med\",\"axis\":\"code\"},{\"file\":\"skills/fold-findings/references/FOLD_PROCESS.md\",\"line\":46,\"title\":\"freeze-batch claims `route: replan` for decision-required rows\",\"detail\":\"The freeze-batch condition is '≥ 1 row with frozen class `replan-in-unit` **or `decision-required`**', and the new text says the loop 'routes to `node scripts/unit-route.mjs <unit>`, whose `route: replan` line names the planner'. For a decision-required row the router prints `route: decision` with `next: decision required — stop and surface to the user` (unit-route.mjs DECISION_ROUTE branch) — no replan line and no planner. The fold's documented consumer action is unactionable for half its own trigger set.\",\"severity\":\"med\",\"axis\":\"usage-docs\"},{\"file\":\"scripts/workflow-status.mjs\",\"line\":760,\"title\":\"sensor routes decision-required rows to the fold, router says decision\",\"detail\":\"`readSuggestions` only tests PLAN_ROUTE; a `decision-required` open row falls into the `rows.length > 0` branch and emits `{command: \\\"/fold-findings\\\"}`. The router the changelog says 'owns the class→destination decision' answers `route: decision` for the same row (fixture 12-decision-unit), and normative-drift's new test claims 'neither may invent a fourth destination for the same class' — here the two machine surfaces disagree on the decision class's destination.\",\"severity\":\"med\",\"axis\":\"workflow\"},{\"file\":\".claude-plugin/plugin.json\",\"line\":null,\"title\":\"new skill missing from the plugin manifest\",\"detail\":\"The skills array enumerates every workflow skill including internal ones (`./skills/implementation-discovery`, `./skills/evidence-grounding`, …) but has no `./skills/replan-findings` entry. AC9's 'the new internal skill is registered … the skill tree stays discoverable' and SKILLS.md's registration claim are not satisfied on the plugin-manifest discovery surface this file owns.\",\"severity\":\"med\",\"axis\":\"code\"},{\"file\":\"CHANGELOG.md\",\"line\":94,\"title\":\"stray `|---|` appended to new changelog rows\",\"detail\":\"Every added row in this unit ends with a literal `|---|` inside the last cell (e.g. `…publish the re-bundle. |---|`, also on the 3.5.0, 5.2.0, 3.2.0, 3.5.1, 1.5.0 and 2.8.0 rows and their ES siblings). That renders as literal text in the table cell — a markdown defect in the release record repeated across both CHANGELOG files.\",\"severity\":\"low\",\"axis\":\"usage-docs\"},{\"file\":\"CHANGELOG.md\",\"line\":156,\"title\":\"double negative in the 3.5.0 cell\",\"detail\":\"'a plain fix-now row to `/fold-findings`, no open row contributes nothing' literally asserts every open row contributes something; the intended claim (per AC6: 'a unit with no open row contributes no suggestion') is the opposite. The ES sibling repeats it ('ninguna fila abierta no aporta nada').\",\"severity\":\"low\",\"axis\":\"brand\"},{\"file\":\"skills/triage-issue/references/REVIEW_FINDING_PROCESS.md\",\"line\":30,\"title\":\"step 4 drops the fresh /review-plan its own step 3 just added\",\"detail\":\"Step 3 now requires 'the fresh `/review-plan <unit>` that must pass before execution', but step 4 still says 'After a replan, ask the user to continue manually with `/execute-phase <unit> P<n>`' with no review-plan step — the same file contradicts itself about whether execution may follow the replan directly.\",\"severity\":\"low\",\"axis\":\"usage-docs\"},{\"file\":\"skills/plan-feature/SKILL.md\",\"line\":70,\"title\":\"stale 'Both resources' after the allowlist grew\",\"detail\":\"The closing line of the progressive-loading section still reads 'Do not load planning gates after a redirect stop. Both resources are normative, one hop from this file' — the allowlist it closes now has four entries, so 'Both' no longer refers to anything countable.\",\"severity\":\"low\",\"axis\":\"usage-docs\"}]"
+}

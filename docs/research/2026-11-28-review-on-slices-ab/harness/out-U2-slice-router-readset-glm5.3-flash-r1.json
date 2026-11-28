@@ -1,0 +1,56 @@
+{
+ "id": "U2__slice__router-readset__glm5.3-flash__r1",
+ "unit": "U2",
+ "job": "slice__router-readset",
+ "model": "glm5.3-flash",
+ "run": 1,
+ "ms": 131633,
+ "usage": {
+  "completion_tokens": 1474,
+  "prompt_tokens": 7645,
+  "total_tokens": 9119,
+  "completion_tokens_details": {
+   "reasoning_tokens": 838
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 14,
+   "title": "F92 row misfiles route value into class column",
+   "detail": "Row F92 reads `| F92 | ... | code | med | replan-in-unit | regression of F80 — plan owner re-cuts ... | no |`. Every other row uses the class vocabulary `fix-now` / `decision-required` (e.g. F83 `| med | fix-now | replan-in-unit: ... |`); here the class column holds the route token `replan-in-unit` and the route column holds free prose that is not a route value (no other route cell lacks the `fold…/replan-in-unit…/surface decision…` lead). The ledger schema declared by the header (`| class | route |`) is violated.",
+   "severity": "med",
+   "axis": "workflow"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 11,
+   "title": "F87: replan-routed row marked folded=yes",
+   "detail": "F87's route is `replan-in-unit: plan owner re-cuts SPEC.md:588 ...` yet its folded column is `yes`. Within this same material the fixtures establish the pairing: 10-replan-unit marks its replan rows `no`, and 13-execute-unit marks `fold into phase` rows `yes`. A replan-routed finding cannot be already folded into the phase; the row contradicts the router vocabulary the fixture set is built to exercise.",
+   "severity": "med",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 4,
+   "title": "F80 route cell uses non-canonical fold token",
+   "detail": "F80's route cell begins `fold: widen the layer-line parse...` while the canonical fold route emitted/declared elsewhere in this material is `fold into phase` (10-replan-unit F1, 11-fold-unit F1, 13-execute-unit F1). F84 (`fold: widen the box-7...`) and F89 (`fold: relocate...`) repeat the same off-vocabulary `fold:` prefix. If the router matches on route class these rows are a distinct, untyped route.",
+   "severity": "low",
+   "axis": "workflow"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/ROADMAP.md",
+   "line": 4,
+   "title": "ROADMAP omits the 30-dup-alpha unit present in the fixture tree",
+   "detail": "The fixture ships both `docs/features/30-dup-alpha/` and `docs/fix/30-dup-alpha/`, but the ROADMAP table lists only units 10, 11, 12, 13, 14, 37, 40 — no row for slug/unit 30. Either the duplicate-slug fixture is invisible to the roadmap contract the router consumes, or the fixture is incomplete for the dup case it evidently intends to cover.",
+   "severity": "low",
+   "axis": "spec-drift"
+  }
+ ],
+ "raw": "[{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":14,\"title\":\"F92 row misfiles route value into class column\",\"detail\":\"Row F92 reads `| F92 | ... | code | med | replan-in-unit | regression of F80 — plan owner re-cuts ... | no |`. Every other row uses the class vocabulary `fix-now` / `decision-required` (e.g. F83 `| med | fix-now | replan-in-unit: ... |`); here the class column holds the route token `replan-in-unit` and the route column holds free prose that is not a route value (no other route cell lacks the `fold…/replan-in-unit…/surface decision…` lead). The ledger schema declared by the header (`| class | route |`) is violated.\",\"severity\":\"med\",\"axis\":\"workflow\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":11,\"title\":\"F87: replan-routed row marked folded=yes\",\"detail\":\"F87's route is `replan-in-unit: plan owner re-cuts SPEC.md:588 ...` yet its folded column is `yes`. Within this same material the fixtures establish the pairing: 10-replan-unit marks its replan rows `no`, and 13-execute-unit marks `fold into phase` rows `yes`. A replan-routed finding cannot be already folded into the phase; the row contradicts the router vocabulary the fixture set is built to exercise.\",\"severity\":\"med\",\"axis\":\"spec-drift\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\"line\":4,\"title\":\"F80 route cell uses non-canonical fold token\",\"detail\":\"F80's route cell begins `fold: widen the layer-line parse...` while the canonical fold route emitted/declared elsewhere in this material is `fold into phase` (10-replan-unit F1, 11-fold-unit F1, 13-execute-unit F1). F84 (`fold: widen the box-7...`) and F89 (`fold: relocate...`) repeat the same off-vocabulary `fold:` prefix. If the router matches on route class these rows are a distinct, untyped route.\",\"severity\":\"low\",\"axis\":\"workflow\"},{\"file\":\"scripts/fixtures/unit-route/docs/features/ROADMAP.md\",\"line\":4,\"title\":\"ROADMAP omits the 30-dup-alpha unit present in the fixture tree\",\"detail\":\"The fixture ships both `docs/features/30-dup-alpha/` and `docs/fix/30-dup-alpha/`, but the ROADMAP table lists only units 10, 11, 12, 13, 14, 37, 40 — no row for slug/unit 30. Either the duplicate-slug fixture is invisible to the roadmap contract the router consumes, or the fixture is incomplete for the dup case it evidently intends to cover.\",\"severity\":\"low\",\"axis\":\"spec-drift\"}]"
+}

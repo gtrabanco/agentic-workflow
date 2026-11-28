@@ -1,0 +1,48 @@
+{
+ "id": "U2__slice__sensor-route__qwen3.6__r2",
+ "unit": "U2",
+ "job": "slice__sensor-route",
+ "model": "qwen3.6",
+ "run": 2,
+ "ms": 5743,
+ "usage": {
+  "completion_tokens": 505,
+  "prompt_tokens": 19812,
+  "total_tokens": 20317,
+  "completion_tokens_details": {
+   "reasoning_tokens": 0
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "scripts/workflow-status.mjs",
+   "line": 737,
+   "title": "Dead code: readOpenRows returns rows but readFixNow ignores them",
+   "detail": "The function readOpenRows (line 728) returns an array of row objects. However, readFixNow (line 737) calls readOpenRows but then iterates over `ledger.split('\\n')` directly (line 739) instead of using the returned rows. The rows from readOpenRows are effectively discarded, and the logic inside readFixNow duplicates the parsing logic of readOpenRows but without the VF- filter or the structured return.",
+   "severity": "med",
+   "axis": "code"
+  },
+  {
+   "file": "scripts/workflow-status.mjs",
+   "line": 737,
+   "title": "Logic error: readFixNow does not filter VF- rows",
+   "detail": "readOpenRows correctly filters out rows with IDs starting with 'VF-' (line 732). However, readFixNow, which is the function actually called by buildEnvelope (line 1129), parses the ledger directly and does NOT apply this filter. This means VF- rows will be processed as regular findings in readFixNow, potentially causing schema validation errors or incorrect envelope content, contradicting the intent of readOpenRows.",
+   "severity": "high",
+   "axis": "code"
+  },
+  {
+   "file": "scripts/workflow-status.mjs",
+   "line": 737,
+   "title": "Dead code: readOpenRows is never used for its return value",
+   "detail": "The function readOpenRows is defined (line 728) and returns a list of parsed row objects. However, it is only called inside readFixNow (line 738), where its return value is ignored. The code in readFixNow re-parses the ledger from scratch. This makes readOpenRows dead code in terms of its return value, and its internal logic (like the VF- filter) is not applied to the actual data flow used by the sensor.",
+   "severity": "med",
+   "axis": "code"
+  }
+ ],
+ "raw": "[\n  {\n    \"file\": \"scripts/workflow-status.mjs\",\n    \"line\": 737,\n    \"title\": \"Dead code: readOpenRows returns rows but readFixNow ignores them\",\n    \"detail\": \"The function readOpenRows (line 728) returns an array of row objects. However, readFixNow (line 737) calls readOpenRows but then iterates over `ledger.split('\\\\n')` directly (line 739) instead of using the returned rows. The rows from readOpenRows are effectively discarded, and the logic inside readFixNow duplicates the parsing logic of readOpenRows but without the VF- filter or the structured return.\",\n    \"severity\": \"med\",\n    \"axis\": \"code\"\n  },\n  {\n    \"file\": \"scripts/workflow-status.mjs\",\n    \"line\": 737,\n    \"title\": \"Logic error: readFixNow does not filter VF- rows\",\n    \"detail\": \"readOpenRows correctly filters out rows with IDs starting with 'VF-' (line 732). However, readFixNow, which is the function actually called by buildEnvelope (line 1129), parses the ledger directly and does NOT apply this filter. This means VF- rows will be processed as regular findings in readFixNow, potentially causing schema validation errors or incorrect envelope content, contradicting the intent of readOpenRows.\",\n    \"severity\": \"high\",\n    \"axis\": \"code\"\n  },\n  {\n    \"file\": \"scripts/workflow-status.mjs\",\n    \"line\": 737,\n    \"title\": \"Dead code: readOpenRows is never used for its return value\",\n    \"detail\": \"The function readOpenRows is defined (line 728) and returns a list of parsed row objects. However, it is only called inside readFixNow (line 738), where its return value is ignored. The code in readFixNow re-parses the ledger from scratch. This makes readOpenRows dead code in terms of its return value, and its internal logic (like the VF- filter) is not applied to the actual data flow used by the sensor.\",\n    \"severity\": \"med\",\n    \"axis\": \"code\"\n  }\n]"
+}

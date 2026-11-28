@@ -1,0 +1,40 @@
+{
+ "id": "U2__slice__unit-artifacts__qwen3.6__r2",
+ "unit": "U2",
+ "job": "slice__unit-artifacts",
+ "model": "qwen3.6",
+ "run": 2,
+ "ms": 7429,
+ "usage": {
+  "completion_tokens": 920,
+  "prompt_tokens": 36421,
+  "total_tokens": 37341,
+  "completion_tokens_details": {
+   "reasoning_tokens": 0
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/progress.md",
+   "line": 135,
+   "title": "Budget ceiling re-basing contradicts SPEC Rules",
+   "detail": "P8 receipt states: 'Route ceilings re-based... Each ceiling was raised to ceil(measured × 1.10)...'. However, SPEC.md `## Rules that must never be violated` explicitly states: 'Skills stay within their context budgets. The new main file must satisfy the manifest's defaults (mainEstimateMax: 2800, mainLinesMax: 240).' The P8 receipt also notes 'plan-feature's main estimate to 2802 > 2800... both were compressed back under the defaults'. While P2 claims compression, P8 admits re-basing ceilings for other skills. The SPEC Rules section does not provide an exception for 're-basing' ceilings, only that skills must satisfy the manifest's defaults. The P8 receipt's action of modifying `SKILL_CONTEXT_BUDGETS.json` to raise ceilings contradicts the strict 'must satisfy the manifest's defaults' rule unless the manifest itself is the source of truth for dynamic budgets, but the SPEC Rules section cites the specific numbers (2800/240) as the rule, not the file. More critically, P2 says 'compressed back under the defaults', but P8 says 're-based'. If the defaults were violated and then fixed by compression, the P8 re-basing of *other* ceilings (plan-feature:issue/scoped, etc.) suggests the 'defaults' are not hard limits but soft targets, which contradicts the 'must never be violated' severity of the Rules section. The defect is that the P8 receipt admits to violating the 'stay within' rule by re-basing, whereas the Rules section presents it as an absolute constraint.",
+   "severity": "med",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/fix/224-deterministic-replan-routing/progress.md",
+   "line": 135,
+   "title": "Version pin maintenance contradicts version-bump sweep evenness",
+   "detail": "P8 receipt states: 'A version pin was maintained. scripts/review-loop-discipline.test.mjs:10j pinned fold-findings' exact version: to 1.4.0... P4 bumps that skill to 1.5.0 by SPEC obligation, so the pin was advanced to 1.5.0...'. However, SPEC.md `## Rules that must never be violated` states: 'review-change and fold-findings keep their frozen classification... never edits a recorded row's severity or class.' While this is a version pin, not a classification, the SPEC's `## Amendments` and `planning-findings.md` (RP-224-6) emphasize that 'Version every change' is a strict rule. The P8 receipt describes modifying a test file's assertion to match the new version. This is a test maintenance action, not a defect in the unit's delivery flow itself, but it highlights that the 'frozen classification' rule might be interpreted broadly. However, a more direct defect is in P2: 'plan-feature's main estimate to 2802 > 2800... both were compressed back under the defaults'. The SPEC Rules say 'must satisfy the manifest's defaults'. If the code *initially* violated it and was then compressed, the *final* state satisfies it. But P8 says 'Route ceilings re-based' for *other* skills. The contradiction is between the 'must satisfy' rule and the 're-basing' action. The P8 receipt admits to changing the budget manifest, which is the 'manifest's defaults'. If the manifest is the source of truth, then the rule 'must satisfy the manifest's defaults' is tautological and not a constraint. If the numbers 2800/240 are the constraint, then re-basing is a violation. The P8 receipt does not cite a SPEC amendment allowing this re-basing, making it a spec-drift.",
+   "severity": "med",
+   "axis": "spec-drift"
+  }
+ ],
+ "raw": "[\n  {\n    \"file\": \"docs/fix/224-deterministic-replan-routing/progress.md\",\n    \"line\": 135,\n    \"title\": \"Budget ceiling re-basing contradicts SPEC Rules\",\n    \"detail\": \"P8 receipt states: 'Route ceilings re-based... Each ceiling was raised to ceil(measured × 1.10)...'. However, SPEC.md `## Rules that must never be violated` explicitly states: 'Skills stay within their context budgets. The new main file must satisfy the manifest's defaults (mainEstimateMax: 2800, mainLinesMax: 240).' The P8 receipt also notes 'plan-feature's main estimate to 2802 > 2800... both were compressed back under the defaults'. While P2 claims compression, P8 admits re-basing ceilings for other skills. The SPEC Rules section does not provide an exception for 're-basing' ceilings, only that skills must satisfy the manifest's defaults. The P8 receipt's action of modifying `SKILL_CONTEXT_BUDGETS.json` to raise ceilings contradicts the strict 'must satisfy the manifest's defaults' rule unless the manifest itself is the source of truth for dynamic budgets, but the SPEC Rules section cites the specific numbers (2800/240) as the rule, not the file. More critically, P2 says 'compressed back under the defaults', but P8 says 're-based'. If the defaults were violated and then fixed by compression, the P8 re-basing of *other* ceilings (plan-feature:issue/scoped, etc.) suggests the 'defaults' are not hard limits but soft targets, which contradicts the 'must never be violated' severity of the Rules section. The defect is that the P8 receipt admits to violating the 'stay within' rule by re-basing, whereas the Rules section presents it as an absolute constraint.\",\n    \"severity\": \"med\",\n    \"axis\": \"spec-drift\"\n  },\n  {\n    \"file\": \"docs/fix/224-deterministic-replan-routing/progress.md\",\n    \"line\": 135,\n    \"title\": \"Version pin maintenance contradicts version-bump sweep evenness\",\n    \"detail\": \"P8 receipt states: 'A version pin was maintained. scripts/review-loop-discipline.test.mjs:10j pinned fold-findings' exact version: to 1.4.0... P4 bumps that skill to 1.5.0 by SPEC obligation, so the pin was advanced to 1.5.0...'. However, SPEC.md `## Rules that must never be violated` states: 'review-change and fold-findings keep their frozen classification... never edits a recorded row's severity or class.' While this is a version pin, not a classification, the SPEC's `## Amendments` and `planning-findings.md` (RP-224-6) emphasize that 'Version every change' is a strict rule. The P8 receipt describes modifying a test file's assertion to match the new version. This is a test maintenance action, not a defect in the unit's delivery flow itself, but it highlights that the 'frozen classification' rule might be interpreted broadly. However, a more direct defect is in P2: 'plan-feature's main estimate to 2802 > 2800... both were compressed back under the defaults'. The SPEC Rules say 'must satisfy the manifest's defaults'. If the code *initially* violated it and was then compressed, the *final* state satisfies it. But P8 says 'Route ceilings re-based' for *other* skills. The contradiction is between the 'must satisfy' rule and the 're-basing' action. The P8 receipt admits to changing the budget manifest, which is the 'manifest's defaults'. If the manifest is the source of truth, then the rule 'must satisfy the manifest's defaults' is tautological and not a constraint. If the numbers 2800/240 are the constraint, then re-basing is a violation. The P8 receipt does not cite a SPEC amendment allowing this re-basing, making it a spec-drift.\",\n    \"severity\": \"med\",\n    \"axis\": \"spec-drift\"\n  }\n]"
+}

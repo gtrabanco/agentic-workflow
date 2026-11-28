@@ -1,0 +1,48 @@
+{
+ "id": "U1__slice__init-consent__qwen3.6__r2",
+ "unit": "U1",
+ "job": "slice__init-consent",
+ "model": "qwen3.6",
+ "run": 2,
+ "ms": 13462,
+ "usage": {
+  "completion_tokens": 879,
+  "prompt_tokens": 3356,
+  "total_tokens": 4235,
+  "completion_tokens_details": {
+   "reasoning_tokens": 0
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "skills/init-workspace/SKILL.md",
+   "line": 24,
+   "title": "Turn contract box incomplete: missing closing block requirement",
+   "detail": "The Turn contract box lists 4 checkmarks (inputs, scaffold/ledger, consent, language) but omits the 5th requirement present in the diff's new 'Needs-input guard' section and implied by the 'closing block' rule. The diff adds a new checkmark for the closing `→ Next:` block in the current content (line 30 of current content), but the diff hunk only shows the addition of the first checkmark. The diff shows the base had 4 items, and the tip has 5. The diff hunk `@@ -21,6 +21,9 @@` shows the addition of the first checkmark but fails to show the subsequent checkmarks being added in the same block, suggesting the diff is truncated or incomplete regarding the full contract list. Specifically, the diff shows the base block ending at `...unless one of the first two says otherwise` and the tip block starting with the new checkmark, but the tip block in the 'current content' shows 5 checkmarks. The diff does not show the addition of the 2nd, 3rd, 4th, and 5th checkmarks, only the first one. This implies the diff is missing the other 4 checkmark additions, making the diff invalid/incomplete for the stated change.",
+   "severity": "high",
+   "axis": "code"
+  },
+  {
+   "file": "skills/init-workspace/SKILL.md",
+   "line": 34,
+   "title": "Needs-input guard contradicts Turn contract on 're-ask' behavior",
+   "detail": "The 'Needs-input guard' section states: 'If blank: re-ask once... If still blank, emit... and stop.' The 'Turn contract' section states: 'Any blank required input was re-asked once; if still blank the skill emits... and stops.' These are consistent. However, the 'Needs-input guard' also states: 'Cwd is used as a fallback only.' for `<target-dir>`. The Turn contract does not mention fallbacks. More critically, the 'Needs-input guard' says 'Consent... is mandatory... blank or absent consent → re-ask once → halt'. The Turn contract says 'Nothing was installed or overwritten without an explicit yes'. This is consistent. But the 'Needs-input guard' section for `<target-dir>` says 'Cwd is used as a fallback only.' This implies that if the user provides a blank input, the skill *should* use Cwd? No, it says 'If blank: re-ask once... If still blank... stop.' So Cwd is not a fallback for blank input, but perhaps for missing argument? The diff adds this text. The issue is that the 'Turn contract' box in the diff hunk (lines 24-27 of current content) shows the new checkmark, but the diff hunk itself (the `diff` block) only shows the addition of the first line of that checkmark. The diff hunk shows: `+✓ Required user inputs were answered concretely...` but the current content shows 5 checkmarks. The diff hunk is missing the other 4 checkmarks. This is a diff defect.",
+   "severity": "high",
+   "axis": "code"
+  },
+  {
+   "file": "skills/init-workspace/SKILL.md",
+   "line": null,
+   "title": "Diff hunk truncation: missing checkmarks in Turn contract",
+   "detail": "The diff hunk for `skills/init-workspace/SKILL.md` shows the addition of the first checkmark in the Turn contract box. However, the 'current content at tip' shows 5 checkmarks in that box. The base content (implied by the diff context) had 4 checkmarks (lines 21-24 of base). The diff adds 1 checkmark. But the tip has 5. This means 4 checkmarks were added in the diff, but the diff hunk only shows 1. The diff is incomplete/truncated, failing to capture the full change to the Turn contract box. This makes the diff invalid for review as it does not reflect the actual state change.",
+   "severity": "high",
+   "axis": "code"
+  }
+ ],
+ "raw": "[{\"file\":\"skills/init-workspace/SKILL.md\",\"line\":24,\"title\":\"Turn contract box incomplete: missing closing block requirement\",\"detail\":\"The Turn contract box lists 4 checkmarks (inputs, scaffold/ledger, consent, language) but omits the 5th requirement present in the diff's new 'Needs-input guard' section and implied by the 'closing block' rule. The diff adds a new checkmark for the closing `→ Next:` block in the current content (line 30 of current content), but the diff hunk only shows the addition of the first checkmark. The diff shows the base had 4 items, and the tip has 5. The diff hunk `@@ -21,6 +21,9 @@` shows the addition of the first checkmark but fails to show the subsequent checkmarks being added in the same block, suggesting the diff is truncated or incomplete regarding the full contract list. Specifically, the diff shows the base block ending at `...unless one of the first two says otherwise` and the tip block starting with the new checkmark, but the tip block in the 'current content' shows 5 checkmarks. The diff does not show the addition of the 2nd, 3rd, 4th, and 5th checkmarks, only the first one. This implies the diff is missing the other 4 checkmark additions, making the diff invalid/incomplete for the stated change.\",\"severity\":\"high\",\"axis\":\"code\"},{\"file\":\"skills/init-workspace/SKILL.md\",\"line\":34,\"title\":\"Needs-input guard contradicts Turn contract on 're-ask' behavior\",\"detail\":\"The 'Needs-input guard' section states: 'If blank: re-ask once... If still blank, emit... and stop.' The 'Turn contract' section states: 'Any blank required input was re-asked once; if still blank the skill emits... and stops.' These are consistent. However, the 'Needs-input guard' also states: 'Cwd is used as a fallback only.' for `<target-dir>`. The Turn contract does not mention fallbacks. More critically, the 'Needs-input guard' says 'Consent... is mandatory... blank or absent consent → re-ask once → halt'. The Turn contract says 'Nothing was installed or overwritten without an explicit yes'. This is consistent. But the 'Needs-input guard' section for `<target-dir>` says 'Cwd is used as a fallback only.' This implies that if the user provides a blank input, the skill *should* use Cwd? No, it says 'If blank: re-ask once... If still blank... stop.' So Cwd is not a fallback for blank input, but perhaps for missing argument? The diff adds this text. The issue is that the 'Turn contract' box in the diff hunk (lines 24-27 of current content) shows the new checkmark, but the diff hunk itself (the `diff` block) only shows the addition of the first line of that checkmark. The diff hunk shows: `+✓ Required user inputs were answered concretely...` but the current content shows 5 checkmarks. The diff hunk is missing the other 4 checkmarks. This is a diff defect.\",\"severity\":\"high\",\"axis\":\"code\"},{\"file\":\"skills/init-workspace/SKILL.md\",\"line\":null,\"title\":\"Diff hunk truncation: missing checkmarks in Turn contract\",\"detail\":\"The diff hunk for `skills/init-workspace/SKILL.md` shows the addition of the first checkmark in the Turn contract box. However, the 'current content at tip' shows 5 checkmarks in that box. The base content (implied by the diff context) had 4 checkmarks (lines 21-24 of base). The diff adds 1 checkmark. But the tip has 5. This means 4 checkmarks were added in the diff, but the diff hunk only shows 1. The diff is incomplete/truncated, failing to capture the full change to the Turn contract box. This makes the diff invalid for review as it does not reflect the actual state change.\",\"severity\":\"high\",\"axis\":\"code\"}]"
+}

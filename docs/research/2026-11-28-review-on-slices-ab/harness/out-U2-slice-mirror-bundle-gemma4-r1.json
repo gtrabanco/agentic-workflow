@@ -1,0 +1,32 @@
+{
+ "id": "U2__slice__mirror-bundle__gemma4__r1",
+ "unit": "U2",
+ "job": "slice__mirror-bundle",
+ "model": "gemma4",
+ "run": 1,
+ "ms": 4416,
+ "usage": {
+  "completion_tokens": 213,
+  "prompt_tokens": 28068,
+  "total_tokens": 28281,
+  "completion_tokens_details": {
+   "reasoning_tokens": 0
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "packages/pi-agentic-workflow/skills/workflow-status/SKILL.md",
+   "line": null,
+   "title": "Inconsistent sensor signal recommendation",
+   "detail": "The `workflow-status` Turn contract (line 31) claims `next.recommended` is non-bare and computed from pre-execution evidence, but the `SENSOR_SIGNALS.md` reference (line 74) defines the trigger for a replan-in-unit finding as `{command: \"/plan-feature <unit>\" | \"/plan-fix <issue>\"...}`, which contradicts the `review-change` and `fold-findings` documentation stating that the router `node scripts/unit-route.mjs <unit>` must be run to determine the specific planner. The sensor is recommending the *result* of the router rather than the router itself, which breaks the 'deterministic producer' contract if the router's output is the source of truth.",
+   "severity": "med",
+   "axis": "workflow"
+  }
+ ],
+ "raw": "[{\"file\":\"packages/pi-agentic-workflow/skills/workflow-status/SKILL.md\",\"line\":null,\"title\":\"Inconsistent sensor signal recommendation\",\"detail\":\"The `workflow-status` Turn contract (line 31) claims `next.recommended` is non-bare and computed from pre-execution evidence, but the `SENSOR_SIGNALS.md` reference (line 74) defines the trigger for a replan-in-unit finding as `{command: \\\"/plan-feature <unit>\\\" | \\\"/plan-fix <issue>\\\"...}`, which contradicts the `review-change` and `fold-findings` documentation stating that the router `node scripts/unit-route.mjs <unit>` must be run to determine the specific planner. The sensor is recommending the *result* of the router rather than the router itself, which breaks the 'deterministic producer' contract if the router's output is the source of truth.\",\"severity\":\"med\",\"axis\":\"workflow\"}]"
+}

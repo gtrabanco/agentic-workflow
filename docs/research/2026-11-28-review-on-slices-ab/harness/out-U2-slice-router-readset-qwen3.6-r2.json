@@ -1,0 +1,48 @@
+{
+ "id": "U2__slice__router-readset__qwen3.6__r2",
+ "unit": "U2",
+ "job": "slice__router-readset",
+ "model": "qwen3.6",
+ "run": 2,
+ "ms": 4145,
+ "usage": {
+  "completion_tokens": 638,
+  "prompt_tokens": 8534,
+  "total_tokens": 9172,
+  "completion_tokens_details": {
+   "reasoning_tokens": 0
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/40-cited-paths/review-findings.md",
+   "line": 4,
+   "title": "Finding F1 cites non-existent files",
+   "detail": "The finding row for F1 cites `src/file-7.txt`, `src/file-8.txt`, and `src/file-9.txt` as part of the defect scope. However, the provided material only includes `src/file-1.txt` through `src/file-6.txt` and `src/file-10.txt` through `src/file-20.txt`. Files 7, 8, and 9 are missing from the unit's file set, making the finding reference invalid and the cited defect unlocatable within this slice.",
+   "severity": "high",
+   "axis": "workflow"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/40-cited-paths/review-findings.md",
+   "line": 5,
+   "title": "Finding F2 cites non-existent files",
+   "detail": "The finding row for F2 cites `src/file-14.txt` and `src/file-15.txt` as part of the defect scope. These files are not present in the provided material (only 10-13 and 16-20 are included). The finding is therefore based on missing context.",
+   "severity": "high",
+   "axis": "workflow"
+  },
+  {
+   "file": "scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md",
+   "line": 10,
+   "title": "Finding F88 cites unknown revision and missing file",
+   "detail": "The finding F88 claims `8bab5c90` is an unknown revision and `docs/features/ROADMAP_EXECUTION_ORDER.md` does not exist on main. The corresponding verification row `VF-88` confirms this state. However, the finding itself is marked `replan-in-unit` with route `no` (implied by absence of 'yes' in folded column, though column is empty, the context suggests it's an active finding). More critically, the finding references `SPEC.md:302` which is part of the fixture. If the file/repo state contradicts the finding's premise (that it's a defect), the finding might be stale. But the stronger defect is that `VF-88` explicitly states the file is absent on main, yet the finding is still listed as a defect to be fixed in this unit. If the unit is `fix/224`, and this file doesn't exist, the fix cannot be applied to it. This is a workflow contradiction: you cannot fix a defect in a file that doesn't exist in the target scope.",
+   "severity": "med",
+   "axis": "workflow"
+  }
+ ],
+ "raw": "[\n  {\n    \"file\": \"scripts/fixtures/unit-route/docs/features/40-cited-paths/review-findings.md\",\n    \"line\": 4,\n    \"title\": \"Finding F1 cites non-existent files\",\n    \"detail\": \"The finding row for F1 cites `src/file-7.txt`, `src/file-8.txt`, and `src/file-9.txt` as part of the defect scope. However, the provided material only includes `src/file-1.txt` through `src/file-6.txt` and `src/file-10.txt` through `src/file-20.txt`. Files 7, 8, and 9 are missing from the unit's file set, making the finding reference invalid and the cited defect unlocatable within this slice.\",\n    \"severity\": \"high\",\n    \"axis\": \"workflow\"\n  },\n  {\n    \"file\": \"scripts/fixtures/unit-route/docs/features/40-cited-paths/review-findings.md\",\n    \"line\": 5,\n    \"title\": \"Finding F2 cites non-existent files\",\n    \"detail\": \"The finding row for F2 cites `src/file-14.txt` and `src/file-15.txt` as part of the defect scope. These files are not present in the provided material (only 10-13 and 16-20 are included). The finding is therefore based on missing context.\",\n    \"severity\": \"high\",\n    \"axis\": \"workflow\"\n  },\n  {\n    \"file\": \"scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md\",\n    \"line\": 10,\n    \"title\": \"Finding F88 cites unknown revision and missing file\",\n    \"detail\": \"The finding F88 claims `8bab5c90` is an unknown revision and `docs/features/ROADMAP_EXECUTION_ORDER.md` does not exist on main. The corresponding verification row `VF-88` confirms this state. However, the finding itself is marked `replan-in-unit` with route `no` (implied by absence of 'yes' in folded column, though column is empty, the context suggests it's an active finding). More critically, the finding references `SPEC.md:302` which is part of the fixture. If the file/repo state contradicts the finding's premise (that it's a defect), the finding might be stale. But the stronger defect is that `VF-88` explicitly states the file is absent on main, yet the finding is still listed as a defect to be fixed in this unit. If the unit is `fix/224`, and this file doesn't exist, the fix cannot be applied to it. This is a workflow contradiction: you cannot fix a defect in a file that doesn't exist in the target scope.\",\n    \"severity\": \"med\",\n    \"axis\": \"workflow\"\n  }\n]"
+}

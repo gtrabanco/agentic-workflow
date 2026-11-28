@@ -1,0 +1,56 @@
+{
+ "id": "U2__slice__tutorial-crossrefs__qwen3.6__r2",
+ "unit": "U2",
+ "job": "slice__tutorial-crossrefs",
+ "model": "qwen3.6",
+ "run": 2,
+ "ms": 8752,
+ "usage": {
+  "completion_tokens": 1050,
+  "prompt_tokens": 25823,
+  "total_tokens": 26873,
+  "completion_tokens_details": {
+   "reasoning_tokens": 0
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 25152
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "docs/workflow/SKILLS.md",
+   "line": 6,
+   "title": "Internal step count mismatch",
+   "detail": "The diff changes the internal step count from 18 to 19, but the table only adds one new entry (`replan-findings`). The text claims 19 internal steps composed of specific lists, but the previous count was 18. Adding `replan-findings` makes it 19, which is correct for the count, but the list of components in the text must be verified. However, looking at the diff, the change is from 18 to 19. The list of components: plan-feature (2), evidence-grounding (1), pre-execution-review (1), review-implementation (1), planning-preflight (1), phase-contract (1), verification-contract (1), review pack (9). Sum: 2+1+1+1+1+1+1+9 = 17. Plus `replan-findings` (1) = 18. The text says 19. There is a missing internal step in the count or the list. Let's re-read carefully. 'the plan-feature router's two planning steps' (2). 'the two pre-execution evidence owners evidence-grounding ... and pre-execution-review' (2). 'the review-change findings engine review-implementation' (1). 'the planning-preflight planning gate' (1). 'the phase-contract lint contract' (1). 'the verification-concept acceptance guard' (1). 'the workflow's own 9-skill internal review pack' (9). Total so far: 2+2+1+1+1+1+9 = 17. The diff adds `replan-findings` (1). Total 18. The text says 19. One internal step is missing from the enumeration or the count is wrong.",
+   "severity": "med",
+   "axis": "spec-drift"
+  },
+  {
+   "file": "docs/workflow/FEATURE_WORKFLOW.md",
+   "line": 285,
+   "title": "Incorrect planner invocation for replan",
+   "detail": "The doc states: 'replan-in-unit runs node scripts/unit-route.mjs <unit>, whose route: replan line names the planner that appends new user-confirmed phases to the unit's SPEC (fresh /review-plan first)'. This implies the router script *names* the planner. However, `REVIEW_AND_CLASSIFY.md` clarifies: 'its route: replan line names the planner (/plan-feature for a feature, /plan-fix for a fix)'. The `FEATURE_WORKFLOW.md` text is slightly ambiguous but generally consistent. However, `PORTABLE_PROMPT.md` says: 'runs node scripts/unit-route.mjs <unit> so the planner its route: replan line names appends user-confirmed phases'. This is grammatically broken and logically unclear. It suggests the *planner* appends phases, but the router *names* the planner. The actual flow is: Router prints `route: replan` + planner name. The *agent* then invokes that planner. The docs imply the router script itself might do the appending or that the 'line names the planner' is the mechanism for appending. The key defect is in `PORTABLE_PROMPT.md` which has broken syntax 'so the planner its route: replan line names appends'.",
+   "severity": "med",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "docs/workflow/PORTABLE_PROMPT.md",
+   "line": 140,
+   "title": "Broken syntax in portable prompt",
+   "detail": "The diff changes 'appends user-confirmed phases' to 'runs node scripts/unit-route.mjs <unit> so the planner its route: replan line names appends user-confirmed phases'. The phrase 'so the planner its route: replan line names appends' is syntactically broken and semantically ambiguous. It should likely be 'so the planner named in its route: replan line appends...'.",
+   "severity": "med",
+   "axis": "usage-docs"
+  },
+  {
+   "file": "docs/workflow/PORTABLE_PROMPT.es.md",
+   "line": 146,
+   "title": "Broken syntax in portable prompt ES",
+   "detail": "The diff changes 'appends user-confirmed fases' to 'runs node scripts/unit-route.mjs <unit> so the planner its route: replan line names appends user-confirmed fases'. Same broken syntax as the English version.",
+   "severity": "med",
+   "axis": "usage-docs"
+  }
+ ],
+ "raw": "[\n  {\n    \"file\": \"docs/workflow/SKILLS.md\",\n    \"line\": 6,\n    \"title\": \"Internal step count mismatch\",\n    \"detail\": \"The diff changes the internal step count from 18 to 19, but the table only adds one new entry (`replan-findings`). The text claims 19 internal steps composed of specific lists, but the previous count was 18. Adding `replan-findings` makes it 19, which is correct for the count, but the list of components in the text must be verified. However, looking at the diff, the change is from 18 to 19. The list of components: plan-feature (2), evidence-grounding (1), pre-execution-review (1), review-implementation (1), planning-preflight (1), phase-contract (1), verification-contract (1), review pack (9). Sum: 2+1+1+1+1+1+1+9 = 17. Plus `replan-findings` (1) = 18. The text says 19. There is a missing internal step in the count or the list. Let's re-read carefully. 'the plan-feature router's two planning steps' (2). 'the two pre-execution evidence owners evidence-grounding ... and pre-execution-review' (2). 'the review-change findings engine review-implementation' (1). 'the planning-preflight planning gate' (1). 'the phase-contract lint contract' (1). 'the verification-concept acceptance guard' (1). 'the workflow's own 9-skill internal review pack' (9). Total so far: 2+2+1+1+1+1+9 = 17. The diff adds `replan-findings` (1). Total 18. The text says 19. One internal step is missing from the enumeration or the count is wrong.\",\n    \"severity\": \"med\",\n    \"axis\": \"spec-drift\"\n  },\n  {\n    \"file\": \"docs/workflow/FEATURE_WORKFLOW.md\",\n    \"line\": 285,\n    \"title\": \"Incorrect planner invocation for replan\",\n    \"detail\": \"The doc states: 'replan-in-unit runs node scripts/unit-route.mjs <unit>, whose route: replan line names the planner that appends new user-confirmed phases to the unit's SPEC (fresh /review-plan first)'. This implies the router script *names* the planner. However, `REVIEW_AND_CLASSIFY.md` clarifies: 'its route: replan line names the planner (/plan-feature for a feature, /plan-fix for a fix)'. The `FEATURE_WORKFLOW.md` text is slightly ambiguous but generally consistent. However, `PORTABLE_PROMPT.md` says: 'runs node scripts/unit-route.mjs <unit> so the planner its route: replan line names appends user-confirmed phases'. This is grammatically broken and logically unclear. It suggests the *planner* appends phases, but the router *names* the planner. The actual flow is: Router prints `route: replan` + planner name. The *agent* then invokes that planner. The docs imply the router script itself might do the appending or that the 'line names the planner' is the mechanism for appending. The key defect is in `PORTABLE_PROMPT.md` which has broken syntax 'so the planner its route: replan line names appends'.\",\n    \"severity\": \"med\",\n    \"axis\": \"usage-docs\"\n  },\n  {\n    \"file\": \"docs/workflow/PORTABLE_PROMPT.md\",\n    \"line\": 140,\n    \"title\": \"Broken syntax in portable prompt\",\n    \"detail\": \"The diff changes 'appends user-confirmed phases' to 'runs node scripts/unit-route.mjs <unit> so the planner its route: replan line names appends user-confirmed phases'. The phrase 'so the planner its route: replan line names appends' is syntactically broken and semantically ambiguous. It should likely be 'so the planner named in its route: replan line appends...'.\",\n    \"severity\": \"med\",\n    \"axis\": \"usage-docs\"\n  },\n  {\n    \"file\": \"docs/workflow/PORTABLE_PROMPT.es.md\",\n    \"line\": 146,\n    \"title\": \"Broken syntax in portable prompt ES\",\n    \"detail\": \"The diff changes 'appends user-confirmed fases' to 'runs node scripts/unit-route.mjs <unit> so the planner its route: replan line names appends user-confirmed fases'. Same broken syntax as the English version.\",\n    \"severity\": \"med\",\n    \"axis\": \"usage-docs\"\n  }\n]"
+}

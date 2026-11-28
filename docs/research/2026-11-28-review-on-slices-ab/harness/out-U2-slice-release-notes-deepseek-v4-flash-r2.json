@@ -1,0 +1,64 @@
+{
+ "id": "U2__slice__release-notes__deepseek-v4-flash__r2",
+ "unit": "U2",
+ "job": "slice__release-notes",
+ "model": "deepseek-v4-flash",
+ "run": 2,
+ "ms": 3385,
+ "usage": {
+  "completion_tokens": 966,
+  "prompt_tokens": 12997,
+  "total_tokens": 13963,
+  "completion_tokens_details": {
+   "reasoning_tokens": 0
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 12800
+  }
+ },
+ "finish": "stop",
+ "perr": null,
+ "parsed": [
+  {
+   "file": "CHANGELOG.md",
+   "line": null,
+   "title": "Malformed table rows: stray `|---|` appended to new entries",
+   "detail": "Every newly added row in CHANGELOG.md ends with a literal `|---|` glued to the cell text, e.g. `...the bump exists to publish the re-bundle. |---|` and `...The class→destination decision is the router's (`scripts/unit-route.mjs`). |---|`. The same defect appears in all 8 added rows (package 0.10.0, workflow-status 3.5.0, plan-feature 5.2.0, plan-fix 3.2.0, review-change 3.5.1, fold-findings 1.5.0, triage-issue 2.8.0, review-implementation 1.8.0, replan-findings 1.0.0). The `|---|` is a leftover separator fragment that renders as literal text inside the 'What changed' cell, corrupting the source-of-truth changelog table.",
+   "severity": "med",
+   "axis": "code"
+  },
+  {
+   "file": "CHANGELOG.es.md",
+   "line": null,
+   "title": "Malformed table rows: stray `|---|` appended to new entries",
+   "detail": "Same defect in the Spanish changelog: each added row ends with `... |---|` (e.g. `...el bump existe para publicar el re-empaquetado. |---|`, `...La decisión clase→destino es del router (`scripts/unit-route.mjs`). |---|`). All 8 added rows carry the stray separator fragment, corrupting the per-skill source-of-truth table.",
+   "severity": "med",
+   "axis": "code"
+  },
+  {
+   "file": "CHANGELOG.md",
+   "line": null,
+   "title": "replan-findings row uses `—` for Type, violating the declared bump vocabulary",
+   "detail": "The versioning policy table declares exactly three bump types: `major`, `minor`, `patch`. The new `replan-findings` 1.0.0 row sets Type to `—` (em dash) instead of one of the declared values. A new internal contract that adds a conditional entry is a new capability, so it should be `minor`; `—` is outside the stated vocabulary. Same in CHANGELOG.es.md (`| — |`).",
+   "severity": "low",
+   "axis": "workflow"
+  },
+  {
+   "file": "CHANGELOG.md",
+   "line": null,
+   "title": "review-change 3.5.1 classified `patch` but changes routing behavior",
+   "detail": "The versioning policy states `patch` = 'wording, examples, clarifications, internal tidy-ups; no behavior change' and `minor` = 'a new routing case'. The 3.5.1 entry describes replacing 'the two contradictory sentences that sent the class to the executor and to `plan-feature` separately' with a router-based destination — a routing change, not wording. It is bumped as `patch` (and the package row repeats `review-change` 3.5.1), contradicting the repo's own bump policy.",
+   "severity": "low",
+   "axis": "workflow"
+  },
+  {
+   "file": "CHANGELOG.md",
+   "line": null,
+   "title": "Package 0.10.0 claims to re-bundle skills but omits the version bumps it lists as changed",
+   "detail": "The package row says it re-bundles `plan-feature` 5.2.0, `plan-fix` 3.2.0, `replan-findings` 1.0.0, `workflow-status` 3.5.0, `review-change` 3.5.1, `review-implementation` 1.8.0, `triage-issue` 2.8.0 and `fold-findings` 1.5.0. But the per-skill tables in this same file do not show a `review-implementation` 1.8.0 or `replan-findings` 1.0.0 entry in the main per-skill sections — they appear only in the trailing summary table. If the per-skill tables are 'the source of truth for what changed between each version' (stated at the top of the file), the two skills' changes are not recorded in their canonical sections, so the package row references versions the source-of-truth tables do not document.",
+   "severity": "low",
+   "axis": "spec-drift"
+  }
+ ],
+ "raw": "[{\"file\":\"CHANGELOG.md\",\"line\":null,\"title\":\"Malformed table rows: stray `|---|` appended to new entries\",\"detail\":\"Every newly added row in CHANGELOG.md ends with a literal `|---|` glued to the cell text, e.g. `...the bump exists to publish the re-bundle. |---|` and `...The class→destination decision is the router's (`scripts/unit-route.mjs`). |---|`. The same defect appears in all 8 added rows (package 0.10.0, workflow-status 3.5.0, plan-feature 5.2.0, plan-fix 3.2.0, review-change 3.5.1, fold-findings 1.5.0, triage-issue 2.8.0, review-implementation 1.8.0, replan-findings 1.0.0). The `|---|` is a leftover separator fragment that renders as literal text inside the 'What changed' cell, corrupting the source-of-truth changelog table.\",\"severity\":\"med\",\"axis\":\"code\"},{\"file\":\"CHANGELOG.es.md\",\"line\":null,\"title\":\"Malformed table rows: stray `|---|` appended to new entries\",\"detail\":\"Same defect in the Spanish changelog: each added row ends with `... |---|` (e.g. `...el bump existe para publicar el re-empaquetado. |---|`, `...La decisión clase→destino es del router (`scripts/unit-route.mjs`). |---|`). All 8 added rows carry the stray separator fragment, corrupting the per-skill source-of-truth table.\",\"severity\":\"med\",\"axis\":\"code\"},{\"file\":\"CHANGELOG.md\",\"line\":null,\"title\":\"replan-findings row uses `—` for Type, violating the declared bump vocabulary\",\"detail\":\"The versioning policy table declares exactly three bump types: `major`, `minor`, `patch`. The new `replan-findings` 1.0.0 row sets Type to `—` (em dash) instead of one of the declared values. A new internal contract that adds a conditional entry is a new capability, so it should be `minor`; `—` is outside the stated vocabulary. Same in CHANGELOG.es.md (`| — |`).\",\"severity\":\"low\",\"axis\":\"workflow\"},{\"file\":\"CHANGELOG.md\",\"line\":null,\"title\":\"review-change 3.5.1 classified `patch` but changes routing behavior\",\"detail\":\"The versioning policy states `patch` = 'wording, examples, clarifications, internal tidy-ups; no behavior change' and `minor` = 'a new routing case'. The 3.5.1 entry describes replacing 'the two contradictory sentences that sent the class to the executor and to `plan-feature` separately' with a router-based destination — a routing change, not wording. It is bumped as `patch` (and the package row repeats `review-change` 3.5.1), contradicting the repo's own bump policy.\",\"severity\":\"low\",\"axis\":\"workflow\"},{\"file\":\"CHANGELOG.md\",\"line\":null,\"title\":\"Package 0.10.0 claims to re-bundle skills but omits the version bumps it lists as changed\",\"detail\":\"The package row says it re-bundles `plan-feature` 5.2.0, `plan-fix` 3.2.0, `replan-findings` 1.0.0, `workflow-status` 3.5.0, `review-change` 3.5.1, `review-implementation` 1.8.0, `triage-issue` 2.8.0 and `fold-findings` 1.5.0. But the per-skill tables in this same file do not show a `review-implementation` 1.8.0 or `replan-findings` 1.0.0 entry in the main per-skill sections — they appear only in the trailing summary table. If the per-skill tables are 'the source of truth for what changed between each version' (stated at the top of the file), the two skills' changes are not recorded in their canonical sections, so the package row references versions the source-of-truth tables do not document.\",\"severity\":\"low\",\"axis\":\"spec-drift\"}]"
+}
