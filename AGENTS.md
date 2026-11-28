@@ -649,6 +649,7 @@ gate-receipt-verdicts | packages/agentic-workflow-schema/src/gate-receipt.ts | s
 gate-receipt-check-statuses | packages/agentic-workflow-schema/src/gate-receipt.ts | schema-export:GATE_CHECK_STATUSES | gate-check-status | yes
 gate-receipt-freshness | packages/agentic-workflow-schema/src/gate-receipt.ts | schema-export:GATE_RECEIPT_FRESHNESS_CODES | gate-receipt-freshness | no
 gate-receipt-grammar | packages/agentic-workflow-schema/README.md | block:gate-receipt@1 | n/a | no
+claim-staleness-grammar | packages/agentic-workflow/README.md | block:claim-staleness@1 | n/a | no
 ask-dont-infer-rule | skills/unit-lane/references/DESIGN.md | block:ask-dont-infer@1 | n/a | no
 evidence-staleness-rule | skills/unit-lane/references/DESIGN.md | block:evidence-staleness@1 | n/a | no
 activity-fusion | skills/unit-lane/references/PLAN.md | block:activity-fusion@1 | n/a | no

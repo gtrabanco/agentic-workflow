@@ -118,6 +118,25 @@ write-then-report mechanical: the reviewer runs `verify --stage …` for its own
 before it prints the verdict and pastes the sensor's answer beside the block. The
 recipe owner stays this file; §8 owns the rule the recipe serves.
 
+### The claim ledger's projection (`claims`)
+
+The same attribution answers a second question: did the bytes a planning claim
+cites move after the phase that recorded it? `pre-execution-snapshot claims --unit
+<NN-slug|fix-N> [--emit] [--check]` reads the unit's `sources.md` CLAIM/INV rows,
+takes the phase map from the unit doc's `## Log` `P<n>` lines, and marks a row
+`stale (P<n> · <sha>)` when a cited path moved after that phase's revision.
+`--emit` prints the projected ledger with the mark in an appended `staleness`
+column; it never writes it — `sources.md` is a durable unit-folder record, so the
+ledger-ownership map's `no-script-writer` directive keeps every script off it, and
+the caller that owns the ledger lands the bytes. The projection is idempotent.
+
+The op reports and never gates: the default run exits 0 whatever the rows say, and
+`--check`'s exit 1 is a code a caller chooses to honour — the blocking policy is
+decided by the first observed case, per the unit that shipped it (`D2`). Three
+states exist so a row is never read as a false `fresh`: `no-citation`,
+`unverified: no-recorded-phase` and `unverified: unresolvable-revision (P<n>)`. The
+envelope and the column's grammar are the crate README's (`claim-staleness@1`).
+
 ### Authoring side: rotating the revision
 
 The author's `artifactRevisionId` is the field that lets a reviewer prove its own

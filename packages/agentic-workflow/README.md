@@ -67,7 +67,7 @@ writing anything**.
 | `phase-lint <plan-path>` | The **phase linter** (feature 91, moved out of the repository's `scripts/`): reads one unit doc's `## Tasks` phase bullets and prints `P<n> Phase-lint: PASS (6/6) · fingerprint …` per phase plus the `verdict` and `fingerprint` lines; a failing rule prints `P<n> box-<k>: <finding>`. Fail-closed codes: `missing-plan`, `no-phases`, `unparseable` (an unreadable file or a missing/out-of-enum `Layer:`), `layer-unknown` (a task target the shipped prefix table cannot map — the plan grammar is this repository's own shape, so the token is named and the unit-doc grammar stays the supported consumer shape), `lint-blocked`. Exit 0 pass · 1 blocked or usage (a second path argument is a usage error, stderr, exit 1). Read-only |
 | `diff-guard --base <ref> [--max-lines <n>] [--max-files <n>] [--json]` | The **diff-size guard**: measures `git diff --numstat <ref>..HEAD` against the ceiling and prints `DIFF-GUARD PASS — …` or `DIFF-GUARD BREACH — …` with the anti-gaming note (`DIFF-GUARD ERROR — …`, exit 2, for a usage or unknown ref). Exit 0 pass · 1 breach · 2 usage. Deterministic: no timestamps, no hashes |
 | `workflow-status [--compact] [--rag] [--help] [--version]` | The **workflow sensor** (feature 91): the strict Envelope v2 result the drivers consume — repository state, the two roadmap tables, open findings, the fix queue, tier and continuation — validated against the pinned schema package before it is printed. Exit 0 a validated envelope · 1 a fatal read. Read-only, offline except the bounded `gh` forge reads |
-| `pre-execution-snapshot <build\|verify\|contract> [flags]` | The **pre-execution snapshot** (feature 91): `build` writes the `pre-execution-snapshot@1` receipt for a stage (content-bound digests of the bound paths, plus a parent digest for a feature plan stage), `verify` re-derives a receipt's bound digest and reports drift, `contract` prints the published contract constants. `--root` re-points the sensed repository. Exit 0 ok · 1 a real error (named, never a stack trace in the receipt) |
+| `pre-execution-snapshot <build\|verify\|contract\|claims> [flags]` | The **pre-execution snapshot** (feature 91): `build` writes the `pre-execution-snapshot@1` receipt for a stage (content-bound digests of the bound paths, plus a parent digest for a feature plan stage), `verify` re-derives a receipt's bound digest and reports drift, `contract` prints the published contract constants, and `claims` (issue #634) projects that same `changedPaths` attribution onto a unit's claim ledger, marking a row `stale (P<n> · <sha>)` whose cited bytes moved after a recorded phase — `--emit` prints the projected ledger (it never writes it), `--check` answers exit 1, and it reports rather than gates (`claim-staleness@1` below). `--root` re-points the sensed repository. Exit 0 ok · 1 a real error (named, never a stack trace in the receipt), or `--check` with a stale claim · 2 a `claims` usage error or a unit with no claim ledger |
 | `needs-input <unit-dir> [--workspace <dir>] [--json]` | The **open-question sensor** (feature 91): reads the unit's `decisions.md` `open-questions@1` ledger and prints the block (`open-questions@1`, open count, entries, route back) or the refusal naming the defective row. The third route (issue #644) is the one it **verifies**: a row routed `init-workspace:<class>` claims no document in the workspace owns its fact, so the dispatcher reads the substrate census and refuses the claim (`substrate-present`) when the surface exists — the scaffold route cannot become a way around an owner. `--workspace` re-points that census; without it, the nearest ancestor carrying a guide or a git directory. Exit 0 answered · 1 refused · 2 usage. Read-only |
 | `substrate check --workspace <dir> [--guide AGENTS.md] [--json]` | The **substrate coverage gate** (issue #644): one row per substrate class — `architecture`, `decision-records`, `api-posture`, `documentation-map` — each `present`, `declined` (a dated row in the guide's `substrate-declines@1` block, written only on an explicit yes) or `absent`, plus the summary and verdict. `init-workspace` runs it on both routes: an `absent` class is a refused install, or the recorded decline. Exit 0 nothing absent · 1 one or more absent · 2 refusal or usage. Read-only |
 | `ledger-provenance <ledger-or-unit-doc> [--json] [--check] [--annotate]` | The **fold-queue recount** (feature 91): reads a `## Findings` table (or a legacy `review-findings.md`) and proves each `folded: yes` row cites a commit that is reachable and whose subject claims that row. `--check` runs the same walk read-only and exits 1 on any row needing a repair, naming the rows by cause; `--annotate` is the one writer. Exit 0 clean · 1 repair needed · 2 usage |
@@ -1106,4 +1106,62 @@ refusal | REFUSAL <code> · #<issue> · <detail> | the close-time guard's verdic
 advisory | ADVISORY <code> · #<issue> · <detail> | an uncarried condition (a phrase naming no issue): printed, never fatal, never silent
 degraded | DEGRADED <code> | a source that could not be read (`unavailable-forge-…`, `unavailable-roadmap-…`, `corpus-truncated-at-limit`); the verdict never reads as a clean corpus
 verdict | verdict <PASS\|VIOLATION\|UNRESOLVED> | `PASS` alone exits 0; `VIOLATION` is a finding or a refusal; `UNRESOLVED` is a corpus or citation the machine could not read
+```
+
+## Claim staleness (`claims`)
+
+A claim ledger states what each row rests on and cites the bytes that prove it.
+Those bytes move: a later phase rewrites the file a `CLAIM`/`INV` row points at,
+and the row keeps asserting its `certainty` while its citation rots. The
+`pre-execution-snapshot claims` op projects the sensor's own `changedPaths`
+attribution (`changedBoundPaths`, the same reader `verify` reports drift
+through) onto those rows and marks the ones whose citation moved.
+
+```bash
+runner pre-execution-snapshot claims --unit <NN-slug|fix-N> [--dir <artifact-dir>] \
+  [--emit] [--check] [--root <repo-root>]
+```
+
+The phase map comes from the unit doc's `## Log`: a `P<n>` line records the
+phase and the commit it produced, and the projection tries the shas that line
+carries in the order it lists them, using the first git can resolve (the corpus
+puts the phase's own commit first and ancillary ones — a red-first test commit, a
+settle commit — after it; an earlier checkpoint can only read `stale` where the
+phase's own commit reads `fresh`, never the reverse). A claim is `stale` when a
+cited path differs between one of those recorded revisions and the worktree.
+
+**It reports; it does not gate.** The default run exits 0 whatever the rows say,
+`--check` exits 1 when a row came back `stale` for a caller that chooses to
+honour it, and no surface in this repository consumes the code: the blocking
+policy is deliberately undecided until a real case decides it (the unit's `D2`).
+**It emits the projected ledger; it never writes it.** `sources.md` is a durable
+unit-folder record, so the ledger-ownership map's `no-script-writer` directive
+keeps every script off it — the same rule that keeps a script away from the unit
+doc — and `--emit` prints the projected ledger on stdout for the caller that owns
+the ledger to land; stderr carries only the `emitted … mark(s); this command
+writes no file` notice, never the ledger nor an envelope. The projection is
+idempotent: feeding the emitted bytes back in produces them again byte for byte,
+because the column is detected rather than appended twice. Only the CLAIM/INV
+tables and only the rows the projection answered are rewritten; prose, other
+tables and escaped pipes are preserved byte for byte.
+
+**Three no-signal states, never a false `fresh`:** a row citing nothing
+`git ls-files` can see at a revision is `no-citation`; a unit recording no `P<n>`
+phase leaves every row `unverified: no-recorded-phase`; a recorded revision git
+cannot resolve answers `unverified: unresolvable-revision (P<n>)`.
+
+Exit 0 reported · 1 `--check` with a stale row · 2 a usage error or a unit with
+no claim ledger (the refusal names the absent `sources.md`). Read-only, always:
+the op opens no file for writing under any flag.
+
+```text
+claim-staleness@1
+line | shape | what it holds
+contract | claim-staleness@1 | the envelope's identity
+unit | unit \| <NN-slug\|fix-N> | the unit whose claim ledger was projected
+row.column | row \| state \| mark \| moved-paths | one line per CLAIM/INV row, in document order
+row.state | fresh \| stale \| no-citation \| unverified-no-phase \| unverified-unresolvable-revision | the closed set; `fresh` means compared and nothing moved
+row.mark | stale (P<n> · <sha>) \| fresh \| no-citation \| unverified: no-recorded-phase \| unverified: unresolvable-revision (P<n>) | the cell `--emit` projects into the ledger's appended `staleness` column; `<sha>` is the 12-hex prefix of the phase's revision
+row.moved-paths | <comma-separated repo paths> \| — | every cited path that moved after some recorded phase
+summary | <n> rows · <s> stale · <f> fresh · <c> no-citation · <u> unverified | the counts, derived from the rows rather than tabulated twice
 ```

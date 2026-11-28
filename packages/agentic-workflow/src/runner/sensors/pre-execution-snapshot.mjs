@@ -24,6 +24,8 @@
  *        [--dir <artifact-dir>] [--unit-kind feature|fix] [--receipt <id|64-hex>]
  *        [--parent <64-hex>] [--policy <version>] [--artifact-revision <id>]
  *        [--source-revision <sha>] [--root <repo-root>]
+ *   agentic-workflow pre-execution-snapshot claims --unit <id> [--dir <artifact-dir>]
+ *        [--emit] [--check] [--root <repo-root>]
  *   agentic-workflow pre-execution-snapshot contract
  *
  * `--root` re-points the repository the two git-backed facts are read from (the
@@ -34,6 +36,12 @@
  *
  * Exit codes: 0 fresh / digest printed · 1 usage or refused snapshot ·
  * 3 no receipt for that stage · 4 receipt exists but is no longer current.
+ *
+ * `claims` (issue #634) has its own contract: 0 when it reported, 1 only under
+ * `--check` when a claim came back `stale`, 2 on a usage error or a unit with no
+ * claim ledger. It is a report, never a gate — no surface in this repository
+ * consumes its exit code (`D2`) — and `--emit` prints the projected ledger instead
+ * of writing it, because a script never writes a durable unit-folder record.
  *
  * Two things this file owns and the package does not: which bytes of *this*
  * repository enter a snapshot (the stage tables and context list below), and the
@@ -120,6 +128,21 @@ const gitAt = (root) => (...args) => {
   try { return execFileSync("git", args, { cwd: root, encoding: "utf8" }).trim(); } catch { return ""; }
 };
 const git = (...args) => gitAt(activeRoot)(...args);
+/**
+ * git, with its own stderr discarded. A probe that asks "does this token resolve"
+ * expects to be told no, and git answers a non-revision on stderr — which would
+ * land in the consumer's stream next to the envelope. Only the `claims` op uses
+ * this runner: every path that reports a refusal keeps git's own words.
+ */
+const quietGit = (...args) => {
+  try {
+    return execFileSync("git", args, {
+      cwd: activeRoot, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"],
+    }).trim();
+  } catch {
+    return "";
+  }
+};
 const GIT_REVISION = /^[a-f0-9]{40}$|^[a-f0-9]{64}$/;
 const isRevision = (value) => GIT_REVISION.test(String(value ?? ""));
 const normalize = (p) => path.relative(activeRoot, path.resolve(activeRoot, p)).split(path.sep).join("/");
@@ -440,6 +463,40 @@ export function attributeFreshness({
 async function main(argv = process.argv.slice(2)) {
   const { action, opts } = parseArgs(argv);
   if (opts.root) activeRoot = path.resolve(opts.root);
+  if (action === "claims") {
+    if (!opts.unit) {
+      process.stderr.write("pre-execution-snapshot: `claims` needs --unit <id> (or --dir <artifact-dir>) — it projects one unit's claim ledger\n");
+      process.exitCode = 2;
+      return;
+    }
+    const dir = unitDir(opts);
+    const sourcesRel = normalize(path.join(dir, "sources.md"));
+    const sourcesText = readRepo(sourcesRel);
+    if (sourcesText === null) {
+      process.stderr.write(`pre-execution-snapshot: ${sourcesRel} is absent — a unit with no claim ledger has nothing to project\n`);
+      process.exitCode = 2;
+      return;
+    }
+    // Dynamic on purpose: the projection imports this module's own
+    // `changedBoundPaths`, so a static import back would close a cycle at load.
+    const { projectClaimStaleness, renderClaimStalenessEnvelope, hasStale } = await import("./claim-staleness.mjs");
+    const unitDocText = readRepo(normalize(path.join(dir, "SPEC.md"))) ?? "";
+    const { rows } = projectClaimStaleness({ sourcesText, unitDocText, gitRun: quietGit, unitDir: dir });
+    if (opts.emit) {
+      // The projected ledger is EMITTED, never written: `sources.md` is a durable
+      // unit-folder record, so the ledger-ownership map's `no-script-writer`
+      // directive forbids a script from touching it (same rule feature 669 hit with
+      // the unit doc). The caller that owns the ledger lands these bytes.
+      const { writeStalenessColumn } = await import("./claim-staleness.mjs");
+      process.stdout.write(writeStalenessColumn(sourcesText, rows));
+      process.stderr.write(`pre-execution-snapshot: emitted ${sourcesRel} with ${rows.length} mark(s); this command writes no file\n`);
+      if (opts.check) process.exitCode = hasStale(rows) ? 1 : 0;
+      return;
+    }
+    process.stdout.write(renderClaimStalenessEnvelope({ unit: opts.unit, rows }));
+    if (opts.check) process.exitCode = hasStale(rows) ? 1 : 0;
+    return;
+  }
   if (action === "contract") {
     process.stdout.write(`${JSON.stringify({
       receiptContract: PRE_EXECUTION_RECEIPT_CONTRACT_ID,
@@ -453,7 +510,7 @@ async function main(argv = process.argv.slice(2)) {
     return;
   }
   if (!action || !["build", "verify"].includes(action) || !opts.stage || !opts.unit) {
-    throw new Error("usage: pre-execution-snapshot.mjs build|verify --stage <spec|plan> --unit <id> [--dir <path>] [--receipt <id|digest>] [--root <repo>]");
+    throw new Error("usage: pre-execution-snapshot.mjs build|verify --stage <spec|plan> --unit <id> [--dir <path>] [--receipt <id|digest>] [--root <repo>]; claims --unit <id> [--emit] [--check] [--root <repo>]");
   }
   const { snapshot, digest, artifactPaths, contextPaths } = await buildSnapshot(opts);
   const dir = unitDir(opts);

@@ -164,7 +164,7 @@ shell fallback.
 | `workflow-status` | the workflow sensor — the Envelope v2 result the drivers consume |
 | `phase-lint <plan-path>` | the phase linter over a unit doc's `## Tasks` |
 | `diff-guard --base <ref>` | the diff-size guard |
-| `pre-execution-snapshot <build\|verify\|contract>` | the pre-execution snapshot and its drift check |
+| `pre-execution-snapshot <build\|verify\|contract\|claims>` | the pre-execution snapshot and its drift check |
 | `needs-input <unit-dir> [--workspace <dir>]` | the open-question sensor — the third route (`init-workspace:<class>`) is verified against the workspace's substrate census before it is granted |
 | `substrate check --workspace <dir> [--guide AGENTS.md] [--json]` | the substrate coverage gate — one row per class (`present`/`declined`/`absent`), the summary and the verdict |
 | `ledger-provenance <ledger> [--check\|--annotate]` | the fold-queue recount |

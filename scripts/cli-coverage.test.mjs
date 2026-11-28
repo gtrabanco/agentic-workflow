@@ -47,6 +47,8 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { fileURLToPath } from "node:url";
 
+import { HELP_REGISTRY } from "../packages/agentic-workflow/src/runner/help.mjs";
+
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const SKILLS = path.join(ROOT, "skills");
 const SCRIPTS = path.join(ROOT, "scripts");
@@ -334,6 +336,51 @@ test("a documented flag is a flag the command actually accepts", () => {
     }
   }
   assert.deepEqual(findings, [], "a documented flag is a promise the command must keep");
+});
+
+/**
+ * The `## Subcommands` rows' first `<a\|b\|c>` alternation after the command
+ * name — the op list a row enumerates, when an alternation is there at all.
+ * A row without one (or with a flag bracket first) enumerates nothing here.
+ */
+export function runnerOpEnumerations() {
+  const text = read(RUNNER_DOC);
+  const start = text.indexOf("## Subcommands");
+  assert.ok(start !== -1, "RUNNER.md carries no `## Subcommands` section");
+  const rows = new Map();
+  for (const line of text.slice(start).split("\n")) {
+    const match = line.match(/^\| `([a-z0-9-]+)([^`]*)`/u);
+    if (!match) continue;
+    const alternation = match[2].match(/^\s*<([^>]+)>/u);
+    if (!alternation) continue;
+    const tokens = alternation[1].split("\\|").map((token) => token.trim()).filter(Boolean);
+    if (tokens.length > 1) rows.set(match[1], tokens);
+  }
+  return rows;
+}
+
+test("the runner contract's op enumeration is a promise the registry keeps", () => {
+  // The 2026-11-28 external verify of #634 found this row still enumerating
+  // `build|verify|contract` while the registry had grown a fourth op: the fix
+  // landed on the help index and the crate README and the contract row kept
+  // lying — the sibling-survivor class. The rule applies only when some token
+  // is a declared op, so an argument alternation like `<unit|issue>` is never
+  // mistaken for an op list; when it applies, the enumeration must equal the
+  // registry in both directions.
+  const findings = [];
+  for (const [command, tokens] of runnerOpEnumerations()) {
+    const ops = HELP_REGISTRY[command]?.ops;
+    if (!Array.isArray(ops) || ops.length === 0) continue;
+    if (!tokens.some((token) => ops.includes(token))) continue;
+    const missing = ops.filter((op) => !tokens.includes(op));
+    const extras = tokens.filter((token) => !ops.includes(token));
+    if (missing.length > 0 || extras.length > 0) {
+      findings.push(
+        `${command}: RUNNER.md lists [${tokens.join("|")}], the registry declares [${ops.join("|")}] — missing ${missing.join(", ") || "—"}; unknown ${extras.join(", ") || "—"}`,
+      );
+    }
+  }
+  assert.deepEqual(findings, [], "a row's op enumeration is a promise the registry must keep");
 });
 
 test("every migrated shim imports a module the package actually ships", () => {
