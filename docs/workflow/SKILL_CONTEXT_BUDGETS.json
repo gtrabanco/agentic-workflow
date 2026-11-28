@@ -56,9 +56,9 @@
         }
       },
       "AGENTS.md": {
-        "linesMax": 702,
-        "proseLinesMax": 475,
-        "estimateMax": 15798,
+        "linesMax": 796,
+        "proseLinesMax": 556,
+        "estimateMax": 17443,
         "machineBlocks": [
           "normalizer-inventory@1",
           "normative-surfaces@1",
@@ -69,6 +69,7 @@
           "inviolable-rules@1": 18
         },
         "sources": {
+          "init-workspace upgrade (charter + substrate write, 2026-11-28)": "the upgrade writes the `## Project charter` section into the guide (identity + project layers landed via `charter land`, 23/23 slots filled, the boundary slot in the checked arrow shape), adds 4 documentation-map rows (charter, VERIFICATION_CRITERIA, FEATURE_MAP, boundary materialization), so the guide measures 796 lines / 240 machine / 556 prose / 17,414 est with `bun scripts/check-skill-context.mjs --documents`. `linesMax`, `proseLinesMax` and `estimateMax` re-pin to the exact measurement (the fix #571 precedent); `machineLines` (240) and `blockLines` keep their exact boundary. Same-session follow-up: the charter's Architectural-boundaries slot flipped `domain separation -> prose-only` to `machine: scripts/domain-separation.test.mjs` (AI-002 hand edit), re-spending estimate only — re-pinned 17,414 -> 17,443 to the exact boundary (same precedent). The `documents` section has no emitter, so this row is a recorded hand edit, never a silent one.",
           "issue #603 (self-documenting-cli correction, 2026-11-23)": "one `rendered-facts@1` row pins docs/workflow/PORTABLE_PROMPT.md's internal-steps count (the external-verify receipt's sibling-sweep finding B3), so the guide measures 682 lines / 223 machine with `bun scripts/check-skill-context.mjs --documents`. `machineLines` 222 -> 223 and `linesMax` 681 -> 682 are re-pinned to the exact boundary the row spends (fix #571 precedent); `proseLinesMax` (475) and `estimateMax` (15798) keep their headroom. The `documents` section has no emitter, so this row is a recorded hand edit, never a silent one.",
           "issue #693 (worktree prune policy correction, 2026-11-23)": "the Worktree creation section restores the measured destruction sentence (`git worktree prune` deletes non-registration entries under `.git/worktrees/` recursively, with the working tree and its uncommitted work inside it — external verify B1) and the read-first trigger (A5), so the guide measures 683 lines / 222 machine / 461 prose / 14,470 est with `bun scripts/check-skill-context.mjs --documents`. `linesMax` re-pins 681 -> 683 (the exact boundary the tree spends, the fix #571 precedent); `proseLinesMax` (475) and `estimateMax` (15,798) keep their headroom and are not re-based. The `documents` section has no emitter, so this row is a recorded hand edit, never a silent one.",
           "issue #696 (runner mapping delivery, 2026-11-22)": "issue #696 (runner mapping delivery, 2026-11-22): one `normative-surfaces@1` row (`runner-mapping`, bound to the block `RUNNER.md` publishes and the pi bundle injects) joins the machine region, so the guide measures 681 lines / 222 machine / 459 prose / 14421 est with `bun scripts/check-skill-context.mjs --documents`. `machineLines` is re-pinned 221 -> 222 (the exact boundary the row spends, the fix #571 precedent) and `linesMax` (681) is spent exactly, so it is not re-based. `estimateMax` (15798) and `proseLinesMax` (475) keep their headroom. The `documents` section has no emitter, so this row is a recorded hand edit, never a silent one.",

@@ -54,6 +54,7 @@ from a feature SPEC, implementation, or passing test alone.
   exception by real import, and prints a receipt classifying every runner const.
   `scripts/normative-drift.test.mjs` recomputes each restatement against its
   const, so prose can never outvote the machine.
+- Enforcement: machine: `bun test scripts/vocabulary-parity.test.mjs` + `bun test scripts/normative-drift.test.mjs`
 - **Change authority:** an owner decision on the issue that proposes the change;
   this invariant is never reworded by an implementation.
 
@@ -68,3 +69,33 @@ mirror | only inside a named pre-build entrypoint; header names this invariant; 
 runner-internal | a set no published contract names stays in its module, classified by the residency case
 token-change | schema const + consumer use + (grammar block when surfaced) in one PR
 ```
+
+## AI-002 — a project-domain carrier never enters the exportable scaffold
+
+- **Rule:** `template/` — the one product surface a target project copies
+  wholesale — carries no citation to this repository's own project-domain
+  state: no source-repo issue or PR URLs, no concrete unit citations
+  (`docs/features/<n>-<slug>`, `docs/fix/<n>-<slug>` with a concrete slug —
+  the naming-convention placeholders stay legal), no source decision or
+  research-tree citations (`docs/design/`, `docs/research/`, `docs/golden/`).
+  The npm package names, the skills install instruction and the marked example
+  `scripts/local-gate.mjs` are sanctioned source-repo content.
+- **Rationale:** the boundary IR7 declares prose-only in the charter's origin
+  (domain separation — "a project decision never enters a product surface")
+  has one direction that is exactly checkable, and the merge-driver registry
+  lesson showed why: `template/.gitattributes` mentions the source's own
+  manifests, and only a hidden-file-aware sweep sees it. Purity of the copied
+  scaffold is the machine core; the two-way context-aware direction remains
+  product-audit's person-run domain-drift sweep.
+- **Applies to:** every text file `template/` ships, hidden files included —
+  plus any future wholesale-copied product surface added in the same sweep.
+- **Evidence:** `scripts/domain-separation.test.mjs` is the rule's
+  enforcement: it reads the full `template/` tree (hidden files included,
+  penalizing `rg`'s default blindness on dotfiles), refuses each carrier
+  class with a file:line citation, and sane-checks every rule against its own
+  header's live example so a rule can never pass forever green.
+- **Change authority:** an owner decision (the records block in the owning
+  fix unit's `decisions.md`); the ruleset's deliberate non-rules (the
+  shared-merge path classes are product vocabulary) are recorded in the
+  detector's header, never re-litigated in review.
+- Enforcement: machine: `bun test scripts/domain-separation.test.mjs`

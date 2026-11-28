@@ -67,6 +67,10 @@ new doc takes ownership of a task:
 | A new capability or integration surface | [`docs/CAPABILITIES.md`](docs/CAPABILITIES.md) |
 | Resuming a session, or what happened last | [`docs/LOGS.md`](docs/LOGS.md), [`docs/workflow/REPOSITORY_STATE.md`](docs/workflow/REPOSITORY_STATE.md) — the domain-separation safeguard's detail is [`docs/workflow/DOMAIN_SEPARATION.md`](docs/workflow/DOMAIN_SEPARATION.md) |
 | The tutorial as a whole | [`docs/workflow/README.md`](docs/workflow/README.md) — it owns the pages index |
+| Project identity, deployment, license & policies | the **Project charter** section (below) — written by `/init-workspace`, read before any design or plan |
+| Acceptance criteria & review passes per surface | `docs/workflow/VERIFICATION_CRITERIA.md` *(the project’s criteria catalogue; extended only with a recorded decision)* |
+| User-facing flows, and what demonstrates each one | `docs/workflow/FEATURE_MAP.md` *(seeded at bootstrap, maintained by the lane’s docs step)* |
+| Declared boundaries and how each is enforced | `docs/workflow/BOUNDARY_ENFORCEMENT.md` *(written by `runner materialize apply`, never by hand)* |
 
 ## Deep references
 
@@ -105,6 +109,96 @@ When two sources disagree, the **nearest one wins**:
 A lower rung never overrides a higher one. Where the same rule lives below this
 file, this guide **links** it instead of restating it (see the ownership rule
 under [Working rules](#working-rules)).
+
+## Project charter
+
+> **Written by `/init-workspace` — never guessed by an agent.** The charter is
+> this project's own answer to *what this project is and how it wants to be
+> worked on*, captured at bootstrap in two layers. It exists because a workflow
+> that consents to every byte it writes but never asks *what the project is*
+> leaves every agent to assume product identity, platform, deployment, and
+> policy — the exact failure `ask-dont-infer` exists to prevent.
+
+**Content rule (evidence-bound).** The charter records **decisions, policies
+and commands — never derivable-from-code description** (arXiv 2602.11988:
+repository-overview context files cost tokens with no success gain while
+instructions work). A sentence the reader
+could reconstruct by listing the directories does not belong here. Each answer is positioned and sized per the documentation map above —
+the charter stays this section plus the registered docs, never one monolithic
+document.
+
+**Identity layer — filled at bootstrap, blocking.** `/init-workspace` asks
+these before writing any substrate byte; the workflow may not guess them, and
+an unanswered one halts the run through the fail-closed open-question flow
+(cheap-to-undo answers may be recorded as dated assumptions instead — but
+these five are expensive to undo, so they are answered or the run stops):
+
+- **Project kind:** library-first monorepo — the deterministic CLI crate and the pi package are the strongest artifacts; the skills tree is the standard's specification. Declared horizon: a custom pi runner that applies the flow in order, then a server that executes it (CLI, web, remote); MQTT is the working transport candidate (owner decision 2026-11-28)
+- **Who uses it and why:** Owner-first: the repositories and agents that install the workflow. The owner resolves conflicts, and some parts stay opinionated (mainly the shipped defaults, which may become mandatory)
+- **Deployment & serving:** not deployed — distribution is npm (the packages) plus the GitHub forge; the runner-server vision is roadmap, not state (owner decision 2026-11-28)
+- **License:** MIT
+- **Ceremony profile seed:** assumed 2026-11-28 (owner chose decide-for-me) — docs-step: paid; captures: discarded (no UI to capture); review-passes: packages, skills, docs (code, docs, security, perf; the web-only passes are out); publish-gate: paid; test-policy: paid — re-confirm at the first review-pack run
+
+**Domain layer — open-with-defaults.** Asked once at bootstrap; an unanswered
+item is recorded as a **dated assumption** (`assumed <YYYY-MM-DD> — <value>;
+surfaced and re-confirmed by the first unit that needs it`), never re-asked at
+every bootstrap, never a silent default:
+
+- **Tests & gate policy:** a green `bun scripts/local-gate.mjs` before every merge; a push runs the offline subset (the pre-push hook); suites run bun-first with the node fallback; skill and docs budgets via `bun scripts/check-skill-context.mjs`
+- **Dependency policy:** exact pins in one bun-workspace lockfile; vendored code keeps a provenance header (source, author, version, license); no backward-compat support — a superseded surface is deleted in the change that supersedes it
+- **Documentation policy:** docs drive the work; generated surfaces (`docs/generated/`, the roadmap tables) are written only by `scripts/docs-generate.mjs`; committed docs are English-only (permanent); documentation currency ships with the unit
+- **Required tooling:** bun-first with the node fallback (`AGENTIC_WORKFLOW_RUNTIME` override), `rg` over `grep`, the `gh` CLI — availability is checked every session via `node scripts/setup-env.mjs --check`, never assumed
+- **Data / PII:** none — the repo processes no personal or production data; the doctor bundles ship anonymized
+- **Config posture:** every declared option is materialized explicitly; a new tunable answers the four config-policy questions before it enters the unified config
+- **i18n:** none — committed artifacts are English-only; bilingualism is a web-layer rendering concern, never a committed artifact (owner decision 2026-10-27, #232)
+
+**Objectives layer — filled at bootstrap, open-with-defaults.** Layer 3 asks
+what the repository is *for* and how this team engineers, then records each
+answer here with the workflow behaviour it toggles. An unanswered slot is
+recorded as a dated assumption (`assumed <YYYY-MM-DD> — <value>`), never a
+silent default; a value this project already declares is kept as written and
+never overwritten by a recommendation:
+
+- **Repo purpose:** evolve the workflow from a skills standard into a custom pi runner that applies everything in the correct order and keeps the docs in order via /flow and the deterministic commands — without removing the human. Long-term: a server that runs it, launchable from a CLI, the web or a remote server; MQTT is the working transport candidate (owner decision 2026-11-28)
+- **Users:** the repositories and agents that install the workflow. Owners win on conflict, but some parts are and must stay opinionated (mainly the shipped defaults, which can become mandatory). It must stay easy for a user to add their own hooks/plugins that write the docs elsewhere — e.g. an adapter fully replacing the roadmap file with GitHub or a kanban
+- **Team shape:** solo owner; external contributions arrive as PRs the owner integrates — the commit log is one human author plus journal bots (git shortlog evidence)
+- **Optimization target:** assumed 2026-11-28 — stability
+- **Automation appetite:** assumed 2026-11-28 — automations only after the gate is stable
+
+**Engineering posture — filled at bootstrap, open-with-defaults.** The
+*why-grade* decisions a later unit reads instead of re-deriving: each slot
+records the team's rule, never a recommendation the team did not confirm. The
+dependency questions (pinning, vendoring, deprecation) refine the domain
+layer's **Dependency policy** slot above — one home, never a second slot.
+
+- **Testing strategy:** suites beside each change, bun-first, plus the root gate whose worker runs the same per-file invocation
+- **Architectural boundaries:** product vs project domain separation → machine: bun test scripts/domain-separation.test.mjs (the scaffold-purity core; the two-way sweep stays person-run per IR7) · runner grammar residency → machine: scripts/cli-coverage.test.mjs + scripts/runner-launcher-drift.mjs · closed-vocabulary residency → machine: published-vocabulary-parity · English-only committed artifacts → machine: docs-language
+
+  One entry per declared boundary, in the machine-checked shape:
+  `<boundary> → machine: <mechanism>` or `<boundary> → prose-only`. Prose-only
+  is an honest answer, never an accident: it marks a boundary to materialize.
+- **Production verification:** n/a for a repo with no running service — CI (`root-suite.yml`) runs the same root suite manually for branches that cannot run locally (assumed 2026-11-28; re-touched when the server vision ships)
+- **Evidence driver:** n/a — no UI captures; the runner's receipts (charter, gate, review) and the suite outputs are the evidence (assumed 2026-11-28, aligned with captures: discarded)
+
+  The one command a capture criterion invokes. The workflow records and invokes
+  it; it never ships a driver. With no driver declared, a criterion naming
+  `artifact: screenshot|video|state-snapshot` fails closed with a `manual:` label
+  instead of passing on prose (`skills/verification-contract/SKILL.md`).
+- **Decision records:** unit-level decisions live in the unit's decisions.md; a cross-unit decision is promoted into exactly ONE permanent owner doc (the Inviolable rules for a law, ARCHITECTURE.md for structure, ARCHITECTURAL_INVARIANTS.md for a checkable property) and the unit cites it, never copies it — a record lands before the irreversible work it governs
+
+  A `cross-unit` decision is promoted by the procedure in
+  `docs/architecture/ARCHITECTURE.md` § Promoting a decision; the value above
+  names this project's own home, in addition to the three owner docs that
+  procedure maps.
+- **API posture:** fail-closed at every machine boundary: typed envelopes, closed vocabularies, refusal receipts (EDIT REFUSAL, GATE REJECTION, SCAFFOLD REFUSAL); the CLI never invents an acceptance token
+
+**Verification-criteria catalogue.** What "done" means *at this project*,
+beyond the workflow's generic baseline — per-surface acceptance criteria,
+which review passes apply per surface type, framework-specific gate commands,
+docs coverage, captures, manual-check rows — lives in
+[`docs/workflow/VERIFICATION_CRITERIA.md`](docs/workflow/VERIFICATION_CRITERIA.md)
+with its provenance per criterion. Triage and execution consume the catalogue
+and never invent acceptance criteria silently.
 
 ## Inviolable rules
 
