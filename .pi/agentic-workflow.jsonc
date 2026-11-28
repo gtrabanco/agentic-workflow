@@ -63,24 +63,20 @@
   "gitIdentity": {
     // gitIdentity.enforce — When the identity check runs: off, commit, push, push-upstream, or the commit-and-push pair.
     // type: string · shipped default: "off"
-    "enforce": "off",
+    "enforce": "commit-and-push-upstream",
     // gitIdentity.approved — Only the declared facts are verified; an absent field is not checked.
     // type: object · shipped default: {}
     "approved": {
       // gitIdentity.approved.name — git user.name, matched case-insensitively.
-      // type: string · shipped default: no shipped default — set it only when you use it
+      "name": "Gabriel Trabanco Llano",
       // gitIdentity.approved.email — git user.email, matched case-insensitively.
-      // type: string · shipped default: no shipped default — set it only when you use it
-      // gitIdentity.approved.fullName — The legal name a signing key's UID must carry.
-      // type: string · shipped default: no shipped default — set it only when you use it
+      "email": "1969593+gtrabanco@users.noreply.github.com",
       // gitIdentity.approved.format — The signing key format: openpgp or ssh.
-      // type: string · shipped default: no shipped default — set it only when you use it
+      "format": "openpgp",
       // gitIdentity.approved.signingKey — The resolved signing key: key id, fingerprint or path.
-      // type: string · shipped default: no shipped default — set it only when you use it
-      // gitIdentity.approved.signingKeys — The per-machine keys: a resolved key matching any of these is approved (issue #546).
-      // type: array · shipped default: no shipped default — set it only when you use it
-      // gitIdentity.approved.signing — required: a commit must carry a signature from an approved key. allowed (default): signing is optional, and a resolved key is verified when one resolves. off: the project approves unsigned commits, so a signed one is refused.
-      // type: string · shipped default: no shipped default — set it only when you use it
+      "signingKey": "B8629F2451528D18",
+      // gitIdentity.approved.signing — allowed: signing is optional; a resolved key is verified when one resolves.
+      "signing": "allowed"
     },
     // gitIdentity.agentGuard — The model-facing half of the identity guard: the config keys the agent may write without asking.
     // type: object · shipped default: {"allow":[]}

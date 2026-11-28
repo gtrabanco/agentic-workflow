@@ -3,21 +3,21 @@
 A signed commit proves *a key signed bytes*. It proves nothing about **who** the
 commit is attributed to: a leaked fixture identity or an agent's deliberate
 `user.name` produces exactly the same valid signature as the owner's own commit.
-This repository measured the cost — three leaks in nine days, 139 of 4,437
-commits on `origin/main` carrying the wrong author, every one of them
-"verified" in the forge UI.
+The repository this scaffold ships from measured the cost — three leaks in nine
+days, 139 of 4,437 commits on `origin/main` carrying the wrong author, every one
+of them shown as "verified" in the forge UI.
 
-This page is the annex: what the guard does, how to install the opt-in half, the
-environment layout that makes identity drift hard to produce, and what is
-deliberately **not** recommended. `init-workspace` applies none of it without an
-explicit yes.
+This page is the annex for **your** project: what the guard does, how to install
+the opt-in half, the environment layout that makes identity drift hard to
+produce, and what is deliberately **not** recommended. `init-workspace` applies
+none of it without an explicit yes.
 
 ## The two layers, and why both exist
 
 | Layer | Carrier | Sees | Does not see |
 |---|---|---|---|
 | 1 — agent config-write guard | the `pi-agentic-workflow` extension | every `bash` call a model asks the host to run | a script the model launches, a `!` command the human types, another agent host, variable indirection |
-| 2 — fail-fast verification | the pre-commit hook, and the push-range step of the local gate | every commit made in this checkout (hook) and every never-published commit of the push range (gate) | a commit made elsewhere and pushed from a machine without the gate |
+| 2 — fail-fast verification | the pre-commit hook, and a push-range check in the project's pre-push step | every commit made in this checkout (hook) and every never-published commit of the push range (the check) | a commit made elsewhere and pushed from a machine without either |
 
 Layer 1 stops the *intent*; Layer 2 stops the *result*. Two of the three recorded
 leaks came from processes Layer 1 cannot see, which is why Layer 2 is not
@@ -37,12 +37,12 @@ The approved identity lives in the unified config, base file, section
     // `push-upstream` only the branch's tracked upstream remote
     "enforce": "commit-and-push-upstream",
     "approved": {
-      "name": "Gabriel Trabanco Llano",              // git user.name
-      "email": "1969593+gtrabanco@users.noreply.github.com",
-      "fullName": "Gabriel Trabanco Llano",           // legal name, checked against the key's UID (openpgp)
+      "name": "Contributor Name",                     // git user.name
+      "email": "contributor@example.com",             // git user.email
+      "fullName": "Contributor Legal Name",           // legal name, checked against the key's UID (openpgp)
       "format": "openpgp",                           // openpgp (default) or ssh
-      "signingKey": "B8629F2451528D18",               // key id, fingerprint, or ssh key path
-      "signingKeys": ["B8629F2451528D18"],            // the same fact, one entry per machine
+      "signingKey": "0123456789ABCDEF",               // key id, fingerprint, or ssh key path
+      "signingKeys": ["0123456789ABCDEF"],            // the same fact, one entry per machine
       "signing": "allowed",                           // required | allowed (default) | off (sign-off)
     },
     "agentGuard": {
@@ -145,17 +145,18 @@ configuration: `user.signingKey` (or the keyring default) is what the check read
 
 ## The push-range check
 
-The local gate's `push-identity` step runs on a real push (the installed
-`pre-push` hook passes the proven base) and verifies every author **and**
-committer of the never-published commits of `<base>..HEAD`:
+The same check exists in the workflow repository as a standalone gate over the
+range a push is about to publish; a project that wires its own pre-push step
+calls that gate with the range and fails the push on a non-zero exit. It
+verifies every author **and** committer of the never-published commits of
+`<base>..HEAD`:
 
 ```sh
-bun scripts/push-identity-check.mjs --base origin/main   # the same command, by hand (node runs it too)
-git push --no-verify                                     # the escape hatch; record why
+git push --no-verify   # the escape hatch; record why
 ```
 
-A full local run without a push range drops the step: there is nothing to
-verify, and failing on an absent base would train operators to ignore it.
+A run without a range is a usage error by design: a step with nothing to verify
+must not be dispatched, and an absent base must never be read as a pass.
 
 ## The push scope
 
@@ -182,31 +183,26 @@ keeps the check**. The scope can only ever skip a push whose remote is explicitl
 named and differs from the upstream one, so a caller that forgets the flag loses
 convenience, never the guard.
 
-```sh
-bun scripts/push-identity-check.mjs --base origin/main --remote fork   # by hand (node runs it too)
-```
+The workflow repository's gate takes the same range plus a `--remote` naming the
+remote whose publishes define reachability.
 
 What the range is respects reachability (issue #539): a commit already reachable
-from a published ref — the remote mainline, and the pushed branch's own remote
-tip the hook passes as the base — cannot be changed by this push, so it is
-skipped and only the never-published commits are judged. Merging `origin/main`
-into a branch used to put main's own history in the range and refuse the push
-over commits (forge web-merges, journal aggregations, CI runs) that no local
-push could affect. The same rule governs the journal gate, which additionally
-accepts the published journal tip as a byte-prefix baseline for an integration
-push. A checkout with no remote-tracking ref keeps the strict reading — fetch,
-never loosen the matcher.
+from a published ref — the remote mainline, and your pushed branch's own remote
+tip passed as the base — cannot be changed by the push, so it is skipped and
+only the never-published commits are judged. Without that rule, merging the
+remote mainline into a branch puts that branch's already-published history in
+the range and every merge-push fails over commits no local push could affect.
 
 ## Portability of the whole guard surface
 
-The identity guard is one carrier of a set that used to assume one machine, one
+The identity guard is one carrier of a set that must not assume one machine, one
 remote and one forge. The rest — the turn-contract verifier, the merge wrapper and
 the command guard — resolve their forge from the remote (`gh`, `glab`, `gt`; a
 Bitbucket remote is refused with the message naming its absent CLI) and their
 temporary directory through one shared helper. The matrix, the allowlist and the
 degradation contract are documented where those hooks live:
-[`template/.agentic-workflow/hooks/README.md`](../../template/.agentic-workflow/hooks/README.md).
-A `rigidity-review` gate step audits that surface, so a hardcoded forge binary, a
+[`.agentic-workflow/hooks/README.md`](../../.agentic-workflow/hooks/README.md). A
+`rigidity-review` gate step audits that surface, so a hardcoded forge binary, a
 `/tmp` fallback or an `origin/HEAD` coming back fails the gate instead of the next
 external contributor.
 
@@ -222,9 +218,11 @@ const ID = ["-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid
 execFileSync("git", [...ID, "commit", "-qm", "fixture"], { cwd: root });
 ```
 
-`scripts/git-config-writes.mjs` enforces it over every test carrier in this
-repository, and every `bunfig.toml` preloads the locator scrub so a single-file
-run is as protected as a gate run.
+Pin the same rule in your project with a lint over your test carriers; this
+repository's `scripts/git-config-writes.mjs` is the reference implementation.
+Strip the repository locators (`GIT_DIR`, `GIT_WORK_TREE`, `GIT_INDEX_FILE`, …)
+from the environment before a suite runs — a `bunfig.toml` `[test] preload`
+reaches a single-file run as well as a full suite.
 
 ## Recommended environment layout
 
