@@ -180,6 +180,14 @@ fingerprint: 147102e56c984f19b99e549440955bae7d71aa906c99dc087c644e96a2cc465c
 - **The gate is red on `main` in this environment** (`doc.query`, `doc.hybrid`,
   and the pi embedding suites). That is why the push used the hook's documented
   escape hatch; the reason is recorded above, and no step was skipped on trust.
+- **The correction-batch push (2026-11-28, `4c0a8da02..HEAD`, the external-verify
+  B1/B2 batch) also used `AGENTIC_WORKFLOW_SKIP_LOCAL_GATE=1`**: the honest
+  push ran the offline gate first and it failed only at `crate-suite-bun`
+  (`doc.query`, `doc.hybrid`) — the same two suites measured failing identically
+  on a `git archive origin/main` copy in this environment (no embedding
+  provider). Every other gate step passed, the full battery ran in the
+  foreground (unit `## Log` E23), and `verify@1` answers `ok: true` (E24).
+  No step was skipped on trust.
 - **The lifecycle page is now doc-currency** for any later unit that changes how
   the workflow is used — that obligation travels with #669 and is recorded as its
   `Future cost`.
