@@ -171,6 +171,7 @@ shell fallback.
 | `quality-metrics [--window <days>] [--until <instant>] [--repo <dir>] [--out <path>]` | the project-quality sensor — the DORA four keys plus the reversion ratio as one `quality-metrics@1` document (definitions in the crate README) |
 | `forge-read <issue\|pr> <number> [--comments] [--reviews] [--json]` | the guarded forge read — one issue or pull request, its threads on request, every content field through the content guard and printed as the fenced delivery (or as the `forge-read@1` envelope with `--json`); `forge-read shim <install\|check\|exec>` is the ad-hoc `gh` interceptor the same route drives |
 | `unit-route <unit\|issue> [--triage <unit> [--json]]` | the unit router and the triage step list |
+| `flow <unit> [--stop-after plan] [--yes] [--retriage] [--record] [--json]` | the deterministic lane driver — sense the unit, decide the next closed-catalog step (or stop after the plan) and hand it over (issue #669) |
 | `skills <discover\|register\|inventory> [flags]` | the skill-discovery route's machine half — the screen, the consented install decision and the registration/decay inventory (issue #591; grammars in the crate README) |
 | `relevant-files <unit-doc> [--phase P<k>\|all] [--changed <a,b> \| --base <ref>]` | the phase read-set resolver and its changed-file discipline — the paths a phase must read, and the one failure it reports (issue #269) |
 | `scaffold-contract <check\|authoring> [<unit-doc>] [--workspace <dir>] [--json]` | the scaffold contract that travels — a project's exported unit-doc templates compared with the installed release's section contract, and the same check on a staged unit doc at emission (issue #701) |
@@ -204,6 +205,7 @@ shell fallback.
 | `journal-corpus [--root <dir>] [--json]` | the journal corpus reader — the session journal joined into the audit's corpus (issue #616) |
 | `repository-state [--root <dir>] [--json]` | the Normalized Repository State reader — what is frozen and what a contradiction is (feature 18) |
 | `residual-classify <surface> [--inventory --base <rev>] [--root <dir>] [--json]` | the residual classifier — consumed, promised, orphan or half-built, with the consuming line named (issue #340) |
+| `single-repo-leaks [--root <dir>] [--json]` | the single-repo-leak census — every subcommand declares the root it resolves against, and the read-only project rows are probed on a consumer-shaped tree (issue #717) |
 | `restatement-sweep [--root <dir>] [--json]` | the restatement sweep — a seeded rule worded a second time outside its owner (issue #646) |
 | `workflow-doctor <mine\|battery\|bundle\|route\|publish> [--root <dir>] [--json]` | the ceremony-failure doctor — the project's own record mined, anonymized and routed upstream with consent (issue #703) |
 | `test-obligation-tags [--root <dir>] [--sweep] [--json]` | the test-obligation tag gate — every suite declares what it protects and what it proves (issue #596) |

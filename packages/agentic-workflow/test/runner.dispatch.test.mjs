@@ -69,7 +69,7 @@ test("the dispatch table is the whole surface and a foreign name is refused", as
   assert.deepEqual(
     Object.keys(RUNNER_COMMANDS),
     [
-      "unit-route", "phase-lint", "diff-guard", "workflow-status", "pre-execution-snapshot", "needs-input",
+      "unit-route", "flow", "phase-lint", "diff-guard", "workflow-status", "pre-execution-snapshot", "needs-input",
       "substrate", "ledger-provenance", "quality-metrics", "forge-read", "ceremony", "skills",
       // The #553 migration: every deterministic command a shipped skill used to
       // reach through `scripts/` is a subcommand, so the table is the whole
@@ -85,6 +85,9 @@ test("the dispatch table is the whole surface and a foreign name is refused", as
       "delivery-conditions",
       // #703: the ceremony-failure doctor joins the surface its skill cites.
       "workflow-doctor",
+      // #717: the single-repo-leak census, whose declaration lives in the help
+      // registry and whose probe runs the read-only project rows.
+      "single-repo-leaks",
     ],
     "the shell-visible half of the runner is exactly these commands: the router, the six sensors, the substrate census, the quality sensor, the guarded forge read (issue #612), the ceremony registry, the skill-discovery route (issue #591), and the commands the #553 coverage sweep moved out of `scripts/`",
   );
@@ -134,6 +137,6 @@ test("the unknown-service refusal names the running crate and the pin/override r
   assert.equal(refused.status, 2);
   assert.match(refused.stderr, /^EDIT REFUSAL — Unknown service: invented-command/u, "the published refusal prefix is unchanged");
   assert.match(refused.stderr, new RegExp(`@gtrabanco/agentic-workflow@${version.replaceAll(".", "\\.")}`, "u"), "the refusal names the crate it ran");
-  assert.match(refused.stderr, /skills\/runner-contract\/references\/RUNNER\.md/u, "the repair points at the pin's owner");
+  assert.match(refused.stderr, /the `runner-contract` skill's references\/RUNNER\.md/u, "the repair points at the pin's owner by the name a target project can resolve (issue #717)");
   assert.match(refused.stderr, /AGENTIC_WORKFLOW_RUNNER/u, "the override repair is named too");
 });

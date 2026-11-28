@@ -44,7 +44,7 @@ test("the no-command run names the scoped package at its pin, never the scope-le
   const result = spawnSync(process.execPath, [bin], { encoding: "utf8" });
   assert.equal(result.status, 1, "no subcommand is a usage error");
   assert.match(result.stderr, /^usage: bunx @gtrabanco\/agentic-workflow@<pin> </mu, "the scoped package and its pin source are named");
-  assert.match(result.stderr, /skills\/runner-contract\/references\/RUNNER\.md/u, "the reader is pointed at the pin's owner");
+  assert.match(result.stderr, /the `runner-contract` skill's references\/RUNNER\.md/u, "the reader is pointed at the pin's owner by the name a target project can resolve (issue #717)");
   assert.doesNotMatch(result.stderr, /usage: agentic-workflow </u, "the scope-less spelling that resolves to the placeholder is gone");
 });
 

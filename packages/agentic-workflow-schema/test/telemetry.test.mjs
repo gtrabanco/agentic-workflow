@@ -48,10 +48,12 @@ const COMMANDS = [
   "triage-issue",
   "unit-lane",
   "workflow-status",
-  // The four native command names the package registers in code
+  // The six native command names the package registers in code
   // (routing/types.ts: ADVANCE_COMMAND, AW_INDEX_COMMAND, SETTINGS_COMMAND,
-  // SETTINGS_COMMAND_ALIAS).
+  // SETTINGS_COMMAND_ALIAS, and issue #669's FLOW_COMMAND / DRAFT_COMMAND).
   "advance",
+  "flow",
+  "draft",
   "aw-index",
   "agentic-workflow-settings",
   "aw-settings",

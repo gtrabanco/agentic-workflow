@@ -477,3 +477,49 @@ test("estate: the wall-clock section is the budget manifest's own rows, never a 
     fs.rmSync(root, { recursive: true, force: true });
   }
 });
+
+/* --------------------------------------------------- the foreign-tree answer */
+
+// Issue #717 (S6). The two facts this gate needs used to be read from the tree it
+// measured: `packages/agentic-workflow-schema/src/vocabularies.ts` and the tag
+// grammar's owner doc. A target project carries neither, so the command refused
+// before reading anything — a repo-relative path resolved against the wrong
+// root. The vocabulary is the dependency's now, and the owner doc is a
+// product-internal parity check that says `n/a` instead of refusing.
+
+test("S6: the vocabulary resolves from the installed schema package, not the project root", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "tag-foreign-"));
+  try {
+    fs.mkdirSync(path.join(root, "scripts"), { recursive: true });
+    fs.writeFileSync(
+      path.join(root, "scripts", "plain.test.mjs"),
+      suiteBody(`${TAG_PREFIX}protects=scripts/plain.test.mjs obligations=contract`),
+    );
+    const gate = run(["--root", root]);
+    assert.doesNotMatch(`${gate.stdout}${gate.stderr}`, /vocabularies\.ts is absent/u, "no product source path is named");
+    assert.equal(gate.status, 0, `${gate.stdout}${gate.stderr}`);
+    assert.match(gate.stdout, /verdict: PASS/u);
+
+    const vocabulary = run(["--root", root, "--vocabulary"]);
+    assert.equal(vocabulary.status, 0, `${vocabulary.stdout}${vocabulary.stderr}`);
+    assert.match(vocabulary.stdout, /n\/a — product-internal/u, "the owner doc ships with the skills tree, not the crate");
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("S6: an estate with no suite refuses instead of passing", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "tag-empty-"));
+  try {
+    const gate = run(["--root", root]);
+    assert.equal(gate.status, 1, "an empty estate is a refusal, never a pass");
+    assert.match(gate.stdout, /estate-empty/u);
+    assert.match(gate.stdout, /verdict: FAIL/u);
+
+    const estate = run(["--root", root, "--estate"]);
+    assert.equal(estate.status, 1);
+    assert.match(estate.stdout, /estate-empty/u);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});

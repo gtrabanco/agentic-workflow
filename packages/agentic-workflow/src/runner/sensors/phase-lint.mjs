@@ -28,10 +28,13 @@
  *
  * Fail-closed reason codes: `missing-plan` (no argument, or a path that does
  * not exist), `no-phases` (readable file with no phase in either grammar),
- * `unparseable` (unreadable file, missing/out-of-enum `Layer:` line, or a task
- * target the frozen prefix table cannot map), `lint-blocked` (a rule failure,
- * including a malformed `Relevant files:` sub-section under its own
- * `relevant-files:` finding id).
+ * `unparseable` (unreadable file, or a missing/out-of-enum `Layer:` line),
+ * `layer-unknown` (a task target the shipped prefix table cannot map — the
+ * phase-block grammar is this repository's own shape, so a project tree fails
+ * closed by name instead of joining the untokenizable class; the unit-doc
+ * grammar is the supported consumer shape and never reads this box),
+ * `lint-blocked` (a rule failure, including a malformed `Relevant files:`
+ * sub-section under its own `relevant-files:` finding id).
  *
  * Read-only: never writes, never calls the network, no external dependencies.
  * Passing more than one path is a usage error (stderr + exit 1), never a
@@ -504,7 +507,13 @@ function box2(phase) {
       }
       if (!isTargetToken(token)) continue;
       const layer = layerForTarget(token, phase.layer);
-      if (layer === null) return { findings, ambiguous: token };
+      // A target no shipped prefix maps is the *project's* tree, not a broken
+      // document: the phase-block grammar and its prefix table are this
+      // repository's own shape (owner: `skills/phase-contract/SKILL.md`), and the
+      // unit-doc grammar — what every seeded template ships — never reads this
+      // box. Failing closed by name keeps the cause actionable instead of folding
+      // it into the untokenizable `unparseable` class (issue #717).
+      if (layer === null) return { findings, unmapped: { phase: phase.number, task: index + 1, token } };
       if (layer !== phase.layer) findings.push(`task ${index + 1} target \`${sanitizeEcho(token)}\` belongs to layer ${layer}, not ${phase.layer}`);
       break;
     }
@@ -661,7 +670,7 @@ const BOXES = [box1, box2, box3, box4, box5, box6, box7, box8];
  */
 const executedPhase = (phase) => Array.isArray(phase.ticks) && phase.ticks.length > 0 && phase.ticks.every(Boolean);
 
-/** Check one phase; returns { findings: [{box, reason}] } or { ambiguous }. */
+/** Check one phase; returns { findings: [{box, reason}] }, { ambiguous } or { unmapped }. */
 function lintPhase(phase) {
   const findings = [];
   const historical = executedPhase(phase);
@@ -679,6 +688,7 @@ function lintPhase(phase) {
     const result = check(view);
     if (result && !Array.isArray(result)) {
       if (result.ambiguous) return { ambiguous: result.ambiguous };
+      if (result.unmapped) return { unmapped: result.unmapped };
       for (const reason of result.findings) findings.push({ box: index + 1, reason });
       continue;
     }
@@ -926,6 +936,18 @@ export function lintPlan(text) {
     const result = lintPhase(phase);
     if (result.ambiguous) {
       return { verdict: "BLOCKED: unparseable", exitCode: 1, lines: ["verdict BLOCKED: unparseable", `fingerprint: ${digest([])}`] };
+    }
+    if (result.unmapped) {
+      const { phase: number, task, token } = result.unmapped;
+      return {
+        verdict: "BLOCKED: layer-unknown",
+        exitCode: 1,
+        lines: [
+          `P${number} box-2: task ${task} target \`${sanitizeEcho(token)}\` belongs to no layer the shipped prefix table knows — the phase-block grammar is this repository's own shape and the \`phase-contract\` skill owns its scope; the unit-doc grammar is the supported consumer shape`,
+          "verdict BLOCKED: layer-unknown",
+          `fingerprint: ${digest([])}`,
+        ],
+      };
     }
     results.push({ phase, findings: result.findings });
   }

@@ -48,6 +48,7 @@ invents profile slots or waives a verification contract.
 | **Journal signals** | The corrections a session had to make, the sessions each unit consumed (rework), and the findings its own reviewers refuted — cross-joined to the findings corpus, so a class the journal alone records still arrives with the corpus row it belongs to | `runner journal-corpus <repo>` receipt-quoted (`journal-corpus@1`, § Journal-signal sweep) | all |
 | **Retention debt** | Merged units still carrying the process artifacts a settle collapses (task lists, phase logs, review ledgers, the evidence table) — and the documents that can never be settled because they carry no provenance stamp — product-wide, so the tree's cost stops growing with every shipped unit | `runner retention-debt <repo>` receipt-quoted (`retention-debt@1`, § Retention-debt sweep) | all |
 | **Decision promotion** | A decision whose scope is cross-unit must land in exactly ONE permanent owner doc — the guide's laws, `ARCHITECTURE.md` or `ARCHITECTURAL_INVARIANTS.md` — with the unit ledger citing it and never restating it; the sweep reports every cross-unit decision that names no owner doc, every decision captured after the rule landed with no scope cell, and every ledger the dispatcher cannot read | `runner decision-promotion <repo>` receipt-quoted (`decision-promotion@1`, § Decision-promotion sweep) | all |
+| **Distributable-surface scope** | A shipped surface that resolves *this repository's* path as if the consumer's project owned it — code, never convention: the declaration each CLI subcommand carries (`project`, `product`, `host`) plus the foreign-tree run of the read-only ones | `runner single-repo-leaks` receipt-quoted (`single-repo-leaks@1`, § Single-repo-leak sweep) | all |
 
 Skip inapplicable axes (no a11y/SEO/brand for a CLI/library/infra product) and
 **say which you skipped and why**. Every axis is covered by the workflow's own
@@ -92,6 +93,60 @@ on demand outside the repository) carries one seed per residue class — a
 duplicated grammar copy, an exported-but-unconsumed function, a doc naming a
 removed surface, a live surface with no doc — plus a clean twin: the sweeps
 must yield exactly one finding per seed on `seeded/` and zero on `clean/`.
+
+
+## Single-repo-leak sweep (pass-only-if)
+
+The defect class #716 and #717 share: a path, directory noun or layout assumption
+**built into shipped code** that the consumer cannot declare, configure or
+satisfy, because the code was written against this repository's tree. The
+distinction the sweep applies is the issue's own test — *is the consumer able to
+satisfy or declare this path, and was it documented as a product requirement?* A
+declared product convention (`docs/ROADMAP.md`, `docs/features/<NN>`,
+`.agentic-workflow/`, `AGENTS.md`, the unit-doc grammar) is not a finding: a
+consumer adopts it. The inverse is.
+
+The sweep consumes ONE deterministic receipt — `runner single-repo-leaks` — and
+quotes it; it is never re-derived by inspection, and no prose copy of the
+declaration exists:
+
+- ✓ every subcommand the CLI publishes declares exactly one `resolution` cell in
+  its help registry (`project` reads the target project's tree, `product` reads
+  the installed product's own tree, `host` resolves the host agent's directory),
+  and a missing or unknown cell is a finding;
+- ✓ every read-only `project` row that declares a `probe` was executed once
+  against a consumer-shaped tree, and no path it printed resolves in the product
+  tree while missing from the measured one — the finding names the command and
+  the token;
+- ✓ a `product`-class refusal names what is absent *in the product's terms* and
+  never asks the project for a file it cannot carry; a refusal that names a
+  product path is the finding;
+- ✓ an empty result is a refusal, not a pass: an estate, a carrier or a
+  comparison that found nothing to judge says so by name (`estate-empty`,
+  `carrier-missing`), because a silent zero is a false PASS by this workflow's
+  own fail-closed standard;
+- ✓ the sweep run over the clean fixture yields zero findings, and a new
+  subcommand cannot ship without answering the question.
+
+The lexical half — a sweep of every repo-looking literal in `packages/*/src` — is
+deliberately *not* the instrument: it cannot separate a resolved path from a
+prose citation (measured at 458 raw hits, 138 with comments stripped, dominated
+by citations), so it measures wording instead of resolution (issue #717,
+`D3`). The census that applied the sweep to the six candidates it was opened with
+is `docs/fix/717-audit-single-repo-leaks/census.md`.
+
+### The receipt grammar (`single-repo-leaks@1`)
+
+```text
+single-repo-leaks@1
+kind | shape | what it orders
+receipt | single-repo-leaks@1 … | one fixed block: the root line, the declared tally, the probed tally, one line per finding, the verdict
+root | consumer fixture · <path> | the tree the probes ran against: the fixture the producer builds, or the caller's `--root`
+declared | <n> subcommand(s) · project <n> · product <n> · host <n> | one cell per resolution class, with no cell left unclassified
+probe | <n> read-only project command(s) executed · <n> declared | what ran, and how many rows are declared but not executed
+finding | finding — <code> · <command> · <detail> | the closed set: `undeclared-command`, `unknown-resolution`, `product-path-named`, `probe-failed`, `empty-registry`, `missing-root`, `product-root-missing`
+verdict | PASS · FAIL · REFUSED | `PASS` only with zero findings; `REFUSED` when the measured root or the product tree does not resolve
+```
 
 ## Coverage-gap sweep (pass-only-if)
 

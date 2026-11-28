@@ -183,6 +183,7 @@ docs/workflow/GIT_IDENTITY_HARDENING.md | 2-rarely | scanned | structural scan: 
 docs/workflow/GOLDEN_FIXTURE.md | 2-rarely | scanned | structural scan: headings, owner pointers and the unit's patterns
 docs/workflow/ISSUE_WORKFLOW.md | 2-rarely | scanned | structural scan: headings, owner pointers and the unit's patterns
 docs/workflow/LANE_FLOW.md | 2-rarely | scanned | structural scan: headings, owner pointers and the unit's patterns
+docs/workflow/LIFECYCLE.md | 1-on-demand | full | written and read end-to-end by unit 669 (this page is that unit's own deliverable, so the read is the author's)
 docs/workflow/LOADING.md | 1-on-demand | full | read end-to-end this session
 docs/workflow/MIGRATION.md | 2-rarely | scanned | structural scan: headings, owner pointers and the unit's patterns
 docs/workflow/ORCHESTRATION.md | 2-rarely | scanned | structural scan: headings, owner pointers and the unit's patterns

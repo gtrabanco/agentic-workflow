@@ -84,6 +84,7 @@ while doing one kind of work is one hop away and read on demand:
 | [`docs/workflow/GATE_INVENTORY.md`](docs/workflow/GATE_INVENTORY.md) | asking whether a gate survives a compaction, and where its carrier lives |
 | [`docs/workflow/LOADING.md`](docs/workflow/LOADING.md) | asking which tier a document belongs to, what a session loads always, or where the volatile machine regions must sit inside a file |
 | [`docs/workflow/SKILLS.md`](docs/workflow/SKILLS.md) | looking up what a skill does, or where it runs in the flow |
+| [`docs/workflow/LIFECYCLE.md`](docs/workflow/LIFECYCLE.md) | choosing an entry (`/draft`, `/flow`, `/unit-lane`), or asking what the driver does next: the lifecycles, the review ladder to `MERGE-READY`, the command decision tree and the driver's four declared grammars |
 | [`docs/workflow/REPLICATE.md`](docs/workflow/REPLICATE.md) | replicating the workflow into another project |
 | [`docs/workflow/MIGRATION.md`](docs/workflow/MIGRATION.md) | landing a breaking surface, and needing the migration note beside it |
 | [`docs/workflow/SETUP.md`](docs/workflow/SETUP.md) | provisioning this repo's own authoring toolchain |
@@ -641,12 +642,17 @@ retention-debt-receipt | docs/workflow/RETENTION.md | block:retention-debt@1 | n
 decision-scope-vocabulary | packages/agentic-workflow-schema/src/vocabularies.ts | schema-export:DECISION_SCOPES | decision-scope | no
 decision-scope-grammar | skills/unit-lane/references/DESIGN.md | block:decision-scope@1 | n/a | no
 decision-promotion-grammar | skills/product-audit/references/AUDIT_DIMENSIONS.md | fenced:decision-promotion@1 | n/a | no
+single-repo-leak-receipt | skills/product-audit/references/AUDIT_DIMENSIONS.md | block:single-repo-leaks@1 | n/a | no
 repository-state | skills/resolve-repository-state/references/STATE_CONTRACT.md | block:repository-state@1 | n/a | no
 restatement-corpus | skills/audit-docs/references/RESTATEMENT.md | block:restatement-corpus@1 | n/a | no
 workflow-doctor-mine-grammar | packages/agentic-workflow/README.md | block:workflow-doctor-mine@1 | n/a | no
 workflow-doctor-bundle-grammar | packages/agentic-workflow/README.md | block:workflow-doctor-bundle@1 | n/a | no
 workflow-doctor-route-grammar | packages/agentic-workflow/README.md | block:workflow-doctor-route@1 | n/a | no
 doctor-triage-rubric | skills/agentic-workflow-doctor/references/RUBRIC.md | block:doctor-triage-rubric@1 | n/a | no
+flow-step-references | docs/workflow/LIFECYCLE.md | block:flow-step-references@1 | n/a | no
+flow-stop-rules | docs/workflow/LIFECYCLE.md | block:flow-stop-rules@1 | n/a | no
+flow-approval | docs/workflow/LIFECYCLE.md | block:flow-approval@1 | n/a | no
+flow-session-modes | docs/workflow/LIFECYCLE.md | block:flow-session-modes@1 | n/a | no
 ```
 
 ### Rendered facts (prose that restates a machine value)
