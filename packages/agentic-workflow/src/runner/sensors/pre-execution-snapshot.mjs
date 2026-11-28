@@ -128,6 +128,21 @@ const gitAt = (root) => (...args) => {
   try { return execFileSync("git", args, { cwd: root, encoding: "utf8" }).trim(); } catch { return ""; }
 };
 const git = (...args) => gitAt(activeRoot)(...args);
+/**
+ * git, with its own stderr discarded. A probe that asks "does this token resolve"
+ * expects to be told no, and git answers a non-revision on stderr — which would
+ * land in the consumer's stream next to the envelope. Only the `claims` op uses
+ * this runner: every path that reports a refusal keeps git's own words.
+ */
+const quietGit = (...args) => {
+  try {
+    return execFileSync("git", args, {
+      cwd: activeRoot, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"],
+    }).trim();
+  } catch {
+    return "";
+  }
+};
 const GIT_REVISION = /^[a-f0-9]{40}$|^[a-f0-9]{64}$/;
 const isRevision = (value) => GIT_REVISION.test(String(value ?? ""));
 const normalize = (p) => path.relative(activeRoot, path.resolve(activeRoot, p)).split(path.sep).join("/");
@@ -466,7 +481,7 @@ async function main(argv = process.argv.slice(2)) {
     // `changedBoundPaths`, so a static import back would close a cycle at load.
     const { projectClaimStaleness, renderClaimStalenessEnvelope, hasStale } = await import("./claim-staleness.mjs");
     const unitDocText = readRepo(normalize(path.join(dir, "SPEC.md"))) ?? "";
-    const { rows } = projectClaimStaleness({ sourcesText, unitDocText, gitRun: git, unitDir: dir });
+    const { rows } = projectClaimStaleness({ sourcesText, unitDocText, gitRun: quietGit, unitDir: dir });
     if (opts.emit) {
       // The projected ledger is EMITTED, never written: `sources.md` is a durable
       // unit-folder record, so the ledger-ownership map's `no-script-writer`

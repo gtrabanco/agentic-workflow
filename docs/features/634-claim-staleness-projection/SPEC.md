@@ -320,9 +320,10 @@ V | V<n> | a finding's verification — the row it signs, the recheck and its re
 - **P2** — 2026-11-28, the suite landed alone and red, then two corrections of its own expectations before any implementation existed — the phase-revision rule (the corpus puts the phase's commit first) and the import specifier · `22608b40a`, `f0d831919`, `a4d148019`.
 - **P3** — 2026-11-28, the projection module: cited-path extraction, phase→revision reading, the mark grammar, the idempotent column projection · `8603afbbd`.
 - **P4** — 2026-11-28, the `claims` op on `pre-execution-snapshot` and its help row · `7000bc08a`, corrected to `--emit` in `6d3cc388f`.
-- **P5** — 2026-11-28, the surface declared: the crate README's command row and the `claim-staleness@1` block, the `normative-surfaces@1` row, the skill reference's paragraph, the changeset · `7c893722e`, with the budget re-pin and the roadmap status in `8694f0cc5` and the gate-inventory claim in `b3711c0`.
+- **P5** — 2026-11-28, the surface declared: the crate README's command row and the `claim-staleness@1` block, the `normative-surfaces@1` row, the skill reference's paragraph, the changeset · `7c893722e`, with the budget re-pin and the roadmap status in `8694f0cc5` and the gate-inventory claim in `66801b4fa`.
 - **P6** — 2026-11-28, verification: `E5`–`E10`, `G1`, and the live projection over this unit's own ledger (recorded below).
 - **P7** — 2026-11-28, release settle: the roadmap row, the journal fragment, the pull request.
+- **E11** — the live projection over this unit's own ledger (AC5), at head `78b35dbbb`: `agentic-workflow pre-execution-snapshot claims --unit 634-claim-staleness-projection` → 12 rows, `5 stale · 7 fresh · 0 no-citation · 0 unverified`, every row marked. The five stale rows are the honest answer, not a defect: `CLAIM-001` cites the sensor, `CLAIM-007` cites `decisions.md`, `INV-002`/`INV-003` cite this doc and `INV-005` cites `known-issues.md`, and all four files moved after `P5` — the phase the mark names. Each was re-read against the tree while writing this line and each still holds. `--check` over the same head → exit 1 (five stale rows), which is the report's only gate and nothing consumes it (`D2`).
 
 
 ## Next
