@@ -165,6 +165,7 @@ Nothing is removed. Strictly additive inside `subagents.ts`: the shim gains a ho
 
 | id | S# / file:line | axis | severity | impact | class | route |
 |---|---|---|---|---|---|---|
+| F1 | AC4 / test/subagents-provision.test.mjs:351 | tests | WARNING | blocking | source | fold |
 
 ## Log
 
@@ -264,4 +265,7 @@ None.
 - **G8** — 2026-11-28, `bun scripts/run-root-suite.mjs` · exit 0 · the whole root suite green.
 - **G9** — 2026-11-28, `bun packages/agentic-workflow/bin/agentic-workflow.mjs scaffold-contract authoring docs/fix/755-durable-subagents-layer-fails/SPEC.md` · exit 0 · `ACCEPTANCE MATCH` — `ac-hash` re-pinned to the amended section.
 - **P6** — 2026-11-28, external-verify batch 1: red reproducers `d848e1968`, the bound-copy gate `8626a5193`, this docs/ledger/claims commit — one correction batch, inline, no review cycle (§4).
+- **R1** — 2026-11-28, review at HEAD 3945e297ad48495000b3a9c5f1058854cf2d9b13 · verdict REVIEW-FAIL · cycle 1 · gate exit 1. Fresh-instrumented isolated review: axes code/security/verify/perf + inline usage-docs, design/a11y/seo/brand skipped (Lib/SDK footprint); one confirmed fix-now finding (F1), three report-only notes.
+- **V2** — test/subagents-provision.test.mjs:351 · reviewer review-change · HEAD 3945e297ad48495000b3a9c5f1058854cf2d9b13 · recheck reproduced by walking node_modules from the shipped dependency's entry (`pi-extensible-workflows/dist/subagents/index.js`) for `@earendil-works/pi-coding-agent`: this box binds 1.4.0 (satisfies `>=1.1.0`), so `bound Finding` returns `null` and the case's `notices.length === 0` assertion holds without the fixture's stale 0.84.2 hoist ever participating — the asserted stale-hoist scenario is untested and the case would red on the reporter's box · confirmed.
+- **G10** — 2026-11-28, `bun packages/agentic-workflow/bin/agentic-workflow.mjs gate-receipt run` · exit 1 — red only at `crate-suite-bun`: 3 `doc.query.test.mjs` offline-contract cases fail under this session's ambient provider variables (`NAN_API_KEY`), the environment-caused pre-existing red G4 disclosed (its unset-vars run, G6, recorded 1191 pass / exit 0); `doc.query.test.mjs` is not in this branch's diff · 15 checks passed, 1 failed, 4 skipped · manifest d21164c8f87667418470df863084818fc2721e66b1294f818aef2ed288de68c9.
 
