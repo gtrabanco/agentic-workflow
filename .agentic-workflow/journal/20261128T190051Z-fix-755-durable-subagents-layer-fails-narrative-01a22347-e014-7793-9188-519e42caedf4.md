@@ -1,0 +1,6 @@
+## 2026-11-28T19:00:51Z — fix/755-durable-subagents-layer-fails — narrative
+- **Commits:** 10 (`3e1fa408…49590109`)
+- **Files:** 17 files
+- **Summary:** fix/755-durable-subagents-layer-fails: external-verify corrected, 3-blocker batch applied, docs committed and pushed.
+- **Decisions:** The verdict's 3 blockers (stale bound copy, claim re-scope, O13 locator) were resolved in a single batch: (D4) the peer-gate now judges the dependency's effective binding via its entry path (not the running host, not PI_PACKAGE_DIR), so a nameable running host can never mask a stale binding; (D5) all claims re-scoped to the delivered report-and-gate behaviour (S4/S5 titles, AC2, AC4, roadmap_summary, README, changeset, Future section). The gate ran fully on the final tree before push — root-suite exit 0, package suite 1191/1191, verify PASS, scaffold-contract ACCEPTANCE MATCH, journal aggregate ok. Push ran with ambient provider vars stripped (NAN_API_KEY, EMBEDDINGS_*) to avoid the pre-existing #719 failures that appear only under this session's env; the gate's  offline path completed 18 steps in 488s. No rebase, no force-push, history preserved linear.
+- **Next:** Owner reviews the pushed branch (4 commits on origin/fix/755-durable-subagents-layer-fails) for PR creation against main; the external-verify.md verdict receipt is in docs/fix/755-durable-subagents-layer-fails/
