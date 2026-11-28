@@ -474,3 +474,46 @@ describe("roadmap check — the half-migrated tree (issue #319)", () => {
     );
   });
 });
+
+// ── the CAS read half answers the `## Fixes` table (issue #740; EXTERNAL VERIFY B2, correction P10) ──
+
+describe("findRow — the ## Fixes fallback", () => {
+  const fixesDoc = () =>
+    [
+      "# Roadmap",
+      "",
+      "## Features",
+      "",
+      "| NN | Slug | Status | Depends on | Summary |",
+      REAL_SEPARATOR,
+      "| 650 | `decision-promotion` | done | — | work |",
+      "",
+      "## Fixes",
+      "",
+      "| Issue | Topic | Status | Notes |",
+      "|---|---|---|---|",
+      "| [#740](https://github.com/gtrabanco/agentic-workflow/issues/740) | config-json5-stem | done · [#741](https://github.com/gtrabanco/agentic-workflow/pull/741) | Issue [#740] (L) |",
+      "",
+    ].join("\n");
+
+  it("answers the Fixes row by issue key through the writer's locator (#740 B2)", () => {
+    const p = write("fixes-read/ROADMAP.md", fixesDoc());
+    const row = findRow(p, "740");
+    ok(row, "the CAS read half answers the row fixRowUpsert keys");
+    strictEqual(row.slug, "config-json5-stem");
+    strictEqual(row.status, "done · [#741](https://github.com/gtrabanco/agentic-workflow/pull/741)");
+    strictEqual(row.dependsOn, "", "the Fixes table carries no depends column");
+    ok(row.description.includes("Issue [#740]"), row.description);
+    strictEqual(findRow(p, "999"), null, "an absent issue still answers null");
+    strictEqual(findRow(p, "650").slug, "`decision-promotion`", "the Features row keeps precedence with its own cells");
+  });
+
+  it("CLI: roadmap read --nn <issue> answers the Fixes row (the receipt E12 claimed)", () => {
+    const p = write("fixes-read-cli/ROADMAP.md", fixesDoc());
+    const read = spawnSync(process.execPath, [CLI, "roadmap", "read", p, "--nn", "740", "--json"], { encoding: "utf8" });
+    strictEqual(read.status, 0, read.stderr);
+    const receipt = JSON.parse(read.stdout);
+    ok(receipt.row, "the row answers instead of null");
+    strictEqual(receipt.row.slug, "config-json5-stem");
+  });
+});

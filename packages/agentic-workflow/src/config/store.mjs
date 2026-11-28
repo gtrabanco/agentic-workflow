@@ -8,7 +8,14 @@ import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 
-import { BASE_CONFIG_SECTIONS, BASE_CONFIG_FILE, parseJsonc, stringifyJsoncValue } from "@gtrabanco/agentic-workflow-schema";
+import {
+  BASE_CONFIG_SECTIONS,
+  BASE_CONFIG_STEM,
+  configFileCandidates,
+  parseJsonc,
+  resolveConfigFileName,
+  stringifyJsoncValue,
+} from "@gtrabanco/agentic-workflow-schema";
 
 const PROJECT_CONFIG_DIR = ".pi";
 
@@ -22,6 +29,16 @@ export function scopeDirectories({ projectDir = process.cwd(), globalDir, env = 
 
 export function sectionFiles(sections) {
   return [...new Set(sections.map((section) => section.file))];
+}
+
+/**
+ * The file a section's stem occupies in one scope: the first existing candidate
+ * in silent `json → jsonc → json5` order, or the create name `<stem>.json5`
+ * (#740 S2/S3). Writes land on whatever this answered, so a `.jsonc` operator
+ * file is never renamed.
+ */
+export function configPathFor(dir, stem) {
+  return join(dir, resolveConfigFileName(stem, (fileName) => existsSync(join(dir, fileName))));
 }
 
 /** Read one file: absent is an empty document, present-but-broken is an issue. */
@@ -50,7 +67,7 @@ export function readScopeDocuments(dir, sections) {
   const paths = {};
   const issues = [];
   for (const file of sectionFiles(sections)) {
-    const path = join(dir, file);
+    const path = configPathFor(dir, file);
     paths[file] = path;
     const read = readConfigDocument(path);
     documents[file] = read.value;
@@ -75,4 +92,4 @@ export function writeConfigText(path, text) {
   writeAtomic(path, text);
 }
 
-export { BASE_CONFIG_FILE, BASE_CONFIG_SECTIONS, PROJECT_CONFIG_DIR };
+export { BASE_CONFIG_SECTIONS, BASE_CONFIG_STEM, PROJECT_CONFIG_DIR, configFileCandidates };

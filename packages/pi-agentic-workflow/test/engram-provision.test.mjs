@@ -36,7 +36,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-import { BASE_CONFIG_FILE } from "@gtrabanco/agentic-workflow-schema";
+import { BASE_CONFIG_STEM } from "@gtrabanco/agentic-workflow-schema";
 
 import {
   ENGRAM_ARGS,
@@ -90,9 +90,9 @@ describe("engram provisioning — consent is first", () => {
     // makes the file invalid and lands on `config-invalid` instead.
     const report = provisionEngram({ consented: false, binaryPath: BINARY, declaredNames: [], register: () => {} });
     strictEqual(report.status, "not-consented");
-    ok(report.message.includes(BASE_CONFIG_FILE), `the opt-in names ${BASE_CONFIG_FILE}: ${report.message}`);
+    ok(report.message.includes(BASE_CONFIG_STEM), `the opt-in names ${BASE_CONFIG_STEM}: ${report.message}`);
     ok(
-      !report.message.includes(`pi-${BASE_CONFIG_FILE}`),
+      ![".json", ".jsonc", ".json5"].some((extension) => report.message.includes(`pi-${BASE_CONFIG_STEM}${extension}`)),
       `the extension file refuses \`memory\` as an unknown key, so it is never named: ${report.message}`,
     );
   });

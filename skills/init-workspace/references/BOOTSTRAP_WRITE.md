@@ -169,7 +169,7 @@
    declaration untouched, and report exactly what was written. An absent binary
    becomes a residual with the documented install route — never a failed run.
    Skip this step when the pi package provisions the host itself.
-12. **Offer the subagent routing and resource config (issue #260, S11 edge 4; #201's Mechanics-4 shape, ask-first).** If the project installs `@gtrabanco/pi-agentic-workflow`, offer to seed `pi-agentic-workflow.json` with the subagent layer's two operator surfaces — **never written without a yes**:
+12. **Offer the subagent routing and resource config (issue #260, S11 edge 4; #201's Mechanics-4 shape, ask-first).** If the project installs `@gtrabanco/pi-agentic-workflow`, offer to seed the `pi-agentic-workflow` config with the subagent layer's two operator surfaces — **never written without a yes**:
     - the `passes` recommended entries for the review family (one cheap tier for the finders, `"auto"` left out unless the operator wants delegated choice);
     - the optional `subagents` key (`"parallelism": "auto"` plus caps shaped `"<n> of <m> <unit>"`, or the key omitted entirely — absent means the self-detected envelope with conservative defaults).
     An existing owner-written file is never rewritten: propose the additive keys, show the exact JSON, and record a declined offer as a residual. When the pi package is absent, this step is a residual with the package README's `Spawned passes` + `Subagent layer` sections as the documented route.** Keep the canonical policy and

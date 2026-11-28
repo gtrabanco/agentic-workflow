@@ -347,3 +347,15 @@ test("a scratch fixture never leaks a signing key into the checkout", () => {
   // shell suite pinned — no key file is created outside a throwaway directory.
   assert.equal(existsSync(path.join(REPO_ROOT, "id_ed25519.pub")), false);
 });
+
+test("the profile is found at .jsonc and .json5, and the refusal names the real file (issue #740 S2)", (t) => {
+  for (const name of ["agentic-workflow.jsonc", "agentic-workflow.json5"]) {
+    const repo = fixture(t);
+    const file = path.join(repo.root, ".pi", name);
+    writeFileSync(file, '{ gitIdentity: { enforce: "commit", approved: { name: "Fixture Human" } } }\n');
+    const resolved = resolveIdentityProfile({ root: repo.root, env: { PI_CODING_AGENT_DIR: repo.home } });
+    assert.equal(resolved.enforce, "commit", name);
+    assert.equal(resolved.named, true, name);
+    assert.equal(resolved.sources.project, file, "the source is the file that was read");
+  }
+});

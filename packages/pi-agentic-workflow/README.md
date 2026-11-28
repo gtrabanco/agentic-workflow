@@ -408,23 +408,22 @@ The record is package bookkeeping, so ignore it beside the start marker:
 
 ## Model routing
 
-Two JSONC files, both optional. Model routing lives in this package's extension
-file; cross-tool feature config (`logSession`, `memory`, `telemetry`, `guard`,
-`gitIdentity`, `advance`, `pathProtection`, `contentGuard`) lives in the base
-`agentic-workflow.json` at the
-same scope (guide: `docs/workflow/CONFIG.md`, machine contract:
-`@gtrabanco/agentic-workflow-schema`). Bun's native parser reads the file first
-and the schema package's `parseJsonc` stays the acceptance boundary, so `//` and
-`/* */` comments and trailing commas mean the same thing — and are refused with
-the same line and column — under bun and node. The `/settings` console edits the
-file in place, so a save keeps your comments and only what changed is rewritten:
-adding or removing a key re-renders the object that holds it, and a removed key
-takes its own comment with it.
+Two config files, both optional, both JSON5. Routing lives in this package's
+extension file; cross-tool feature config (`logSession`, `memory`, `telemetry`,
+`guard`, `gitIdentity`, `advance`, `pathProtection`, `contentGuard`) lives in the
+base `agentic-workflow` stem at the same scope (guide: `docs/workflow/CONFIG.md`;
+machine contract: `@gtrabanco/agentic-workflow-schema`). The schema package's
+`parseJsonc` is the acceptance boundary on both runtimes: JSON5 with a strict
+end-of-input check, so a file means the same under bun and node. A file that
+parses but no longer matches the schema degrades at load; only a parse failure
+refuses. The `/settings` console edits the file in place, keeping your comments.
 
-| Scope | Path | Read when |
+| Scope | Path (`json → jsonc → json5`, first existing wins; a write stays) | Read when |
 | --- | --- | --- |
-| Global | `~/.pi/agent/pi-agentic-workflow.json` (routing) · `~/.pi/agent/agentic-workflow.json` (features) | always |
-| Project | `<repo>/.pi/pi-agentic-workflow.json` (routing) · `<repo>/.pi/agentic-workflow.json` (features) | the project is trusted |
+| Global | `~/.pi/agent/pi-agentic-workflow{,.jsonc,.json5}` (routing) · `~/.pi/agent/agentic-workflow{,.jsonc,.json5}` (features) | always |
+| Project | `<repo>/.pi/pi-agentic-workflow{,.jsonc,.json5}` (routing) · `<repo>/.pi/agentic-workflow{,.jsonc,.json5}` (features) | the project is trusted |
+
+A new file is created as `<stem>.json5` (issue #740).
 
 ```json
 {
@@ -757,7 +756,7 @@ The project's policy is a **projection** of this package's own section, never a
 second place to write the same rule:
 
 ```jsonc
-// .pi/pi-agentic-workflow.json — the authoring surface
+// .pi/pi-agentic-workflow.jsonc — the authoring surface
 {
   "guardPlugins": {
     "guards": {
@@ -879,7 +878,7 @@ not — `rg` spells several `grep` flags differently, and a silent rewrite into 
 different command would be worse than a refusal). `enabled: false` turns the
 carrier off, and the base file's `guard.toolChoice.mode` (issue #626) is the
 project-wide disposition: `allow` stands it down, `deny` keeps the refusal, and
-`ask` answers as `deny` because this guard has no question path. The section lives in `pi-agentic-workflow.json`, so the base config
+`ask` answers as `deny` because this guard has no question path. The section lives in the `pi-agentic-workflow` stem, so the base config
 other hosts read is unchanged. Boundary: this sees the `bash` tool call itself,
 not a `grep` inside a script the command executes. This is the recorded
 domain-separation exception that lets the package carry the convention at all —
@@ -930,7 +929,7 @@ recognises all three before it registers anything:
 | **Core binary** | the `engram` executable, on `PATH` or named by `ENGRAM_BIN`: the substrate both the native extension and an MCP server need |
 | **Running server** | `ENGRAM_URL` names an externally managed Engram server — local or remote |
 
-With consent (`memory.engram: true` in `agentic-workflow.json`), the package may
+With consent (`memory.engram: true` in the `agentic-workflow` stem), the package may
 register Engram's MCP server for the session through Pi's own
 `registerMcpServer` — **session-scoped and not persisted**, so nothing outlives
 the session and nothing is written to your `mcp.json` behind your back. What
@@ -1058,7 +1057,7 @@ writes, byte for byte (a test runs that hook and diffs the bytes).
 
 **Off by default, and it never creates the journal.** A project participates by
 carrying `docs/LOGS.md`; enable the writer in the feature config file
-(`.pi/agentic-workflow.json`; the project file wins over the global one):
+(`.pi/agentic-workflow.json5` — or the `.json`/`.jsonc` beside it; the project file wins over the global one):
 
 ```json
 { "logSession": true }
@@ -1152,8 +1151,8 @@ command exactly as before.
 
 ### Config
 
-Both config files (`~/.pi/agent/pi-agentic-workflow.json`; project
-`.pi/pi-agentic-workflow.json` — the project file wins per field):
+Both config files (`~/.pi/agent/pi-agentic-workflow.*`; project
+`.pi/pi-agentic-workflow.*` — the project file wins per field):
 
 ```json
 {
@@ -1235,7 +1234,7 @@ test:
 
 `<agentDir>` is pi's global agent directory — `getAgentDir()` in the extension,
 `~/.pi/agent` on a default install (the same directory that holds
-`pi-agentic-workflow.json` and `mcp.json`).
+the `pi-agentic-workflow` config and `mcp.json`).
 
 ### Config form
 

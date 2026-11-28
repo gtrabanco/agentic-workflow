@@ -50,8 +50,10 @@ cannot disagree about a key, its type or its shipped default:
   merges tighter-only (globs union, requirements take the higher rank), and so
   does `contentGuard` (`mergeContentGuardOverrides`: the trusted roles
   intersect, the allow/deny login lists union).
-- `parseJsonc` — dependency-free JSONC (comments, trailing commas, BOM) with a
-  line and column on every error.
+- `parseJsonc` — dependency-free JSON5 (comments, trailing commas, identifier
+  keys, single quotes and the ES5 escapes, hex and leading/trailing-dot numbers,
+  `Infinity`/`NaN`, BOM) with a line and column on every error and a strict
+  end-of-input check.
 - `composeConfigSchema` — one object schema naming every section.
 
 The committed [`config.schema.json`](./config.schema.json) is generated from

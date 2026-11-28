@@ -29,7 +29,7 @@ The approved identity lives in the unified config, base file, section
 `gitIdentity` — never in a second file:
 
 ```jsonc
-// .pi/agentic-workflow.json (project scope; project wins over global)
+// .pi/agentic-workflow.json5 — or the .json/.jsonc beside it (#740); project wins over global
 {
   "gitIdentity": {
     // off | commit | push | push-upstream | commit-and-push | commit-and-push-upstream
@@ -277,7 +277,7 @@ None of this is applied by the workflow; each line is the operator's.
 Nothing from this page by default. It may *offer*, once, with an explicit yes:
 
 - install the pre-commit hook (or chain it from an existing one);
-- scaffold `.pi/agentic-workflow.json` with a `gitIdentity` block whose
+- scaffold the `agentic-workflow` config (created as `.pi/agentic-workflow.json5`) with a `gitIdentity` block whose
   `enforce` is `off` and whose `approved` is empty, for the operator to fill in.
 
 A "no" is remembered for the session and installs nothing.

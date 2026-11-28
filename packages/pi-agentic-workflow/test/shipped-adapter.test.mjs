@@ -300,7 +300,7 @@ test("AC13 through the factory: an untrusted project is never read, even when th
       availableModels: () => [{ provider: "openai", id: "gpt-5.2" }],
     };
     await router.dispatch({ name: "unit-lane", skill: "unit-lane" }, "", ctx);
-    assert.deepEqual(readPaths, [join(agentDir, "pi-agentic-workflow.json"), join(agentDir, "agentic-workflow.json")], "the project files are not opened");
+    assert.deepEqual(readPaths, [join(agentDir, "pi-agentic-workflow.json5"), join(agentDir, "agentic-workflow.json5")], "the project files are not opened");
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
@@ -582,14 +582,15 @@ test("F6 through the adapter: a project-scope mcp.json declaration is never shad
   }
 });
 
-test("F5 through the adapter: an invalid config is a stated problem, never a silent opt-out", async () => {
-  // The file exists and says `engram: true`, but a sibling key is invalid, so
-  // `loadConfig` fails closed to the shipped default. Reading consent off that
-  // default told the operator who opted in to opt in, while the dispatcher kept
-  // reporting the same file as invalid.
+test("F5 through the adapter: an unparsable config is a stated problem, never a silent opt-out", async () => {
+  // The file exists and says `engram: true`, but it does not parse, so
+  // `loadConfig` fails closed to the shipped default and reports the parse
+  // failure. Issue #740 S6 narrowed that refusal to the parse boundary only: a
+  // value that no longer validates is dropped silently, but a file that cannot
+  // be read stays evidence and the operator is told which file it is.
   const entry = await shippedEntry({ globalConfig: { memory: { engram: true } } });
   try {
-    writeFileSync(join(entry.agentDir, "pi-agentic-workflow.json"), '{"memory":{"engram":"yes"},"default":{"thinking":"nope"}}');
+    writeFileSync(join(entry.agentDir, "pi-agentic-workflow.json"), '{"memory":{"engram":true},"default":');
     withEngramEnv({}, () => entry.handlers.get("session_start")({}, entry.context()));
     assert.deepEqual(entry.calls.registerMcpServer, [], "consent that cannot be read registers nothing");
     assert.ok(

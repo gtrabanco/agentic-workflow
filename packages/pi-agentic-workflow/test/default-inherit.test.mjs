@@ -160,10 +160,10 @@ test("AC6: the loader reads the two documented files, and real absence is zero-c
   const root = mkdtempSync(join(tmpdir(), "paw-zero-config-"));
   try {
     assert.deepEqual(configFilePaths("/x/agent", "/y/repo"), {
-      global: join("/x/agent", "pi-agentic-workflow.json"),
-      project: join("/y/repo", ".pi", "pi-agentic-workflow.json"),
-      globalBase: join("/x/agent", "agentic-workflow.json"),
-      projectBase: join("/y/repo", ".pi", "agentic-workflow.json"),
+      global: join("/x/agent", "pi-agentic-workflow.json5"),
+      project: join("/y/repo", ".pi", "pi-agentic-workflow.json5"),
+      globalBase: join("/x/agent", "agentic-workflow.json5"),
+      projectBase: join("/y/repo", ".pi", "agentic-workflow.json5"),
     });
 
     // No injected reader: the loader's own filesystem read must report the

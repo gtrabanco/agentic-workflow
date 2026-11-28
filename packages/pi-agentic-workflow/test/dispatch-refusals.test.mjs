@@ -115,7 +115,7 @@ test("AC12: a present-but-unreadable config file refuses the dispatch instead of
         cwd: "/fixture/repo",
         projectTrusted: true,
         readFile: (path) => {
-          if (path.endsWith("pi-agentic-workflow.json")) {
+          if (path.endsWith("pi-agentic-workflow.json5")) {
             throw Object.assign(new Error("EACCES: permission denied"), { code: "EACCES" });
           }
           return null;
@@ -145,7 +145,7 @@ test("AC6/AC12: real absence stays zero-config while an unreadable file is a pro
       // #427 put two files in the agent dir (the pi file and the base feature
       // file); name the one file that is unreadable instead of throwing for the
       // whole directory, so "one unreadable file" stays one problem.
-      if (path === "/fixture/agent/pi-agentic-workflow.json") {
+      if (path === "/fixture/agent/pi-agentic-workflow.json5") {
         throw Object.assign(new Error("EISDIR: illegal operation on a directory"), { code: "EISDIR" });
       }
       return null;

@@ -8,8 +8,9 @@
  * switch. It ships them as data:
  * `agentic-workflow config`
  * discovers `agentic-workflow.config.json`, composes this schema with the base
- * feature schema, and reads/writes `pi-agentic-workflow.json` without importing
- * this package.
+ * feature schema, and reads/writes the `pi-agentic-workflow` stem (`.json`,
+ * `.jsonc` or `.json5`, resolved by the shared rule) without importing this
+ * package.
  *
  * `test/config-extension.test.mjs` pins the committed descriptor to this
  * module, so the published data and the runtime validator cannot drift.
@@ -244,7 +245,9 @@ const { declared: _declared, ...piDefaults } = DEFAULT_PI_CONFIG;
 export const PI_CONFIG_EXTENSION: ConfigExtensionDescriptor = {
   contract: CONFIG_EXTENSION_CONTRACT,
   key: "pi",
-  file: "pi-agentic-workflow.json",
+  // The canonical identity is the stem (#740 S4): the scopes carry
+  // `pi-agentic-workflow.json`, `.jsonc` or `.json5`, and the resolver picks.
+  file: "pi-agentic-workflow",
   description: "pi-agentic-workflow package config: model routing, profiles, passes, subagent limits, State Flow, shell-tool choice, phase batching, guard plugins.",
   schema: PI_SCHEMA,
   defaults: piDefaults,

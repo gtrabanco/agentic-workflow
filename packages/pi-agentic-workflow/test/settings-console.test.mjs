@@ -864,7 +864,7 @@ test("AC10: the shipped command, run through the real entry, writes the real glo
       // The registry has one model, so the entry path offers it as a list.
       [prompts.modelPicked("the default route")]: "anthropic/claude-sonnet-4-5",
       [prompts.thinking("the default route")]: "low",
-      [prompts.saveTo(join(root, "agent", "pi-agentic-workflow.json"))]: true,
+      [prompts.saveTo(join(root, "agent", "pi-agentic-workflow.json5"))]: true,
     };
     const shown = [];
     const ctx = {

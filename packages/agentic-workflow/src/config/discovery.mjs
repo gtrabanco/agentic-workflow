@@ -7,7 +7,7 @@
 
 import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { CONFIG_EXTENSION_CONTRACT, parseJsonc, validateConfigExtension } from "@gtrabanco/agentic-workflow-schema";
+import { CONFIG_EXTENSION_CONTRACT, CONFIG_FILE_EXTENSIONS, parseJsonc, validateConfigExtension } from "@gtrabanco/agentic-workflow-schema";
 
 export const CONFIG_EXTENSIONS_DIR_NAME = "config-extensions";
 
@@ -29,7 +29,7 @@ function loadDescriptor(path, source, issues) {
     return undefined;
   }
   if (value === undefined) {
-    issues.push({ path: source, message: `${path} is not valid JSONC` });
+    issues.push({ path: source, message: `${path} is not valid JSON5` });
     return undefined;
   }
   const descriptorIssues = validateConfigExtension(value);
@@ -54,13 +54,25 @@ function packageDirectories(projectDir) {
   return directories;
 }
 
+/**
+ * One descriptor per stem (#740 S2): a drop-in may be `.json`, `.jsonc` or
+ * `.json5`, and the first candidate in that order wins silently — the same rule
+ * every other reader applies, so a renamed descriptor never double-loads.
+ */
 function dropInDescriptors(root) {
   const dir = join(root, CONFIG_EXTENSIONS_DIR_NAME);
   if (!existsSync(dir)) return [];
-  return readdirSync(dir)
-    .filter((name) => name.endsWith(".json"))
-    .sort()
-    .map((name) => join(dir, name));
+  const byStem = new Map();
+  for (const name of readdirSync(dir).sort()) {
+    const extension = CONFIG_FILE_EXTENSIONS.find((candidate) => name.endsWith(candidate));
+    if (extension === undefined) continue;
+    const stem = name.slice(0, -extension.length);
+    const current = byStem.get(stem);
+    if (current === undefined || CONFIG_FILE_EXTENSIONS.indexOf(extension) < CONFIG_FILE_EXTENSIONS.indexOf(current.extension)) {
+      byStem.set(stem, { extension, path: join(dir, name) });
+    }
+  }
+  return [...byStem.values()].map((entry) => entry.path).sort();
 }
 
 export function discoverConfigExtensions({ projectDir, globalDir }) {

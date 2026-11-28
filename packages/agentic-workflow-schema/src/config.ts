@@ -72,8 +72,37 @@ export interface ConfigExtensionDescriptor {
   defaults: Record<string, unknown>;
 }
 
-export const BASE_CONFIG_FILE = "agentic-workflow.json";
+/**
+ * The base config's canonical identity (#740 S4): the stem, never a file name.
+ * A scope directory carries `<stem>.json`, `<stem>.jsonc` or `<stem>.json5`, and
+ * every reader resolves the stem with the same precedence.
+ */
+export const BASE_CONFIG_STEM = "agentic-workflow";
+
+/** The extensions a config file may carry, in resolution order (#740 S2). */
+export const CONFIG_FILE_EXTENSIONS = Object.freeze([".json", ".jsonc", ".json5"] as const);
+
+/** The extension a new config file is created with (#740 S3). */
+export const DEFAULT_CONFIG_EXTENSION = ".json5";
+
 export const CONFIG_EXTENSIONS_DIR = "config-extensions";
+
+/** Every file name a stem may occupy, in silent precedence order. */
+export function configFileCandidates(stem: string): string[] {
+  return CONFIG_FILE_EXTENSIONS.map((extension) => `${stem}${extension}`);
+}
+
+/**
+ * The file a stem occupies: the first candidate the caller's `exists` predicate
+ * reports, or the create name when none does. The predicate takes the file NAME
+ * so each host resolves inside its own scope directory (or over its own seam).
+ */
+export function resolveConfigFileName(stem: string, exists: (fileName: string) => boolean): string {
+  for (const candidate of configFileCandidates(stem)) {
+    if (exists(candidate)) return candidate;
+  }
+  return `${stem}${DEFAULT_CONFIG_EXTENSION}`;
+}
 
 const LOG_SESSION_MAX_ARGV = 32;
 const LOG_SESSION_MAX_TIMEOUT_MS = 60_000;
@@ -504,7 +533,7 @@ export const BASE_CONFIG_SECTIONS: readonly ConfigSectionSpec[] = [
   {
     key: "logSession",
     category: "feature",
-    file: BASE_CONFIG_FILE,
+    file: BASE_CONFIG_STEM,
     path: ["logSession"],
     description: "Automatic session logging: a boolean-like switch and an optional publisher command.",
     schema: LOG_SESSION_SCHEMA,
@@ -513,7 +542,7 @@ export const BASE_CONFIG_SECTIONS: readonly ConfigSectionSpec[] = [
   {
     key: "memory",
     category: "feature",
-    file: BASE_CONFIG_FILE,
+    file: BASE_CONFIG_STEM,
     path: ["memory"],
     description: "Memory-substrate consent (the Engram MCP registration is ask-first).",
     schema: {
@@ -526,7 +555,7 @@ export const BASE_CONFIG_SECTIONS: readonly ConfigSectionSpec[] = [
   {
     key: "telemetry",
     category: "feature",
-    file: BASE_CONFIG_FILE,
+    file: BASE_CONFIG_STEM,
     path: ["telemetry"],
     description: "Per-unit cost measurement. On by default — the sample stays local and anonymized (no prompt text, no model output, no diff, no file content); false opts a project out.",
     schema: {
@@ -549,7 +578,7 @@ export const BASE_CONFIG_SECTIONS: readonly ConfigSectionSpec[] = [
   {
     key: "guard",
     category: "feature",
-    file: BASE_CONFIG_FILE,
+    file: BASE_CONFIG_STEM,
     path: ["guard"],
     description:
       "Guard dispositions — allow, deny or ask — as one global default plus one override per guard (gitIdentity, toolChoice, receipt). A refused value falls back to the shipped ask.",
@@ -559,7 +588,7 @@ export const BASE_CONFIG_SECTIONS: readonly ConfigSectionSpec[] = [
   {
     key: "gitIdentity",
     category: "feature",
-    file: BASE_CONFIG_FILE,
+    file: BASE_CONFIG_STEM,
     path: ["gitIdentity"],
     description: "Approved commit identity (name, email, legal name, signing key) and the agent config-write guard.",
     schema: GIT_IDENTITY_SCHEMA,
@@ -568,7 +597,7 @@ export const BASE_CONFIG_SECTIONS: readonly ConfigSectionSpec[] = [
   {
     key: "advance",
     category: "feature",
-    file: BASE_CONFIG_FILE,
+    file: BASE_CONFIG_STEM,
     path: ["advance"],
     description: "Conductor knobs: iteration ceiling, sensitive/security path sets, run-log path.",
     schema: {
@@ -599,7 +628,7 @@ export const BASE_CONFIG_SECTIONS: readonly ConfigSectionSpec[] = [
   {
     key: "pathProtection",
     category: "feature",
-    file: BASE_CONFIG_FILE,
+    file: BASE_CONFIG_STEM,
     path: ["pathProtection"],
     description: "Path-protection override: extra globs and raised requirements (never a lowering).",
     schema: PATH_PROTECTION_SCHEMA,
@@ -609,7 +638,7 @@ export const BASE_CONFIG_SECTIONS: readonly ConfigSectionSpec[] = [
   {
     key: "contentGuard",
     category: "feature",
-    file: BASE_CONFIG_FILE,
+    file: BASE_CONFIG_STEM,
     path: ["contentGuard"],
     description: "Author-provenance policy for third-party forge content: trusted roles plus allow/deny login lists (tighten-only).",
     schema: CONTENT_GUARD_SCHEMA,
@@ -619,7 +648,7 @@ export const BASE_CONFIG_SECTIONS: readonly ConfigSectionSpec[] = [
   {
     key: "docRetention",
     category: "feature",
-    file: BASE_CONFIG_FILE,
+    file: BASE_CONFIG_STEM,
     path: ["docRetention"],
     description: "Document retention: whether a merged unit's process artifacts are trimmed into the gitignored archive, and how the archive is kept (issue #651).",
     schema: DOC_RETENTION_SCHEMA,
@@ -628,7 +657,7 @@ export const BASE_CONFIG_SECTIONS: readonly ConfigSectionSpec[] = [
   {
     key: "batchScheduler",
     category: "feature",
-    file: BASE_CONFIG_FILE,
+    file: BASE_CONFIG_STEM,
     path: ["batchScheduler"],
     description: "The batch scheduler's lane vocabulary: this project's own tree roots, so a tree that is not this repository's layout plans in parallel lanes instead of degrading to surface-unknown (issue #716).",
     schema: BATCH_SCHEDULER_SCHEMA,
@@ -637,7 +666,7 @@ export const BASE_CONFIG_SECTIONS: readonly ConfigSectionSpec[] = [
   {
     key: "relay",
     category: "feature",
-    file: BASE_CONFIG_FILE,
+    file: BASE_CONFIG_STEM,
     path: ["relay"],
     description: "The owner's default answer at the lane's Relay seam: ask (the question stays open) or inline (preselect the inline per-phase hand-off). Absent means ask; neither value skips the question or bypasses pi-web's own dispatch consent gate (issue #722).",
     schema: {
@@ -690,6 +719,13 @@ function matchesType(value: unknown, type: string): boolean {
 /** Strict JSON-Schema-subset validation. No coercion: a string never becomes a boolean. */
 export function validateJsonSchema(schema: JsonSchema, value: unknown, path: string): ConfigIssue[] {
   const issues: ConfigIssue[] = [];
+  // JSON5 reads `NaN` and `±Infinity`, but the standard-JSON writer renders both
+  // as `null` — a silent value change. Refuse it at the validation boundary
+  // instead of writing a lie (#740 S5).
+  if (typeof value === "number" && !Number.isFinite(value)) {
+    issues.push({ path, message: "must be a finite number; Infinity and NaN do not survive the JSON writer" });
+    return issues;
+  }
   if (schema.type !== undefined) {
     const types = Array.isArray(schema.type) ? schema.type : [schema.type];
     if (!types.some((type) => matchesType(value, type))) {
@@ -766,30 +802,96 @@ export function validateSectionValue(section: ConfigSectionSpec, value: unknown)
   return validateJsonSchema(section.schema, value, section.key);
 }
 
-/** Drop the keys the schema refuses and report every removed path. */
-export function sanitizeJsonSchema(schema: JsonSchema, value: unknown, path: string, removed: string[]): unknown {
+/**
+ * Salvage one value against a schema: drop every member or item that no longer
+ * validates, keep the valid siblings, and report every dropped path (#740 S7).
+ * A value that cannot be salvaged — a mutated shape, or a container whose bounds
+ * the drops would break — is dropped whole.
+ */
+function salvageValue(
+  schema: JsonSchema,
+  value: unknown,
+  path: string,
+  removed: string[],
+): { kept: boolean; value: unknown } {
   if (schema.anyOf !== undefined) {
-    const branch = schema.anyOf.find((candidate) => validateJsonSchema(candidate, value, path).length === 0)
-      ?? (isRecord(value) ? schema.anyOf.find((candidate) => candidate.type === "object") : undefined);
-    return branch === undefined ? value : sanitizeJsonSchema(branch, value, path, removed);
+    const exact = schema.anyOf.find((branch) => validateJsonSchema(branch, value, path).length === 0);
+    if (exact !== undefined) return salvageValue(exact, value, path, removed);
+    const objectBranch = isRecord(value)
+      ? schema.anyOf.find((branch) => branch.type === "object" && branch.properties !== undefined)
+      : undefined;
+    if (objectBranch !== undefined) {
+      const salvaged = salvageValue(objectBranch, value, path, removed);
+      if (salvaged.kept && validateJsonSchema(schema, salvaged.value, path).length === 0) return salvaged;
+    }
+    if (validateJsonSchema(schema, value, path).length === 0) return { kept: true, value };
+    removed.push(path);
+    return { kept: false, value: undefined };
+  }
+  if (schema.oneOf !== undefined) {
+    if (validateJsonSchema(schema, value, path).length === 0) return { kept: true, value };
+    removed.push(path);
+    return { kept: false, value: undefined };
   }
   if (Array.isArray(value) && schema.items !== undefined) {
-    return value.map((item, index) => sanitizeJsonSchema(schema.items as JsonSchema, item, `${path}[${index}]`, removed));
+    const dropped: string[] = [];
+    const items: unknown[] = [];
+    value.forEach((item, index) => {
+      const child = salvageValue(schema.items as JsonSchema, item, `${path}[${index}]`, dropped);
+      if (child.kept) items.push(child.value);
+    });
+    // The bounds are the array's own contract: if the drops broke them, the
+    // array cannot be salvaged and the caller drops it whole instead.
+    if (validateJsonSchema({ ...schema, items: undefined }, items, path).length === 0) {
+      removed.push(...dropped);
+      return { kept: true, value: items };
+    }
+    removed.push(path);
+    return { kept: false, value: undefined };
   }
-  if (!isRecord(value) || schema.properties === undefined) return value;
-  const out: Record<string, unknown> = {};
-  for (const [key, entry] of Object.entries(value)) {
-    const child = schema.properties[key];
-    if (child !== undefined) out[key] = sanitizeJsonSchema(child, entry, keyPath(path, key), removed);
-    else if (schema.additionalProperties === false) removed.push(keyPath(path, key));
-    else out[key] = entry;
+  if (isRecord(value) && (schema.properties !== undefined || schema.required !== undefined || schema.additionalProperties !== undefined)) {
+    const properties = schema.properties ?? {};
+    const out: Record<string, unknown> = {};
+    for (const [key, entry] of Object.entries(value)) {
+      const childPath = keyPath(path, key);
+      const child = properties[key];
+      if (child !== undefined) {
+        const salvaged = salvageValue(child, entry, childPath, removed);
+        if (salvaged.kept) out[key] = salvaged.value;
+        continue;
+      }
+      if (schema.additionalProperties === false) {
+        removed.push(childPath);
+        continue;
+      }
+      if (typeof schema.additionalProperties === "object") {
+        const salvaged = salvageValue(schema.additionalProperties, entry, childPath, removed);
+        if (salvaged.kept) out[key] = salvaged.value;
+        continue;
+      }
+      out[key] = entry;
+    }
+    // A required key the operator never wrote is not invented here: only a value
+    // that validates on its own is kept, so a container left invalid is dropped.
+    if (validateJsonSchema({ ...schema, required: undefined }, out, path).length === 0) return { kept: true, value: out };
+    removed.push(path);
+    return { kept: false, value: undefined };
   }
-  return out;
+  if (validateJsonSchema(schema, value, path).length === 0) return { kept: true, value };
+  removed.push(path);
+  return { kept: false, value: undefined };
+}
+
+/** Drop every key and item the schema refuses — unknown or no longer valid — and report every removed path. */
+export function sanitizeJsonSchema(schema: JsonSchema, value: unknown, path: string, removed: string[]): unknown {
+  const salvaged = salvageValue(schema, value, path, removed);
+  return salvaged.kept ? salvaged.value : undefined;
 }
 
 export function sanitizeSectionValue(section: ConfigSectionSpec, value: unknown): { value: unknown; removed: string[] } {
   const removed: string[] = [];
-  return { value: sanitizeJsonSchema(section.schema, value, section.key, removed), removed };
+  const salvaged = salvageValue(section.schema, value, section.key, removed);
+  return { value: salvaged.kept ? salvaged.value : undefined, removed };
 }
 
 /** Shallow fill: a default applies only where the operator's key is UNDEFINED. */
@@ -918,8 +1020,11 @@ export function validateConfigExtension(value: unknown): ConfigIssue[] {
   } else if (BASE_KEYS.has(value.key)) {
     issues.push({ path: "key", message: `"${value.key}" is a base feature section and cannot be redefined` });
   }
-  if (typeof value.file !== "string" || !/^[a-z0-9][a-z0-9._-]*\.json$/u.test(value.file)) {
-    issues.push({ path: "file", message: "must be a bare .json file name (no directory)" });
+  const file = value.file;
+  if (typeof file !== "string" || !/^[a-z0-9][a-z0-9._-]*$/u.test(file)) {
+    issues.push({ path: "file", message: "must be a bare config stem (no directory, no extension)" });
+  } else if (CONFIG_FILE_EXTENSIONS.some((extension) => file.endsWith(extension))) {
+    issues.push({ path: "file", message: "must be the config stem, not a file name: drop the extension (#740 S4)" });
   }
   if (typeof value.description !== "string" || value.description.trim() === "") {
     issues.push({ path: "description", message: "must be a non-empty string" });

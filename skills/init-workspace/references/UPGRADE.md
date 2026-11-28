@@ -108,7 +108,7 @@ template is a residual, never clobbered.
    `path-protection.md` page are proposed from the template; an existing
    owner-written `path-policy.json` is never clobbered and is listed as a
    residual instead. A missing subagent routing config (issue #260, S11 edge 4)
-   is **offered the same way, additive and ask-first**: seed `pi-agentic-workflow.json`
+   is **offered the same way, additive and ask-first**: seed the `pi-agentic-workflow` config
    with the recommended `passes` entries for the review family and the optional
    `subagents` key (caps shaped `"<n> of <m> <unit>"`, or the key omitted —
    absent means the self-detected envelope) only on an explicit yes; an existing

@@ -7,10 +7,19 @@ machine contract (section list, defaults, `config.schema.json`) is owned by
 
 ## Files and scopes
 
-| Scope | Directory | Base file | Extension file |
+| Scope | Directory | Base file stem | Extension file stem |
 |---|---|---|---|
-| global (per user) | `~/.pi/agent/` (the host's agent directory) | `agentic-workflow.json` | `pi-agentic-workflow.json` |
-| project | `.pi/` | `agentic-workflow.json` | `pi-agentic-workflow.json` |
+| global (per user) | `~/.pi/agent/` (the host's agent directory) | `agentic-workflow` | `pi-agentic-workflow` |
+| project | `.pi/` | `agentic-workflow` | `pi-agentic-workflow` |
+
+- **The stem is the identity; the extension is the location (issue #740).** A
+  config file may be `<stem>.json`, `<stem>.jsonc` or `<stem>.json5`, and a scope
+  resolves the first that exists in that order — silently, so a `.json` file left
+  from an older install keeps winning over a `.jsonc` beside it. A write always
+  lands in the file that already exists (a `.jsonc` operator file is never
+  renamed); when none exists the file is created as `<stem>.json5`. `config
+  init` and `config default` follow the same rule. This repository commits its own
+  config as `.jsonc` to exercise the middle extension.
 
 - **Base file** — feature config every agentic-workflow install shares:
   `logSession`, `memory`, `telemetry`, `guard`, `gitIdentity`, `advance`,
@@ -18,19 +27,29 @@ machine contract (section list, defaults, `config.schema.json`) is owned by
   It is cross-tool: the value means the same on Claude Code, Codex, OpenCode2
   and π; only the implementation of each feature differs.
 - **Extension file** — package-specific config. The `pi-agentic-workflow`
-  package owns `pi-agentic-workflow.json` (model routing, profiles, passes,
+  package owns the `pi-agentic-workflow` stem (model routing, profiles, passes,
   subagent limits, State Flow, shell-tool choice). A package that is not installed contributes
   neither a section nor a file, so the base config never breaks.
-- Both files are **JSONC**: `//` and `/* */` comments and trailing commas are
-  accepted. On Bun the runtime's own parser (`Bun.JSONC.parse`) reads the file
-  first; the schema package's `parseJsonc` remains the acceptance boundary on
-  both runtimes and reports every refusal with its line and column, so a file
-  means the same thing under Bun and Node — including the spellings only Bun's
-  parser would take (`'single quotes'`, `0x` numbers), which are refused on
-  both. The settings console edits the file it read, so a save keeps your
-  comments and rewrites only what changed; adding or removing a key re-renders
-  the object that holds it, and a removed key takes its own comment with it.
+- The dialect is **JSON5**: `//` and `/* */` comments, trailing commas, ES5
+  identifier keys (`{ logSession: true }`), single-quoted strings with the ES5
+  escapes (`\x`, `\u`, the line continuation), hex and leading/trailing-dot
+  numbers, a leading `+`, and `Infinity`/`NaN`. On Bun the runtime's own parser
+  (`Bun.JSONC.parse`) reads the file first; the schema package's `parseJsonc`
+  remains the acceptance boundary on both runtimes, reports every refusal with
+  its line and column, and refuses bytes after the root value, so a concatenated
+  or truncated file fails closed on both. Writes stay standard JSON, so a value
+  only JSON5 can spell (`NaN`, `±Infinity`) would become `null` in the file: the
+  validator refuses it with `must be a finite number` before any byte moves. The
+  settings console edits the file it read, so a save keeps your comments and
+  rewrites only what changed; adding or removing a key re-renders the object that
+  holds it, and a removed key takes its own comment with it.
 - The project config is not read while the project is untrusted.
+- **A file that parses but no longer matches the schema degrades at load.** A key
+  or section the schema no longer declares, and a value that no longer validates,
+  are dropped silently and the shipped default fills in — `config validate` (and
+  the doctor's divergence report) is the on-demand trail for everything dropped.
+  Only a file that does not **parse** refuses the load, because present-but-broken
+  stays evidence.
 
 ## Resolution
 
@@ -67,9 +86,12 @@ project can never silently drop a global glob or lower a requirement.
 | `relay` | base | `{ "seam": "ask" }` | the owner's default answer at the lane's Relay seam: `ask` (the question stays open — the shipped default, and what an absent key means) or `inline` (the relay-or-inline question preselects the inline per-phase hand-off). It never skips the question and never bypasses pi-web's own `dispatch_relay` human-consent gate, so there is no `auto` value; see [The Relay seam](#the-relay-seam--relayseam). Owner of the seam's meaning: [RELAY.md](../../skills/unit-lane/references/RELAY.md) §The seam's default (issue #722) |
 | `pi` | extension | routing defaults | `default`, `commands`, `onUnavailableRoute`, `onSettle`, `recommendedModels`, `profiles`, `profileOrder`, `profileFallback`, `passes`, `subagents`, `stateFlow`, `toolChoice` (`enabled: true`, `mode: "block"` — the command-time `rg`/`bun` carrier; `mode: "rewrite"` forwards instead of refusing), `phaseBatching` (`enabled: false` — the model-aware phase-batching switch; see [Phase batching](#phase-batching)), `guardPlugins` (`enabled: true`, `guards: {}` — the project's own guards, declared as data; see [Guard plugins](#guard-plugins)) |
 
-Unknown keys are refused, never merged or coerced. `config validate` reports
-each one by path; `--sanitize` removes them; `--no-warn-unknown` suppresses only
-that class.
+Unknown keys are refused, never merged or coerced, and a value that does not
+match its schema is refused the same way. `config validate` reports each one by
+path; `--sanitize` writes the file back with every unknown key **and** every value
+that no longer validates dropped (a valid sibling survives an invalid one); a
+second `validate` is then clean, and `config default` fills the missing declared
+options. `--no-warn-unknown` suppresses only the unknown-key class.
 
 ### The Relay seam — `relay.seam`
 
@@ -206,7 +228,7 @@ Three worked examples:
 ## Guard plugins
 
 A project's restrictions are its own, so the extension accepts guards as **data**:
-`guardPlugins` in `pi-agentic-workflow.json` declares them, and the same
+`guardPlugins` in the `pi-agentic-workflow` config declares them, and the same
 declaration is enforced by whichever carrier is installed. The section is the one
 authoring surface — `runner provision permissions` projects it into the
 operator-level permission layer's own policy file, so a rule is written once.
@@ -411,10 +433,11 @@ runner config default --json
   settings console has no opt-out.
 - **Idempotent.** A second run changes no byte and takes no second backup, so the
   operation is safe to re-run after every upgrade.
-- **Every installed file.** The base `agentic-workflow.json` always;
-  `pi-agentic-workflow.json` only while `pi-agentic-workflow` is installed, and
+- **Every installed file.** The base `agentic-workflow` stem always; the
+  `pi-agentic-workflow` stem only while `pi-agentic-workflow` is installed, and
   any other extension the same way, through `config-extension@1` discovery — the
-  mechanism is generic, never a per-package case.
+  mechanism is generic, never a per-package case. Each file is written where it
+  already lives, or created as `<stem>.json5`.
 - **Refuse before writing.** A file that does not parse, and a merge that fails
   validation, exit 2 with `CONFIG REFUSAL — <reason>` and leave every file of the
   run untouched — no write, no backup, in any scope.
@@ -429,11 +452,13 @@ The receipt is JSON on stdout and the progress lines are stderr only:
 
 ```json
 { "contract": "config-materialize@1", "scope": "both",
-  "files": [ { "scope": "project", "file": "agentic-workflow.json",
-               "path": ".pi/agentic-workflow.json", "existed": true,
-               "written": true, "backup": ".pi/agentic-workflow.json.bak-20261121T013000Z",
+  "files": [ { "scope": "project", "file": "agentic-workflow",
+               "path": ".pi/agentic-workflow.jsonc", "existed": true,
+               "written": true, "backup": ".pi/agentic-workflow.jsonc.bak-20261121T013000Z",
                "materialized": ["logSession.publisher"], "removed": [] } ] }
 ```
+
+`file` is the canonical stem; `path` is the file the write landed on.
 
 ## CLI
 
@@ -502,12 +527,16 @@ A package publishes its own section without this repository knowing it:
    {
      "contract": "config-extension@1",
      "key": "pi",
-     "file": "pi-agentic-workflow.json",
+     "file": "pi-agentic-workflow",
      "description": "package-internal config",
      "schema": { "type": "object", "additionalProperties": false, "properties": { } },
      "defaults": { }
    }
    ```
+
+   `file` is the **stem**, never a name with an extension (a `.json`-suffixed
+   value is refused with that rule): the scopes carry `<stem>.json`,
+   `<stem>.jsonc` or `<stem>.json5`.
 
 2. Name it from `package.json`:
 
@@ -533,12 +562,12 @@ project's guide before adding a section.
 ## Migration from the pre-unified files
 
 - Feature keys (`memory`, `telemetry`, `advance`, `pathProtection`,
-  `autoLogSession`) moved out of `pi-agentic-workflow.json` into the base
-  `agentic-workflow.json`.
+  `autoLogSession`) moved out of the `pi-agentic-workflow` file into the base
+  `agentic-workflow` file.
 - `autoLogSession: { "mode": "mechanical" }` became `logSession: true`;
   `autoLogSession: { "mode": "off" }` became `logSession: false` (or absent).
   A publisher moves to `logSession.publisher`.
-- Routing and profile keys stay in `pi-agentic-workflow.json` unchanged; they
+- Routing and profile keys stay in the `pi-agentic-workflow` file unchanged; they
   are now the `pi` section.
 - Run `config validate --scope both` after moving values; it names every key
   that is now in the wrong file.
