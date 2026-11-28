@@ -5,11 +5,11 @@ ac-hash: 7c5059be65eca88817be98ca1f83d9e1360cd54c963c0c7c9e698520bfa987f9
 roadmap_summary: The durable-subagents layer stops failing on a stale hoisted host copy — the diagnostic names the resolved copy's version and the repair, resolution binds the running host first, and the declared peer range is enforced at the sandbox
 ---
 
-# fix/755-hoisted-peer-stale
+# fix/755-durable-subagents-layer-fails
 
-> Fix specification — a local, unpublished application against the repository's
-> own surgery. Ledgers are frozen in `planning-evidence.md` and
-> `planning-obligations.md` beside this doc (scope `medium`), never embedded.
+> Fix specification — the applied unit for issue #755. The ledgers are frozen in
+> `planning-evidence.md` and `planning-obligations.md` beside this doc (scope
+> `medium`), never embedded.
 
 ```text
 doc-provenance@1
@@ -27,14 +27,16 @@ The PR closes it via `Closes #755`.
 
 ## Specs
 
-**S1 — The diagnostic must name the resolved copy's version and the real repair.**
-> 1. **The diagnostic misroutes the fix.** "Reinstall the package" cannot fix this: reinstalling `@gtrabanco/pi-agentic-workflow` never touches the hoisted host copy. The shim has the resolved path at hand (the error names it); reading the resolved copy's `package.json` version and reporting something like *"the extension sandbox resolves @earendil-works/pi-coding-agent@0.84.2 — update it (e.g. `bun add @earendil-works/pi-coding-agent` in the package manager dir) to satisfy the >=1.1.0 peer"* would point at the real repair.
+Requirements, each numbered `S#` and quoting the requester's own words verbatim.
 
-**S2 — Resolution must bind the running host's own module instead of the sandbox's stale copy.**
-> 2. **Resolution strategy.** Binding the host API through the bare specifier means every extension sandbox keeps its own (stale-able) host copy. Resolving against the running pi's own module (the path the host already knows — `subagents.js` already walks up from the shim, the host package root is derivable the same way) would remove the whole class of failure.
+**S1 — Fix diagnostic to route the real repair.**
+> The diagnostic misroutes the fix. "Reinstall the package" cannot fix this: reinstalling `@gtrabanco/pi-agentic-workflow` never touches the hoisted host copy. The shim has the resolved path at hand (the error names it); reading the resolved copy's `package.json` version and reporting something like *\"the extension sandbox resolves @earendil-works/pi-coding-agent@0.84.2 — update it (e.g. `bun add @earendil-works/pi-coding-agent` in the package manager dir) to satisfy the >=1.1.0 peer\"* would point at the real repair.
 
-**S3 — The declared peer range must be enforced against the resolved copy.**
-> 3. **Peer range is declared but unenforced at the sandbox.** `pi-agentic-workflow` declares `peerDependencies: { "@earendil-works/pi-coding-agent": ">=1.1.0" }`, yet the effective resolution in the sandbox violates it; nothing checks the resolved copy.
+**S2 — Resolve against running pi's own module.**
+> Resolution strategy. Binding the host API through the bare specifier means every extension sandbox keeps its own (stale-able) host copy. Resolving against the running pi's own module (the path the host already knows — `subagents.js` already walks up from the shim, the host package root is derivable the same way) would remove the whole class of failure.
+
+**S3 — Enforce peer range at the sandbox.**
+> Peer range is declared but unenforced at the sandbox. `pi-agentic-workflow` declares `peerDependencies: { \"@earendil-works/pi-coding-agent\": \">=1.1.0\" }`, yet the effective resolution in the sandbox violates it; nothing checks the resolved copy.
 
 **S4 — The reported failure must stop: the layer loads.**
 > ## Symptom
@@ -56,7 +58,7 @@ The PR closes it via `Closes #755`.
 - `packages/pi-agentic-workflow/src/extension/subagents.ts` — the resolution and the diagnostic (S1, S2, S3, S4).
 - `packages/pi-agentic-workflow/test/subagents-provision.test.mjs` — the suite that pins the contract (S1–S5); its `test-obligation:` head stays.
 - `packages/pi-agentic-workflow/README.md` — the subagents section's resolution/diagnostic narrative (S1, S2, S3).
-- `docs/fix/755-hoisted-peer-stale/` — this unit doc and its two ledgers.
+- `docs/fix/755-durable-subagents-layer-fails/` — this unit doc and its two ledgers.
 - `docs/ROADMAP.md` — the `## Fixes` row for this unit.
 - Consumers of the diagnostic text: nothing parses it; the `-#726` suite asserts substrings only, and those substrings are preserved.
 
@@ -120,9 +122,9 @@ Nothing is removed. Strictly additive inside `subagents.ts`: the shim gains a ho
 
 ## Tasks
 
-- P1 — Freeze the ledgers and the acceptance criteria for this unit (validator: `bun packages/agentic-workflow/bin/agentic-workflow.mjs verify docs/fix/755-hoisted-peer-stale/SPEC.md` exits 0)
+- P1 — Freeze the ledgers and the acceptance criteria for this unit (validator: `bun packages/agentic-workflow/bin/agentic-workflow.mjs verify docs/fix/755-durable-subagents-layer-fails/SPEC.md` exits 0)
   (Implements: S1, S2, S3, S4, S5)
-  - Relevant files: docs/fix/755-hoisted-peer-stale/SPEC.md, docs/fix/755-hoisted-peer-stale/planning-obligations.md, docs/fix/755-hoisted-peer-stale/planning-evidence.md
+  - Relevant files: docs/fix/755-durable-subagents-layer-fails/SPEC.md, docs/fix/755-durable-subagents-layer-fails/planning-obligations.md, docs/fix/755-durable-subagents-layer-fails/planning-evidence.md
 
 - P2 — Write the RED cases first: the peer-version diagnostic, the host-module preference, the satisfied-peer silence, and a scratch fixture reproducing the reported failure (validator: `bun test test/subagents-provision.test.mjs` in `packages/pi-agentic-workflow` fails on the new cases and passes the old ones)
   (Implements: S1, S2, S3, S4, S5)
@@ -142,7 +144,7 @@ Nothing is removed. Strictly additive inside `subagents.ts`: the shim gains a ho
 
 - P6 — Verify: the package suite, the crate's root gate, the docs renderer check and the differential run against the base commit (validator: `bun run test` in `packages/pi-agentic-workflow` exits 0 AND `bun scripts/docs-generate.mjs --check` exits 0)
   (Implements: S1, S2, S3, S4, S5)
-  - Relevant files: docs/fix/755-hoisted-peer-stale/SPEC.md
+  - Relevant files: docs/fix/755-durable-subagents-layer-fails/SPEC.md
 
 ## Triaged steps
 
@@ -218,7 +220,7 @@ None — the application is complete and awaits the owner's external verificatio
 
 ## Branch
 
-`fix/755-hoisted-peer-stale`
+`fix/755-durable-subagents-layer-fails`
 
 ## Depends on
 
@@ -241,7 +243,7 @@ None.
 - **E5** — 2026-11-28, O9 — `rg -n '\.pi/agent/npm' packages/pi-agentic-workflow/src` · one match, `subagents.ts:290`, a string inside the diagnostic; no write path (`writeFileSync`/`mkdirSync`/`spawnSync`) targets the sandbox.
 - **E6** — 2026-11-28, O11 — `bun test packages/agentic-workflow/test/tool-choice.policy.test.mjs` · exit 0 · 24 pass, 0 fail (the extended F19 pins `versions.d.mts` against `versions.mjs`).
 - **E7** — 2026-11-28, O12 differential — the base commit `1542fe8bd` extracted to `mktemp -d`, installed and built: `bun test test/subagents-provision.test.mjs` · exit 0 · 12 pass, the identical 12 case names this change still passes. The full base suite fails 11 cases; this tree fails 6 — the same 6 (`#719 AC6`, five `embed-profile*`/`consent` cases), all pre-existing, plus five base-only artifacts the `/tmp` extraction creates (three symlink cases, the staged-copy case). No case regressed.
-- **G1** — 2026-11-28, `bun scripts/version-parity-gate.mjs --content --base origin/main` · exit 0 · `VERDICT: PASS` via `.changeset/755-hoisted-peer-stale.md`.
+- **G1** — 2026-11-28, `bun scripts/version-parity-gate.mjs --content --base origin/main` · exit 0 · `VERDICT: PASS` via `.changeset/755-durable-subagents-layer-fails.md`.
 - **G2** — 2026-11-28, `bun scripts/docs-generate.mjs --check` · exit 0 · `3 checked · 0 missing · 0 stale · 0 orphaned`, `verdict: PASS`.
 - **G3** — 2026-11-28, `bun scripts/local-gate.mjs` · exit 1, **only** at `worktree-guard`, which reads the shared repository and reports two pre-existing stale worktrees (`feat-752-pi-161-170-delta`, `fix-634-claim-staleness-projection`, both at merged `51747154e`). Every other step passed, `version-parity-content: exit 0`. Not caused by, and not repaired by, this unit — deleting another branch's worktree is not this change's authority. Disclosed in the handoff.
 - **P1** — 2026-11-28, unit doc and both ledgers frozen with S1–S5 verbatim, 13 obligations and 12 evidence rows · `3e1fa4080`.
@@ -251,3 +253,4 @@ None.
 - **P5** — 2026-11-28, the roadmap row was written by `ceremony roadmap row-upsert` (never hand-edited), the journal entry by `journal write`, and the generated projection by `docs-generate` · commit follows this log.
 - **G4** — 2026-11-28, `bun scripts/local-gate.mjs --no-bail` at `5222d99cb` · exit 1 at **two pre-existing** steps, nothing else: `worktree-guard` (G3's two stale worktrees of other branches) and `crate-suite-bun`. The crate failure was measured against the base: this tree fails 9 unique cases, base `1542fe8bd` fails 14, and `comm -23 mine base` is **empty** — every crate failure is pre-existing (doc/embedding query paths needing a provider and network, plus two `bin` cases), none introduced here.
 - **G5** — 2026-11-28, `bun scripts/run-root-suite.mjs` · exit 0 · the whole root suite green (the previous `check-skill-context` failure was the README budget, repaired in `5222d99cb` — the manifest's own `ceil(measured × 1.10)` arithmetic, recorded as a hand edit in the `documents` sources row because that section has no emitter).
+

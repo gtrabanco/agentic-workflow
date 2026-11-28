@@ -1,4 +1,4 @@
-# 755 — hoisted-peer-stale · planning evidence
+# 755 — durable-subagents-layer-fails · planning evidence
 
 One row per Engineering claim the change rests on. `authority-kind` is the
 closed cell (`known | assumption | unknown | spec`), `freshness` is
