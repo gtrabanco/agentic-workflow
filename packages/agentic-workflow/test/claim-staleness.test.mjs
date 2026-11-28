@@ -169,8 +169,10 @@ test("phaseRevisions reads a recorded phase and the commit it carries", () => {
   );
   assert.deepEqual(phaseRevisions(doc), [
     { phase: 1, revision: "1111111" },
-    { phase: 3, revision: "9999999" },
-  ], "a line with no sha records no revision, and the last sha on the line is the phase's");
+    { phase: 3, revision: "3333333" },
+  ], "a line with no sha records no revision; the phase's commit is the first sha on the line — "
+    + "the corpus records ancillary shas after it (`docs/features/394-auto-log-session/SPEC.md:222`: "
+    + "`ad5a2b3f` is the phase, `92d48e85` the red commit in parentheses)");
 });
 
 test("phaseRevisions answers nothing for a unit that records no phase", () => {
@@ -238,14 +240,26 @@ test("a unit with no recorded phase answers `unverified: no-recorded-phase`, nev
   assert.equal(project(sources, unitDoc("- **E1** — a run."), git).rows[0].mark, "unverified: no-recorded-phase");
 });
 
+const runFailClosed = (sources, doc, git) => projectClaimStaleness({
+  sourcesText: sources, unitDocText: doc, gitRun: git, unitDir: "docs/features/toy",
+}).rows[0].mark;
+
 test("an unresolvable recorded revision is stated, never read as fresh", () => {
   const sources = ledger("| CLAIM-001 | x | `scripts/reader.mjs` | repository | confirmed |");
   const doc = unitDoc("- **P1** — a · `deadbeef`.");
   const git = fakeGit({ tracked: ["scripts/reader.mjs"], revisions: {} });
-  assert.equal(
-    project(sources, doc, git).rows[0].mark,
-    "unverified: unresolvable-revision (P1)",
-  );
+  assert.equal(runFailClosed(sources, doc, git), "unverified: unresolvable-revision (P1)");
+});
+
+test("a phase line whose first sha is unresolvable falls to the next sha it carries", () => {
+  const sources = ledger("| CLAIM-001 | x | `scripts/reader.mjs` | repository | confirmed |");
+  const doc = unitDoc("- **P1** — a · `deadbeef` (the work landed in `1111111`).");
+  const git = fakeGit({
+    tracked: ["scripts/reader.mjs"],
+    revisions: { 1111111: PHASE_1 },
+    moved: { [PHASE_1]: ["scripts/reader.mjs"] },
+  });
+  assert.equal(runFailClosed(sources, doc, git), "stale (P1 · 111111111111)");
 });
 
 test("a bare filename resolves inside the unit folder, and an untracked one is not projectable", () => {
