@@ -304,10 +304,32 @@ V | V<n> | a finding's verification — the row it signs, the recheck and its re
   gates the behaviour change"), after three `E` lines showing no trigger fired.
   Recorded as `D1` in `decisions.md`; the client never claims a trigger fired.
 
+- **E1** — trigger 3 checked: `gh issue view 444 --json state,labels` → `state: OPEN`, labels `backlog`, `postponed`, `feature`. #444 has not activated, so trigger 3 has not fired.
+- **E2** — trigger 1 checked: `rg -n 'runner flow|/flow|flow driver' docs/LOGS.md` → 12 hits, every one about *building* #669 (`:10220` "Feature 669 closed", `:9929` "/draft and /flow don't exist yet"); the driver merged with PR #749 at 2026-11-28T11:24Z, under four hours before this cut. Zero journal entries show a unit run under it, so the "majority of standard units via driver" condition has not fired.
+- **E3** — trigger 2 checked: `rg -n -i 'no longer matches|source drift|stale claim|cited path' --glob 'docs/**/{known-issues,SPEC,review-findings}.md'` → no finding whose root cause is a claim citing bytes a phase rewrote. The adjacent cases sit at other, already-owned levels: #179 (ledger RS13/RS3(b)), #509 (lane claims), `docs/fix/706-log-write-path-fix/known-issues.md:12` (a claim's word), `docs/features/79-spec-by-reference/review-findings.md:37` (F20 disputed → dismissed). Trigger 2 has not fired.
+- **E4** — the red receipt: `bun test packages/agentic-workflow/test/claim-staleness.test.mjs` → exit 1, `Cannot find module '../src/runner/sensors/claim-staleness.mjs'`, observed with the module moved aside so the failure is the intended one and not a wrong import specifier.
+- **E5** — `bun test packages/agentic-workflow/test/claim-staleness.test.mjs` → 22 pass, 0 fail.
+- **E6** — `bun test scripts/pre-execution-sensor.test.mjs scripts/pre-execution-attribution.test.mjs` → 32 pass, 0 fail (O7: the three existing ops keep their behaviour).
+- **E7** — `bun test packages/agentic-workflow/test/cli.surface.test.mjs packages/agentic-workflow/test/cli.help.test.mjs packages/agentic-workflow/test/runner.sensors.test.mjs` → 40 pass, 0 fail.
+- **E8** — `bun test scripts/normative-drift.test.mjs` → 24 pass, 0 fail; `bun scripts/check-skill-context.mjs --documents` → PASS, 8 budgeted documents (O9).
+- **E9** — `bun test scripts/ledger-ownership.test.mjs scripts/git-config-writes.test.mjs packages/agentic-workflow/test/claim-staleness.test.mjs` → 47 pass, 0 fail (O11).
+- **E10** — the differential against the base commit: `git archive 51747154e` into a throwaway tree, then the same suites there. `doc.query` + `doc.hybrid` → 44 pass / 9 fail on base AND on head, identical; `scripts/single-repo-leaks.test.mjs` → 13/2 on one base run and 12/3 on the next, and 12/3 on head — flaky on both sides, not a regression. With `AGENTIC_WORKFLOW_DOC_EMBEDDINGS_BASE_URL`, `…_API_KEY`, `…_MODEL`, `…_MAX_REQUEST_CHARS` and `NAN_API_KEY` unset, `doc.query` → 22 pass 0 fail and `doc.hybrid` + `doc.structure` → 50 pass 0 fail: the provider variables this session exports are the cause, and they poison the base tree the same way.
+- **G1** — the gate: `bun scripts/local-gate.mjs --jobs 1` with those ambient variables unset → **exit 0, `PASS — 20 step(s) in 859s`** (`crate-suite-node` exit 0 in 251s, `root-suite` exit 0 in 364s). Two earlier runs are recorded rather than discarded: `--jobs 4` died at `crate-suite-bun` on the `doc.*` suites, and `--jobs 2` died at `root-suite` on `single-repo-leaks`' probe timeouts — both traced to the ambient variables plus a box at load 11.5 on 6 cores, and both reproduced on the base commit (`E10`).
+- **F1** — folded inside the unit, each a real gate finding against this change: `scripts/git-config-writes.test.mjs` refused the fixture's `git config user.*` writes (the identity now rides each commit as `-c`); `scripts/ledger-ownership.test.mjs` refused `--write` touching a durable unit-folder record (the op became `--emit`, `D5`); `scripts/prose-gate-inventory.test.mjs` refused a declared surface that no gate row cited; the guide's own budget was re-pinned to the exact measurement for the new machine row.
+- **P1** — 2026-11-28, the unit doc repaired: both ledgers cut (8 evidence rows, 11 obligations), one criterion per requirement, the two unsatisfiable validators replaced, `sources.md` + `decisions.md` + `known-issues.md` added · `1447db55a`.
+- **P2** — 2026-11-28, the suite landed alone and red, then two corrections of its own expectations before any implementation existed — the phase-revision rule (the corpus puts the phase's commit first) and the import specifier · `22608b40a`, `f0d831919`, `a4d148019`.
+- **P3** — 2026-11-28, the projection module: cited-path extraction, phase→revision reading, the mark grammar, the idempotent column projection · `8603afbbd`.
+- **P4** — 2026-11-28, the `claims` op on `pre-execution-snapshot` and its help row · `7000bc08a`, corrected to `--emit` in `6d3cc388f`.
+- **P5** — 2026-11-28, the surface declared: the crate README's command row and the `claim-staleness@1` block, the `normative-surfaces@1` row, the skill reference's paragraph, the changeset · `7c893722e`, with the budget re-pin and the roadmap status in `8694f0cc5` and the gate-inventory claim in `b3711c0`.
+- **P6** — 2026-11-28, verification: `E5`–`E10`, `G1`, and the live projection over this unit's own ledger (recorded below).
+- **P7** — 2026-11-28, release settle: the roadmap row, the journal fragment, the pull request.
+
+
 ## Next
 
-P2's red commit is the next action: the claim-staleness suite alone, observed
-failing on the absent module.
+Hand the diff to the owner for external verification. Nothing is approved here:
+the unit's own `G1` is a writer's receipt, and `--check` gates nothing by design
+(`D2`).
 
 ## References
 
