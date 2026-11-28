@@ -144,8 +144,8 @@ receipt | single-repo-leaks@1 … | one fixed block: the root line, the declared
 root | consumer fixture · <path> | the tree the probes ran against: the fixture the producer builds, or the caller's `--root`
 declared | <n> subcommand(s) · project <n> · product <n> · host <n> | one cell per resolution class, with no cell left unclassified
 probe | <n> read-only project command(s) executed · <n> declared | what ran, and how many rows are declared but not executed
-finding | finding — <code> · <command> · <detail> | the closed set: `undeclared-command`, `unknown-resolution`, `product-path-named`, `probe-failed`, `empty-registry`, `missing-root`
-verdict | PASS · FAIL · REFUSED | `PASS` only with zero findings; `REFUSED` when the measured root does not resolve
+finding | finding — <code> · <command> · <detail> | the closed set: `undeclared-command`, `unknown-resolution`, `product-path-named`, `probe-failed`, `empty-registry`, `missing-root`, `product-root-missing`
+verdict | PASS · FAIL · REFUSED | `PASS` only with zero findings; `REFUSED` when the measured root or the product tree does not resolve
 ```
 
 ## Coverage-gap sweep (pass-only-if)

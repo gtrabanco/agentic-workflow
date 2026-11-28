@@ -39,6 +39,7 @@ import {
   pathTokens,
   productPathFindings,
   renderReceipt,
+  resolveProductRoot,
 } from "../packages/agentic-workflow/src/single-repo-leaks/index.mjs";
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -145,6 +146,64 @@ test("S4: the census classifies all six candidates with a reproducer", () => {
     assert.match(row.reproducer, /`[^`]+`/, `${row.id} carries a backticked reproducer`);
     assert.ok(row.route !== "", `${row.id} names its route`);
   }
+});
+
+test("S3: a probe that cannot run is a finding, never an executed row", () => {
+  const table = { help: { family: "tooling", resolution: "project", probe: "--help" } };
+  const shapes = [
+    ["a spawn the platform refused", { status: null, stdout: "", stderr: "", error: { code: "ENOENT", message: "spawn ENOENT" } }],
+    ["an answer with no exit status", { status: null, stdout: "", stderr: "" }],
+    ["a process a signal killed", { status: null, stdout: "", stderr: "", signal: "SIGKILL" }],
+  ];
+  for (const [label, answer] of shapes) {
+    const result = census({ registry: table, root: FIXTURE, productRoot: REPO, bin: BIN, run: () => answer });
+    assert.equal(result.verdict, "FAIL", `${label} is a refusal, never a pass`);
+    assert.deepEqual(result.probed, [], `${label} never counts as an executed probe`);
+    assert.deepEqual(result.findings.map((finding) => finding.code), ["probe-failed"], label);
+  }
+});
+
+test("S3: a root that is not a directory refuses instead of passing", () => {
+  const file = path.join(TMP, "not-a-directory.json");
+  fs.writeFileSync(file, "{}\n");
+  const result = census({ registry: { help: { family: "tooling", resolution: "project", probe: "" } }, root: file, productRoot: REPO, bin: BIN });
+  assert.equal(result.verdict, "REFUSED");
+  assert.deepEqual(result.findings.map((finding) => finding.code), ["missing-root"]);
+  assert.match(result.findings[0].detail, /not a directory/);
+});
+
+test("S3: both entry routes resolve one product tree, and the fixture seeds it", () => {
+  assert.equal(resolveProductRoot(), REPO, "the shipped route derives the checkout, never the crate directory");
+  assert.equal(resolveProductRoot(REPO), REPO, "an explicit product root is measured as given");
+  const leaky = () => ({
+    status: 0,
+    stdout: "refusal — packages/agentic-workflow-schema/src/vocabularies.ts is absent\n",
+    stderr: "",
+  });
+  const result = census({
+    registry: { help: { family: "tooling", resolution: "project", probe: "" } },
+    root: FIXTURE,
+    productRoot: resolveProductRoot(),
+    bin: BIN,
+    run: leaky,
+  });
+  assert.deepEqual(result.findings.map((finding) => finding.code), ["product-path-named"], "the shipped route still detects a product path");
+  const scaffolded = path.join(TMP, "scaffolded");
+  assert.equal(buildFixture(scaffolded, resolveProductRoot()), true, "the fixture seeds the template scaffold from the resolved product tree");
+});
+
+test("S3: a product tree with no template scaffold is refused by name", () => {
+  const bare = path.join(TMP, "bare-product");
+  fs.mkdirSync(path.join(bare, "packages"), { recursive: true });
+  const result = census({
+    registry: { help: { family: "tooling", resolution: "product" } },
+    productRoot: bare,
+    bin: BIN,
+    run: () => ({ status: 0, stdout: "", stderr: "" }),
+  });
+  assert.equal(result.verdict, "REFUSED", "a tree that cannot carry the comparison is never a pass");
+  assert.deepEqual(result.findings.map((finding) => finding.code), ["product-root-missing"]);
+  assert.match(result.findings[0].detail, /template/);
 });
 
 test("S10: the producer prints the receipt with zero findings and refuses a missing root", async () => {

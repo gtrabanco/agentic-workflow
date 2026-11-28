@@ -64,6 +64,7 @@ export const FINDING_CODES = Object.freeze([
   "probe-failed",
   "empty-registry",
   "missing-root",
+  "product-root-missing",
 ]);
 
 /** The registry field that carries the declaration. */
@@ -74,6 +75,24 @@ export const PROBE_FIELD = "probe";
 export const PROBE_TIMEOUT_MS = 60_000;
 
 const PACKAGE_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
+
+/**
+ * The product tree: an explicit root as given, else the nearest ancestor of this
+ * crate that carries the `template/` scaffold. One resolver for both entry routes
+ * — the shipped `runner single-repo-leaks` and this repository's `scripts/` caller
+ * measure the same tree, so neither can quietly mute the leak comparison
+ * (issue #717, F3).
+ */
+export function resolveProductRoot(explicit = null) {
+  if (explicit !== null && explicit !== undefined) return path.resolve(explicit);
+  let candidate = PACKAGE_ROOT;
+  for (;;) {
+    if (fs.existsSync(path.join(candidate, "template"))) return candidate;
+    const parent = path.dirname(candidate);
+    if (parent === candidate) return PACKAGE_ROOT;
+    candidate = parent;
+  }
+}
 
 /**
  * The declaration half: one row per published subcommand, and the findings a
@@ -123,6 +142,15 @@ const isFile = (target) => {
   }
 };
 
+/** The measured root resolves only when it is a directory the probes can run in. */
+const rootStat = (target) => {
+  try {
+    return fs.statSync(target);
+  } catch {
+    return null;
+  }
+};
+
 /**
  * The leak: a token the command printed that the product tree carries and the
  * measured root does not. A token the project itself owns is never a finding —
@@ -145,7 +173,8 @@ export function productPathFindings({ command, output, root, productRoot }) {
 /** Copy the seeded scaffold into the fixture, then add one project-owned tree. */
 export function buildFixture(dir, productRoot) {
   const scaffold = path.join(productRoot, "template");
-  if (fs.existsSync(scaffold)) fs.cpSync(scaffold, dir, { recursive: true });
+  const seeded = fs.existsSync(scaffold);
+  if (seeded) fs.cpSync(scaffold, dir, { recursive: true });
   fs.writeFileSync(path.join(dir, "AGENTS.md"), fs.existsSync(path.join(dir, "AGENTS.md")) ? fs.readFileSync(path.join(dir, "AGENTS.md"), "utf8") : "# Project guide\n");
   fs.mkdirSync(path.join(dir, "src", "pages"), { recursive: true });
   fs.writeFileSync(path.join(dir, "src", "pages", "ledger.ts"), "export const ledger = [];\n");
@@ -159,31 +188,46 @@ export function buildFixture(dir, productRoot) {
   // the command's assumptions.
   fs.writeFileSync(path.join(dir, "docs", "ROADMAP.md"), "# Roadmap\n");
   fs.mkdirSync(path.join(dir, ".agentic-workflow", "journal"), { recursive: true });
+  return seeded;
+}
+
+/**
+ * Why a probe's answer is not an answer, or `null` when the command ran. A probe
+ * that never ran is never scored executed-and-clean: the fail-closed standard this
+ * command exists to enforce applies to its own run (issue #717, F1).
+ */
+function probeFailure(result) {
+  if (result.timedOut === true) return `did not answer inside ${PROBE_TIMEOUT_MS} ms`;
+  if (result.error) return `did not run: ${result.error.message ?? result.error}`;
+  if (result.signal) return `was killed by ${result.signal}`;
+  if (!Number.isInteger(result.status)) return "answered without an exit status";
+  return null;
 }
 
 /**
  * The probe half. `run` is injectable so a suite can drive the same code without
  * spawning the CLI; the default runs this crate's bin in the fixture root.
  */
-export function probeRows({ rows, root, bin, run }) {
+export function probeRows({ rows, root, productRoot = root, bin, run }) {
   const findings = [];
   const probed = [];
   for (const row of rows.filter((entry) => entry.probed)) {
     const argv = row.probe.trim() === "" ? [] : row.probe.trim().split(/\s+/);
     const result = run({ bin, argv, root });
-    if (result.timedOut === true) {
-      findings.push({ code: "probe-failed", command: row.command, detail: `did not answer inside ${PROBE_TIMEOUT_MS} ms` });
+    const failure = probeFailure(result);
+    if (failure !== null) {
+      findings.push({ code: "probe-failed", command: row.command, detail: failure });
       continue;
     }
     probed.push(row.command);
     const output = `${result.stdout ?? ""}${result.stderr ?? ""}`;
-    findings.push(...productPathFindings({ command: row.command, output, root, productRoot: result.productRoot ?? root }));
+    findings.push(...productPathFindings({ command: row.command, output, root, productRoot }));
   }
   return { probed, findings };
 }
 
 /** The default runner: this crate's own bin, in the measured root. */
-export function defaultRun({ bin, argv, root, productRoot, execPath = process.execPath }) {
+export function defaultRun({ bin, argv, root, execPath = process.execPath }) {
   const result = spawnSync(execPath, [bin, ...argv], {
     cwd: root,
     encoding: "utf8",
@@ -191,7 +235,14 @@ export function defaultRun({ bin, argv, root, productRoot, execPath = process.ex
     env: { ...process.env, AGENTIC_WORKFLOW_PROBE: "1" },
   });
   const timedOut = result.error?.code === "ETIMEDOUT" || result.signal === "SIGTERM";
-  return { status: result.status, stdout: result.stdout ?? "", stderr: result.stderr ?? "", timedOut, productRoot };
+  return {
+    status: result.status,
+    signal: result.signal ?? null,
+    error: result.error ?? null,
+    stdout: result.stdout ?? "",
+    stderr: result.stderr ?? "",
+    timedOut,
+  };
 }
 
 /** The fixed report block. */
@@ -213,7 +264,7 @@ const USAGE = "usage: single-repo-leaks [--root <dir>] [--json]";
  * the product's own template and removed again, so the default run measures a
  * consumer shape without touching this checkout.
  */
-export function census({ registry, productRoot = PACKAGE_ROOT, root = null, bin = path.join(PACKAGE_ROOT, "bin", "agentic-workflow.mjs"), run = defaultRun } = {}) {
+export function census({ registry, productRoot = resolveProductRoot(), root = null, bin = path.join(PACKAGE_ROOT, "bin", "agentic-workflow.mjs"), run = defaultRun } = {}) {
   const { rows, findings } = declarations(registry);
   const tally = { total: rows.length, probeable: rows.filter((row) => row.probed).length };
   for (const value of RESOLUTIONS) tally[value] = rows.filter((row) => row.resolution === value).length;
@@ -222,20 +273,35 @@ export function census({ registry, productRoot = PACKAGE_ROOT, root = null, bin 
   let measuredRoot = root;
   let scratch = null;
   try {
+    // A tree that cannot carry the comparison cannot answer it: without the
+    // product's own scaffold a path this repository carries is indistinguishable
+    // from one the project does, and a zero-finding run would be a false pass
+    // (issue #717, F3).
+    if (!fs.existsSync(path.join(productRoot, "template"))) {
+      findings.push({
+        code: "product-root-missing",
+        command: "-",
+        detail: `${productRoot} carries no template/ scaffold, so a product path cannot be told from a project one`,
+      });
+      return { fixture, root: measuredRoot ?? productRoot, tally, probed: [], findings, verdict: "REFUSED" };
+    }
     if (fixture) {
       scratch = fs.mkdtempSync(path.join(os.tmpdir(), "single-repo-leaks-"));
       measuredRoot = scratch;
       buildFixture(scratch, productRoot);
     }
-    if (!fs.existsSync(measuredRoot)) {
-      findings.push({ code: "missing-root", command: "-", detail: `${measuredRoot} does not exist` });
+    const stats = rootStat(measuredRoot);
+    if (stats === null || !stats.isDirectory()) {
+      const detail = stats === null ? `${measuredRoot} does not exist` : `${measuredRoot} is not a directory the probes can run in`;
+      findings.push({ code: "missing-root", command: "-", detail });
       return { fixture, root: measuredRoot, tally, probed: [], findings, verdict: "REFUSED" };
     }
     const probe = probeRows({
       rows,
       root: measuredRoot,
+      productRoot,
       bin,
-      run: (options) => run({ ...options, productRoot }),
+      run,
     });
     findings.push(...probe.findings);
     return {
@@ -273,7 +339,7 @@ export async function main(argv = process.argv.slice(2), context = {}) {
     }
   }
   const { HELP_REGISTRY } = await import("../runner/help.mjs");
-  const productRoot = context.root ?? PACKAGE_ROOT;
+  const productRoot = resolveProductRoot(context.root ?? null);
   const result = census({ registry: HELP_REGISTRY, productRoot, root, bin: context.bin ?? path.join(PACKAGE_ROOT, "bin", "agentic-workflow.mjs") });
   if (json) {
     process.stdout.write(`${JSON.stringify({ contract: CONTRACT, ...result }, null, 2)}\n`);

@@ -113,3 +113,15 @@ the consumer's; the intervention is requested, not a repair to make a suite pass
 so the assertions are updated with the behaviour and not weakened (`IR3`).
 
 **Scope.** `unit-only`.
+
+## Path-protection records
+
+Escape records the path-protection policy requires (owner:
+`skills/orchestration-envelope/references/TURN_CONTRACT.md`), one row per write
+to a protected path.
+
+```text
+path-protection-records@1
+kind | paths | phase | date | authority | justification
+justification | scripts/single-repo-leaks.test.mjs | P3 | 2026-11-27 | execute-phase | F1–F3: the census's fail-open paths need the regression coverage the review recorded as their `recheck` cells — a probe that never ran (`probe-failed`), a `--root` that is not a directory (`missing-root`), and one product tree for both entry routes (`resolveProductRoot` plus the absent-scaffold refusal). The cases land red against the unfixed module first and are never weakened to reach green (`IR3`).
+```
