@@ -168,11 +168,11 @@ test("phaseRevisions reads a recorded phase and the commit it carries", () => {
     "- **P3** — 2026-11-05 · `3333333` (suite landed red first in `9999999`).",
   );
   assert.deepEqual(phaseRevisions(doc), [
-    { phase: 1, revision: "1111111" },
-    { phase: 3, revision: "3333333" },
-  ], "a line with no sha records no revision; the phase's commit is the first sha on the line — "
-    + "the corpus records ancillary shas after it (`docs/features/394-auto-log-session/SPEC.md:222`: "
-    + "`ad5a2b3f` is the phase, `92d48e85` the red commit in parentheses)");
+    { phase: 1, revisions: ["1111111"] },
+    { phase: 3, revisions: ["3333333", "9999999"] },
+  ], "a line with no sha records no revision; a line's shas are read in the order it lists them, "
+    + "because the corpus puts the phase's own commit first and ancillary ones after it "
+    + "(`docs/features/394-auto-log-session/SPEC.md:222`: `ad5a2b3f` is the phase, `92d48e85` the red commit)");
 });
 
 test("phaseRevisions answers nothing for a unit that records no phase", () => {
