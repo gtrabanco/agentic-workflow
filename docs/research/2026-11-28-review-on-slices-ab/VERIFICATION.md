@@ -4,7 +4,7 @@ Everything needed to rebuild the experiment against this repository (or a
 unit-of-the-month re-run), plus the honest defects found in the instrument
 itself. Ground truth: the two units' committed cycle-1 ledgers; the
 instrument: [harness/](harness/) with the packed per-call outputs
-(`harness/out-*.json`, 112 records).
+(`harness/out/*.json`, 112 records).
 
 ## Byte reconstruction of the change sites
 
@@ -92,7 +92,8 @@ recomputed with the fixed matcher). Instrument notes that shape the
 # prerequisites: bun, NAN_API_KEY in the environment, this repository cloned
 cd docs/research/2026-11-28-review-on-slices-ab/harness
 bun build-contexts.mjs <REPO_ROOT>          # writes ctx/<U?> — deterministic
-bun run-reviews.mjs                          # appends out-<call-id>.json records
+OUT_DIR=harness/out bun run-reviews.mjs      # appends out-<call-id>.json records
+# (record dir for the session's run: harness/out/)
 OUT_DIR=<records-dir> bun score.mjs          # reproduces results/arm-summary.md
 ```
 

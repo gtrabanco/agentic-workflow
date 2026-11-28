@@ -11,8 +11,8 @@ third-party code is vendored here, so no provenance header applies.
 | `score.mjs` | Scorer: aggregates packed call records into the arm-summary table (fixed matcher semantics documented in the file head). |
 | `config.json` | The two units' reconstruction config — bases, tips, the natural-language unit summaries, and both units' slice → files maps (fix/224's map is generated from the change list and checked for full coverage with no overlaps). |
 | `gt.json` | Ground truth: the two committed cycle-1 ledgers reduced to id + cited files + essence, for the file-mapped recall scorer. |
-| `out-*.json` | The 112 raw call records packed from the session run (id, usage including reasoning tokens, finish reason, parse state, the parsed findings, and the model's raw completion for audit). |
-| `results/` (`../results/`) | `arm-summary.md` (definitive tables) + `all-calls.csv` (per-call tokens, wall clock, findings, parse state). |
+| `out/` (records) | The 112 raw call records packed from the session run (id, usage including reasoning tokens, finish reason, parse state, the parsed findings, and the model's raw completion for audit). |
+| `../results/` | `arm-summary.md` (definitive tables) + `all-calls.csv` (per-call tokens, wall clock, findings, parse state). |
 
 Reuse for another unit: add the unit to `config.json` (base/tip + slices from
 its own doc Tasks/phase structure; the fold/phase boundaries are the slicing

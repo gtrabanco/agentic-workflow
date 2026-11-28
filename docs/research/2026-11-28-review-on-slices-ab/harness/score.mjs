@@ -13,7 +13,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const harnessDir = path.dirname(fileURLToPath(import.meta.url));
-const outDir = process.env.OUT_DIR ?? path.join(harnessDir, "..", "..", "..", "..", "..", "..", "..", "..", "rev-on-slices.out");
+const outDir = process.env.OUT_DIR ?? path.join(harnessDir, "out");
 const gt = JSON.parse(readFileSync(new URL("./gt.json", import.meta.url)));
 const models = ["qwen3.6", "gemma4", "glm5.3-flash", "deepseek-v4-flash"];
 
@@ -36,11 +36,11 @@ function parts(dirEntryId) {
   if (p[1] === "mono") return { unit: p[0], model: p[2], arm: "mono", run: Number(p[3].slice(1)) };
   return { unit: p[0], model: p[3], arm: "slices", run: Number(p[4].slice(1)) };
 }
-const files = readdirSync(harnessDir).filter((f) => f.startsWith("out-") && f.endsWith(".json"));
+const files = readdirSync(outDir).filter((f) => f.startsWith("out-") && f.endsWith(".json"));
 const rowsByCell = {};
 for (const f of files) {
   let rec;
-  try { rec = JSON.parse(readFileSync(path.join(harnessDir, f))); } catch { continue; }
+  try { rec = JSON.parse(readFileSync(path.join(outDir, f))); } catch { continue; }
   const { unit, model, arm, run } = parts(rec.id);
   const key = `${unit}|${model}|${arm}|${run}`;
   (rowsByCell[key] ??= []).push(rec);

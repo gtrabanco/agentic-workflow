@@ -125,6 +125,7 @@ reading-coverage@1
 # excluded: docs/features/ — frozen unit history (the issue's S3 boundary)
 # excluded: docs/fix/ — frozen unit history, this unit's own folder excepted
 # excluded: docs/generated/ — emitted projection, written by docs-generate only
+# excluded: docs/research/2026-11-28-review-on-slices-ab/harness/out/ — packed raw instrument call records (112), written by the harness run step (data, not a read surface); the per-call summary is its results/all-calls.csv, rowed
 file | tier | depth | evidence
 .github/ISSUE_TEMPLATE/config.yml | 2-rarely | scanned | structural scan: headings, owner pointers and the unit's patterns
 .github/ISSUE_TEMPLATE/feature.yml | 2-rarely | scanned | structural scan: headings, owner pointers and the unit's patterns
@@ -166,6 +167,17 @@ docs/research/2026-11-15-all-code-is-slop-mapping.md | 2-rarely | scanned | stru
 docs/research/2026-11-16-product-audit-extensibility.md | 2-rarely | scanned | structural scan: headings, owner pointers and the unit's patterns
 docs/research/2026-11-17-issue-621-claimed-surface-verification.md | 2-rarely | scanned | structural scan: headings, owner pointers and the unit's patterns
 docs/research/2026-11-20-issue-663-skill-surface-diagnosis.md | 2-rarely | full | authored this session as the issue #663 diagnosis; read end-to-end as written
+docs/research/2026-11-28-review-on-slices-ab/README.md | 2-rarely | full | authored this session as the review-on-slices A/B report (#753 measurement); read end-to-end as written
+docs/research/2026-11-28-review-on-slices-ab/VERIFICATION.md | 2-rarely | full | authored this session as the A/B reproduction record; read end-to-end as written
+docs/research/2026-11-28-review-on-slices-ab/external-evidence.md | 2-rarely | full | authored this session as the external-record reading (fetched pages); read end-to-end as written
+docs/research/2026-11-28-review-on-slices-ab/harness/README.md | 2-rarely | full | authored this session for the instrument; read end-to-end as written
+docs/research/2026-11-28-review-on-slices-ab/harness/build-contexts.mjs | 2-rarely | scanned | authored this session's instrument code; reviewed structurally (heads, config keys, cap declarations)
+docs/research/2026-11-28-review-on-slices-ab/harness/run-reviews.mjs | 2-rarely | scanned | authored this session's instrument code; reviewed structurally (per-model token budgets, retry and salvage flags)
+docs/research/2026-11-28-review-on-slices-ab/harness/score.mjs | 2-rarely | scanned | authored this session's instrument code; reviewed structurally (matcher semantics in the head comment) and re-run
+docs/research/2026-11-28-review-on-slices-ab/harness/config.json | 2-rarely | full | authored this session's experiment config; reviewed full (small json: commits, slice maps)
+docs/research/2026-11-28-review-on-slices-ab/harness/gt.json | 2-rarely | full | derived from the two committed cycle-1 ledgers; reviewed full (small json: id, files, essence)
+docs/research/2026-11-28-review-on-slices-ab/results/all-calls.csv | 2-rarely | scanned | emitted by this session's scoring pass (112 rows); reviewed structurally (row count, column set)
+docs/research/2026-11-28-review-on-slices-ab/results/arm-summary.md | 2-rarely | full | authored this session; reviewed full (tables recomputed by the scorer)
 docs/research/284-pi-durable-spike.md | 2-rarely | scanned | structural scan: headings, owner pointers and the unit's patterns
 docs/research/ATTRIBUTION.md | 2-rarely | scanned | structural scan: headings, owner pointers and the unit's patterns
 docs/research/agentic-workflow-machine-contract-options.md | 2-rarely | scanned | structural scan: headings, owner pointers and the unit's patterns
