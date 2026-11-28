@@ -195,7 +195,7 @@ of the rest. Each criterion names the check that proves it.
 | retired claim / pin | replacement | negative-capability evidence |
 |---|---|---|
 | `filterReferences`, `isSubsequence`, `matchesToken` (`src/settings/picker.ts`) | the host's `fuzzyFilter` behind `narrowReferences` | `rg -n 'filterReferences\|isSubsequence\|matchesToken' packages/pi-agentic-workflow` → 0 after P3 (the historical names survive only in frozen closed-unit records and `docs/LOGS.md`, which are history, never a live contract) |
-| the module comment's PE-004 claim ("pi-coding-agent's `fuzzyFilter` is internal") | the verified fact: the public fuzzy utilities live in `@earendil-works/pi-tui`, exported since 1.1.0 | the comment is rewritten in the same edit; `rg -c 'PE-004' packages/pi-agentic-workflow/src` → 0 |
+| the module comment's PE-004 claim ("pi-coding-agent's `fuzzyFilter` is internal") | the verified fact: the public fuzzy utilities live in `@earendil-works/pi-tui`, exported since 1.1.0 | the comment is rewritten in the same edit; `rg -c 'PE-004' packages/pi-agentic-workflow/src/settings/picker.ts` → 0 (no match — re-scoped to the retired module by external-verify A1: the two whole-`src` hits are untouched, different-unit citations) |
 | README `Also verified against Pi 1.5.0 (2026-11-02)` | the dated record for the host this unit verified (S6) | `rg -c '1\.5\.0' packages/pi-agentic-workflow/README.md` → 0 after P6 (the 1.5.0 record survives only in the frozen `CHANGELOG.md` release note, which is history) |
 | the event matrix's `source` citation naming `@1.5.2` and a 37-event catalogue | the verified host version and the machine-derived catalogue count | `rg -n 'pi-coding-agent@1\.5\.2\|37-event' docs/workflow/CONFIG.md` → 0 after P6 |
 
@@ -373,12 +373,6 @@ Frozen at cut in `planning-obligations.md` (M/L shape) — never embedded here.
   a hand-written package changelog would be a second writer for one fact.
   Authority: S3 + `PE-007` + AGENTS.md §Repository indexes (emitters, never hand
   edits).
-
-- **D6** — 2026-11-27, the package changelog's single writer is the release cut
-  (`scripts/release.mjs apply`), beside the root companion row it already writes;
-  a hand-written package changelog would be a second writer for one fact.
-  Authority: S3 + `PE-007` + AGENTS.md §Repository indexes (emitters, never hand
-  edits).
 - **E1** — 2026-11-27, the suite baseline, measured before any edit:
   `cd packages/pi-agentic-workflow && bun run test` · exit 1 · `6 tests failed`,
   every one of them the embed-profile default-on case this session's
@@ -489,14 +483,56 @@ Frozen at cut in `planning-obligations.md` (M/L shape) — never embedded here.
 - **P7** — 2026-11-27 22:5x, the roadmap row through the emitter plus the
   release intent · `22a106fcf`; the verification recorded above (E13, E14, G2)
   and this closing record land together.
+- **L3** — 2026-11-28, the operator's correction request, verbatim:
+  ```
+  Apply to this repository: triage and fix those that deserve to fix but understand the context before fix and check you haven't broke another different thing, if you have done, start the loop again until you fixed full symbol/related stuff
+  ```
+  applied as one correction batch over the 2026-11-28 `EXTERNAL VERIFY`
+  receipt ([`external-verify.md`](external-verify.md), blockers B1–B2; the
+  batch also folds advisories A1–A2, with A3–A5 triaged no-fix in the handoff).
+- **D7** — 2026-11-28, the state-flow dispatch needs **no change** — the
+  outcome of S7's last bullet, now recorded as the `D`-line decision AC-S7 and
+  O14 name as half of their proof (external-verify B1): `pi.sendUserMessage`
+  dispatches an extension command instead of starting a turn, and neither call
+  site opens a run, so the 1.2.0 busy-on-run-start window is never entered by
+  the dispatch — nothing swallowed. Mirrors `decisions.md` D7. Authority: S7
+  bullet 6 + `PE-017` + `E15`, `E19`.
+- **E19** — 2026-11-28, O14's validator re-run in the correction batch, now
+  `D`-grounded: `rg -n 'sendUserMessage' packages/pi-agentic-workflow/src/extension/index.ts`
+  · exit 0 · the dispatch at `:215`/`:216`
+  (``pi.sendUserMessage(`/${STATE_FLOW_START_COMMAND}`, { expandPromptTemplates: true })``)
+  plus the passthrough at `:518`; the installed host's concurrency text
+  (`~/.bun/install/global/node_modules/@earendil-works/pi-coding-agent/docs/extensions.md:336`)
+  · “Pi counts as busy while a run starts, including the compaction check and
+  `before_agent_start`, so messages sent meanwhile go into the starting run.”
+  and its `agent_settled` example (`:691`) · “`ctx.isIdle()` is true; runs
+  requested here start after all settled handlers finish.” — outcome per
+  **D7**: no change needed, nothing swallowed. Obligation O14 flipped back to
+  `verified` on this run.
+- **E20** — 2026-11-28, the Retirements row's negative evidence, corrected
+  (external-verify A1): `rg -c 'PE-004' packages/pi-agentic-workflow/src/settings/picker.ts`
+  · exit 1 · no match — the retired module carries no PE-004 claim; the two
+  whole-`src` hits the receipt counted are untouched, different-unit citations
+  (`extension/index.ts:98`, `hooks/runner.ts:20`).
+- **G4** — 2026-11-28, the B2 recheck in the correction batch: `roadmap rowUpsert`
+  settled row 694 to `done · [#750](https://github.com/gtrabanco/agentic-workflow/pull/750)`
+  (receipt before `a70491a9` → after `67a32ecd`, byte-identical to the
+  `mktemp -d` fixture's splice), `bun scripts/docs-generate.mjs` re-synced
+  `docs/generated/units.md` (`verdict: PASS`), and `bun scripts/roadmap-settle.mjs`
+  · exit 0 · `289 unit docs checked · verdict: PASS · violations: 0`.
+- **G5** — 2026-11-28, the correction batch's gate (the P7 validator that was
+  red at the receipt's head): `env -u AGENTIC_WORKFLOW_DOC_EMBEDDINGS_* bun scripts/local-gate.mjs --skip-network --jobs auto`
+  · exit 0 · `local-gate: PASS — 16 step(s) in 588s` — root-suite green with
+  `roadmap-settle` inside it, both crate suites, schema and pi compat steps,
+  projection, budgets, secret scan and version parity.
 
 ## Next
 
-Operator review of the diff — the external-verifier step. Nothing is claimed
-"done" until that verdict: the change is applied against the frozen ledgers, the
-obligations ledger is `verified` row by row, and the two gates above are the
-receipts. A blocker the review reports earns one correction batch; a new finding
-does not earn another cycle.
+Correction batch applied over the 2026-11-28 `EXTERNAL VERIFY` receipt
+(blockers B1–B2 fixed, advisories A1–A2 folded, A3–A5 triaged no-fix with
+grounds in the handoff) and its recheck is green: G4 (the settle) and G5 (the
+full offline gate). Next: the delta external-verify on this batch's head —
+re-check B1/B2 and one spot check. Nothing here claims done until that verdict.
 
 ## References
 
