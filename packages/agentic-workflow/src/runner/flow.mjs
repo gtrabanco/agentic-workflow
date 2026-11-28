@@ -23,9 +23,10 @@
  *
  * Exit codes: 0 a decision was printed (a halt included); 1 an unknown unit or a
  * usage error; 2 a refusal in the driver's own closed set (an unknown step name,
- * an ambiguous unit token, a unit doc outside the accepted shapes or unreadable).
- * Diagnostics go to stderr and a refusal prints no hand-off. `UNIT_ROUTE_REPO`
- * re-points the router, and therefore this driver, at a fixture tree.
+ * an unsupported stop point, an ambiguous unit token, a unit doc outside the
+ * accepted shapes or unreadable). Diagnostics go to stderr and a refusal prints
+ * no hand-off. `UNIT_ROUTE_REPO` re-points the router, and therefore this driver,
+ * at a fixture tree.
  */
 
 import { createHash } from "node:crypto";
@@ -65,7 +66,7 @@ const PLANNING_STEPS = Object.freeze(["research", "design", "plan"]);
 export const FLOW_STOP_RULES_V1 = Object.freeze({
   contract: "flow-stop-rules@1",
   rules: Object.freeze([
-    Object.freeze({ id: "explicit", when: "the operator passed --stop-after <step>", stop: "after-plan", overridable: false }),
+    Object.freeze({ id: "explicit", when: "the operator passed --stop-after plan", stop: "after-plan", overridable: false }),
     Object.freeze({ id: "tier-high", when: "the unit recorded tier high", stop: "after-plan", overridable: true }),
   ]),
 });
@@ -140,16 +141,17 @@ const ROUTE_STEPS = Object.freeze({
   "plan-from-issue": "plan",
 });
 
-const USAGE = `usage: agentic-workflow flow <unit> [--stop-after <step>] [--yes] [--retriage] [--record] [--json]
+const USAGE = `usage: agentic-workflow flow <unit> [--stop-after plan] [--yes] [--retriage] [--record] [--json]
 
 Prints the one next step of the lane's closed catalog for a unit, with the
 bounded read set and the turn-contract receipt the model executes. It reads
 machine state only (the unit doc, the router's triage answer and the router's
 route) and writes nothing unless asked:
 
-  --stop-after <step>  stop after that catalog step and print the approval block
-                       (the /draft entry is --stop-after plan; an explicit stop is
-                       never cancelled by --yes)
+  --stop-after plan    stop after the plan and print the approval block — the
+                       v1 explicit stop is the plan only (the /draft entry),
+                       so any other step is refused by name; an explicit stop
+                       is never cancelled by --yes
   --yes                the owner-typed override: no post-plan stop fires, and the
                        override lands as a human-owner D row in decisions.md
   --retriage           re-plan an already-planned unit (the only path back to
@@ -352,7 +354,7 @@ function writeDecisionRow(dir, row) {
 // CLI
 // ---------------------------------------------------------------------------
 
-const USAGE_LINE = "usage: agentic-workflow flow <unit> [--stop-after <step>] [--yes] [--retriage] [--record] [--json]";
+const USAGE_LINE = "usage: agentic-workflow flow <unit> [--stop-after plan] [--yes] [--retriage] [--record] [--json]";
 
 /** Parse the driver's own flags: one unit token, and nothing invented. */
 function parseArgs(args) {
@@ -402,6 +404,12 @@ export function run(args) {
   const catalog = loadCatalog();
   if (flags.stopAfter !== null && !catalog.steps.includes(flags.stopAfter)) {
     fail(2, `unknown step '${flags.stopAfter}' (one of ${catalog.steps.join(", ")})`);
+  }
+  // The v1 explicit stop is the plan (issue #669 S8, decision D12): the driver
+  // observes the planned bit and the router's route, never "step X completed",
+  // so any other stop point would be invented — refused by name instead.
+  if (flags.stopAfter !== null && flags.stopAfter !== "plan") {
+    fail(2, `unsupported stop point '${flags.stopAfter}' — the v1 explicit stop is 'plan' only (the /draft entry)`);
   }
 
   const resolved = resolveUnit(flags.unit);

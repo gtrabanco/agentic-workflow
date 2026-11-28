@@ -65,7 +65,7 @@ export const HELP_REGISTRY = Object.freeze({
     ownHelp: true,
     family: "lane",
     summary: "the deterministic lane driver: sense the unit, decide the next closed-catalog step, hand it over (`/flow` and `/draft` run it)",
-    usage: "<unit> [--stop-after <step>] [--yes] [--retriage] [--record] [--json]",
+    usage: "<unit> [--stop-after plan] [--yes] [--retriage] [--record] [--json]",
   },
   "phase-lint": {
     family: "lane",

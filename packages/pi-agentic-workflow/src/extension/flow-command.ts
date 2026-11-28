@@ -78,11 +78,11 @@ export interface FlowCommandDeps<M extends ModelRef = ModelRef> {
 }
 
 /**
- * The argv the driver receives for one entry: `--stop-after plan` for the draft
- * (always, and it wins over any `--stop-after` the operator typed), `--yes`
- * dropped there because no flag cancels a draft's stop.
+ * The operator's own tokens: the entry's forced and dropped flags removed, so
+ * a guard can tell "no unit typed" from "flags only" (`/draft --yes` has no
+ * unit either — the forced `--stop-after plan` must never mask that).
  */
-export function driverArgs(entry: string, args: string): string[] {
+export function operatorTokens(entry: string, args: string): string[] {
   const tokens = args.split(/\s+/u).filter(Boolean);
   if (entry !== DRAFT_COMMAND) return tokens;
   const kept: string[] = [];
@@ -96,6 +96,17 @@ export function driverArgs(entry: string, args: string): string[] {
     }
     kept.push(token);
   }
+  return kept;
+}
+
+/**
+ * The argv the driver receives for one entry: `--stop-after plan` for the draft
+ * (always, and it wins over any `--stop-after` the operator typed), `--yes`
+ * dropped there because no flag cancels a draft's stop.
+ */
+export function driverArgs(entry: string, args: string): string[] {
+  const kept = operatorTokens(entry, args);
+  if (entry !== DRAFT_COMMAND) return kept;
   return ["--stop-after", "plan", ...kept];
 }
 
@@ -150,11 +161,14 @@ export function registerFlowCommands<M extends ModelRef = ModelRef>(
   if (dispatch === undefined) throw new Error("registerFlowCommands needs a dispatch seam");
 
   const handlerFor = (entry: string) => async (args: string, ctx: InvocationContext<M>): Promise<void> => {
-    const driverArgv = driverArgs(entry, args);
-    if (driverArgv.length === 0) {
+    // The guard judges the operator's own tokens (external-verify A2): the
+    // draft's forced `--stop-after plan` must never make a unit-less invocation
+    // look like an argumented one.
+    if (operatorTokens(entry, args).length === 0) {
       ctx.notify(`/${entry} needs a unit: /${entry} <unit> [flags]`, "warning");
       return;
     }
+    const driverArgv = driverArgs(entry, args);
 
     let launch: RunnerAnswer;
     try {

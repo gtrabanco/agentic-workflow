@@ -79,13 +79,15 @@ later supplies its own rule set without touching this grammar.
 ```text
 flow-stop-rules@1
 id | when | stop | overridable
-explicit | the operator passed `--stop-after <step>` | after that step | no
+explicit | the operator passed `--stop-after plan` | after the plan | no
 tier-high | the unit recorded tier `high` | after the plan | yes, by a typed `--yes`
 ```
 
 `tier-high` is the v1 default: a `high`-tier unit stops after its plan and a
 `standard` one does not. `explicit` is what `/draft` is, which is why a draft
-always stops.
+always stops; the v1 explicit stop point is the plan alone, so any other
+`--stop-after` value is refused by name (the driver observes the planned bit,
+never "step X completed").
 
 **`--yes` is an owner decision, not a setting.** It cancels the overridable rule
 only, so it can never cancel an explicit stop, and every run that carries it
