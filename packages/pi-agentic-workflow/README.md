@@ -1406,14 +1406,10 @@ dialog.
   (`pi install`, package skills, friendly command registration, routed set/clear,
   settings console round-trip, `sendUserMessage` with prompt template expansion).
   Also verified against Pi 1.7.0 (2026-11-28) with a two-leg `tsc --noEmit` run
-  pinned at that release (peer-floor 1.1.0 and today's `latest` leg at 1.7.0
-  both clean), release notes read from the installed package's own
-  `CHANGELOG.md` (the pi.dev changelog lags, and `/changelog/1.7.0` answers
-  404); continuously against `latest` by the `pi-compat-guard` gate — a moving
-  tripwire, never a pin. A malformed `models.json` is no longer swallowed:
-  since 1.7.0 the host reports it as a warning in its `diagnostics`, so print,
-  JSON and RPC runs name the config error instead of only
-  `Model "…" not found` / `No API key found`.
+  (peer-floor 1.1.0 and `latest` 1.7.0 both clean), release notes from the
+  installed package's own `CHANGELOG.md` (the pi.dev changelog lags), and a
+  malformed `models.json` now surfaces as a host `diagnostics` warning in
+  print/JSON/RPC runs. The `pi-compat-guard` gate tracks `latest`, never a pin.
 - The package declares Pi as a peer dependency; it bundles no copy of Pi.
 - Skills can instruct the model to run commands. Review them as you would any
   third-party package.
