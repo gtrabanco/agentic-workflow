@@ -22,10 +22,12 @@
  * import binds whatever the extension sandbox hoists — and `pi update --all`
  * never refreshes a hoisted peer with no direct requester, so that copy can
  * predate the export the layer needs. A stale copy is therefore a *loading*
- * failure of the dependency, not of this package. This module answers both
- * halves of it: a host module that satisfies the declared peer range is
- * preferred, and when only an unsatisfying one resolves, the diagnostic names
- * its version and the one-line repair instead of a reinstall that never helps.
+ * failure of the dependency, not of this package. This module answers it where
+ * the truth lives: the check judges the copy the dependency's own import will
+ * bind — a satisfying one loads the layer silently, an unsatisfying one becomes
+ * a diagnostic naming its version and the one-line repair instead of a
+ * reinstall that never helps — and a nameable running host only adds what it
+ * can say, never rescues a binding the dependency does not use.
  */
 
 import { existsSync, readFileSync } from "node:fs";
@@ -143,14 +145,15 @@ export function subagentsDiagnostic(reason: string): string {
   );
 }
 
-/** The message for a host the sandbox binds but the peer range refuses. A
+/** The message for a host the dependency binds but the peer range refuses. A
  * reinstall never reaches the hoisted copy (issue #755), so that instruction is
  * replaced by the repair that does, and the disable target is kept. The opening
- * clause stays the one operators and tests key on.
+ * clause stays the one operators and tests key on. `note` adds what a nameable
+ * running host can say about its own satisfaction.
  */
-export function peerDiagnostic(finding: HostFinding, spec: string | null): string {
+export function peerDiagnostic(finding: HostFinding, spec: string | null, note = ""): string {
   return (
-    `pi-agentic-workflow: the durable-subagents layer did not load — ${hostFindingReason(finding, spec)}. ` +
+    `pi-agentic-workflow: the durable-subagents layer did not load — ${hostFindingReason(finding, spec)}${note}. ` +
     `Expected ${SUBAGENTS_ENTRY_LABEL}. To disable the layer deliberately, remove the ` +
     `./dist/extension/subagents-entry.js entry from this package's pi.extensions.`
   );
@@ -178,8 +181,9 @@ function readOwnManifest(): unknown {
 
 /**
  * Whether `version` satisfies a `>=X.Y.Z` floor — the only shape this package
- * declares. Any other spec is unenforceable here and answers `false`, which the
- * diagnostic reports as such instead of claiming a satisfaction nobody checked.
+ * declares. Any other spec is unenforceable here and answers `false`: the
+ * check fails closed and reports the range as unmet rather than claiming a
+ * satisfaction nobody checked.
  */
 export function satisfiesPeerRange(version: string | null, spec: string | null): boolean {
   if (version === null || spec === null) return false;
@@ -217,10 +221,11 @@ export type HostFinding =
   | { kind: "unresolved" };
 
 /**
- * Resolve the host module the dependency's bare specifier would bind, and prefer
- * a satisfying module when one is nameable. `hostModule` (the running host, when
- * the caller knows it) is tried first; the sandbox's own resolution is the
- * fallback so a host that cannot name itself still has an answer.
+ * Resolve the best nameable host module: the running host when the caller can
+ * name it, else what the sandbox's own resolution binds. This is knowledge for
+ * the diagnostic, never the load gate — the gate is the copy the dependency's
+ * import binds (`boundFinding`), because only that copy decides whether the
+ * layer loads.
  */
 export function resolveHostModule(
   options: { from?: string; hostModule?: string; manifest?: unknown } = {},
@@ -253,7 +258,7 @@ export function resolveHostModule(
   return { ok: false, finding, reason: hostFindingReason(finding, spec) };
 }
 
-/** The module the dependency's bare specifier binds from our own location. */
+/** The module the dependency's bare specifier binds from the given start file. */
 function sandboxHostModule(from: string): string | null {
   try {
     return createRequire(asPath(from)).resolve(HOST_PACKAGE);
@@ -320,8 +325,24 @@ function unavailable(host: unknown, reason: string): SubagentsProvisionResult {
   return { status: "unavailable", entry: SUBAGENTS_ENTRY_LABEL, reason };
 }
 
-function unavailableForHost(host: unknown, finding: HostFinding, spec: string | null, reason: string): SubagentsProvisionResult {
-  reportAtSessionStart(host, peerDiagnostic(finding, spec));
+/**
+ * The finding for the copy the dependency's own import will bind: resolution
+ * starts at its entry, the same `node_modules` walk its bare specifier runs, so
+ * the verdict is about the effective binding — never about a fresher copy that
+ * sits closer to this package or about a running host the dependency does not
+ * import through. `null` means the binding satisfies the range.
+ */
+function boundFinding(entry: string, spec: string | null): HostFinding | null {
+  const path = sandboxHostModule(entry);
+  if (path === null) return { kind: "unresolved" };
+  const version = readHostVersion(path);
+  if (version === null) return { kind: "unreadable", path };
+  if (satisfiesPeerRange(version, spec)) return null;
+  return { kind: "stale", path, version };
+}
+
+function unavailableForHost(host: unknown, finding: HostFinding, spec: string | null, reason: string, note = ""): SubagentsProvisionResult {
+  reportAtSessionStart(host, peerDiagnostic(finding, spec, note));
   return { status: "unavailable", entry: SUBAGENTS_ENTRY_LABEL, reason };
 }
 
@@ -337,15 +358,25 @@ export async function provisionSubagents(
   const resolved = resolveSubagentsEntry(options.from ?? import.meta.url);
   if (!resolved.ok) return unavailable(host, resolved.reason);
 
-  // A host the sandbox binds but the peer range refuses is the failure the
-  // dependency's own import reports as a missing export; say what it is here,
-  // before loading, so the operator gets the version and the repair.
-  const hostModule = resolveHostModule({
-    from: options.from ?? import.meta.url,
-    hostModule: options.hostModule,
-    manifest: options.manifest,
-  });
-  if (!hostModule.ok) return unavailableForHost(host, hostModule.finding, peerRange(options.manifest), hostModule.reason);
+  // The peer check judges the copy the dependency's own bare specifier will
+  // bind (issue #755): resolution starts at its entry, the same node_modules
+  // walk its import runs. A nameable running host informs the warning but never
+  // rescues a stale binding — the dependency does not import through it, so
+  // accepting it here would reach the load and fail with the very export error
+  // this check exists to replace.
+  const spec = peerRange(options.manifest);
+  const finding = boundFinding(resolved.path, spec);
+  if (finding !== null) {
+    const running =
+      options.hostModule === undefined
+        ? null
+        : resolveHostModule({ from: resolved.path, hostModule: options.hostModule, manifest: options.manifest });
+    const note =
+      running !== null && running.ok && running.path === options.hostModule
+        ? ` (the running ${HOST_PACKAGE}@${running.version} satisfies it)`
+        : "";
+    return unavailableForHost(host, finding, spec, hostFindingReason(finding, spec), note);
+  }
 
   const load = options.load ?? ((href: string) => import(href));
   let factory: unknown;

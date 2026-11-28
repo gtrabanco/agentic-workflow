@@ -12,8 +12,10 @@
  * sandbox hoists wins over the pi that is actually running. This entry knows the
  * running host — the module pi loaded it from is reachable through the host
  * package directory the caller can name (`PI_PACKAGE_DIR`, or the host's own
- * `getPackageDir()` when the API exposes it) — and hands it to the provision so a
- * satisfying host outranks a stale sandbox copy.
+ * `getPackageDir()` when the API exposes it) — and hands it to the provision so
+ * the warning can say the running host satisfies the range while the copy the
+ * dependency binds does not. It never rescues that binding: only the operator's
+ * repair (or a fresher copy) changes what the dependency imports.
  */
 
 import { existsSync } from "node:fs";
