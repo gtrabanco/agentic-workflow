@@ -1,0 +1,10 @@
+# 634 — claim-staleness-projection · known issues
+
+Debt that outlives this unit, each with the condition that re-triggers it.
+
+| id | what | re-trigger |
+|---|---|---|
+| KI-1 | **The #444 risk-scoring signal is not implemented (S3).** #444 (decision-substrate) is open under `postponed`, so there is no consumer to score yet; the projection's envelope deliberately carries no scoring field, and inventing one would be the pre-designed policy S2 forbids. | #444 activates and its risk model asks for unit-level signals — then the projection's row state becomes an input, not a new surface. |
+| KI-2 | **The consumer is report-only (`D2`).** A stale claim blocks nothing; `--check` answers an exit code and no gate consumes it. This is deliberate, not an omission: S2 forbids pre-designing the block/warn/re-read policy. | The first observed stale-claim case: a `source`/`environment` finding whose cited `path:line` no longer matches the tree. That case decides the policy, and the decision lands here as a `D` row before the behaviour changes. |
+| KI-3 | **Only the unit asked about is projected.** The six other `sources.md` claim journals never receive the column until someone runs the op on them, so a fleet-wide staleness census does not exist. | A consumer needs cross-unit staleness (a sensor or the product audit reading every ledger) — that is its own unit, and it would reuse `projectClaimStaleness` rather than a second reader. |
+| KI-4 | **A citation that no longer resolves is invisible to this projection.** A row citing a deleted path reads `no-citation` rather than `stale`, because staleness is a *movement* question and dead-citation detection is a different defect. | A review raises a dead citation as its own class, or #644's evidence-staleness sweep grows a dead-link dimension. |

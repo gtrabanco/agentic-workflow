@@ -1,0 +1,12 @@
+# 634 — claim-staleness-projection · decisions
+
+One row per decision this unit takes. `scope` is `unit-only` or `cross-unit`
+(the `decision-scope@1` grammar); a `cross-unit` decision is promoted into its
+one permanent owner doc instead of being restated here.
+
+| id | scope | authority | decision |
+|---|---|---|---|
+| D1 | unit-only | owner answer 2026-11-28, verbatim `selected both`, to an option whose own text states the caveat ("still needs the trigger you consider fired, since the issue body gates the behaviour change") — asked after three evidence runs showed no trigger fired | **The issue's trigger gate is waived by the owner, not satisfied.** Issue #634 is open under `postponed` and its body forbids a behaviour change until trigger 1, 2 or 3 fires; none has (`E1`–`E3` in the unit doc's `## Log`). The owner nevertheless directs the unit to ship, which only the owner may decide — the gate is the owner's own policy. The record is a waiver, never a claim that a trigger fired. |
+| D2 | unit-only | S2a (owner directive) + S2 (*"never pre-designed here"*) | **The consumer contract is mark-and-report, never a block.** Because no observed case exists (D1), any block/warn/re-read policy would be pre-designed, which S2 forbids. So the projection writes the mark and `--check` reports it with an exit code a caller may choose to honour; nothing in this repository gates on it, and no existing gate gains a dependency on the op. The blocking question re-opens at the first observed case, per the unit doc's `## Future cost`. |
+| D3 | unit-only | PE-002, PE-004 | **The mark is an appended `staleness` column on the CLAIM/INV table** — not a mutation of `certainty` (which DESIGN.md § Provenance pins to `confirmed`/`inferred`, a fact that stays true while its citation rots), and not a separate block (the mark must sit on the claim it judges). The column is appended so the one programmatic reader — `provenanceRows`, which resolves cells by header index and skips a row whose width differs from its header — keeps answering exactly as it does today. |
+| D4 | unit-only | PE-006; `vocabulary-residency@1` (`runner-internal` row) | **The mark vocabulary stays in its own runner module.** No published contract names it, so the residency case classifies it Class-3 runner-internal: it ships as a frozen const in `claim-staleness.mjs`, and this PR adds no schema const, no version mirror and no parity pin. |
