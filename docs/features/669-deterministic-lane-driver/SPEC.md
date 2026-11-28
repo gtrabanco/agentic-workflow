@@ -318,10 +318,11 @@ Budget: strong
 - **E17** — 2026-12-23, `bun test scripts/telemetry-coverage.test.mjs` and `bun run --cwd packages/agentic-workflow-schema build && bun test test/telemetry.test.mjs` · exit 0 · the two new commands join `PHASE_LABELS` and the mirror suite agrees.
 - **G1** — 2026-12-23, HEAD `fad3e87da`, `bun scripts/local-gate.mjs --jobs auto --no-bail` · exit 1 · every step `PASS` except `crate-suite-bun`, whose only red suites are `doc.query` and `doc.hybrid` — measured failing identically on a `git archive main` copy (the embedding provider is absent in this environment). The four steps depending on it were skipped, not failed.
 - **E18** — 2026-12-23, `bun packages/agentic-workflow/bin/agentic-workflow.mjs verify docs/features/669-deterministic-lane-driver/SPEC.md` · exit 0 · `verify@1` receipt, obligations ledger closed.
+- **P6** — 2026-12-23, verification ran in the foreground (`E9`–`E18`, `G1`), the obligations ledger closed and the PR opened as [#749](https://github.com/gtrabanco/agentic-workflow/pull/749) · 1eb65d180.
 
 ## Next
 
-The operator's external verification of this handoff; then one PR against `main` (this unit is local and unpublished until then).
+PR [#749](https://github.com/gtrabanco/agentic-workflow/pull/749) is open against `main`, awaiting the operator's review and merge. Merge authority stays with the operator; nothing in this unit merges.
 
 ## References
 
