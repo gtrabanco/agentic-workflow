@@ -58,7 +58,7 @@ function writeHostCopy(nodeModulesDir, { version, codemode = version.startsWith(
 }
 
 /** Write a package-shaped tree; `layout` picks where the dependency lives. */
-function fixture(t, { layout, factory = 'export default function factory(pi) { pi.registerTool({ name: "subagents_run" }); }\n', omitEntry = false, omitPackage = false, host = null } = {}) {
+function fixture(t, { layout, factory = 'export default function factory(pi) { pi.registerTool({ name: "subagents_run" }); }\n', omitEntry = false, omitPackage = false, host = { version: "1.7.0" } } = {}) {
   const root = mkdtempSync(join(tmpdir(), "pi-aw-subagents-"));
   t.after(() => rmSync(root, { recursive: true, force: true }));
 
@@ -70,6 +70,10 @@ function fixture(t, { layout, factory = 'export default function factory(pi) { p
 
   if (omitPackage) return { root, from };
 
+  if (omitPackage) return { root, from };
+
+  // Unless a case asks for none, the sandbox hoists a host copy — the layout the
+  // dependency's bare specifier always binds against.
   const hostDir = host === null ? null : writeHostCopy(join(root, "node_modules"), host);
 
   const dependencyDir = layout === "nested" ? join(packageDir, "node_modules", "pi-extensible-workflows") : join(root, "node_modules", "pi-extensible-workflows");
@@ -227,13 +231,15 @@ test("the peer range comes from this package's own manifest, not a literal", () 
 });
 
 test("an in-range host module is preferred over an out-of-range sandbox copy", (t) => {
-  const { root, hostDir } = fixture(t, { layout: "hoisted", host: { version: "1.7.0" } });
-  // The sandbox hoists a stale copy the bare specifier would bind.
-  writeHostCopy(join(root, "node_modules"), { version: "0.84.2" });
-  const chosen = resolveHostModule({ from: pathToFileURL(join(root, "node_modules", "@gtrabanco", "pi-agentic-workflow", "dist", "extension", "subagents-entry.js")).href });
+  // The sandbox hoists a stale copy the bare specifier would bind; the running
+  // host that loaded us is a satisfying module beside it.
+  const { root, from, hostDir } = fixture(t, { layout: "hoisted", host: { version: "0.84.2" } });
+  const runningHost = writeHostCopy(join(root, "host"), { version: "1.7.0" });
+  const chosen = resolveHostModule({ from, hostModule: join(runningHost, "dist", "index.js") });
   assert.equal(chosen.ok, true, chosen.ok ? "" : chosen.reason);
   assert.equal(chosen.version, "1.7.0", "the satisfying host wins over the stale one");
-  assert.equal(chosen.path, join(hostDir, "dist", "index.js"));
+  assert.equal(chosen.path, join(runningHost, "dist", "index.js"));
+  assert.notEqual(chosen.path, join(hostDir, "dist", "index.js"), "the stale sandbox copy is not the answer");
 });
 
 test("a satisfied peer range loads silently", async (t) => {
@@ -246,8 +252,7 @@ test("a satisfied peer range loads silently", async (t) => {
 });
 
 test("an out-of-range resolved host reports its version and the repair", async (t) => {
-  const { root, from } = fixture(t, { layout: "hoisted" });
-  writeHostCopy(join(root, "node_modules"), { version: "0.84.2" });
+  const { from } = fixture(t, { layout: "hoisted", host: { version: "0.84.2", codemode: false } });
   const fake = fakeHost();
   const result = await provisionSubagents(fake.host, { from });
   assert.equal(result.status, "unavailable");
@@ -264,8 +269,7 @@ test("an out-of-range resolved host reports its version and the repair", async (
 });
 
 test("an unreadable host version fails closed", async (t) => {
-  const { root, from } = fixture(t, { layout: "hoisted" });
-  const hostDir = writeHostCopy(join(root, "node_modules"), { version: "0.84.2" });
+  const { from, hostDir } = fixture(t, { layout: "hoisted", host: { version: "0.84.2", codemode: false } });
   writeFileSync(join(hostDir, "package.json"), JSON.stringify({ name: HOST_NAME, type: "module" }));
   const fake = fakeHost();
   const result = await provisionSubagents(fake.host, { from });
@@ -278,8 +282,7 @@ test("an unreadable host version fails closed", async (t) => {
 test("a scratch install shaped like the reporter's sandbox loads the layer", async (t) => {
   // The reporter's sandbox: a hoisted 0.84.2 host copy beside the extensions,
   // and the running host (1.7.0) reachable as the module that loaded us.
-  const { root, from } = fixture(t, { layout: "hoisted" });
-  writeHostCopy(join(root, "node_modules"), { version: "0.84.2" });
+  const { root, from } = fixture(t, { layout: "hoisted", host: { version: "0.84.2", codemode: false } });
   const runningHost = writeHostCopy(join(root, "host"), { version: "1.7.0" });
   const fake = fakeHost();
   const result = await provisionSubagents(fake.host, { from, hostModule: join(runningHost, "dist", "index.js") });
@@ -303,4 +306,26 @@ test("the README states the resolution order and the host-version repair", () =>
   assert.match(section, /peer/iu, "the README names the peer range");
   assert.match(section, /satisf/iu, "the README states that a satisfied host is preferred");
   assert.match(section, /bun add @earendil-works\/pi-coding-agent/u, "the README names the one-line repair");
+});
+
+test("the entry hands the running host to the provision, so the stale copy is not the binding", async (t) => {
+  // Load the shipped shim the way pi does — a module in the package's
+  // dist/extension/, provisioned with the host API. `PI_PACKAGE_DIR` is what pi
+  // itself honours to name its own package, so it stands in for "the running host".
+  const { root } = fixture(t, { layout: "hoisted", host: { version: "0.84.2", codemode: false } });
+  const runningHost = writeHostCopy(join(root, "host"), { version: "1.7.0" });
+  const previous = process.env.PI_PACKAGE_DIR;
+  process.env.PI_PACKAGE_DIR = runningHost;
+  t.after(() => {
+    if (previous === undefined) delete process.env.PI_PACKAGE_DIR;
+    else process.env.PI_PACKAGE_DIR = previous;
+  });
+  const fake = fakeHost();
+  const entry = await import(pathToFileURL(join(PKG_DIR, "dist", "extension", "subagents-entry.js")).href);
+  await entry.default(fake.host);
+  fake.fireSessionStart();
+  assert.equal(fake.notices.length, 0, `a named running host removes the stale-copy warning, got ${JSON.stringify(fake.notices)}`);
+  // The shipped dependency registers its five tools — the set the README names.
+  const names = fake.tools.map((tool) => tool.name).sort();
+  assert.deepEqual(names, ["subagents_inspect", "subagents_retry", "subagents_run", "subagents_steer", "subagents_stop"]);
 });

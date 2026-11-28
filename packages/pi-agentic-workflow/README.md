@@ -524,7 +524,30 @@ here:
   silence. To disable the substrate entirely, remove the
   `./dist/extension/subagents-entry.js` line from this package's
   `pi.extensions` (a local `package.json` edit — pi has no per-extension
-  switch). Since 6.4.0 the extension ships **no release notes** of its own (its
+  switch).
+
+  **The host peer is checked, not assumed (issue #755).** The dependency imports
+  `@earendil-works/pi-coding-agent` through a *bare specifier*, so its import
+  binds whatever copy the extension sandbox hoists — and `pi update --all`
+  never re-resolves a hoisted peer that no extension asks for directly. A copy
+  left behind by an old install therefore keeps loading, even after pi itself
+  moved on. Before loading the layer, the shim resolves the host and checks it
+  against this package's declared `peerDependencies` range (read from its own
+  manifest, never restated in code):
+
+  - a host that **satisfies** the range is used, and with it present the layer
+    loads; a host module that satisfies the range is preferred over one that
+    does not, so a stale sandbox copy is not the binding when a current host is
+    reachable;
+  - a host that **does not satisfy** the range is a `session_start` warning
+    naming the resolved version and its path, and the one-line repair —
+    `bun add @earendil-works/pi-coding-agent` in the sandbox's package manager
+    directory (`~/.pi/agent/npm`) — because reinstalling *this* package cannot
+    reach the hoisted copy. Versions are compared with the shipped
+    `parseSemver`/`semverGt`, and an unreadable version fails closed into the
+    same warning rather than counting as satisfied.
+
+  Nothing here writes to the sandbox: the repair is reported, never performed. Since 6.4.0 the extension ships **no release notes** of its own (its
   startup notice is gone and `changelog-state.json` is no longer used), and
   because it is loaded **by path**, Pi's *Extension Updates* page — which reads
   npm- and git-installed packages — cannot show them for it: read
