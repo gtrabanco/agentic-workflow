@@ -10,7 +10,11 @@
  *
  * This file is the one machine home of that grammar. Each entry declares the
  * subcommand's family, its one-line summary and, where the subcommand itself is
- * a closed registry, the ops/flags it accepts. `help` renders from it, the
+ * a closed registry, the ops/flags it accepts. It also declares the root the
+ * subcommand resolves a path against — `project`, `product` or `host` — because
+ * a repo-relative path read against the wrong root is the defect class issue
+ * #717 censuses: `scripts/single-repo-leaks.mjs` refuses a missing or unknown
+ * cell, so a new subcommand cannot ship without answering the question. `help` renders from it, the
  * failure path suggests from it, and `cli.surface.test.mjs` pins it against the
  * crate README in both directions — so a new subcommand cannot ship without a
  * help row, and a help row cannot name a subcommand that does not dispatch.
@@ -44,6 +48,8 @@ export const HELP_FAMILIES = Object.freeze({
  * @property {readonly string[]} [flags]   the flags it accepts, when closed
  * @property {string} [usage]            the usage tail after the subcommand name
  * @property {boolean} [ownHelp]         the subcommand already ships a richer `--help` of its own; the bin defers to it
+ * @property {"project"|"product"|"host"} resolution  which root the subcommand resolves a path against — declared, never guessed (issue #717)
+ * @property {string} [probe]            the argv tail the single-repo-leak census runs against a foreign tree; a row with no probe is declared but not executed
  */
 
 /** @type {Readonly<Record<string, HelpEntry>>} */
@@ -51,6 +57,7 @@ export const HELP_REGISTRY = Object.freeze({
   // ── lane ceremony ─────────────────────────────────────────────────────
   ceremony: {
     family: "lane",
+    resolution: "project",
     summary: "the closed ceremony CLI: one object, one op, JSON on stdout, and the uniform 0/1/2 exit contract",
     ops: [...CEREMONY_OBJECTS],
     usage: "<object> <op> [flags...]",
@@ -58,117 +65,139 @@ export const HELP_REGISTRY = Object.freeze({
   "unit-route": {
     ownHelp: true,
     family: "lane",
+    resolution: "project",
     summary: "prints the route one delivery unit takes now, from its own ledger",
     usage: "<unit|issue> | --triage <unit> [--json]",
   },
   flow: {
     ownHelp: true,
     family: "lane",
+    resolution: "project",
     summary: "the deterministic lane driver: sense the unit, decide the next closed-catalog step, hand it over (`/flow` and `/draft` run it)",
     usage: "<unit> [--stop-after plan] [--yes] [--retriage] [--record] [--json]",
   },
   "phase-lint": {
     family: "lane",
+    resolution: "project",
     summary: "lints one unit doc's ## Tasks phases and prints the verdict plus its fingerprint",
     usage: "<plan-path>",
   },
   "unit-doc": {
     family: "editing",
+    resolution: "project",
     summary: "the typed unit-document service: create, setSection, evidence, progress, validate, provenance",
     ops: ["create", "setSection", "evidence", "progress", "validate", "provenance"],
     usage: "<NN-slug> <op> [args...]",
   },
   "unit-lineage": {
     family: "lane",
+    resolution: "project",
     summary: "re-derives a unit's triage block from the facts instead of pinning substrings",
     flags: ["--unit", "--root", "--json"],
   },
   "roadmap-settle": {
     family: "lane",
+    resolution: "project",
     summary: "checks the inverse settle invariant: a unit doc carrying a PR URL must have its index row reading done",
     flags: ["--root", "--json"],
   },
   "roadmap": {
     family: "editing",
+    resolution: "project",
     summary: "the roadmap writer: rowUpsert, annotate, read, fixrow and check over the shared-document driver",
     ops: ["rowUpsert", "annotate", "read", "fixrow", "check"],
   },
   "review-receipt": {
     family: "lane",
+    resolution: "project",
     summary: "emits, verifies and posts the SHA-bound review receipt a merge gate reads",
     ops: ["emit", "verify", "post"],
     flags: ["--root", "--dry-run"],
   },
   "repair-receipt": {
     family: "lane",
+    resolution: "project",
     summary: "emits and verifies the fold's typed repair receipt: the encoded re-review route a merge gate consumes as currency",
     ops: ["emit", "verify"],
     flags: ["--unit", "--reviewed", "--pr", "--head", "--root", "--dry-run"],
   },
   "review-state": {
     family: "lane",
+    resolution: "project",
     summary: "the per-unit record of which review axes ran, at which head, with which evidence",
     ops: ["record", "mark", "check", "show"],
     flags: ["--unit", "--path", "--status", "--reason", "--base", "--head", "--reset"],
   },
   "scope-manifest": {
     family: "lane",
+    resolution: "project",
     summary: "signs and verifies the digest-bound manifest of the paths a change actually affects",
     ops: ["sign", "verify"],
     flags: ["--base", "--head", "--root"],
   },
   "gate-receipt": {
     family: "lane",
+    resolution: "project",
     summary: "runs the project's gate and judges a recorded receipt pass/stale/invalid/missing",
     ops: ["run", "verify"],
     flags: ["--root", "--gate", "--receipt", "--log"],
   },
   "audit-pr-gate": {
     family: "lane",
+    resolution: "project",
     summary: "the merge gate: evaluates receipts and hygiene to MERGE-READY or BLOCKED",
     ops: ["evaluate", "hygiene", "comment"],
   },
   "adversarial-verdict": {
     family: "lane",
+    resolution: "project",
     summary: "refuses every row of an adversarial pass record that breaks the contract",
     flags: ["--record", "--diff"],
   },
   "findings-corpus": {
     family: "knowledge",
+    resolution: "project",
     summary: "joins the unit docs' findings and log marks into one corpus for class attribution",
     flags: ["--repo", "--json", "--min-recurrence", "--threshold"],
   },
   "correction-budget": {
     family: "lane",
+    resolution: "project",
     summary: "the review-to-fold loop's stopping condition as a measurement rather than prose",
     flags: ["--unit", "--rounds-spent", "--repo", "--json"],
   },
   "dimension-regression": {
     family: "lane",
+    resolution: "product",
     summary: "a change touching a review surface must record its dimension run, or the audit's dimension was skipped",
     flags: ["--base", "--root", "--remote"],
   },
   "coverage-gap": {
     family: "knowledge",
+    resolution: "project",
     summary: "crosses declared criteria, gate-inventory detectors and the findings corpus into typed gaps",
   },
   "decision-promotion": {
     family: "lane",
+    resolution: "project",
     summary: "a cross-unit decision must name the permanent owner doc it was promoted to",
     flags: ["--root", "--json"],
   },
   "residual-classify": {
     family: "lane",
+    resolution: "project",
     summary: "classifies an added surface by what actually consumes it, so a retirement is legitimate only when orphan",
     flags: ["--root", "--receipt", "--date", "--inventory", "--base"],
   },
   "differential-baseline": {
     family: "lane",
+    resolution: "project",
     summary: "materializes the base revision and runs the declared validators against it, so a change is measured",
     flags: ["--base", "--repo", "--json"],
   },
   "session-close": {
     family: "lane",
+    resolution: "project",
     summary: "the mechanical half of ending a session: render the entry, then close on an append-only log",
     ops: ["render", "close"],
   },
@@ -177,48 +206,64 @@ export const HELP_REGISTRY = Object.freeze({
   "workflow-status": {
     ownHelp: true,
     family: "sensor",
+    resolution: "project",
+    probe: "",
     summary: "the workflow sensor: the strict Envelope v2 result every driver consumes",
     flags: ["--compact", "--rag", "--help", "--version"],
   },
   "pre-execution-snapshot": {
     family: "sensor",
+    resolution: "project",
     summary: "builds and verifies the content-bound pre-execution snapshot a review freezes against",
     ops: ["build", "verify", "contract"],
   },
   "needs-input": {
     family: "sensor",
+    resolution: "project",
+    probe: "",
     summary: "reads the unit's open-questions ledger and verifies the route each open row claims",
     flags: ["--workspace", "--json"],
   },
   substrate: {
     family: "sensor",
+    resolution: "project",
+    probe: "",
     summary: "the substrate coverage gate: one row per class, present, declined or absent",
     ops: ["check"],
     flags: ["--workspace", "--guide", "--json"],
   },
   "ledger-provenance": {
     family: "sensor",
+    resolution: "project",
+    probe: "",
     summary: "proves every folded finding row cites a reachable commit whose subject claims it",
     flags: ["--json", "--check", "--annotate"],
   },
   "quality-metrics": {
     ownHelp: true,
     family: "sensor",
+    resolution: "project",
+    probe: "",
     summary: "the DORA four keys plus the reversion ratio, each row labelled measured/derived/unavailable",
     flags: ["--window", "--until", "--repo", "--out"],
   },
   "diff-guard": {
     family: "guard",
+    resolution: "project",
     summary: "measures a diff against the size ceiling and prints PASS or BREACH",
     flags: ["--base", "--max-lines", "--max-files", "--json"],
   },
   "relevant-files": {
     family: "sensor",
+    resolution: "project",
+    probe: "",
     summary: "resolves a phase's read set and checks a changed set against it",
     flags: ["--phase", "--changed", "--base"],
   },
   "scaffold-contract": {
     family: "sensor",
+    resolution: "project",
+    probe: "",
     summary: "the scaffold contract that travels: exported unit-doc templates against the installed release's contract, and the same check on a staged unit doc",
     ops: ["check", "authoring"],
     usage: "<check|authoring> [<unit-doc>] [--workspace <dir>] [--json]",
@@ -226,52 +271,73 @@ export const HELP_REGISTRY = Object.freeze({
   },
   "test-impact": {
     family: "sensor",
+    resolution: "project",
+    probe: "",
     summary: "the set of tests a change can affect, unioned from four static sources, never a guess",
     flags: ["--base", "--paths", "--references"],
   },
   "test-route": {
     family: "sensor",
+    resolution: "project",
+    probe: "",
     summary: "answers which suites a path needs from the committed route map, fail-closed to the full suite",
     ops: ["--check", "--list"],
     flags: ["--map", "--root"],
   },
   "skill-context": {
     family: "sensor",
+    resolution: "project",
+    probe: "",
     summary: "measures every skill's text against the ceilings the project's manifest declares",
     flags: ["--manifest-only", "--routes", "--documents", "--json"],
   },
   "test-obligation-tags": {
     family: "sensor",
+    resolution: "project",
+    probe: "",
     summary: "every root suite declares the surface and obligation kinds it protects; an undeclared suite is refused",
     flags: ["--root", "--sweep", "--json"],
   },
   "prose-gate-inventory": {
     family: "sensor",
+    resolution: "project",
+    probe: "",
     summary: "reads the gate inventory and refuses a carrier the tree no longer holds",
     flags: ["--repo"],
   },
   "promise-coherence": {
     family: "sensor",
+    resolution: "project",
     summary: "re-measures every 'measured at the head' claim in the prose it reads",
     flags: ["--json"],
   },
+  "single-repo-leaks": {
+    family: "knowledge",
+    resolution: "product",
+    summary: "the single-repo-leak census: every subcommand declares the root it resolves against, and the read-only project rows are probed on a consumer-shaped fixture",
+    flags: ["--root", "--json"],
+  },
   "restatement-sweep": {
     family: "knowledge",
+    resolution: "product",
     summary: "reports every place a rule is worded a second time outside its owner",
     flags: ["--repo", "--json"],
   },
   "repository-state": {
     family: "knowledge",
+    resolution: "project",
     summary: "reads the frozen Normalized Repository State and answers what a later decision may not move",
     flags: ["--ttl-days", "--today", "--json"],
   },
   "journal-corpus": {
     family: "knowledge",
+    resolution: "project",
     summary: "joins the session journal's entries into the corpus the audit's journal dimension reads",
     flags: ["--repo", "--recurrence"],
   },
   "workflow-doctor": {
     family: "knowledge",
+    resolution: "project",
     summary: "mines the project's own ceremony failures, anonymizes a fixed-rubric triage and routes it upstream",
     ops: ["mine", "battery", "bundle", "route", "publish"],
     usage: "<mine|battery|bundle|route|publish> [flags]",
@@ -297,16 +363,19 @@ export const HELP_REGISTRY = Object.freeze({
   },
   "retention-debt": {
     family: "knowledge",
+    resolution: "project",
     summary: "reports every proved-merged unit still carrying its full document carrier past threshold",
     flags: ["--root", "--json"],
   },
   "dependency-advisory-pass": {
     family: "sensor",
+    resolution: "project",
     summary: "reports pins that drifted from what the registry publishes, degrading visibly on a fetch failure",
     flags: ["--root", "--json"],
   },
   "batch-scheduler": {
     family: "lane",
+    resolution: "project",
     summary: "reads the live work graph and emits order-respecting, collision-free parallel batches",
     flags: ["--root", "--issues-file", "--state", "--no-state", "--remote", "--mark-launched", "--json-only"],
   },
@@ -314,48 +383,56 @@ export const HELP_REGISTRY = Object.freeze({
   // ── knowledge and retrieval ───────────────────────────────────────────
   doc: {
     family: "knowledge",
+    resolution: "project",
     summary: "the retrieval index and the doc CLI: sync, query, status, rebuild, read, edit, index",
     ops: ["--sync", "--query", "--status", "--rebuild", "read", "edit", "index", "archive", "restore"],
     flags: ["--json-only", "--mode", "--since", "--until", "--file"],
   },
   config: {
     family: "tooling",
+    resolution: "project",
     summary: "the unified config CLI: read and write the base config and every discovered extension file",
     ops: ["get", "set", "list", "show", "validate", "init", "reset", "default", "schema"],
     flags: ["--scope", "--project", "--global-dir", "--category", "--sanitize", "--no-warn-unknown", "--no-backup", "--json"],
   },
   relay: {
     family: "lane",
+    resolution: "project",
     summary: "the Relay packet's offline half: check, budget, tiers, obligations and closeout",
     ops: ["check", "budget", "tiers", "obligations", "closeout"],
     flags: ["--repo", "--packet"],
   },
   section: {
     family: "editing",
+    resolution: "project",
     summary: "the AST section locator: locate, remove and replace over one Markdown document",
     ops: ["locate", "remove", "replace"],
     flags: ["--file", "--selector", "--replacement", "--write", "--json"],
   },
   memory: {
     family: "knowledge",
+    resolution: "host",
     summary: "the memory-substrate health sensor; writes nothing and always exits 0",
     ops: ["probe"],
     flags: ["--json"],
   },
   log: {
     family: "knowledge",
+    resolution: "project",
     summary: "the pure journal entry renderer: log-facts in, the docs/LOGS.md block out",
     ops: ["render"],
     flags: ["--facts", "--raw"],
   },
   journal: {
     family: "knowledge",
+    resolution: "project",
     summary: "the session-log fragment carrier: aggregate, write, headless and name",
     ops: ["aggregate", "write", "headless", "name"],
     flags: ["--dir", "--journal-dir", "--log", "--check", "--json", "--kind", "--session", "--supersedes"],
   },
   skills: {
     family: "tooling",
+    resolution: "project",
     summary: "the skill-discovery route's machine half: discover, register, inventory",
     ops: ["discover", "register", "inventory"],
   },
@@ -363,65 +440,77 @@ export const HELP_REGISTRY = Object.freeze({
   // ── editing ───────────────────────────────────────────────────────────
   changelog: {
     family: "editing",
+    resolution: "project",
     summary: "appends a changelog row through the writer",
     usage: "[file] <json>",
   },
   budgets: {
     family: "editing",
+    resolution: "project",
     summary: "re-bases one context-budget ceiling with its growth source; a shrinkage without one is refused",
     usage: "[file] <json>",
   },
   manifest: {
     family: "editing",
+    resolution: "project",
     summary: "skillAdd and skillRemove on the plugin manifest, keeping its alphabetical machine surface",
     ops: ["skillAdd", "skillRemove"],
     usage: "[plugin.json] <op>",
   },
   verify: {
     family: "editing",
+    resolution: "project",
     summary: "the document verifier: checks one unit doc against the frozen schemas and the tree",
     flags: ["--no-git"],
   },
   charter: {
     family: "editing",
+    resolution: "project",
     summary: "the engineering interview's deterministic half: state, land and check over the guide's charter",
     ops: ["state", "land", "check"],
     flags: ["--guide", "--answers", "--bank", "--json"],
   },
   elicitation: {
     family: "editing",
+    resolution: "project",
     summary: "the pre-spec's own check: the question bank plus the artifact against it",
     ops: ["check"],
     flags: ["--bank", "--spec", "--json"],
   },
   materialize: {
     family: "editing",
+    resolution: "project",
     summary: "materializes the verification decision per declared boundary: plan, check, apply, evidence",
     ops: ["plan", "check", "apply", "evidence"],
     flags: ["--guide", "--record", "--invariants", "--feature-map", "--unit", "--outcomes", "--date", "--root", "--json"],
   },
   resources: {
     family: "tooling",
+    resolution: "product",
     summary: "the trial-envelope layer: detect the host, admit a brief, check a trial, bound a run",
     ops: ["detect", "admit", "check", "bound"],
   },
   provision: {
     family: "tooling",
+    resolution: "host",
     summary: "ask-first bootstraps: the rg binary and the guard-plugin permission policy",
     ops: ["rg", "permissions"],
   },
   "docs-generate": {
     family: "knowledge",
+    resolution: "project",
     summary: "renders the generated documentation projection and syncs the roadmap's two tables",
     flags: ["--root", "--check", "--dry-run"],
   },
   "docs-generated-merge": {
     family: "tooling",
+    resolution: "project",
     summary: "the generated-projection merge driver: arms the class or resolves one conflict",
     flags: ["--install", "--repo"],
   },
   "shared-merge": {
     family: "tooling",
+    resolution: "project",
     summary: "the shared-document merge driver: one class registry decides union or fail-closed conflict",
     flags: ["--install", "--repo"],
   },
@@ -429,32 +518,38 @@ export const HELP_REGISTRY = Object.freeze({
   // ── runner / tooling ──────────────────────────────────────────────────
   runner: {
     family: "tooling",
+    resolution: "product",
     summary: "the programmatic runner choice: which launcher runs this package at its own pin",
     ops: ["resolve"],
     flags: ["--json"],
   },
   "resolve-passes": {
     family: "tooling",
+    resolution: "product",
     summary: "resolves every published pass name's model and thinking through the fail-closed chain",
     flags: ["--global", "--project", "--command"],
   },
   "setup-env": {
     family: "tooling",
+    resolution: "host",
     summary: "checks the authoring toolchain and, with an explicit yes, installs through user-scoped managers",
     flags: ["--check", "--root"],
   },
   doctor: {
     family: "tooling",
+    resolution: "project",
     summary: "one read-only check per documented tool surface, printing the doctor@1 envelope",
     flags: ["--check", "--json", "--root"],
   },
   setup: {
     family: "tooling",
+    resolution: "host",
     summary: "the consent-gated setup wizard over the same envelope doctor prints",
     flags: ["--yes", "--dry-run", "--json", "--root"],
   },
   help: {
     family: "tooling",
+    resolution: "product",
     summary: "this surface: the subcommand index, or one subcommand's usage, ops and flags",
     flags: ["--json"],
   },
@@ -462,38 +557,46 @@ export const HELP_REGISTRY = Object.freeze({
   // ── forge ─────────────────────────────────────────────────────────────
   "delivery-conditions": {
     family: "forge",
+    resolution: "project",
     summary: "the carrier a delivery condition names: the close-time guard and the scheduled sweep that re-check it",
     flags: ["--close-check", "--sweep", "--issues-file", "--repo", "--root", "--limit", "--json"],
     usage: "--close-check <issue> | --sweep [--issues-file <json>] [--repo <owner/name>] [--json]",
   },
   "forge-read": {
     family: "forge",
+    resolution: "project",
     summary: "the one route that may return third-party forge text, fenced and guarded",
     ops: ["issue", "pr"],
     flags: ["--comments", "--reviews", "--json"],
   },
   "fullauto-merge": {
     family: "forge",
+    resolution: "project",
     summary: "the audited, forge-agnostic merge that needs every precondition to be the one merge without a human",
     flags: ["--pr", "--run-id", "--method", "--remote", "--forge"],
   },
   "git-identity-check": {
     family: "forge",
+    resolution: "project",
     summary: "refuses a commit whose identity is not the project's approved one",
     flags: ["--root"],
   },
   "turn-contract": {
     family: "forge",
+    resolution: "project",
     summary: "verifies the turn contract's mechanical boxes and prints ok or the failing box",
     flags: ["--finished", "--remote", "--forge"],
   },
   "guard-command": {
     family: "guard",
+    resolution: "project",
     summary: "the safety hooks' one decision over commands, paths, environment disclosure and .env reads",
     flags: ["--command", "--path", "--allowlist", "--payload", "--format"],
   },
   telemetry: {
     family: "sensor",
+    resolution: "project",
+    probe: "",
     summary: "the manual telemetry reconciliation, the machine-ledger commit and the merge driver's installation gate",
     ops: ["reconstruct", "commit", "merge-install"],
   },

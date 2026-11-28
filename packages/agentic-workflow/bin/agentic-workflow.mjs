@@ -690,8 +690,8 @@ const { tier: feedbackTier, args: argv } = parseFeedbackArgs(process.argv.slice(
 let command = argv[0];
 if (!command) {
   console.error(
-    "usage: bunx @gtrabanco/agentic-workflow@<pin> <unit-doc|roadmap|changelog|budgets|manifest|config|doc|section|relay|memory|log|journal|resolve-passes|runner|verify|charter|materialize|resources|provision|doctor|setup|unit-route|flow|phase-lint|diff-guard|workflow-status|pre-execution-snapshot|needs-input|substrate|ledger-provenance|quality-metrics|forge-read|ceremony|skills|setup-env|test-route|prose-gate-inventory|retention-debt|test-obligation-tags|decision-promotion|dimension-regression|journal-corpus|coverage-gap|repository-state|residual-classify|restatement-sweep|batch-scheduler|delivery-conditions|promise-coherence|skill-context|dependency-advisory-pass|unit-lineage|audit-pr-gate|adversarial-verdict|gate-receipt|review-receipt|repair-receipt|scope-manifest|review-state|differential-baseline|correction-budget|findings-corpus|session-close|test-impact|shared-merge|docs-generated-merge|docs-generate|roadmap-settle|relevant-files|help|scaffold-contract|elicitation|guard-command|turn-contract|git-identity-check|fullauto-merge|telemetry|workflow-doctor> [--debug|--profile] ...\n" +
-      "       (bin: agentic-workflow · pin: skills/runner-contract/references/RUNNER.md · the scope-less `npx agentic-workflow` is a 0.0.0 placeholder, never this package)",
+    "usage: bunx @gtrabanco/agentic-workflow@<pin> <unit-doc|roadmap|changelog|budgets|manifest|config|doc|section|relay|memory|log|journal|resolve-passes|runner|verify|charter|materialize|resources|provision|doctor|setup|unit-route|flow|phase-lint|diff-guard|workflow-status|pre-execution-snapshot|needs-input|substrate|ledger-provenance|quality-metrics|forge-read|ceremony|skills|setup-env|test-route|prose-gate-inventory|retention-debt|test-obligation-tags|decision-promotion|dimension-regression|journal-corpus|coverage-gap|repository-state|residual-classify|restatement-sweep|batch-scheduler|delivery-conditions|promise-coherence|skill-context|dependency-advisory-pass|unit-lineage|audit-pr-gate|adversarial-verdict|gate-receipt|review-receipt|repair-receipt|scope-manifest|review-state|differential-baseline|correction-budget|findings-corpus|session-close|test-impact|shared-merge|docs-generated-merge|docs-generate|roadmap-settle|relevant-files|help|scaffold-contract|elicitation|guard-command|turn-contract|git-identity-check|fullauto-merge|telemetry|workflow-doctor|single-repo-leaks> [--debug|--profile] ...\n" +
+      "       (bin: agentic-workflow · pin: the `runner-contract` skill's references/RUNNER.md · the scope-less `npx agentic-workflow` is a 0.0.0 placeholder, never this package)",
   );
   console.error(helpPointer());
   process.exit(1);
@@ -2153,7 +2153,7 @@ switch (command) {
       break;
     }
     refuse(
-      `Unknown service: ${command} — this install is @gtrabanco/agentic-workflow@${runningCrateVersion()}; a service added after that version is not in it. Check the pin in skills/runner-contract/references/RUNNER.md, or set AGENTIC_WORKFLOW_RUNNER to a crate that carries the service.`,
+      `Unknown service: ${command} — this install is @gtrabanco/agentic-workflow@${runningCrateVersion()}; a service added after that version is not in it. Check the pin in the \`runner-contract\` skill's references/RUNNER.md, or set AGENTIC_WORKFLOW_RUNNER to a crate that carries the service.`,
       { suggest: true },
     );
 }

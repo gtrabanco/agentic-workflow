@@ -9,7 +9,7 @@
  * (the workflow-side analogue of the residue sweeps'
  * features-preserved-without-it check).
  *
- * Two deterministic findings, nothing else:
+ * Three deterministic findings, nothing else:
  *
  *   dimension-dropped                a dimension id present at the base revision is
  *                                    gone at the head without a recorded owner
@@ -17,7 +17,14 @@
  *   missing-reverification-evidence  the range touches a review surface and no unit
  *                                    doc changed in it records a run of this gate
  *                                    (an `E`/`G` line naming
- *                                    `runner dimension-regression`).
+ *                                    `runner dimension-regression`);
+ *   carrier-missing                  the range touches a review surface and the
+ *                                    carrier (the audit-dimensions reference) does
+ *                                    not resolve in the measured tree — the scope
+ *                                    restriction is the product's own invariant,
+ *                                    so a foreign tree is refused by name instead
+ *                                    of compared against zero dimensions (issue
+ *                                    #717).
  *
  * A range that touches no review surface is `not-applicable` — never a pass, and
  * never a failure. The step is a push-range gate (`--push-base`), so a full local
@@ -103,12 +110,18 @@ const decisionNames = (text, id) => logLines(text).some((line) => line.id.starts
  * The rule, pure in its inputs: a fixture and a real push range take the same
  * path. `unitDocs` are `{ path, text }` for the unit docs changed in the range.
  */
-export function evaluateEvolution({ baseDimensions, headDimensions, changedPaths, unitDocs }) {
+export function evaluateEvolution({ baseDimensions, headDimensions, changedPaths, unitDocs, carrierPresent = true }) {
   const surfaces = changedPaths.filter(isDimensionSurface);
   if (surfaces.length === 0) {
-    return { applicable: false, verdict: "not-applicable", surfaces, findings: [], evidence: null };
+    return { applicable: false, verdict: "not-applicable", surfaces, findings: [], evidence: null, carrierPresent };
   }
   const findings = [];
+  // A review surface changed on a tree that does not carry the dimension set:
+  // there is nothing to compare, so the honest answer is a refusal naming the
+  // absent carrier, never a clean verdict derived from two empty sets.
+  if (!carrierPresent) {
+    findings.push({ code: "carrier-missing", detail: `${DIMENSIONS_REL} does not resolve in the measured tree; the review-surface set it orders cannot be compared` });
+  }
   for (const id of baseDimensions) {
     if (headDimensions.includes(id)) continue;
     if (unitDocs.some((doc) => decisionNames(doc.text, id))) continue;
@@ -121,7 +134,7 @@ export function evaluateEvolution({ baseDimensions, headDimensions, changedPaths
       detail: `the range touches ${surfaces.length} review surface(s); record a \`runner dimension-regression\` run in a changed unit doc's \`## Log\``,
     });
   }
-  return { applicable: true, verdict: findings.length === 0 ? "clean" : "refused", surfaces, findings, evidence: evidence?.path ?? null };
+  return { applicable: true, verdict: findings.length === 0 ? "clean" : "refused", surfaces, findings, evidence: evidence?.path ?? null, carrierPresent };
 }
 
 /** `<rev>` resolved to a commit, or null. */
@@ -158,6 +171,7 @@ export function inspectRange(root, rev) {
     headDimensions: dimensionsOf(headText),
     changedPaths,
     unitDocs,
+    carrierPresent: fs.existsSync(path.join(root, DIMENSIONS_REL)),
   });
   return {
     ...evaluated,
@@ -179,6 +193,10 @@ export function renderReport(result, rev) {
     lines.push(`head | ${result.headDimensions} dimensions · changed review surfaces ${result.surfaces.length}`);
     lines.push(`evidence | ${result.evidence ?? "none"}`);
   }
+  // The scope restriction is stated in the report, not left to be inferred from
+  // a zero count: the dimension vocabulary is this product's own invariant, so a
+  // tree that does not carry the reference is named as such (issue #717).
+  lines.push(`carrier | ${DIMENSIONS_REL} ${result.carrierPresent === false ? "absent" : "present"}`);
   for (const finding of result.findings) lines.push(`finding — ${finding.code} · ${finding.detail}`);
   lines.push(`verdict | ${result.verdict}`);
   return `${lines.join("\n")}\n`;

@@ -205,6 +205,7 @@ shell fallback.
 | `journal-corpus [--root <dir>] [--json]` | the journal corpus reader — the session journal joined into the audit's corpus (issue #616) |
 | `repository-state [--root <dir>] [--json]` | the Normalized Repository State reader — what is frozen and what a contradiction is (feature 18) |
 | `residual-classify <surface> [--inventory --base <rev>] [--root <dir>] [--json]` | the residual classifier — consumed, promised, orphan or half-built, with the consuming line named (issue #340) |
+| `single-repo-leaks [--root <dir>] [--json]` | the single-repo-leak census — every subcommand declares the root it resolves against, and the read-only project rows are probed on a consumer-shaped tree (issue #717) |
 | `restatement-sweep [--root <dir>] [--json]` | the restatement sweep — a seeded rule worded a second time outside its owner (issue #646) |
 | `workflow-doctor <mine\|battery\|bundle\|route\|publish> [--root <dir>] [--json]` | the ceremony-failure doctor — the project's own record mined, anonymized and routed upstream with consent (issue #703) |
 | `test-obligation-tags [--root <dir>] [--sweep] [--json]` | the test-obligation tag gate — every suite declares what it protects and what it proves (issue #596) |
