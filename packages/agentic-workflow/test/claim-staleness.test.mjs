@@ -44,7 +44,7 @@ const {
   phaseRevisions,
   projectClaimStaleness,
   writeStalenessColumn,
-} = await import("../../packages/agentic-workflow/src/runner/sensors/claim-staleness.mjs");
+} = await import("../src/runner/sensors/claim-staleness.mjs");
 
 /* ------------------------------------------------------------------ fixtures */
 
