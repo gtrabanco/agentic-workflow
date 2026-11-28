@@ -1,7 +1,7 @@
 ---
 type: fix
 scope: medium
-# ac-hash: written below by the cut, after the Acceptance criteria section freezes
+ac-hash: 7c5059be65eca88817be98ca1f83d9e1360cd54c963c0c7c9e698520bfa987f9
 roadmap_summary: The durable-subagents layer stops failing on a stale hoisted host copy — the diagnostic names the resolved copy's version and the repair, resolution binds the running host first, and the declared peer range is enforced at the sandbox
 ---
 
@@ -165,6 +165,10 @@ Nothing is removed. Strictly additive inside `subagents.ts`: the shim gains a ho
 
 ## Log
 
+- **D1** — 2026-11-28, applied inline per the local unpublished workflow: no `review-change`, `audit-pr` or fold cycle ran on this change; the deterministic gates did. The unit doc and its two ledgers were cut before the first source line.
+- **D2** — 2026-11-28, the peer range is read from this package's manifest rather than a literal, so moving the floor moves the check; an unenforceable spec (`^`, `~`, `*`) answers `false` and is reported as unenforceable instead of claiming a satisfaction nobody checked.
+- **D3** — 2026-11-28, `dependency/versions` gained the `.d.mts` type projection the shim imports (the crate's existing projection pattern, `tool-choice.policy` F19's rule extended to the new module) — the shim reuses the shipped `parseSemver`/`semverGt` rather than a second comparison.
+
 - **L1** — 2026-11-28, the issue, verbatim:
   ```
   ## Environment
@@ -205,7 +209,7 @@ Nothing is removed. Strictly additive inside `subagents.ts`: the shim gains a ho
 
 ## Next
 
-Write the P2 RED cases into `packages/pi-agentic-workflow/test/subagents-provision.test.mjs` and observe them fail before any source change.
+None — the application is complete and awaits the owner's external verification.
 
 ## References
 
@@ -230,3 +234,18 @@ None.
 | A dependency without the entry / without a factory / whose entry throws still reports once | same suite, three cases |
 | The manifest still declares exactly the two entries and the built shim exists | same suite, `the manifest declares the shim and the shipped file exists` |
 | `serena-activation-check` still passes against the untouched manifest | `bun test test/serena-activation-check.test.mjs` |
+- **E1** — 2026-11-28, the RED run — `bun test test/subagents-provision.test.mjs` in `packages/pi-agentic-workflow` · exit 1 · `SyntaxError: Export named 'HOST_PACKAGE' not found in module '…/dist/extension/subagents.js'` — 0 pass, 1 error. Commit `3e1fa4080` carries the failing cases alone.
+- **E2** — 2026-11-28, O1/O2/O3/O4/O5/O6/O7/O10 — `bun test test/subagents-provision.test.mjs` · exit 0 · 21 pass, 0 fail. Cases: 12 pre-existing + `the peer range comes from this package's own manifest, not a literal`, `an in-range host module is preferred over an out-of-range sandbox copy`, `a satisfied peer range loads silently`, `an out-of-range resolved host reports its version and the repair`, `an unreadable host version fails closed`, `a scratch install shaped like the reporter's sandbox loads the layer`, `readHostVersion reports the package version and never guesses`, `the README states the resolution order and the host-version repair`, `the entry hands the running host to the provision, so the stale copy is not the binding`.
+- **E3** — 2026-11-28, O8 — `bun test test/serena-activation-check.test.mjs test/subagents-provision.test.mjs` in `packages/pi-agentic-workflow` · exit 0 · 3 pass (serena) and 21 pass (subagents), the manifest's two-entry array untouched.
+- **E4** — 2026-11-28, O6 in a live shape — the `the entry hands the running host to the provision` case imported the built shim, gave it a `1.7.0` host via `PI_PACKAGE_DIR` while the sandbox held an out-of-range `0.84.2` copy, and the shipped `pi-extensible-workflows` registered its five tools (`subagents_inspect`, `subagents_retry`, `subagents_run`, `subagents_steer`, `subagents_stop`) with no diagnostic.
+- **E5** — 2026-11-28, O9 — `rg -n '\.pi/agent/npm' packages/pi-agentic-workflow/src` · one match, `subagents.ts:290`, a string inside the diagnostic; no write path (`writeFileSync`/`mkdirSync`/`spawnSync`) targets the sandbox.
+- **E6** — 2026-11-28, O11 — `bun test packages/agentic-workflow/test/tool-choice.policy.test.mjs` · exit 0 · 24 pass, 0 fail (the extended F19 pins `versions.d.mts` against `versions.mjs`).
+- **E7** — 2026-11-28, O12 differential — the base commit `1542fe8bd` extracted to `mktemp -d`, installed and built: `bun test test/subagents-provision.test.mjs` · exit 0 · 12 pass, the identical 12 case names this change still passes. The full base suite fails 11 cases; this tree fails 6 — the same 6 (`#719 AC6`, five `embed-profile*`/`consent` cases), all pre-existing, plus five base-only artifacts the `/tmp` extraction creates (three symlink cases, the staged-copy case). No case regressed.
+- **G1** — 2026-11-28, `bun scripts/version-parity-gate.mjs --content --base origin/main` · exit 0 · `VERDICT: PASS` via `.changeset/755-hoisted-peer-stale.md`.
+- **G2** — 2026-11-28, `bun scripts/docs-generate.mjs --check` · exit 0 · `3 checked · 0 missing · 0 stale · 0 orphaned`, `verdict: PASS`.
+- **G3** — 2026-11-28, `bun scripts/local-gate.mjs` · exit 1, **only** at `worktree-guard`, which reads the shared repository and reports two pre-existing stale worktrees (`feat-752-pi-161-170-delta`, `fix-634-claim-staleness-projection`, both at merged `51747154e`). Every other step passed, `version-parity-content: exit 0`. Not caused by, and not repaired by, this unit — deleting another branch's worktree is not this change's authority. Disclosed in the handoff.
+- **P1** — 2026-11-28, unit doc and both ledgers frozen with S1–S5 verbatim, 13 obligations and 12 evidence rows · `3e1fa4080`.
+- **P2** — 2026-11-28, the RED cases landed and were observed failing on the missing exports · `3e1fa4080`.
+- **P3** — 2026-11-28, host-module resolution preference, resolved-peer reading, the peer-range check and the version-naming diagnostic · `f242e7e5e`.
+- **P4** — 2026-11-28, the entry hands the running host through `PI_PACKAGE_DIR`/`getPackageDir()`; README currency for the resolution order and the repair · `f242e7e5e`.
+- **P5** — 2026-11-28, the roadmap row was written by `ceremony roadmap row-upsert` (never hand-edited), the journal entry by `journal write`, and the generated projection by `docs-generate` · commit follows this log.
