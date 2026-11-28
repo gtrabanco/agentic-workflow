@@ -124,10 +124,11 @@ decided.
    `bun test packages/pi-agentic-workflow/test/flow-command.test.mjs` exits 0 and
    `bun test scripts/audit-docs.test.mjs` (or the doc-map link check) exits 0.
 8. **S1/S2 — no invented answer.** The driver never decides an unknown: an
-   unreadable unit, an unknown step name, an absent unit doc and an unknown
-   `--stop-after` value each refuse by name, exit non-zero and print no
-   `next:` line. Check: `bun test packages/agentic-workflow/test/flow.test.mjs`
-   (refusals).
+   unreadable unit, an unknown step name, an absent unit doc, an unknown
+   `--stop-after` value and an unsupported stop point (a `--stop-after` naming
+   any catalog step but `plan`, the one v1 stop) each refuse by name, exit
+   non-zero and print no `next:` line. Check: `bun test
+   packages/agentic-workflow/test/flow.test.mjs` (refusals).
 
 ## Impact
 
@@ -245,6 +246,27 @@ suites the change re-runs unchanged.
   `bun packages/agentic-workflow/bin/agentic-workflow.mjs verify docs/features/669-deterministic-lane-driver/SPEC.md`
   exits 0)
   (Implements: S1, S9, S10)
+- P7 — The external-verify correction batch, code half (2026-11-28): B1 closes
+  `--stop-after` to `plan` with a named refusal for every other catalog step,
+  moving the whole symbol's texts (USAGE, `USAGE_LINE`, the rule table's `when`
+  cell, `help`, the crate README row, the RUNNER.md row, `flow-stop-rules@1`);
+  A2 arms the two doors' no-unit guard through an `operatorTokens` seam so a
+  bare `/draft` or a draft carrying only its own flags warns before the runner
+  runs (validator: `bun test packages/agentic-workflow/test/flow.test.mjs`
+  exits 0 with the unsupported-stop refusal case and `bun test
+  packages/pi-agentic-workflow/test/flow-command.test.mjs` exits 0 with the
+  no-unit guard cases)
+  (Implements: S1, S7, S8)
+  - Relevant files: packages/agentic-workflow/src/runner/flow.mjs, packages/agentic-workflow/src/runner/help.mjs, packages/agentic-workflow/README.md, skills/runner-contract/references/RUNNER.md, docs/workflow/LIFECYCLE.md, packages/pi-agentic-workflow/src/extension/flow-command.ts, packages/agentic-workflow/test/flow.test.mjs, packages/pi-agentic-workflow/test/flow-command.test.mjs
+- P8 — The external-verify correction batch, prose and evidence half (2026-11-28):
+  B2's changeset write target, PE-004's observed refusal branding, O11's
+  declared field name, the `residual-classify` receipt, and the dated rows
+  re-dated to the day each line landed (validator: `bun scripts/version-parity-gate.mjs
+  --content` exits 0, `bun packages/agentic-workflow/bin/agentic-workflow.mjs
+  verify docs/features/669-deterministic-lane-driver/SPEC.md` exits 0, and the
+  O19-O22 `rg` receipts in `planning-obligations.md` answer their exits)
+  (Implements: S2, S5, S9, S10)
+  - Relevant files: .changeset/669-deterministic-lane-driver.md, docs/features/669-deterministic-lane-driver/SPEC.md, docs/features/669-deterministic-lane-driver/decisions.md, docs/features/669-deterministic-lane-driver/planning-obligations.md
 
 ## Triaged steps
 

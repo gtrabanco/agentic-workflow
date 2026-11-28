@@ -3,7 +3,8 @@
 One row per Engineering claim the change rests on. `authority-kind` is the closed
 cell (`known | assumption | unknown | spec`), `freshness` is
 `current | stale | not-applicable`; every row was sampled at the cut head
-(`0623612ed`). Column order and vocabularies are owned by
+(`0623612ed`), except `PE-015`, sampled at the correction-batch head (2026-11-28,
+see `## Log`). Column order and vocabularies are owned by
 `skills/pre-execution-review/references/LEDGERS.md` §1.
 
 | id | authority-kind | claim | source | freshness | affected-decision-or-obligation |
@@ -22,3 +23,4 @@ cell (`known | assumption | unknown | spec`), `freshness` is
 | PE-012 | known (read this session) | the pi package's `commands` object is `additionalProperties`, so two more entries need no schema move; the routing files already accept a per-command model and thinking level | `packages/pi-agentic-workflow/agentic-workflow.config.json:36-80`; `packages/pi-agentic-workflow/src/config/schema.ts` | current | S10, D2 |
 | PE-013 | unknown (owner framing) | a small model executes the one bounded step it is handed without re-deriving the plan from the transcript. No measurement in this repository settles it; the bounded read set (the step's reference + the unit's state pointers) is the mitigation and the first field use is the test. Owner of the claim: the operator, at the first `/flow` run | issue #669 §"Open questions / risks" (the token-economics and bounded-prompt framing); this repository carries no such measurement | current | S2, O12 |
 | PE-014 | known (read this session) | the repository's unit-doc ledgers must be one contiguous table — a blank line inside it orphans every row after it — and `pre-execution-quality` refuses the split | `scripts/pre-execution-quality.test.mjs` (`ledgerTableFault`) | current | P1, O1 |
+| PE-015 | known (read at the correction batch) | the driver observes only the `planned` bit (`unitFacts` via `parseUnitDocPhases`) and the router's route (`computeRoute`); no reader reports "step X completed" for a post-plan catalog step, so an explicit `--stop-after <step>` cannot be honoured for any step but the plan | `packages/agentic-workflow/src/runner/flow.mjs` (`unitFacts`, `decideFlow`, `decideStop`); `packages/agentic-workflow/src/runner/unit-route.mjs` (`computeRoute`) | current | D12, O17 |

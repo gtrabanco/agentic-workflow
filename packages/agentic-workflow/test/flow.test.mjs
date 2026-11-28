@@ -440,3 +440,29 @@ test("the declared step-command table maps every catalog step, and the driver's 
     assert.ok(text.includes(marker), `docs/workflow/LIFECYCLE.md declares ${marker}`);
   }
 });
+
+// ---------------------------------------------------------------------------
+// AC8 — the v1 explicit stop is the plan: any other catalog step refuses by
+// name (external-verify B1, 2026-11-28)
+// ---------------------------------------------------------------------------
+
+test("an unsupported --stop-after step is refused by name (the v1 stop is plan only)", () => {
+  const root = fixture({ planned: true, tier: "standard" });
+  try {
+    for (const step of ["implement", "release"]) {
+      const result = run(["901-flow-fixture", "--stop-after", step], root);
+      assert.equal(result.status, 2, `a non-plan stop point is exit 2 (${step}): ${result.stderr}`);
+      assert.match(
+        result.stderr,
+        new RegExp(`^FLOW REFUSAL — unsupported stop point '${step}'`, "u"),
+        "the refusal names the value it refused",
+      );
+      assert.equal(result.stdout, "", "a refusal prints nothing on stdout, so no next: line exists");
+    }
+    const plan = run(["901-flow-fixture", "--stop-after", "plan"], root);
+    assert.equal(plan.status, 0, plan.stderr);
+    assert.match(plan.stdout, /^stop: after-plan \(rule: explicit\)$/mu, "the plan stop itself still fires");
+  } finally {
+    cleanup(root);
+  }
+});

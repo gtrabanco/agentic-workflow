@@ -152,3 +152,25 @@ test("a driver refusal is reported as an error and dispatches nothing", async ()
   assert.deepEqual(dispatched, []);
   assert.ok(notices.some((entry) => entry.kind === "error" && entry.message.includes("FLOW REFUSAL — unknown unit")), "the refusal is surfaced verbatim");
 });
+
+// external-verify A2 (2026-11-28): the guard judges the operator's own tokens,
+// so the draft's forced `--stop-after plan` can never mask a missing unit.
+test("a door without a unit is refused by the door, before the runner runs", async () => {
+  const cases = [
+    [FLOW_COMMAND, ""],
+    [DRAFT_COMMAND, ""],
+    [DRAFT_COMMAND, "--yes"],
+    [DRAFT_COMMAND, "--stop-after design"],
+  ];
+  for (const [entry, args] of cases) {
+    const notices = [];
+    const { registered, spawns, dispatched } = harness();
+    await registered.get(entry).handler(args, { ...CTX, notify: (message, kind) => notices.push({ message, kind }) });
+    assert.equal(spawns.length, 0, `no runner launch for /${entry} with '${args}' (got ${spawns.length})`);
+    assert.deepEqual(dispatched, [], `nothing dispatched for /${entry} with '${args}'`);
+    assert.ok(
+      notices.some((entry) => entry.kind === "warning" && entry.message.includes("needs a unit")),
+      `the door warns 'needs a unit' for /${entry} '${args}'`,
+    );
+  }
+});
